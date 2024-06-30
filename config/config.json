@@ -1,0 +1,34 @@
+{
+    "Update": {
+        "CheckUpdateAtStartUp": true
+    },
+    "DesktopLyric": {
+        "Alignment": "Center",
+        "FontFamily": "Microsoft YaHei",
+        "FontSize": 50,
+        "HighlightColor": "#ff23bc35",
+        "StrokeColor": "#ff000000",
+        "StrokeSize": 5
+    },
+    "Folders": {
+        "Download": "E:/att-algo-trading-tools/download",
+        "LocalMusic": []
+    },
+    "MainWindow": {
+        "DpiScale": "Auto",
+        "EnableAcrylicBackground": false,
+        "Language": "en_US",
+        "MinimizeToTray": true,
+        "PlayBarColor": "#ff225c7f",
+        "RecentPlayNumbers": 300
+    },
+    "Online": {
+        "MvQuality": "HD",
+        "PageSize": 30,
+        "SongQuality": "Lossless quality"
+    },
+    "QFluentWidgets": {
+        "ThemeColor": "#ff51aa0d",
+        "ThemeMode": "Dark"
+    }
+}

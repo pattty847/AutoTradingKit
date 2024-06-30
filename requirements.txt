@@ -1,0 +1,16 @@
+PySide6
+PySideSix-Frameless-Window
+darkdetect
+colorthief
+scipy
+pillow
+numpy
+pyqtgraph
+pandas
+pandas-ta
+numba
+ccxt
+talipp
+PyOpenGL==3.1.7
+cython
+

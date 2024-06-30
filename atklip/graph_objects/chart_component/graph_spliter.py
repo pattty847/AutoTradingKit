@@ -1,0 +1,260 @@
+import asyncio
+from functools import partial
+from atklip.graph_objects.pyqtgraph import GraphicsView,GraphicsLayout, SignalProxy
+from atklip.graph_objects.pyqtgraph.dockarea import DockArea, Dock,DockLabel
+from atklip.graph_objects.chart_component import  CustomDateAxisItem
+from .viewchart import Chart
+from .sub_chart import SubChart
+from atklip.gui_components.qfluentwidgets.common import FluentStyleSheet
+from PySide6.QtWidgets import QWidget, QSplitter,QApplication,QLabel
+from .pliterbox_ui import Ui_Form
+from .axisitem import *
+from .sub_panel_indicator import ViewSubPanel 
+from .proxy_signal import Signal_Proxy
+from atklip.graph_objects.chart_component.indicators import *
+from atklip.indicators import IndicatorType
+from atklip.gui_components.qfluentwidgets.components.dialog_box import MessageBox
+from PySide6.QtCore import QCoreApplication,QSize
+from PySide6.QtGui import QCloseEvent,QIcon
+from PySide6.QtWidgets import QApplication
+
+class CustomDockArea(DockArea):
+    def __init__(self, parent=None, temporary=False, home=None):
+        super(CustomDockArea, self).__init__(parent=parent, temporary=temporary, home=home)
+        self._parent: ViewSplitter = parent
+        
+    def addDock(self, dock=None, position='bottom', relativeTo=None, **kwds):
+        _dock:CustomDock = dock
+        if self._parent.chart is not None and not isinstance(_dock.panel, Chart):
+            if not isinstance(_dock.panel, SubChart):
+                _dock.panel.vb.setXLink(self._parent.chart.vb)
+            _dock.panel.xAxis.hide()
+            self._parent.chart.crosshair_x_value_change.disconnect(_dock.panel.xAxis.change_value)
+        super().addDock(dock=dock, position=position, relativeTo=relativeTo, **kwds)
+    
+    def floatDock(self, dock):
+        """Removes *dock* from this DockArea and places it in a new window."""
+        area = self.addTempArea()
+        area.win.resize(dock.size())
+        area.moveDock(dock, 'top', None)
+        return area
+    def closeEvent(self, event: QCloseEvent) -> None:
+        event.accept()
+    
+class CustomDock(Dock):
+    sig_delete = Signal()
+    def __init__(self,parent, name, area=None, size=(10, 10), widget=None, hideTitle=False, autoOrientation=True, label=None, **kargs):
+        super(CustomDock, self).__init__(name, area=area, size=size, widget=widget, hideTitle=hideTitle, autoOrientation=autoOrientation, label=label, **kargs)
+        self.parent:ViewSplitter = parent
+        self.chart = self.parent.chart
+        self.panel: ViewSubPanel|Chart|SubChart = None
+        self.sig_delete.connect(self.deleteLater)
+        
+    def addWidget(self, widget: QWidget|Chart|SubChart|ViewSubPanel, row=None, col=0, rowspan=1, colspan=1):
+        self.panel = widget
+        # if isinstance(self.panel,SubChart):
+        #     self.panel.xAxis.show()
+        super().addWidget(widget, row=row, col=col, rowspan=rowspan, colspan=colspan)
+    def float(self):
+        if self.panel is not None and self.chart is not None:
+            self.panel.vb.setXLink(self.panel.vb)
+            self.panel.xAxis.show()
+            if not isinstance(self.panel,SubChart):
+                self.panel.Chart.crosshair_x_value_change.connect(slot=self.panel.xAxis.change_value,type=Qt.ConnectionType.AutoConnection)  
+        area:QWidget = self.area.floatDock(self)
+        self.sig_delete.connect(area.parent().close)
+        self.sig_delete.connect(area.parent().deleteLater)
+
+class CustomDockLabel(DockLabel):
+    
+    def __init__(self, text):
+        super(CustomDockLabel, self).__init__(text, closable=False, fontSize="12px")
+    
+    def mouseDoubleClickEvent(self, ev):
+        if ev.button() == QtCore.Qt.MouseButton.LeftButton:
+            self.dock.float()
+    def floatDock(self):
+        self.dock.float()
+    
+    def updateStyle(self):
+        r = '3px'
+        if self.dim:
+            fg = '#d1d4dc'
+            bg = 'rgb(43, 43, 43)'
+            border = 'rgb(43, 43, 43)'
+        else:
+            fg = '#d1d4dc'
+            bg = 'rgb(43, 43, 43)'
+            border = 'rgb(43, 43, 43)'
+
+        if self.orientation == 'vertical':
+            self.vStyle = """DockLabel {
+                background-color : %s;
+                color : %s;
+                border-top-right-radius: 0px;
+                border-top-left-radius: %s;
+                border-bottom-right-radius: 0px;
+                border-bottom-left-radius: %s;
+                border-width: 0px;
+                border-right: 2px solid %s;
+                padding-top: 3px;
+                padding-bottom: 3px;
+                font-size: %s;
+            }""" % (bg, fg, r, r, border, self.fontSize)
+            self.setStyleSheet(self.vStyle)
+        else:
+            self.hStyle = """DockLabel {
+                background-color : %s;
+                color : %s;
+                border-top-right-radius: %s;
+                border-top-left-radius: %s;
+                border-bottom-right-radius: 0px;
+                border-bottom-left-radius: 0px;
+                border-width: 0px;
+                border-bottom: 2px solid %s;
+                padding-left: 3px;
+                padding-right: 3px;
+                font-size: %s;
+            }""" % (bg, fg, r, r, border, self.fontSize)
+            self.setStyleSheet(self.hStyle)
+    
+
+class ViewSplitter(QSplitter,Ui_Form):
+    sig_add_indicator_to_chart = Signal(tuple)
+    sig_add_sub_panel = Signal(object)
+    sig_show_hide_cross = Signal(tuple)
+    def __init__(self, parent: QWidget | None = ...) -> None:
+        super().__init__(parent)
+        self.listwidgets = []
+        self.setupUi(self)
+        self.mainwindow = None
+        self.chart:Chart = None
+        self.dateAxis = None
+        self.is_started = False
+        
+        self.DockArea = CustomDockArea(self)
+        self.splitter.addWidget(self.DockArea)
+
+    def addWidget(self,widget:QWidget|Chart|SubChart|ViewSubPanel):
+        _dock = CustomDock(parent=self,name="",closable = False,hideTitle=True,label=CustomDockLabel(""))
+        if isinstance(widget,ViewSubPanel) or isinstance(widget,SubChart):
+            widget.setdockLabel(_dock.label)
+        _dock.addWidget(widget)
+        widget.destroyed.connect(_dock.sig_delete)
+        self.DockArea.addDock(_dock)
+  
+    def addItem(self,item:QWidget):
+        self.verticalLayout.addWidget(item)
+    
+    def removeItem(self,item: QWidget):
+        self.verticalLayout.removeWidget(item)
+        item.deleteLater()
+
+
+class GraphSplitter(ViewSplitter):
+    def __init__(self, parent: QWidget | None = ...) -> None:
+        super().__init__(parent)
+        self.sig_add_indicator_to_chart.connect(self.create_indicator,Qt.ConnectionType.QueuedConnection)
+        self.sig_add_sub_panel.connect(self.add_sub_panel,Qt.ConnectionType.QueuedConnection)
+
+    def reload_pre_indicator(self):
+        "load pre saved indicator"
+        self.create_indicator(("Candle Indicator",IndicatorType.JAPAN_CANDLE))
+
+    def create_indicator(self,data):
+        "Tạo Indicator panel và setup cho Chart hoặc Sub-Indicator"
+        """('Basic Indicator', 'SMA-Simple Moving Average')"""
+        indicator_type = data[0]
+        indicator_name = data[1]
+        if indicator_type =="Sub Indicator":
+            self.create_sub_indicator(data)
+        elif indicator_type =="Basic Indicator":
+            self.create_basic_indicator(data)
+        elif indicator_type =="Candle Indicator":
+            self.create_candle_indicator(data)
+        elif indicator_type =="Advance Indicator":
+            self.create_advand_indicator(data)
+        elif indicator_type =="Sub Candle Indicator":
+            self.create_sub_chart(data)
+        else:
+            print("Unknown Indicator Type")
+
+    def create_sub_chart(self,indicator_name:IndicatorType):
+        panel = SubChart(self.chart,self,indicator_name,self.mainwindow)
+        #panel.setup_indicator((indicator_name,self.mainwindow))
+        self.add_sub_panel(panel)
+        QApplication.processEvents()
+    
+    def create_sub_indicator(self,indicator_name:IndicatorType):
+        panel = ViewSubPanel(self.chart,self)
+        panel.setup_indicator((indicator_name,self.mainwindow))
+        self.add_sub_panel(panel)
+        QApplication.processEvents()
+
+    def create_basic_indicator(self,indicator_name:IndicatorType):
+        self.chart.setup_indicator((indicator_name,self.mainwindow))
+        QApplication.processEvents()
+    
+    def create_candle_indicator(self,indicator_name:IndicatorType):
+        self.chart.setup_indicator((indicator_name,self.mainwindow))
+        QApplication.processEvents()
+        
+    def create_advand_indicator(self,indicator_name:IndicatorType):
+        self.chart.setup_indicator((indicator_name,self.mainwindow))
+        QApplication.processEvents()
+
+    def create_normal_indicator(self,indicator_name:IndicatorType):
+        print(indicator_name)
+        QApplication.processEvents()
+
+    def setup_chart(self,mainwindow,current_ex:str="",current_symbol:str="",curent_interval:str=""):
+        self.mainwindow = mainwindow
+        self.chart = Chart(parent=self,exchange_name=current_ex,symbol=current_symbol,interval=curent_interval)
+        Signal_Proxy(
+            signal=self.sig_show_hide_cross,
+            slot=self.mouse_move,connect_type=Qt.ConnectionType.AutoConnection
+        )
+        # self.mouse_proxy = SignalProxy(signal=self.sig_show_hide_cross, rateLimit=144,
+        #                             slot=self.mouse_move)
+        self.addWidget(self.chart)  # add first chart to list
+        self.listwidgets.append(self.chart)
+        self.list_proxy = []
+        
+        self.dateAxis = CustomDateAxisItem(orientation='bottom',context=self.chart,vb=self.chart.vb,
+                                           showValues=True, axisPen="#5b626f", textPen="#5b626f",
+                                            **{Axis.TICK_FORMAT: Axis.DATETIME})
+        
+        self.dateAxis.setHeight(30)
+        self.xaxisview = GraphicsView(self,background="#161616")
+        self.xaxislayout = GraphicsLayout()
+        self.xaxisview.setCentralItem(self.xaxislayout)
+        self.xaxislayout.setContentsMargins(0,0,60,0)
+        self.xaxislayout.addItem(self.dateAxis, row=0, col=0)
+        self.addItem(self.xaxisview)
+        self.dateAxis.linkToView(self.chart.vb)
+        
+        # self.yaxis_proxy = SignalProxy(signal=self.chart.crosshair_x_value_change, rateLimit=60,
+        #                             slot=self.dateAxis.change_value)
+        Signal_Proxy(
+            self.chart.crosshair_x_value_change,
+            slot=self.dateAxis.change_value,connect_type=Qt.ConnectionType.AutoConnection
+        )
+        
+    def add_sub_panel(self,panel:ViewSubPanel|SubChart):
+        self.listwidgets.append(panel)
+        self.addWidget(panel)
+        panel.setVisible(True)
+        panel.sig_delete_sub_panel.connect(self.delete_panel)
+
+    def delete_panel(self,panel:ViewSubPanel|SubChart):
+        self.listwidgets.remove(panel)
+        if isinstance(panel,SubChart):
+            asyncio.run(panel.close())
+        panel.deleteLater()
+    
+    def mouse_move(self,data):
+        [panel.show_hide_cross(data) for panel in self.listwidgets]
+            
+    def show_sub_panel(self,is_show:bool=True):
+        if not self.is_started:
+            self.is_started = True
