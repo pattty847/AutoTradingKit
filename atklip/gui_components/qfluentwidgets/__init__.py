@@ -13,11 +13,11 @@ Examples are available at https://github.com/zhiyiYo/PyQt-Fluent-Widgets/tree/Py
 
 https://github.com/zhiyiYo/PyQt-Fluent-Widgets/commits/PySide6/     XEM có gì mới ở đây
 
-đã cập nhật đến 1.5.6  7/5/2024
+đã cập nhật đến 1.5.6  1/7/2024
 
 """
 
-# __version__ = "1.5.7"
+# __version__ = "1.5.8"
 # __author__ = "zhiyiYo" 
 
 from .components import *
