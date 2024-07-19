@@ -13,7 +13,7 @@ Examples are available at https://github.com/zhiyiYo/PyQt-Fluent-Widgets/tree/Py
 
 https://github.com/zhiyiYo/PyQt-Fluent-Widgets/commits/PySide6/     XEM có gì mới ở đây
 
-đã cập nhật đến 1.5.6  1/7/2024
+đã cập nhật đến 1.5.8  19/7/2024
 
 """
 
