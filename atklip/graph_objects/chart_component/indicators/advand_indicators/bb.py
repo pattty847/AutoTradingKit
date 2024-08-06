@@ -205,6 +205,7 @@ class BasicBB(GraphicsObject):
             self.bb_bank.setBrush(self.has["styles"]["brush_color"])
         
     def threadpool_asyncworker(self,candle=None):
+        self.worker = None
         self.worker = FastWorker(self,self.first_load_data)
         self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.SingleShotConnection)
         self.threadpool.start(self.worker)
@@ -279,6 +280,7 @@ class BasicBB(GraphicsObject):
         self.picture.play(p)
     
     def setdata_worker(self,sig_update_candle):
+        self.worker = None
         self.worker = FastWorker(self,self.update_data,sig_update_candle)
         self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.SingleShotConnection)
         self.threadpool.start(self.worker)

@@ -204,6 +204,7 @@ class BasicRSI(PlotDataItem):
             self.setPen(color=self.has["styles"]["pen"], width=self.has["styles"]["width"],style=self.has["styles"]["style"])
 
     def threadpool_asyncworker(self,candle=None):
+        self.worker = None
         self.worker = FastWorker(self,self.first_load_data)
         self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.SingleShotConnection)
         self.threadpool.start(self.worker)
@@ -274,6 +275,7 @@ class BasicRSI(PlotDataItem):
         self.setPen(self.currentPen)
 
     def setdata_worker(self,sig_update_candle):
+        self.worker = None
         self.worker = FastWorker(self,self.update_data,sig_update_candle)
         self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.SingleShotConnection)
         self.threadpool.start(self.worker)

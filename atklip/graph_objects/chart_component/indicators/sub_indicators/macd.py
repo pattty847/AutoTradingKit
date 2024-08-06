@@ -284,6 +284,7 @@ class BasicMACD(GraphicsObject):
             self.histogram.update_styles(_input,(xdata,histogram))
             
     def threadpool_asyncworker(self,candle=None):
+        self.worker = None
         if candle == None:
             self.worker = FastWorker(self,self.first_load_data)
         else:
@@ -355,6 +356,7 @@ class BasicMACD(GraphicsObject):
             self.hide()
 
     def setdata_worker(self,sig_update_candle):
+        self.worker = None
         self.worker = FastWorker(self,self.update_data,sig_update_candle)
         self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.SingleShotConnection)
         self.threadpool.start(self.worker)

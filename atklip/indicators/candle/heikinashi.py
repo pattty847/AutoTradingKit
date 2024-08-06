@@ -71,9 +71,10 @@ class HEIKINASHI(QObject):
         
     def threadpool_asyncworker(self):
         #if self._candles.candles != []:
-        worker = FastWorker(self,self.gen_data)
-        worker.signals.finished.connect(self.sig_reset_all,Qt.ConnectionType.SingleShotConnection)
-        self.threadpool.start(worker)
+        self.worker = None
+        self.worker = FastWorker(self,self.gen_data)
+        self.worker.signals.finished.connect(self.sig_reset_all,Qt.ConnectionType.SingleShotConnection)
+        self.threadpool.start(self.worker)
     
     def get_candles_as_dataframe(self):
         df = pd.DataFrame([data.__dict__ for data in self.candles])

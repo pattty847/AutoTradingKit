@@ -201,6 +201,7 @@ class Chart(ViewPlotWidget):
                         pre_ohlcv = OHLCV(_ohlcv[-2][1],_ohlcv[-2][2],_ohlcv[-2][3],_ohlcv[-2][4], round((_ohlcv[-2][2]+_ohlcv[-2][3])/2,self._precision) , round((_ohlcv[-2][2]+_ohlcv[-2][3]+_ohlcv[-2][4])/3,self._precision), round((_ohlcv[-2][1]+_ohlcv[-2][2]+_ohlcv[-2][3]+_ohlcv[-2][4])/4,self._precision),_ohlcv[-2][5],_ohlcv[-2][0]/1000,0)
                         last_ohlcv = OHLCV(_ohlcv[-1][1],_ohlcv[-1][2],_ohlcv[-1][3],_ohlcv[-1][4], round((_ohlcv[-1][2]+_ohlcv[-1][3])/2,self._precision) , round((_ohlcv[-1][2]+_ohlcv[-1][3]+_ohlcv[-1][4])/3,self._precision), round((_ohlcv[-1][1]+_ohlcv[-1][2]+_ohlcv[-1][3]+_ohlcv[-1][4])/4,self._precision),_ohlcv[-1][5],_ohlcv[-1][0]/1000,0)
                         new_update = self.jp_candle.update([pre_ohlcv,last_ohlcv])
+                        print(last_ohlcv)
                         # last_df = self.jp_candle.get_last_row_df()
                         # df = self.jp_candle.get_df()
                         if firt_run == False:
@@ -213,10 +214,11 @@ class Chart(ViewPlotWidget):
                     break
             else:
                 break
-            try:
-                time.sleep(1)
-            except:
-                break
+            # try:
+            #     await asyncio.sleep(0.3)
+            # except:
+            #     print("this a misstake")
+            #     pass
         if exchange != None:
             AppLogger.writer("INFO",f"{__name__}-{symbol}-{interval} have closed")
         try:
@@ -310,9 +312,7 @@ class Chart(ViewPlotWidget):
                 self.add_item(indicator)
                 indicator.threadpool_asyncworker()
                 
-                
-                
-        
+
     def set_data_dataconnect(self):
         if self.list_candle_indicators == []:
             "load data when starting app"

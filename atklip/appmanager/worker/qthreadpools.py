@@ -67,6 +67,7 @@ class FastWorker(QRunnable):
         except Exception as e:
             traceback.print_exception(e)
             self.signals.error.emit()
+            
 class FastStartSignal(QObject):
     error = Signal()
     finished = Signal()

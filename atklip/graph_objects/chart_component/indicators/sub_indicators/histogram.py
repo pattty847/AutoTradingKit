@@ -79,6 +79,7 @@ class Histogram(GraphicsObject):
         self.outbound_brush = mkBrush(self.outbound_color,width=0.7)
 
     def threadpool_asyncworker(self):
+        self.worker = None
         worker = FastWorker(self,self.update_last_data)
         worker.signals.setdata.connect(self.setData,Qt.ConnectionType.SingleShotConnection)
         worker.signals.finished.connect(self.sig_change_yaxis_range)
@@ -200,11 +201,13 @@ class SingleHistogram(GraphicsObject):
         self.outbound_brush = mkBrush(self.outbound_color,width=0.7)
 
     def reset_threadpool_asyncworker(self):
+        self.worker = None
         worker = FastWorker(self,self.update_last_data)
         worker.signals.setdata.connect(self.setData,Qt.ConnectionType.SingleShotConnection)
         self.threadpool.start(worker)
     
     def threadpool_asyncworker(self, last_candle:List[OHLCV]):
+        self.worker = None
         worker = FastWorker(self,self.update_last_data)
         worker.signals.setdata.connect(self.setData,Qt.ConnectionType.SingleShotConnection)
         self.threadpool.start(worker)

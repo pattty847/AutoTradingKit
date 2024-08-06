@@ -208,9 +208,10 @@ class ViewSubPanel(PlotWidget):
         pass
 
     def get_last_pos_worker(self):
-        worker = FastWorker(self,self.get_last_pos_of_indicator)
-        worker.signals.setdata.connect(self.auto_xrange,Qt.ConnectionType.SingleShotConnection)
-        self.threadpool.start(worker)
+        self.worker = None
+        self.worker = FastWorker(self,self.get_last_pos_of_indicator)
+        self.worker.signals.setdata.connect(self.auto_xrange,Qt.ConnectionType.SingleShotConnection)
+        self.threadpool.start(self.worker)
     def get_last_pos_of_indicator(self,setdata):
         if self.indicator != None:
             if self.indicator.has["inputs"]["indicator_type"] != IndicatorType.VOLUME:

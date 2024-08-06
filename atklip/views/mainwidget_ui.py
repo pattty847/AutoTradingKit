@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'mainwidget.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.4.2
+## Created by: Qt User Interface Compiler version 6.7.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -23,9 +23,9 @@ class Ui_MainWidget(object):
     def setupUi(self, MainWidget):
         if not MainWidget.objectName():
             MainWidget.setObjectName(u"MainWidget")
-        MainWidget.setWindowModality(Qt.WindowModal)
+        MainWidget.setWindowModality(Qt.WindowModality.WindowModal)
         MainWidget.resize(1400, 800)
-        sizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
+        sizePolicy = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(MainWidget.sizePolicy().hasHeightForWidth())
@@ -47,8 +47,8 @@ class Ui_MainWidget(object):
         self.frame_2.setMinimumSize(QSize(0, 2))
         self.frame_2.setMaximumSize(QSize(16777215, 2))
         self.frame_2.setStyleSheet(u"background-color: #474747;")
-        self.frame_2.setFrameShape(QFrame.NoFrame)
-        self.frame_2.setFrameShadow(QFrame.Plain)
+        self.frame_2.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_2.setFrameShadow(QFrame.Shadow.Plain)
 
         self.verticalLayout_4.addWidget(self.frame_2)
 
@@ -56,8 +56,8 @@ class Ui_MainWidget(object):
         self.topbar.setObjectName(u"topbar")
         self.topbar.setMinimumSize(QSize(0, 45))
         self.topbar.setMaximumSize(QSize(16777215, 45))
-        self.topbar.setFrameShape(QFrame.NoFrame)
-        self.topbar.setFrameShadow(QFrame.Plain)
+        self.topbar.setFrameShape(QFrame.Shape.NoFrame)
+        self.topbar.setFrameShadow(QFrame.Shadow.Plain)
 
         self.verticalLayout_4.addWidget(self.topbar)
 
@@ -66,8 +66,8 @@ class Ui_MainWidget(object):
         self.frame_3.setMinimumSize(QSize(0, 2))
         self.frame_3.setMaximumSize(QSize(16777215, 2))
         self.frame_3.setStyleSheet(u"background-color: #474747;")
-        self.frame_3.setFrameShape(QFrame.NoFrame)
-        self.frame_3.setFrameShadow(QFrame.Plain)
+        self.frame_3.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_3.setFrameShadow(QFrame.Shadow.Plain)
 
         self.verticalLayout_4.addWidget(self.frame_3)
 
@@ -79,8 +79,8 @@ class Ui_MainWidget(object):
         sizePolicy.setHeightForWidth(self.drawbar.sizePolicy().hasHeightForWidth())
         self.drawbar.setSizePolicy(sizePolicy)
         self.drawbar.setMaximumSize(QSize(60, 16777215))
-        self.drawbar.setFrameShape(QFrame.StyledPanel)
-        self.drawbar.setFrameShadow(QFrame.Raised)
+        self.drawbar.setFrameShape(QFrame.Shape.NoFrame)
+        self.drawbar.setFrameShadow(QFrame.Shadow.Raised)
 
         self.horizontalLayout.addWidget(self.drawbar)
 
@@ -89,33 +89,33 @@ class Ui_MainWidget(object):
         self.frame_4.setMinimumSize(QSize(2, 0))
         self.frame_4.setMaximumSize(QSize(2, 16777215))
         self.frame_4.setStyleSheet(u"background-color: #474747;")
-        self.frame_4.setFrameShape(QFrame.StyledPanel)
-        self.frame_4.setFrameShadow(QFrame.Raised)
+        self.frame_4.setFrameShape(QFrame.Shape.StyledPanel)
+        self.frame_4.setFrameShadow(QFrame.Shadow.Raised)
 
         self.horizontalLayout.addWidget(self.frame_4)
 
         self.chartview = QFrame(MainWidget)
         self.chartview.setObjectName(u"chartview")
         self.chartview.setStyleSheet(u"background-color: rgb(71, 71, 71);")
-        self.chartview.setFrameShape(QFrame.NoFrame)
-        self.chartview.setFrameShadow(QFrame.Raised)
+        self.chartview.setFrameShape(QFrame.Shape.NoFrame)
+        self.chartview.setFrameShadow(QFrame.Shadow.Raised)
         self.verticalLayout_2 = QVBoxLayout(self.chartview)
         self.verticalLayout_2.setSpacing(2)
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
-        self.verticalLayout_2.setSizeConstraint(QLayout.SetDefaultConstraint)
+        self.verticalLayout_2.setSizeConstraint(QLayout.SizeConstraint.SetDefaultConstraint)
         self.verticalLayout_2.setContentsMargins(0, 0, 0, 0)
         self.splitter_2 = QSplitter(self.chartview)
         self.splitter_2.setObjectName(u"splitter_2")
         sizePolicy.setHeightForWidth(self.splitter_2.sizePolicy().hasHeightForWidth())
         self.splitter_2.setSizePolicy(sizePolicy)
-        self.splitter_2.setOrientation(Qt.Horizontal)
+        self.splitter_2.setOrientation(Qt.Orientation.Horizontal)
         self.splitter_2.setHandleWidth(2)
         self.splitter = VSplitter(self.splitter_2)
         self.splitter.setObjectName(u"splitter")
         sizePolicy.setHeightForWidth(self.splitter.sizePolicy().hasHeightForWidth())
         self.splitter.setSizePolicy(sizePolicy)
-        self.splitter.setFrameShape(QFrame.NoFrame)
-        self.splitter.setOrientation(Qt.Vertical)
+        self.splitter.setFrameShape(QFrame.Shape.NoFrame)
+        self.splitter.setOrientation(Qt.Orientation.Vertical)
         self.splitter.setOpaqueResize(True)
         self.splitter.setHandleWidth(5)
         self.splitter.setChildrenCollapsible(True)
@@ -125,8 +125,8 @@ class Ui_MainWidget(object):
         self.chartframe.setSizePolicy(sizePolicy)
         self.chartframe.setMinimumSize(QSize(0, 0))
         self.chartframe.setStyleSheet(u"background-color: rgb(22, 22, 22);")
-        self.chartframe.setFrameShape(QFrame.StyledPanel)
-        self.chartframe.setFrameShadow(QFrame.Raised)
+        self.chartframe.setFrameShape(QFrame.Shape.StyledPanel)
+        self.chartframe.setFrameShadow(QFrame.Shadow.Raised)
         self.verticalLayout_6 = QVBoxLayout(self.chartframe)
         self.verticalLayout_6.setSpacing(0)
         self.verticalLayout_6.setObjectName(u"verticalLayout_6")
@@ -135,8 +135,8 @@ class Ui_MainWidget(object):
         self.frame.setObjectName(u"frame")
         sizePolicy.setHeightForWidth(self.frame.sizePolicy().hasHeightForWidth())
         self.frame.setSizePolicy(sizePolicy)
-        self.frame.setFrameShape(QFrame.StyledPanel)
-        self.frame.setFrameShadow(QFrame.Raised)
+        self.frame.setFrameShape(QFrame.Shape.StyledPanel)
+        self.frame.setFrameShadow(QFrame.Shadow.Raised)
         self.verticalLayout_3 = QVBoxLayout(self.frame)
         self.verticalLayout_3.setSpacing(0)
         self.verticalLayout_3.setObjectName(u"verticalLayout_3")
@@ -146,7 +146,7 @@ class Ui_MainWidget(object):
         sizePolicy.setHeightForWidth(self.chartbox_splitter.sizePolicy().hasHeightForWidth())
         self.chartbox_splitter.setSizePolicy(sizePolicy)
         self.chartbox_splitter.setMinimumSize(QSize(0, 0))
-        self.chartbox_splitter.setOrientation(Qt.Vertical)
+        self.chartbox_splitter.setOrientation(Qt.Orientation.Vertical)
         self.chartbox_splitter.setOpaqueResize(True)
         self.chartbox_splitter.setHandleWidth(1)
 
@@ -163,8 +163,8 @@ class Ui_MainWidget(object):
         self.tradebox.setMaximumSize(QSize(16777215, 0))
         self.tradebox.setStyleSheet(u"background-color: rgb(22, 22, 22);\n"
 "background-color: rgb(72, 72, 72);")
-        self.tradebox.setFrameShape(QFrame.NoFrame)
-        self.tradebox.setFrameShadow(QFrame.Raised)
+        self.tradebox.setFrameShape(QFrame.Shape.NoFrame)
+        self.tradebox.setFrameShadow(QFrame.Shadow.Raised)
         self.splitter.addWidget(self.tradebox)
         self.splitter_2.addWidget(self.splitter)
         self.rightview = QFrame(self.splitter_2)
@@ -175,8 +175,8 @@ class Ui_MainWidget(object):
         self.rightview.setFont(font)
         self.rightview.setStyleSheet(u"background-color: rgb(22, 22, 22);\n"
 "background-color: rgb(72, 72, 72);")
-        self.rightview.setFrameShape(QFrame.NoFrame)
-        self.rightview.setFrameShadow(QFrame.Raised)
+        self.rightview.setFrameShape(QFrame.Shape.NoFrame)
+        self.rightview.setFrameShadow(QFrame.Shadow.Raised)
         self.splitter_2.addWidget(self.rightview)
 
         self.verticalLayout_2.addWidget(self.splitter_2)
@@ -191,8 +191,8 @@ class Ui_MainWidget(object):
         self.rightbar.setMaximumSize(QSize(60, 16777215))
         self.rightbar.setStyleSheet(u"background-color: rgb(255, 85, 0);\n"
 "background-color: rgb(33, 33, 33);")
-        self.rightbar.setFrameShape(QFrame.StyledPanel)
-        self.rightbar.setFrameShadow(QFrame.Raised)
+        self.rightbar.setFrameShape(QFrame.Shape.NoFrame)
+        self.rightbar.setFrameShadow(QFrame.Shadow.Plain)
 
         self.horizontalLayout.addWidget(self.rightbar)
 

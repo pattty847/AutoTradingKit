@@ -105,6 +105,7 @@ class Volume(GraphicsObject):
         return _min,_max
     
     def reset_threadpool_asyncworker(self):
+        self.worker = None
         self._is_change_source = True
         self.worker = FastWorker(self,self.update_last_data)
         self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.AutoConnection)
@@ -115,6 +116,7 @@ class Volume(GraphicsObject):
         self.chart.jp_candle.sig_add_candle.connect(self.threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
         self.sig_change_yaxis_range.emit()
     def threadpool_asyncworker(self,candle=[]):
+        self.worker = None
         self._is_change_source = True
         self.worker = FastWorker(self,self.update_last_data)
         self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.SingleShotConnection)
@@ -305,11 +307,13 @@ class SingleVolume(GraphicsObject):
         sig_update_candle.connect(self.threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
 
     def reset_threadpool_asyncworker(self):
+        self.worker = None
         self.worker = FastWorker(self,self.update_last_data)
         self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.SingleShotConnection)
         self.threadpool.start(self.worker)
     
     def threadpool_asyncworker(self, last_candle:List[OHLCV]=[]):
+        self.worker = None
         self.worker = FastWorker(self,self.update_last_data)
         self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.SingleShotConnection)
         self.threadpool.start(self.worker)

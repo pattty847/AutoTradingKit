@@ -1,13 +1,16 @@
 # coding:utf-8
-from PySide6.QtCore import Qt, Signal, QRectF, Property, QPropertyAnimation, QPoint
-from PySide6.QtGui import QPixmap, QPainter, QColor, QPainterPath, QFont
+from typing import List, Union
+from PySide6.QtCore import Qt, Signal, QRectF, Property, QPropertyAnimation, QPoint, QSize
+from PySide6.QtGui import QPixmap, QPainter, QColor, QPainterPath, QFont, QIcon
 from PySide6.QtWidgets import QWidget, QFrame, QVBoxLayout, QHBoxLayout, QLabel
 
 from ...common.overload import singledispatchmethod
 from ...common.style_sheet import isDarkTheme, FluentStyleSheet
 from ...common.animation import BackgroundAnimationWidget, DropShadowAnimation
 from ...common.font import setFont
-from  .label import SubtitleLabel,TitleLabel
+from ...common.icon import FluentIconBase
+from .label import BodyLabel, CaptionLabel
+from .icon_widget import IconWidget
 
 
 class CardWidget(BackgroundAnimationWidget, QFrame):
@@ -212,7 +215,7 @@ class HeaderCardWidget(SimpleCardWidget):
         self.viewLayout = QHBoxLayout(self.view)
 
         self.headerLayout.addWidget(self.headerLabel)
-        self.headerLayout.setContentsMargins(0, 0, 0, 0)
+        self.headerLayout.setContentsMargins(24, 0, 16, 0)
         self.headerView.setFixedHeight(48)
 
         self.vBoxLayout.setSpacing(0)
@@ -221,7 +224,7 @@ class HeaderCardWidget(SimpleCardWidget):
         self.vBoxLayout.addWidget(self.separator)
         self.vBoxLayout.addWidget(self.view)
 
-        self.viewLayout.setContentsMargins(0, 0, 0, 0)
+        self.viewLayout.setContentsMargins(24, 24, 24, 24)
         setFont(self.headerLabel, 15, QFont.DemiBold)
 
         self.view.setObjectName('view')
@@ -229,6 +232,8 @@ class HeaderCardWidget(SimpleCardWidget):
         self.headerLabel.setObjectName('headerLabel')
         FluentStyleSheet.CARD_WIDGET.apply(self)
 
+        self._postInit()
+
     @__init__.register
     def _(self, title: str, parent=None):
         self.__init__(parent)
@@ -240,49 +245,125 @@ class HeaderCardWidget(SimpleCardWidget):
     def setTitle(self, title: str):
         self.headerLabel.setText(title)
 
+    def _postInit(self):
+        pass
+
     title = Property(str, getTitle, setTitle)
 
 
 
-class HeaderCard(CardWidget):
-    """ Header card widget """
+class CardGroupWidget(QWidget):
 
-    @singledispatchmethod
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.headerLabel = TitleLabel(self)
-        self.headerLabel.setFixedHeight(30)
-        
-        self.separator = CardSeparator(self)
-
+    def __init__(self, icon: Union[str, FluentIconBase, QIcon], title: str, content: str, parent=None):
+        super().__init__(parent=parent)
         self.vBoxLayout = QVBoxLayout(self)
-        self.headerLayout = QHBoxLayout(self)
-        self.viewLayout = QVBoxLayout(self)
+        self.hBoxLayout = QHBoxLayout()
 
-        self.headerLayout.addWidget(self.headerLabel)
-        self.headerLayout.setContentsMargins(5,1,1,1)
- 
+        self.iconWidget = IconWidget(icon)
+        self.titleLabel = BodyLabel(title)
+        self.contentLabel = CaptionLabel(content)
+        self.textLayout = QVBoxLayout()
+
+        self.separator = CardSeparator()
+
+        self.__initWidget()
+
+    def __initWidget(self):
+        self.separator.hide()
+        self.iconWidget.setFixedSize(20, 20)
+        self.contentLabel.setTextColor(QColor(96, 96, 96), QColor(206, 206, 206))
+
         self.vBoxLayout.setSpacing(0)
         self.vBoxLayout.setContentsMargins(0, 0, 0, 0)
-        self.vBoxLayout.addLayout(self.headerLayout)
+        self.vBoxLayout.addLayout(self.hBoxLayout)
         self.vBoxLayout.addWidget(self.separator)
-        self.vBoxLayout.addLayout(self.viewLayout)
 
+        self.textLayout.addWidget(self.titleLabel)
+        self.textLayout.addWidget(self.contentLabel)
+        self.hBoxLayout.addWidget(self.iconWidget)
+        self.hBoxLayout.addLayout(self.textLayout)
+        self.hBoxLayout.addStretch(1)
+
+        self.hBoxLayout.setSpacing(15)
+        self.hBoxLayout.setContentsMargins(24, 10, 24, 10)
+        self.textLayout.setContentsMargins(0, 0, 0, 0)
+        self.textLayout.setSpacing(0)
+        self.hBoxLayout.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        self.textLayout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+    def title(self):
+        return self.titleLabel.text()
+
+    def setTitle(self, text: str):
+        self.titleLabel.setText(text)
+
+    def content(self):
+        return self.contentLabel.text()
+
+    def setContent(self, text: str):
+        self.contentLabel.setText(text)
+
+    def icon(self):
+        return self.iconWidget.icon
+
+    def setIcon(self, icon: Union[str, FluentIconBase, QIcon]):
+        self.iconWidget.setIcon(icon)
+
+    def setIconSize(self, size: QSize):
+        self.iconWidget.setFixedSize(size)
+
+    def setSeparatorVisible(self, isVisible: bool):
+        self.separator.setVisible(isVisible)
+
+    def isSeparatorVisible(self):
+        return self.separator.isVisible()
+
+    def addWidget(self, widget: QWidget, stretch=0):
+        self.hBoxLayout.addWidget(widget, stretch=stretch)
+
+
+class GroupHeaderCardWidget(HeaderCardWidget):
+    """ Group header card widget """
+
+    def _postInit(self):
+        super()._postInit()
+        self.groupWidgets = []  # type: List[CardGroupWidget]
+        self.groupLayout = QVBoxLayout()
+
+        self.groupLayout.setSpacing(0)
         self.viewLayout.setContentsMargins(0, 0, 0, 0)
-        setFont(self.headerLabel, 15, QFont.DemiBold)
+        self.groupLayout.setContentsMargins(0, 0, 0, 0)
+        self.viewLayout.addLayout(self.groupLayout)
 
-        self.headerLabel.setObjectName('headerLabel')
-        FluentStyleSheet.CARD_WIDGET.apply(self)
+    def addGroup(self, icon: Union[str, FluentIconBase, QIcon], title: str, content: str, widget: QWidget, stretch=0) -> CardGroupWidget:
+        """ add widget to a new group
 
-    @__init__.register
-    def _(self, title: str, parent=None):
-        self.__init__(parent)
-        self.setTitle(title)
+        Parameters
+        ----------
+        icon: str | QIcon | FluentIconBase
+            the icon to be drawn
 
-    def getTitle(self):
-        return self.headerLabel.text()
+        title: str
+            the title of card
 
-    def setTitle(self, title: str):
-        self.headerLabel.setText(title)
+        content: str
+            the content of card
 
-    title = Property(str, getTitle, setTitle)
+        widget: QWidget
+            the widget to be added
+
+        stretch: int
+            the layout stretch of widget
+        """
+        group = CardGroupWidget(icon, title, content, self)
+        group.addWidget(widget, stretch=stretch)
+
+        if self.groupWidgets:
+            self.groupWidgets[-1].setSeparatorVisible(True)
+
+        self.groupLayout.addWidget(group)
+        self.groupWidgets.append(group)
+        return group
+
+    def groupCount(self):
+        return len(self.groupWidgets)

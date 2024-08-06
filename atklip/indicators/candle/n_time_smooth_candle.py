@@ -72,8 +72,9 @@ class N_SMOOTH_CANDLE(QObject):
         return self.df.iloc[-1]
     
     def threadpool_asyncworker(self,_candle):
-        worker = FastWorker(self,self.update,_candle)
-        self.threadpool.start(worker)
+        self.worker = None
+        self.worker = FastWorker(self,self.update,_candle)
+        self.threadpool.start(self.worker)
         
     def get_candles_as_dataframe(self, candles: List[OHLCV]=[]):
         if candles == []:

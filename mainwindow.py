@@ -17,7 +17,6 @@ class MainWindow(WindowBase):
     def closeEvent(self, event: QCloseEvent) -> None:
         quit_msg = QCoreApplication.translate("MainWindow", u"To close window click button OK", None)   
         mgsBox = MessageBox("Quit Application?", quit_msg, self.window())
-        #mgsBox.setContentCopyable(True)
         if mgsBox.exec():
             self.close_window()
             self.deleteLater()

@@ -177,6 +177,7 @@ class BasicMA(GraphicsObject):
             
     def threadpool_asyncworker(self,candle=None):
         self.disconnect_connection()
+        self.worker = None
         worker = FastWorker(self,self.first_load_data)
         worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.AutoConnection)
         self.threadpool.start(worker)
@@ -227,6 +228,7 @@ class BasicMA(GraphicsObject):
             self.hide()
 
     def setdata_worker(self,sig_update_candle):
+        self.worker = None
         worker = FastWorker(self,self.update_data,sig_update_candle)
         worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.SingleShotConnection)
         self.threadpool.start(worker)

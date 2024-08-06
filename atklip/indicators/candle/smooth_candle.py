@@ -61,8 +61,9 @@ class SMOOTH_CANDLE(QObject):
         return self.df.iloc[-1] 
 
     def threadpool_asyncworker(self,_candle):
-        worker = FastWorker(self,self.update,_candle)
-        self.threadpool.start(worker)
+        self.worker = None
+        self.worker = FastWorker(self,self.update,_candle)
+        self.threadpool.start(self.worker)
         
     def get_candles_as_dataframe(self):
         df = pd.DataFrame([data.__dict__ for data in self.candles])

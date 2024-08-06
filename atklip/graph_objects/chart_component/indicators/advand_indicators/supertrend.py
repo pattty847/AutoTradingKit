@@ -114,6 +114,7 @@ class BasicSPTrend(PlotDataItem):
             return abs(percent)
     
     def setdata_worker(self,lastcandle):
+        self.worker = None
         worker = FastWorker(self,self.update_data,lastcandle)
         worker.signals.setdata.connect(self.set_Data)
         self.threadpool.start(worker)
@@ -282,6 +283,7 @@ class CurrentSPTrend(PlotDataItem):
     
     
     def setdata_worker(self,lastcandle):
+        self.worker = None
         worker = FastWorker(self,self.update_data,lastcandle)
         worker.signals.setdata.connect(self.set_Data)
         self.threadpool.start(worker)

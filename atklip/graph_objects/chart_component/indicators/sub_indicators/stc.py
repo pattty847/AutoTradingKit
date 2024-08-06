@@ -228,6 +228,7 @@ class BasicSTC(GraphicsObject):
             self.macd_line.setPen(color=self.has["styles"]["pen_macd_line"], width=self.has["styles"]["width_macd_line"],style=self.has["styles"]["style_macd_line"])
         
     def threadpool_asyncworker(self,candle=None):
+        self.worker = None
         if candle == None:
             self.worker = FastWorker(self,self.first_load_data)
         else:
@@ -295,6 +296,7 @@ class BasicSTC(GraphicsObject):
             self.hide()
 
     def setdata_worker(self,sig_update_candle):
+        self.worker = None
         self.worker = FastWorker(self,self.update_data,sig_update_candle)
         self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.SingleShotConnection)
         self.threadpool.start(self.worker)
