@@ -87,8 +87,10 @@ class BasicMACD(GraphicsObject):
         self.signal_delete.connect(self.delete)
         
         self.macd_line = PlotDataItem(pen="red")  # for z value
+        self.macd_line.setFlag(QGraphicsItem.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
         self.macd_line.setParentItem(self)
         self.signal = PlotDataItem(pen="orange")
+        self.signal.setFlag(QGraphicsItem.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
         self.signal.setParentItem(self)
         
         self._INDICATOR : pd.DataFrame = pd.DataFrame([])
@@ -113,7 +115,7 @@ class BasicMACD(GraphicsObject):
         self.last_pos.connect(self.price_line.update_price_line_indicator,Qt.ConnectionType.AutoConnection)
 
         self.threadpool = QThreadPool(self)
-        #self.threadpool.setMaxThreadCount(8)
+        self.threadpool.setMaxThreadCount(1)
         
         self.sig_change_yaxis_range.connect(get_last_pos_worker, Qt.ConnectionType.AutoConnection)
         
@@ -121,9 +123,9 @@ class BasicMACD(GraphicsObject):
         self.chart.sig_remove_source.connect(self.replace_source,Qt.ConnectionType.AutoConnection)
         
 
-        self.has["inputs"]["source"].sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
-        self.has["inputs"]["source"].sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.QueuedConnection)
-        self.has["inputs"]["source"].sig_add_candle.connect(self.threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
+        self.has["inputs"]["source"].sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
+        self.has["inputs"]["source"].sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
+        self.has["inputs"]["source"].sig_add_candle.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
         
     def delete(self):
         self.chart.sig_remove_item.emit(self)
@@ -171,12 +173,12 @@ class BasicMACD(GraphicsObject):
         
         self.sig_change_yaxis_range.emit()
         
-        QCoreApplication.processEvents()
+        #QCoreApplication.processEvents()
         
         
-        self.has["inputs"]["source"].sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
-        self.has["inputs"]["source"].sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.QueuedConnection)
-        self.has["inputs"]["source"].sig_add_candle.connect(self.threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
+        self.has["inputs"]["source"].sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
+        self.has["inputs"]["source"].sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
+        self.has["inputs"]["source"].sig_add_candle.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
         
 
     def replace_source(self,source_name):
@@ -286,12 +288,13 @@ class BasicMACD(GraphicsObject):
     def threadpool_asyncworker(self,candle=None):
         self.worker = None
         if candle == None:
-            self.worker = FastWorker(self,self.first_load_data)
+            self.worker = FastWorker(self.threadpool,self.first_load_data)
         else:
-            self.worker = FastWorker(self,self.update_data,candle)
-        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.SingleShotConnection)
-        self.worker.signals.setdata.connect(self.update_histogram,Qt.ConnectionType.SingleShotConnection)
-        self.threadpool.start(self.worker)
+            self.worker = FastWorker(self.threadpool,self.update_data,candle)
+        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.AutoConnection)
+        self.worker.signals.setdata.connect(self.update_histogram,Qt.ConnectionType.AutoConnection)
+        self.worker.start()
+        #self.threadpool.start(self.worker)
     
     def update_histogram(self,data):
         xdata,histogram = data[0], data[3]
@@ -328,11 +331,11 @@ class BasicMACD(GraphicsObject):
         self.sig_change_indicator_name.emit(self.has["name"])
         
         setdata.emit((xdata,macd,signalma,histogram))
-        QCoreApplication.processEvents()
+        #QCoreApplication.processEvents()
         
-        self.has["inputs"]["source"].sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
-        self.has["inputs"]["source"].sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.QueuedConnection)
-        self.has["inputs"]["source"].sig_add_candle.connect(self.threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
+        self.has["inputs"]["source"].sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
+        self.has["inputs"]["source"].sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
+        self.has["inputs"]["source"].sig_add_candle.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
         
     def get_yaxis_param(self):
         _value = None
@@ -357,9 +360,10 @@ class BasicMACD(GraphicsObject):
 
     def setdata_worker(self,sig_update_candle):
         self.worker = None
-        self.worker = FastWorker(self,self.update_data,sig_update_candle)
-        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.SingleShotConnection)
-        self.threadpool.start(self.worker)
+        self.worker = FastWorker(self.threadpool,self.update_data,sig_update_candle)
+        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.AutoConnection)
+        self.worker.start()
+        #self.threadpool.start(self.worker)
     
     def paint(self, p:QPainter, *args):
         self.picture.play(p)

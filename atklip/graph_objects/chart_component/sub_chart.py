@@ -1,4 +1,5 @@
 import asyncio
+from functools import lru_cache
 from typing import Union, Optional, Any, List, TYPE_CHECKING
 import time
 from PySide6 import QtGui
@@ -119,8 +120,9 @@ class SubChart(PlotWidget):
 
         self.draw_object = None
         self.indicator = None
+        self.is_mouse_click = False
         self.threadpool = QThreadPool(self)
-        #self.threadpool.setMaxThreadCount(8)
+        self.threadpool.setMaxThreadCount(1)
         
         self.sources = {}
         self.exchanges = {}
@@ -219,8 +221,13 @@ class SubChart(PlotWidget):
         crypto_ex = CryptoExchange(self)
         new_echange = {"id":f"{symbol}_{interval}","exchange":crypto_ex,}
         self.add_to_exchanges(new_echange)
-        worker = FastStartThread(crypto_ex,self.reset_exchange, apikey,secretkey,crypto_ex,exchange_name,symbol,interval)
-        self.threadpool.start(worker)
+        if self.worker != None:
+            if isinstance(self.worker,FastStartThread):
+                self.worker.stop_thread()
+        self.worker = None
+        self.worker = FastStartThread(crypto_ex,self.reset_exchange, apikey,secretkey,crypto_ex,exchange_name,symbol,interval)
+        self.worker.start_thread()
+        #self.threadpool.start(worker)
     
     async def reset_exchange(self,apikey:str="",secretkey:str="",crypto_ex: CryptoExchange=None,exchange_name:str="binanceusdm",symbol:str="",interval:str=""):
         if apikey != "":
@@ -293,7 +300,7 @@ class SubChart(PlotWidget):
                         new_update = self.jp_candle.update([pre_ohlcv,last_ohlcv])
                         if firt_run == False:
                             self.first_run.emit()
-                            QCoreApplication.processEvents()
+                            #QCoreApplication.processEvents()
                             firt_run = True
                 else:
                     if exchange != None:
@@ -308,6 +315,9 @@ class SubChart(PlotWidget):
         except Exception as e:
             pass
     async def close(self):
+        if self.worker != None:
+            if isinstance(self.worker,FastStartThread):
+                self.worker.stop_thread()
         while list(self.exchanges.keys()) != []:
             for key,value in list(self.exchanges.items()):
                 print(key,value)
@@ -412,8 +422,8 @@ class SubChart(PlotWidget):
             self.vLine.hide()
             self.crosshair_x_value_change.emit(("#363a45",None))
             self.crosshair_y_value_change.emit(("#363a45",None))
-        self.vb.viewTransformChanged()
-        self.vb.informViewBoundsChanged()
+        # self.vb.viewTransformChanged()
+        # self.vb.informViewBoundsChanged()
     # Override addItem method
     def addItem(self, *args: Any, **kwargs: Any) -> None:
         if hasattr(args[0], "_vl_kwargs") and args[0]._vl_kwargs is not None:
@@ -486,46 +496,56 @@ class SubChart(PlotWidget):
         if self.crosshair_enabled:
             self.show_crosshair()
         super().enterEvent(ev)
-    def find_nearest_value(self,x):
-        closest_index = round_(x)
-        last_index = self.jp_candle.last_data().index
-        if last_index < closest_index:
-            closest_index = last_index
+    # @lru_cache()
+    def find_nearest_value(self,closest_index):
+        # closest_index = round_(x)
+        # last_index = self.jp_candle.last_data().index
+        # if last_index < closest_index:
+        #     closest_index = last_index
         sub_ohlcv = self.jp_candle.dict_index_ohlcv.get(closest_index)
         _time = sub_ohlcv.time
         main_ohlcv = self.Chart.jp_candle.dict_time_ohlcv.get(_time)
 
         return sub_ohlcv, main_ohlcv 
-    def mouseMoveEvent(self, ev: QEvent) -> None:
-        self._precision = self.get_precision()
-        """Mouse moved in PlotWidget"""
-        try:
-            self.ev_pos = ev.position()
-        except:
-            self.ev_pos = ev.pos()
-        self.lastMousePositon = self.plotItem.vb.mapSceneToView(self.ev_pos)
-        if self.crosshair_enabled and self.sceneBoundingRect().contains(self.ev_pos):
-            self.mouse_on_vb = True
-            try:
-                sub_ohlcv, main_ohlcv = self.find_nearest_value(self.lastMousePositon.x())
-                
-                print(sub_ohlcv, main_ohlcv)
-                #print(sub_ohlcv.index,main_ohlcv.index,sub_ohlcv.time,main_ohlcv.time)
-                
-                self._update_crosshair_position(self.lastMousePositon)
-                if main_ohlcv is not None:
-                    self._parent.sig_show_hide_cross.emit((True,main_ohlcv.index))
-                    #QCoreApplication.processEvents()
-                data = [sub_ohlcv.open,sub_ohlcv.high,sub_ohlcv.low,sub_ohlcv.close]
-                self.Chart.sig_show_candle_infor.emit(data)
-                self.show_hide_cross((True,sub_ohlcv.index))
+    def mousePressEvent(self, ev):
+        super().mousePressEvent(ev)
+        self.is_mouse_click =  True
 
+    def mouseReleaseEvent(self, ev):
+        super().mouseReleaseEvent(ev)
+        self.is_mouse_click = False
+    def mouseMoveEvent(self, ev: QEvent) -> None:
+        if not self.is_mouse_click:
+            self._precision = self.get_precision()
+            """Mouse moved in PlotWidget"""
+            try:
+                self.ev_pos = ev.position()
             except:
-                pass
-        elif not self.sceneBoundingRect().contains(self.ev_pos):
-            self.mouse_on_vb = False
-        
-        self.emit_mouse_position(self.lastMousePositon)
+                self.ev_pos = ev.pos()
+            self.lastMousePositon = self.plotItem.vb.mapSceneToView(self.ev_pos)
+            if self.crosshair_enabled and self.sceneBoundingRect().contains(self.ev_pos):
+                self.mouse_on_vb = True
+                try:
+                    closest_index = round_(self.lastMousePositon.x())
+                    last_index = self.jp_candle.last_data().index
+                    if last_index < closest_index:
+                        closest_index = last_index
+                    sub_ohlcv, main_ohlcv = self.find_nearest_value(closest_index)
+                    
+                    self._update_crosshair_position(self.lastMousePositon)
+                    if main_ohlcv is not None:
+                        self._parent.sig_show_hide_cross.emit((True,main_ohlcv.index))
+                        ##QCoreApplication.processEvents()
+                    data = [sub_ohlcv.open,sub_ohlcv.high,sub_ohlcv.low,sub_ohlcv.close]
+                    self.Chart.sig_show_candle_infor.emit(data)
+                    self.show_hide_cross((True,sub_ohlcv.index))
+
+                except:
+                    pass
+            elif not self.sceneBoundingRect().contains(self.ev_pos):
+                self.mouse_on_vb = False
+            
+            self.emit_mouse_position(self.lastMousePositon)
         super().mouseMoveEvent(ev)
 
     def emit_mouse_position(self, lastpos):

@@ -66,15 +66,15 @@ class BasicSMC(GraphicsObject):
         self.threadpool = QThreadPool(self)
         
         self._INDICATOR : pd.DataFrame = pd.DataFrame([])
-        #self.threadpool.setMaxThreadCount(8)
+        self.threadpool.setMaxThreadCount(1)
         
         self.chart.sig_update_source.connect(self.change_source,Qt.ConnectionType.AutoConnection)
         self.chart.sig_remove_source.connect(self.replace_source,Qt.ConnectionType.AutoConnection)
         self.signal_delete.connect(self.delete)
         
-        self.has["inputs"]["source"].sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
-        self.has["inputs"]["source"].sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.QueuedConnection)
-        self.has["inputs"]["source"].sig_add_candle.connect(self.setdata_worker,Qt.ConnectionType.QueuedConnection)
+        self.has["inputs"]["source"].sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
+        self.has["inputs"]["source"].sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
+        self.has["inputs"]["source"].sig_add_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
 
     def delete(self):
         self.chart.sig_remove_item.emit(self)
@@ -169,9 +169,10 @@ class BasicSMC(GraphicsObject):
         
     def threadpool_asyncworker(self,candle=None):
         self.worker = None
-        self.worker = FastWorker(self,self.first_load_data)
-        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.SingleShotConnection)
-        self.threadpool.start(self.worker)
+        self.worker = FastWorker(self.threadpool,self.first_load_data)
+        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.AutoConnection)
+        self.worker.start()
+        #self.threadpool.start(self.worker)
     def first_load_data(self,setdata):
         self.disconnect_connection()
         df:pd.DataFrame = self.has["inputs"]["source"].get_df()
@@ -244,9 +245,10 @@ class BasicSMC(GraphicsObject):
     
     def setdata_worker(self,sig_update_candle):
         self.worker = None
-        self.worker = FastWorker(self,self.update_data,sig_update_candle)
-        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.SingleShotConnection)
-        self.threadpool.start(self.worker)
+        self.worker = FastWorker(self.threadpool,self.update_data,sig_update_candle)
+        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.AutoConnection)
+        self.worker.start()
+        #self.threadpool.start(self.worker)
     
     def set_Data(self,data):
         xData = data[0]
@@ -310,7 +312,7 @@ class BasicSMC(GraphicsObject):
         ub = self._INDICATOR[upper_name].to_numpy()
         xdata = df["index"].to_numpy()
         setdata.emit((xdata,lb,cb,ub))
-        QCoreApplication.processEvents()
+        #QCoreApplication.processEvents()
         
     def on_click_event(self):
         print("zooo day__________________")

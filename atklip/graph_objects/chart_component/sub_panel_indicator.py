@@ -1,3 +1,4 @@
+from functools import lru_cache
 from typing import Union, Optional, Any, List, TYPE_CHECKING
 import time
 from PySide6 import QtGui
@@ -107,10 +108,12 @@ class ViewSubPanel(PlotWidget):
         #self.ObjectManager = UniqueObjectManager()
 
         self.draw_object = None
+        self.is_mouse_click = False
         self.indicator = None
         self.first_run = False
         self.threadpool = QThreadPool(self)
-        #self.threadpool.setMaxThreadCount(8)
+        self.threadpool.setMaxThreadCount(1)
+        self.is_cutting_replay = False
         
         self.indicator_data = ()
         self.panel:IndicatorPanel = None
@@ -133,7 +136,6 @@ class ViewSubPanel(PlotWidget):
         mainwindow = indicator_data[1]
         self.indicator_type =_indicator_type = indicator_data[0][1]
         self._precision = self.Chart.get_precision()
-        "add price line"
         if _indicator_type == IndicatorType.MACD:
             self.indicator = BasicMACD(self.get_last_pos_worker,self.Chart,self)
         elif _indicator_type == IndicatorType.RSI:
@@ -158,12 +160,12 @@ class ViewSubPanel(PlotWidget):
             self.indicator = BasicSTOCH(self.get_last_pos_worker,self.Chart,self)
             
             
+        if self.indicator:
+            self.indicator.reset_indicator()
+            self.panel = IndicatorPanel(mainwindow,self, self.indicator)
+            self.container_indicator_wg.add_indicator_panel(self.panel)
+            self.add_item(self.indicator)
             
-   
-        self.panel = IndicatorPanel(mainwindow,self, self.indicator)
-        self.container_indicator_wg.add_indicator_panel(self.panel)
-        self.add_item(self.indicator)
-        self.indicator.reset_indicator()
     
     def setdockLabel(self,docklabel):
         "để float kết nối more btn với float dock"
@@ -209,9 +211,10 @@ class ViewSubPanel(PlotWidget):
 
     def get_last_pos_worker(self):
         self.worker = None
-        self.worker = FastWorker(self,self.get_last_pos_of_indicator)
-        self.worker.signals.setdata.connect(self.auto_xrange,Qt.ConnectionType.SingleShotConnection)
-        self.threadpool.start(self.worker)
+        self.worker = FastWorker(self.threadpool,self.get_last_pos_of_indicator)
+        self.worker.signals.setdata.connect(self.auto_xrange,Qt.ConnectionType.QueuedConnection)
+        self.worker.start()
+        #self.threadpool.start(self.worker)
     def get_last_pos_of_indicator(self,setdata):
         if self.indicator != None:
             if self.indicator.has["inputs"]["indicator_type"] != IndicatorType.VOLUME:
@@ -277,8 +280,8 @@ class ViewSubPanel(PlotWidget):
         else:
             self.vLine.hide()
             self.hLine.hide()
-        self.vb.viewTransformChanged()
-        self.vb.informViewBoundsChanged()
+        # self.vb.viewTransformChanged()
+        # self.vb.informViewBoundsChanged()
         
 
     def _add_crosshair(self, crosshair_pen: QtGui.QPen, crosshair_text_kwargs: dict) -> None:
@@ -331,59 +334,60 @@ class ViewSubPanel(PlotWidget):
             self.show_crosshair()
         super().enterEvent(ev)
 
-    def old_find_nearest_value(self,x, array):
+    # @lru_cache()
+    def find_nearest_value(self,closest_value):
         #absolute_differences = np.abs(array - x)
         # Tìm chỉ số của phần tử có khoảng cách nhỏ nhất
         #index_of_closest_value = np.argmin(absolute_differences)
         # Lấy giá trị tại chỉ số tìm được
         #closest_value = array[index_of_closest_value]
-        closest_value = round_(x)
-        if array[-1] <= closest_value:
-            closest_value = array[-1]
-        index_of_closest_value = np.where(array == closest_value)[0][0]
-        #print(x,index,index_of_closest_value, closest_value)
-        return index_of_closest_value, closest_value
-    def find_nearest_value(self,x):
-        #absolute_differences = np.abs(array - x)
-        # Tìm chỉ số của phần tử có khoảng cách nhỏ nhất
-        #index_of_closest_value = np.argmin(absolute_differences)
-        # Lấy giá trị tại chỉ số tìm được
-        #closest_value = array[index_of_closest_value]
-        closest_value = round_(x)
-        last_index = self.jp_candle.last_data().index
-        if last_index < closest_value:
-            closest_value = last_index
+        # closest_value = round_(x)
+        # last_index = self.jp_candle.last_data().index
+        # if last_index < closest_value:
+        #     closest_value = last_index
         # index_of_closest_value = np.where(array == closest_value)[0][0]
         ohlcv = self.jp_candle.dict_index_ohlcv[closest_value]
         #print(x,index,index_of_closest_value, closest_value)
         return ohlcv #index_of_closest_value, closest_value
-    def mouseMoveEvent(self, ev: QEvent) -> None:
-        self._precision = self.Chart.get_precision()
-        """Mouse moved in PlotWidget"""
-        try:
-            self.ev_pos = ev.position()
-        except:
-            self.ev_pos = ev.pos()
-        self.lastMousePositon = self.plotItem.vb.mapSceneToView(self.ev_pos)
-        if self.crosshair_enabled and self.sceneBoundingRect().contains(self.ev_pos):
-            self.mouse_on_vb = True
-            nearest_index = None
-            try:
-                ohlcv:OHLCV = self.find_nearest_value(self.lastMousePositon.x())
-                self.nearest_value = ohlcv.time
-                data = [ohlcv.open,ohlcv.high,ohlcv.low,ohlcv.close]
-                self._update_crosshair_position(self.lastMousePositon)
-              
-                self._parent.sig_show_hide_cross.emit((True,ohlcv.index))
-                #QCoreApplication.processEvents()
-                self.Chart.sig_show_candle_infor.emit(data)
+    def mousePressEvent(self, ev):
+        super().mousePressEvent(ev)
+        self.is_mouse_click =  True
 
+    def mouseReleaseEvent(self, ev):
+        super().mouseReleaseEvent(ev)
+        self.is_mouse_click = False
+    def mouseMoveEvent(self, ev: QEvent) -> None:
+        if not self.is_mouse_click:
+            self._precision = self.Chart.get_precision()
+            """Mouse moved in PlotWidget"""
+            try:
+                self.ev_pos = ev.position()
             except:
-                pass
-        elif not self.sceneBoundingRect().contains(self.ev_pos):
-            self.mouse_on_vb = False
-        
-        self.emit_mouse_position(self.lastMousePositon)
+                self.ev_pos = ev.pos()
+            self.lastMousePositon = self.plotItem.vb.mapSceneToView(self.ev_pos)
+            if self.crosshair_enabled and self.sceneBoundingRect().contains(self.ev_pos):
+                self.mouse_on_vb = True
+                nearest_index = None
+                try:
+                    closest_index = round_(self.lastMousePositon.x())
+                    last_index = self.jp_candle.last_data().index
+                    if last_index < closest_index:
+                        closest_index = last_index
+                    ohlcv:OHLCV = self.find_nearest_value(closest_index)
+                    self.nearest_value = ohlcv.time
+                    data = [ohlcv.open,ohlcv.high,ohlcv.low,ohlcv.close]
+                    self._update_crosshair_position(self.lastMousePositon)
+                
+                    self._parent.sig_show_hide_cross.emit((True,ohlcv.index))
+                    ##QCoreApplication.processEvents()
+                    self.Chart.sig_show_candle_infor.emit(data)
+
+                except:
+                    pass
+            elif not self.sceneBoundingRect().contains(self.ev_pos):
+                self.mouse_on_vb = False
+            
+            self.emit_mouse_position(self.lastMousePositon)
         super().mouseMoveEvent(ev)
 
     def emit_mouse_position(self, lastpos):

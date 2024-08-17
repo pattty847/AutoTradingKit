@@ -50,11 +50,11 @@ class HEIKINASHI(QObject):
         self.df = pd.DataFrame([])
         
         self.threadpool = QThreadPool(self)
-        #self.threadpool.setMaxThreadCount(8)
+        self.threadpool.setMaxThreadCount(1)
         
-        self._candles.sig_reset_all.connect(self.threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
-        self._candles.sig_update_candle.connect(self.update,Qt.ConnectionType.QueuedConnection)
-        self._candles.sig_add_candle.connect(self.update,Qt.ConnectionType.QueuedConnection)
+        self._candles.sig_reset_all.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
+        self._candles.sig_update_candle.connect(self.update,Qt.ConnectionType.AutoConnection)
+        self._candles.sig_add_candle.connect(self.update,Qt.ConnectionType.AutoConnection)
         
     @property
     def source_name(self):
@@ -72,9 +72,10 @@ class HEIKINASHI(QObject):
     def threadpool_asyncworker(self):
         #if self._candles.candles != []:
         self.worker = None
-        self.worker = FastWorker(self,self.gen_data)
-        self.worker.signals.finished.connect(self.sig_reset_all,Qt.ConnectionType.SingleShotConnection)
-        self.threadpool.start(self.worker)
+        self.worker = FastWorker(self.threadpool,self.gen_data)
+        self.worker.signals.finished.connect(self.sig_reset_all,Qt.ConnectionType.AutoConnection)
+        self.worker.start()
+        #self.threadpool.start(self.worker)
     
     def get_candles_as_dataframe(self):
         df = pd.DataFrame([data.__dict__ for data in self.candles])
@@ -352,7 +353,7 @@ class HEIKINASHI(QObject):
                         
                         
                         self.sig_update_candle.emit(self.candles[-2:])
-                        QCoreApplication.processEvents()
+                        #QCoreApplication.processEvents()
                         return False
                 else:
                     _index = self.candles[-1].index + 1
@@ -373,12 +374,9 @@ class HEIKINASHI(QObject):
                     self.dict_index_ohlcv[ha_candle.index] = ha_candle
                     self.dict_time_ohlcv[ha_candle.time] = ha_candle
                     
-                    
                     new_row = pd.DataFrame([data.__dict__ for data in self.candles[-1:]])
                     # concatenate the existing DataFrame and the new row
                     self.df = pd.concat([self.df, new_row], ignore_index=True)
-                    
-                    
                     self.sig_add_candle.emit(self.candles[-2:])
-                    QCoreApplication.processEvents()
+                    #QCoreApplication.processEvents()
                     return True

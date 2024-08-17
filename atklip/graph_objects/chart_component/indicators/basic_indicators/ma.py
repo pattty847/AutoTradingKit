@@ -61,7 +61,7 @@ class BasicMA(PlotLineItem):
         self.is_reset = False
         
         self.threadpool = QThreadPool(self)
-        #self.threadpool.setMaxThreadCount(8)
+        self.threadpool.setMaxThreadCount(1)
         
         self.chart.sig_update_source.connect(self.change_source,Qt.ConnectionType.AutoConnection)
         
@@ -69,9 +69,9 @@ class BasicMA(PlotLineItem):
         
         self.signal_delete.connect(self.delete)
         
-        self.has["inputs"]["source"].sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
-        self.has["inputs"]["source"].sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.QueuedConnection)
-        self.has["inputs"]["source"].sig_add_candle.connect(self.setdata_worker,Qt.ConnectionType.QueuedConnection)
+        self.has["inputs"]["source"].sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
+        self.has["inputs"]["source"].sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
+        self.has["inputs"]["source"].sig_add_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
         
     def delete(self):
         self.chart.sig_remove_item.emit(self)
@@ -172,9 +172,10 @@ class BasicMA(PlotLineItem):
 
     def threadpool_asyncworker(self,candle=None):
         self.worker = None
-        self.worker = FastWorker(self,self.first_load_data)
-        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.SingleShotConnection)
-        self.threadpool.start(self.worker)
+        self.worker = FastWorker(self.threadpool,self.first_load_data)
+        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.AutoConnection)
+        self.worker.start()
+        #self.threadpool.start(self.worker)
     def get_yaxis_param(self):
         _value = None
         try:
@@ -199,7 +200,6 @@ class BasicMA(PlotLineItem):
         _index = df["index"].to_numpy()
 
         setdata.emit((_index,_data))
-        
         self.sig_change_yaxis_range.emit()
         
         self.has["name"] = f"{self.has["inputs"]["ma_type"].name} {self.has["inputs"]["period"]} {self.has["inputs"]["type"]}"
@@ -220,19 +220,20 @@ class BasicMA(PlotLineItem):
             self.show()
         else:
             self.hide()
-
+    
     def setdata_worker(self,sig_update_candle):
         self.worker = None
-        self.worker = FastWorker(self,self.update_data,sig_update_candle)
-        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.SingleShotConnection)
-        self.threadpool.start(self.worker)
+        self.worker = FastWorker(self.threadpool,self.update_data,sig_update_candle)
+        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.AutoConnection)
+        self.worker.start()
+        #self.threadpool.start(self.worker)
     
     def set_Data(self,data):
         xData = data[0]
         yData = data[1]
         self.setData(xData, yData)
-        self.prepareGeometryChange()
-        self.informViewBoundsChanged()
+        # self.prepareGeometryChange()
+        # self.informViewBoundsChanged()
 
     def get_last_point(self):
         _time = self.xData[-1]
@@ -245,7 +246,7 @@ class BasicMA(PlotLineItem):
         _data = self._INDICATOR.to_numpy()
         _index = df["index"].to_numpy()
         setdata.emit((_index,_data))
-        QCoreApplication.processEvents()
+        #QCoreApplication.processEvents()
     
         
     def on_click_event(self,_object):

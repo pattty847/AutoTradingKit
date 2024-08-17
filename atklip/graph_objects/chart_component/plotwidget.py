@@ -122,6 +122,7 @@ class ViewPlotWidget(PlotWidget):
         self.vb:PlotViewBox = self.getViewBox()
         self.lastMousePositon = None
         self.nearest_value = None
+        self.is_mouse_click = False
         #self.ObjectManager = UniqueObjectManager()
         self.mode_replay = False
         self.replay_enabled = False
@@ -162,8 +163,8 @@ class ViewPlotWidget(PlotWidget):
             self.vLine.hide()
             self.crosshair_x_value_change.emit(("#363a45",None))
             self.crosshair_y_value_change.emit(("#363a45",None))
-        self.vb.viewTransformChanged()
-        self.vb.informViewBoundsChanged()
+        # self.vb.viewTransformChanged()
+        # self.vb.informViewBoundsChanged()
             
     # Override addItem method
     def add_item(self,args):
@@ -296,51 +297,61 @@ class ViewPlotWidget(PlotWidget):
             self.show_crosshair()
         super().enterEvent(ev)
 
-    
-    def find_nearest_value(self,x):
+    # @lru_cache()
+    def find_nearest_value(self,closest_index):
         #absolute_differences = np.abs(array - x)
         # Tìm chỉ số của phần tử có khoảng cách nhỏ nhất
         #index_of_closest_value = np.argmin(absolute_differences)
         # Lấy giá trị tại chỉ số tìm được
         #closest_value = array[index_of_closest_value]
-        closest_index = round_(x)
-        last_index = self.jp_candle.last_data().index
-        if last_index < closest_index:
-            closest_index = last_index
+        #closest_index = round_(x)
         # index_of_closest_value = np.where(array == closest_value)[0][0]
         ohlcv = self.jp_candle.dict_index_ohlcv[closest_index]
         #print(x,index,index_of_closest_value, closest_value)
         return ohlcv #index_of_closest_value, closest_value
+    
+    def mousePressEvent(self, ev):
+        super().mousePressEvent(ev)
+        self.is_mouse_click =  True
+
+    def mouseReleaseEvent(self, ev):
+        super().mouseReleaseEvent(ev)
+        self.is_mouse_click = False
 
     def mouseMoveEvent(self, ev: QEvent) -> None:
         """Mouse moved in PlotWidget"""
-        try:
-            self.ev_pos = ev.position()
-        except:
-            self.ev_pos = ev.pos()
-        self.lastMousePositon = self.plotItem.vb.mapSceneToView(self.ev_pos)
-
-        if self.crosshair_enabled and self.sceneBoundingRect().contains(self.ev_pos):
-            if not self.hLine.isVisible():
-                self.hLine.show()
-            self.mouse_on_vb = True
-            nearest_index = None
+        if not self.is_mouse_click:
             try:
-                ohlcv:OHLCV = self.find_nearest_value(self.lastMousePositon.x())
-                self.nearest_value = ohlcv.time
-                data = [ohlcv.open,ohlcv.high,ohlcv.low,ohlcv.close]
-                self._update_crosshair_position(self.lastMousePositon)
-              
-                self._parent.sig_show_hide_cross.emit((True,ohlcv.index))
-                #QCoreApplication.processEvents()
-                self.sig_show_candle_infor.emit(data)
-                #QCoreApplication.processEvents()
+                self.ev_pos = ev.position()
             except:
-                pass
-        elif not self.sceneBoundingRect().contains(self.ev_pos):
-            self.mouse_on_vb = False
-        
-        self.emit_mouse_position(self.lastMousePositon)
+                self.ev_pos = ev.pos()
+            self.lastMousePositon = self.plotItem.vb.mapSceneToView(self.ev_pos)
+
+            if self.crosshair_enabled and self.sceneBoundingRect().contains(self.ev_pos):
+                if not self.hLine.isVisible():
+                    self.hLine.show()
+                self.mouse_on_vb = True
+                nearest_index = None
+                try:
+                    closest_index = round_(self.lastMousePositon.x())
+                    last_index = self.jp_candle.last_data().index
+                    if last_index < closest_index:
+                        closest_index = last_index
+                    ohlcv:OHLCV = self.find_nearest_value(closest_index)
+                    self.nearest_value = ohlcv.time
+                    data = [ohlcv.open,ohlcv.high,ohlcv.low,ohlcv.close]
+                    self._update_crosshair_position(self.lastMousePositon)
+                
+                    self._parent.sig_show_hide_cross.emit((True,ohlcv.index))
+                    ##QCoreApplication.processEvents()
+                    self.sig_show_candle_infor.emit(data)
+                    ##QCoreApplication.processEvents()
+                except:
+                    pass
+            elif not self.sceneBoundingRect().contains(self.ev_pos):
+                self.mouse_on_vb = False
+            
+            self.emit_mouse_position(self.lastMousePositon)
         super().mouseMoveEvent(ev)
 
     def emit_mouse_position(self, lastpos):

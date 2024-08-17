@@ -25,7 +25,7 @@ class MainWindow(WindowBase):
             event.ignore()
 
 def main():
-    setTheme(Theme.DARK)
+    setTheme(Theme.DARK,True,True)
     app = QApplication(sys.argv)
     app.setStyle("Fusion")
     app.setApplicationVersion("1.0.0")

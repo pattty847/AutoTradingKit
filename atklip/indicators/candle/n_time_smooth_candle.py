@@ -53,10 +53,10 @@ class N_SMOOTH_CANDLE(QObject):
         self.df = pd.DataFrame([])
         
         self.threadpool = QThreadPool(self)
-        #self.threadpool.setMaxThreadCount(8)
-        self._candles.sig_reset_all.connect(self.fisrt_gen_data,Qt.ConnectionType.QueuedConnection)
-        self._candles.sig_update_candle.connect(self.update,Qt.ConnectionType.QueuedConnection)
-        self._candles.sig_add_candle.connect(self.update,Qt.ConnectionType.QueuedConnection)
+        self.threadpool.setMaxThreadCount(1)
+        self._candles.sig_reset_all.connect(self.fisrt_gen_data,Qt.ConnectionType.AutoConnection)
+        self._candles.sig_update_candle.connect(self.update,Qt.ConnectionType.AutoConnection)
+        self._candles.sig_add_candle.connect(self.update,Qt.ConnectionType.AutoConnection)
 
     @property
     def source_name(self):
@@ -73,8 +73,9 @@ class N_SMOOTH_CANDLE(QObject):
     
     def threadpool_asyncworker(self,_candle):
         self.worker = None
-        self.worker = FastWorker(self,self.update,_candle)
-        self.threadpool.start(self.worker)
+        self.worker = FastWorker(self.threadpool,self.update,_candle)
+        self.worker.start()
+        #self.threadpool.start(self.worker)
         
     def get_candles_as_dataframe(self, candles: List[OHLCV]=[]):
         if candles == []:
@@ -353,7 +354,7 @@ class N_SMOOTH_CANDLE(QObject):
             self.is_genering = False
         self.sig_reset_all.emit()
 
-    
+
     def update(self, _candle:List[OHLCV]):
         if (self.first_gen == True) and (self.is_genering == False):
             if self._candles.candles != []:
@@ -376,13 +377,13 @@ class N_SMOOTH_CANDLE(QObject):
                                         ]
                     
                     self.sig_update_candle.emit(self.dict_n_ohlcv[f"{self.n}-candles"][-2:])
-                    QCoreApplication.processEvents()
+                    #QCoreApplication.processEvents()
                     return False
                 else:
                     new_row = pd.DataFrame([data.__dict__ for data in self.candles[-1:]])
                     self.df = pd.concat([self.df, new_row], ignore_index=True)
                     self.sig_add_candle.emit(self.dict_n_ohlcv[f"{self.n}-candles"][-2:])
-                    QCoreApplication.processEvents()
+                    #QCoreApplication.processEvents()
                     return True
                 
         return False

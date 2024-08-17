@@ -38,7 +38,7 @@ class Chart(ViewPlotWidget):
         self.worker = None
         
         self.threadpool = QThreadPool(self)
-        #self.threadpool.setMaxThreadCount(8)
+        self.threadpool.setMaxThreadCount(4)
 
         self.vb.symbol, self.vb.interval = self.symbol, self.interval
         
@@ -140,8 +140,13 @@ class Chart(ViewPlotWidget):
         crypto_ex = CryptoExchange(self)
         new_echange = {"id":f"{symbol}_{interval}","exchange":crypto_ex,}
         self.add_to_exchanges(new_echange)
-        worker = FastStartThread(crypto_ex,self.reset_exchange, apikey,secretkey,crypto_ex,exchange_name,symbol,interval)
-        self.threadpool.start(worker)
+        if self.worker != None:
+            if isinstance(self.worker,FastStartThread):
+                self.worker.stop_thread()
+        self.worker = None
+        self.worker = FastStartThread(crypto_ex,self.reset_exchange, apikey,secretkey,crypto_ex,exchange_name,symbol,interval)
+        self.worker.start_thread()
+        # self.threadpool.start(self.worker)
 
     async def reset_exchange(self,apikey:str="",secretkey:str="",crypto_ex: CryptoExchange=None,exchange_name:str="binanceusdm",symbol:str="",interval:str=""):
         if apikey != "":
@@ -152,6 +157,7 @@ class Chart(ViewPlotWidget):
         exchange = crypto_ex.setupEchange(apikey=self.apikey, secretkey=self.secretkey,exchange_name=exchange_name)
         # exchange.streaming['keepAlive'] = 10000 
         # exchange.streaming['maxPingPongMisses'] = 1
+        
         data = []
         if exchange != None:
             data = await exchange.fetch_ohlcv(symbol,interval,limit=1500) 
@@ -190,23 +196,23 @@ class Chart(ViewPlotWidget):
                         elif "fetchOHLCV" in list(exchange.has.keys()):
                             _ohlcv = await exchange.fetch_ohlcv(symbol,interval,limit=2)
                         else:
-                            time.sleep(1)
+                            await asyncio.sleep(0.3)
                             continue
                     except Exception as ex:
-                        time.sleep(1)
+                        await asyncio.sleep(0.3)
                         continue
-
+                    # print(_ohlcv)
                     if len(_ohlcv) >= 2 and (self.symbol == symbol and self.interval == interval and exchange.id == self.exchange_name):
                         #print("update candle")
                         pre_ohlcv = OHLCV(_ohlcv[-2][1],_ohlcv[-2][2],_ohlcv[-2][3],_ohlcv[-2][4], round((_ohlcv[-2][2]+_ohlcv[-2][3])/2,self._precision) , round((_ohlcv[-2][2]+_ohlcv[-2][3]+_ohlcv[-2][4])/3,self._precision), round((_ohlcv[-2][1]+_ohlcv[-2][2]+_ohlcv[-2][3]+_ohlcv[-2][4])/4,self._precision),_ohlcv[-2][5],_ohlcv[-2][0]/1000,0)
                         last_ohlcv = OHLCV(_ohlcv[-1][1],_ohlcv[-1][2],_ohlcv[-1][3],_ohlcv[-1][4], round((_ohlcv[-1][2]+_ohlcv[-1][3])/2,self._precision) , round((_ohlcv[-1][2]+_ohlcv[-1][3]+_ohlcv[-1][4])/3,self._precision), round((_ohlcv[-1][1]+_ohlcv[-1][2]+_ohlcv[-1][3]+_ohlcv[-1][4])/4,self._precision),_ohlcv[-1][5],_ohlcv[-1][0]/1000,0)
                         new_update = self.jp_candle.update([pre_ohlcv,last_ohlcv])
-                        print(last_ohlcv)
+                        #print(last_ohlcv)
                         # last_df = self.jp_candle.get_last_row_df()
                         # df = self.jp_candle.get_df()
                         if firt_run == False:
                             self.first_run.emit()
-                            QCoreApplication.processEvents()
+                            #QCoreApplication.processEvents()
                             firt_run = True
                 else:
                     if exchange != None:

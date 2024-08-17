@@ -1,8 +1,12 @@
-import asyncio
+import asyncio,os
 from asyncio import run
 import sys
 import traceback
+from typing import Callable
 from PySide6.QtCore import QObject, Signal, QRunnable, Slot, QThreadPool
+
+from .threadpool import QThreadPool_global
+
 
 class WorkerSignals(QObject):
     setdata = Signal(tuple)  # setdata có graph object
@@ -11,8 +15,6 @@ class WorkerSignals(QObject):
     update_signal = Signal(list)
     sig_object = Signal(object)
     sig_process_value = Signal(float)
-
-
 
 class ProcessWorker(QRunnable):
     "Worker này dùng để update  data trong một cho graph object khi có data mới"
@@ -39,85 +41,39 @@ class ProcessWorker(QRunnable):
 
 class FastWorker(QRunnable):
     "Worker này dùng để update  data trong một cho graph object khi có data mới"
-    def __init__(self,parent,fn, *args, **kwargs):
+    def __init__(self,threadpool:QThreadPool=None,fn:Callable=None, *args, **kwargs):
         super(FastWorker, self).__init__()
         self.fn = fn
         self.args = args
-        self.kwargs = kwargs
+        self.kwargs = kwargs #.copy()
         self.signals = WorkerSignals() 
+        if threadpool != None:
+            self.threadpool = QThreadPool_global
+        else:
+            self.threadpool = QThreadPool_global
         self.kwargs['setdata'] = self.signals.setdata
-        # self.qtheadpool = QThreadPool(parent)
-        # self.signals.finished.connect(self.stop_thread)
-        # self.signals.error.connect(self.stop_thread)
-        # parent.destroyed.connect(self.stop_thread)
         self.setAutoDelete(True)
-    # def start_thread(self):
-    #     self.qtheadpool.start(self)
     
-    # def stop_thread(self):
-    #     try:
-    #         self.qtheadpool.deleteLater()
-    #     except Exception as e:
-    #         self.qtheadpool = None
+    def start(self,prio:int=0):
+        self.threadpool.start(self,prio)
+    
+    # def stop_worker(self):
+    #     self.signals.deleteLater()
+
     @Slot()
     def run(self):
         try:
             self.fn(*self.args, **self.kwargs)
-            self.signals.finished.emit()
         except Exception as e:
             traceback.print_exception(e)
-            self.signals.error.emit()
+            # self.signals.error.emit()
+        finally:
+            # self.signals.finished.emit()
+            self.signals.deleteLater()
             
 class FastStartSignal(QObject):
     error = Signal()
     finished = Signal()
-
-class FastStartThread(QRunnable):
-    "Worker này dùng để update  data trong một cho graph object khi có data mới"
-    def __init__(self,parent,fn, *args, **kwargs):
-        super(FastStartThread, self).__init__()
-        self.parent:QObject = parent
-        self.fn = fn
-        self.args = args
-        self.kwargs = kwargs
-        self.signals = FastStartSignal() 
-        # self.qtheadpool = QThreadPool(parent)
-        self.signals.finished.connect(self.stop_thread)
-        # self.signals.error.connect(self.stop_thread)
-        self.setAutoDelete(True)
-        # self.loop = asyncio.new_event_loop()
-        # asyncio.set_event_loop(self.loop)
-        # parent.destroyed.connect(self.stop_thread)
-    
-    # def start_thread(self):
-    #     self.qtheadpool.start(self)
-    
-    def stop_thread(self):
-        try:
-            self.parent.deleteLater()
-        except:
-            pass
-        # if self.loop != None:
-        #     try:
-        #         self.loop.stop()
-        #         self.loop.close()
-        #     except Exception as e:
-        #         self.loop = None
-
-    @Slot()
-    def run(self):
-        try:
-            run(self.fn(*self.args, **self.kwargs))
-            # self.loop.create_task(self.fn(*self.args, **self.kwargs))
-            # self.loop.run_forever()
-        except Exception as e:
-            # traceback.print_exception(e)
-            self.signals.error.emit()
-        finally:
-            try:
-                self.signals.finished.emit()
-            except:
-                pass
 
 class SimpleWorker(QRunnable):
     "Worker này dùng để update  data trong một cho graph object khi có data mới"

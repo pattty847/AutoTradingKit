@@ -51,11 +51,11 @@ class ConfigManager(QObject):
                 raise ValueError('Arguments must be passed as tuples with two elements')
             key, value = arg[0], arg[1]
             self.sig_set_single_data.emit((key, value))
-            QCoreApplication.processEvents()
+            #QCoreApplication.processEvents()
 
         for key, value in kwargs.items():
             self.sig_set_single_data.emit((key, value))
-            QCoreApplication.processEvents()
+            #QCoreApplication.processEvents()
 
     def get_config_value(self, key, default=None):
         keys = key.split('.')

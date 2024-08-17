@@ -89,7 +89,7 @@ class BasicVTX(GraphicsObject):
 
         self.threadpool = QThreadPool(self)
         self.worker = None
-        #self.threadpool.setMaxThreadCount(8)
+        self.threadpool.setMaxThreadCount(1)
         
         self.sig_change_yaxis_range.connect(get_last_pos_worker, Qt.ConnectionType.AutoConnection)
         
@@ -97,9 +97,9 @@ class BasicVTX(GraphicsObject):
         self.chart.sig_remove_source.connect(self.replace_source,Qt.ConnectionType.AutoConnection)
         
 
-        self.has["inputs"]["source"].sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
-        self.has["inputs"]["source"].sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.QueuedConnection)
-        self.has["inputs"]["source"].sig_add_candle.connect(self.threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
+        self.has["inputs"]["source"].sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
+        self.has["inputs"]["source"].sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
+        self.has["inputs"]["source"].sig_add_candle.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
         
     def delete(self):
         self.chart.sig_remove_item.emit(self)
@@ -139,11 +139,11 @@ class BasicVTX(GraphicsObject):
         
         self.set_Data((xdata,vortex,signalma))
         self.sig_change_yaxis_range.emit()
-        QCoreApplication.processEvents()
+        #QCoreApplication.processEvents()
         
-        self.has["inputs"]["source"].sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
-        self.has["inputs"]["source"].sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.QueuedConnection)
-        self.has["inputs"]["source"].sig_add_candle.connect(self.threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
+        self.has["inputs"]["source"].sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
+        self.has["inputs"]["source"].sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
+        self.has["inputs"]["source"].sig_add_candle.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
     
     def replace_source(self,source_name):
         if self.has["inputs"]["source_name"] == source_name:
@@ -208,11 +208,12 @@ class BasicVTX(GraphicsObject):
     def threadpool_asyncworker(self,candle=None):
         self.worker = None
         if candle == None:
-            self.worker = FastWorker(self,self.first_load_data)
+            self.worker = FastWorker(self.threadpool,self.first_load_data)
         else:
-            self.worker = FastWorker(self,self.update_data,candle)
-        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.SingleShotConnection)
-        self.threadpool.start(self.worker)
+            self.worker = FastWorker(self.threadpool,self.update_data,candle)
+        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.AutoConnection)
+        self.worker.start()
+        #self.threadpool.start(self.worker)
     
     def first_load_data(self,setdata):
         self.disconnect_connection()
@@ -242,11 +243,11 @@ class BasicVTX(GraphicsObject):
         self.sig_change_indicator_name.emit(self.has["name"])
         
         setdata.emit((xdata,vortex,signalma))
-        QCoreApplication.processEvents()
+        #QCoreApplication.processEvents()
         
-        self.has["inputs"]["source"].sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
-        self.has["inputs"]["source"].sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.QueuedConnection)
-        self.has["inputs"]["source"].sig_add_candle.connect(self.threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
+        self.has["inputs"]["source"].sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
+        self.has["inputs"]["source"].sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
+        self.has["inputs"]["source"].sig_add_candle.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
         
     def get_yaxis_param(self):
         _value = None
@@ -271,9 +272,10 @@ class BasicVTX(GraphicsObject):
 
     def setdata_worker(self,sig_update_candle):
         self.worker = None
-        self.worker = FastWorker(self,self.update_data,sig_update_candle)
-        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.SingleShotConnection)
-        self.threadpool.start(self.worker)
+        self.worker = FastWorker(self.threadpool,self.update_data,sig_update_candle)
+        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.AutoConnection)
+        self.worker.start()
+        #self.threadpool.start(self.worker)
     
     def paint(self, p:QPainter, *args):
         self.picture.play(p)

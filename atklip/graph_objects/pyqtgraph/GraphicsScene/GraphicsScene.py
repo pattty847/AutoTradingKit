@@ -245,7 +245,7 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
     def mouseDoubleClickEvent(self, ev):
         super().mouseDoubleClickEvent(ev)
         if self.mouseGrabberItem() is None:  ## nobody claimed press; we are free to generate drag/click events
-            self.clickEvents.append(MouseClickEvent(ev, double=True))
+            self.clickEvents.append(MouseClickEvent(ev, _double=True))
         
     def sendHoverEvents(self, ev, exitOnly=False):
         ## if exitOnly, then just inform all previously hovered items that the mouse has left.

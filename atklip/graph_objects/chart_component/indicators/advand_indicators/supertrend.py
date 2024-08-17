@@ -41,7 +41,7 @@ class BasicSPTrend(PlotDataItem):
         self.interval = interval
         
         self.threadpool = QThreadPool(self)
-        #self.threadpool.setMaxThreadCount(8)
+        self.threadpool.setMaxThreadCount(1)
 
         self.on_click.connect(self.on_click_event)
         self.signal_visible.connect(self.setVisible)
@@ -115,9 +115,10 @@ class BasicSPTrend(PlotDataItem):
     
     def setdata_worker(self,lastcandle):
         self.worker = None
-        worker = FastWorker(self,self.update_data,lastcandle)
-        worker.signals.setdata.connect(self.set_Data)
-        self.threadpool.start(worker)
+        self.worker = FastWorker(self.threadpool,self.update_data,lastcandle)
+        self.worker.signals.setdata.connect(self.set_Data)
+        self.worker.start()
+        #self.threadpool.start(self.worker)
     
     def set_Data(self,data):
 
@@ -284,9 +285,10 @@ class CurrentSPTrend(PlotDataItem):
     
     def setdata_worker(self,lastcandle):
         self.worker = None
-        worker = FastWorker(self,self.update_data,lastcandle)
-        worker.signals.setdata.connect(self.set_Data)
-        self.threadpool.start(worker)
+        self.worker = FastWorker(self.threadpool,self.update_data,lastcandle)
+        self.worker.signals.setdata.connect(self.set_Data)
+        self.worker.start()
+        #self.threadpool.start(self.worker)
     
     def set_Data(self,data):
         xData = data[0]

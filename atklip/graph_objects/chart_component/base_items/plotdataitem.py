@@ -4,6 +4,7 @@ from PySide6.QtCore import Qt,QRectF
 from PySide6.QtGui import QPen,QBrush,QPicture, QPainter
 from PySide6.QtWidgets import QGraphicsItem
 
+
 class PlotLineItem(GraphicsObject):
     """Line plot"""
     def __init__(self, *args, **kargs):
@@ -17,6 +18,7 @@ class PlotLineItem(GraphicsObject):
         # self.setProperty('yViewRangeWasChanged', True)
         self.picture = QPicture()
         self._line = PlotDataItem(*args, **kargs)
+        self._line.setFlag(QGraphicsItem.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
         self._line.setParentItem(self)
         self.opts = self._line.opts
     @property

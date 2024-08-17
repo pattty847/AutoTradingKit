@@ -1,5 +1,7 @@
 from typing import Dict, Tuple, List,TYPE_CHECKING
 import numpy as np
+import pandas as pd
+from atklip.indicators import pandas_ta as ta
 
 from PySide6.QtCore import Signal, QRect, QRectF, QPointF,QThreadPool,Qt,QLineF,QCoreApplication
 from PySide6.QtGui import QPainter, QPicture,QPainterPath
@@ -7,6 +9,7 @@ from PySide6.QtWidgets import QGraphicsItem,QStyleOptionGraphicsItem,QWidget
 
 from atklip.graph_objects.pyqtgraph import mkPen, GraphicsObject, mkBrush
 
+from atklip.graph_objects.pyqtgraph.graphicsItems.PlotDataItem import PlotDataItem
 from atklip.indicators import OHLCV,IndicatorType
 from atklip.indicators.candle import JAPAN_CANDLE,HEIKINASHI,SMOOTH_CANDLE
 
@@ -59,7 +62,8 @@ class Volume(GraphicsObject):
         self.output_y_data: List[float] = []
         self.historic_volume = SingleVolume(self.chart,self.has)
         self.historic_volume.setParentItem(self)
-        self.type_picture = "candlestick"
+        self.type_picture = "volume"
+
         self.picture = QPicture()
         self.colorline = 'white'
         self.old_w = []
@@ -67,8 +71,7 @@ class Volume(GraphicsObject):
         self._stop:int = None
         
         self.x_data, self.y_data = np.array([]),np.array([])
-        self.setAcceptHoverEvents(True)
-        
+
         self._bar_picutures: Dict[int, QPicture] = {}
         self.picture: QPicture = None
         self._rect_area: Tuple[float, float] = None
@@ -107,20 +110,22 @@ class Volume(GraphicsObject):
     def reset_threadpool_asyncworker(self):
         self.worker = None
         self._is_change_source = True
-        self.worker = FastWorker(self,self.update_last_data)
+        self.worker = FastWorker(self.threadpool,self.update_last_data)
         self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.AutoConnection)
         self.worker.signals.finished.connect(self.setup_connections,Qt.ConnectionType.AutoConnection)
-        self.threadpool.start(self.worker)
+        self.worker.start()
+        #self.threadpool.start(self.worker)
     def setup_connections(self):
-        self.chart.jp_candle.sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
-        self.chart.jp_candle.sig_add_candle.connect(self.threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
+        self.chart.jp_candle.sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
+        self.chart.jp_candle.sig_add_candle.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
         self.sig_change_yaxis_range.emit()
     def threadpool_asyncworker(self,candle=[]):
         self.worker = None
         self._is_change_source = True
-        self.worker = FastWorker(self,self.update_last_data)
-        self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.SingleShotConnection)
-        self.threadpool.start(self.worker)
+        self.worker = FastWorker(self.threadpool,self.update_last_data)
+        self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.AutoConnection)
+        self.worker.start()
+        #self.threadpool.start(self.worker)
     def get_yaxis_param(self):
         if len(self.has["inputs"]["source"].candles) > 0:
             last_candle = self.has["inputs"]["source"].last_data()
@@ -261,7 +266,7 @@ class Volume(GraphicsObject):
             x_data, y_data = self.has["inputs"]["source"].get_index_volumes(stop=len(self.has["inputs"]["source"].candles)-1)
             #self.setData((x_data, y_data))
             setdata.emit((x_data, y_data))
-            QCoreApplication.processEvents()
+            #QCoreApplication.processEvents()
         except Exception as e:
             print(e)
     
@@ -304,19 +309,21 @@ class SingleVolume(GraphicsObject):
         self.setAcceptedMouseButtons(Qt.MouseButton.NoButton)
         
         self.threadpool = QThreadPool(self)
-        sig_update_candle.connect(self.threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
+        sig_update_candle.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
 
     def reset_threadpool_asyncworker(self):
         self.worker = None
-        self.worker = FastWorker(self,self.update_last_data)
-        self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.SingleShotConnection)
-        self.threadpool.start(self.worker)
+        self.worker = FastWorker(self.threadpool,self.update_last_data)
+        self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.AutoConnection)
+        self.worker.start()
+        #self.threadpool.start(self.worker)
     
     def threadpool_asyncworker(self, last_candle:List[OHLCV]=[]):
         self.worker = None
-        self.worker = FastWorker(self,self.update_last_data)
-        self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.SingleShotConnection)
-        self.threadpool.start(self.worker)
+        self.worker = FastWorker(self.threadpool,self.update_last_data)
+        self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.AutoConnection)
+        self.worker.start()
+        #self.threadpool.start(self.worker)
 
     def paint(self, p: QPainter, *args) -> None:
         p.drawPicture(0, 0, self.picture)
@@ -371,7 +378,7 @@ class SingleVolume(GraphicsObject):
                 #self.setData((x_data, _y_data))
                 try:
                     setdata.emit((x_data, _y_data))
-                    QCoreApplication.processEvents()
+                    #QCoreApplication.processEvents()
                 except Exception as e:
                     pass
     def getData(self) -> Tuple[List[float], List[Tuple[float, ...]]]:

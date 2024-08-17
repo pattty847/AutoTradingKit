@@ -7,7 +7,6 @@ import numpy as np,array
 
 from PySide6.QtCore import Qt, Signal,QObject,QCoreApplication
 
-
 #@dataclass
 class JAPAN_CANDLE(QObject):
     """
@@ -205,7 +204,7 @@ class JAPAN_CANDLE(QObject):
         self.first_gen = True
         self.df = pd.DataFrame([data.__dict__ for data in self.candles])
         self.sig_reset_all.emit()
-        QCoreApplication.processEvents()
+        #QCoreApplication.processEvents()
         return self.candles
 
     def gen_update(self,new_candle:OHLCV):
@@ -239,7 +238,8 @@ class JAPAN_CANDLE(QObject):
             self.dict_index_ohlcv[_new_candle.index] = _new_candle
             self.dict_time_ohlcv[_new_candle.time] = _new_candle
 
-    def update(self,new_candles:OHLCV):
+
+    def update(self,new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]
         if self.first_gen:
             if len(self.candles) == 0:
@@ -282,7 +282,7 @@ class JAPAN_CANDLE(QObject):
                                         ]
 
                     self.sig_update_candle.emit(self.candles[-2:])
-                    QCoreApplication.processEvents()
+                    #QCoreApplication.processEvents()
             else:
                 pre_candle:OHLCV = new_candles[-2]
                 
@@ -307,7 +307,7 @@ class JAPAN_CANDLE(QObject):
                 self.df = pd.concat([self.df, new_row], ignore_index=True)
 
                 self.sig_add_candle.emit(self.candles[-2:])
-                QCoreApplication.processEvents()
+                #QCoreApplication.processEvents()
                 return True
             return False
         return False

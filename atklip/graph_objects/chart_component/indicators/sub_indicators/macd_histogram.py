@@ -47,7 +47,7 @@ class MACDHistogram(GraphicsObject):
         self.setAcceptHoverEvents(True)
         self.threadpool = QThreadPool(self)
 
-        self.sig_reset_histogram.connect(self.threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
+        self.sig_reset_histogram.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
 
     def get_inputs(self):
         inputs =  {}
@@ -79,9 +79,10 @@ class MACDHistogram(GraphicsObject):
     def threadpool_asyncworker(self,data):
         self._is_change_source = True
         self.worker = None
-        self.worker = FastWorker(self,self.update_last_data,data)
-        self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.SingleShotConnection)
-        self.threadpool.start(self.worker)
+        self.worker = FastWorker(self.threadpool,self.update_last_data,data)
+        self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.AutoConnection)
+        self.worker.start()
+        #self.threadpool.start(self.worker)
     def get_yaxis_param(self):
         if len(self.has["inputs"]["source"].candles) > 0:
             last_candle = self.has["inputs"]["source"].last_data()
@@ -201,15 +202,15 @@ class MACDHistogram(GraphicsObject):
         w = 1 / 5
         [self.draw_volume(value,w,x_data,index) for index, value in enumerate(y_data)]
         self._to_update = True
-        self.prepareGeometryChange()
-        self.informViewBoundsChanged()
-        self._panel.informViewBoundsChanged()
+        # self.prepareGeometryChange()
+        # self.informViewBoundsChanged()
+        # self._panel.informViewBoundsChanged()
 
     def update_last_data(self,data, setdata) -> None:
         x_data, y_data = data[0],data[1]
         try:
             setdata.emit((x_data[:-1], y_data[:-1]))
-            QCoreApplication.processEvents()
+            #QCoreApplication.processEvents()
         except Exception as e:
             pass
     def getData(self) -> Tuple[List[float], List[Tuple[float, ...]]]:
@@ -235,15 +236,16 @@ class SingleMACDHistogram(GraphicsObject):
         self.setAcceptHoverEvents(True)
 
         self.threadpool = QThreadPool(self)
-        #self.threadpool.setMaxThreadCount(8)
-        sig_update_histogram.connect(self.threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
+        self.threadpool.setMaxThreadCount(1)
+        sig_update_histogram.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
 
     
     def threadpool_asyncworker(self, last_candle:List):
         self.worker = None
-        self.worker = FastWorker(self,self.update_last_data,last_candle)
-        self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.SingleShotConnection)
-        self.threadpool.start(self.worker)
+        self.worker = FastWorker(self.threadpool,self.update_last_data,last_candle)
+        self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.AutoConnection)
+        self.worker.start()
+        #self.threadpool.start(self.worker)
 
     def paint(self, p: QPainter, *args) -> None:
         p.drawPicture(0, 0, self.picture)
@@ -291,7 +293,7 @@ class SingleMACDHistogram(GraphicsObject):
     def update_last_data(self,last_candle,setdata) -> None:
         try:
             setdata.emit((last_candle[0], last_candle[1]))
-            QCoreApplication.processEvents()
+            #QCoreApplication.processEvents()
         except Exception as e:
             pass
     def getData(self) -> Tuple[List[float], List[Tuple[float, ...]]]:

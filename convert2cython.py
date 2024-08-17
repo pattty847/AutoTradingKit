@@ -106,7 +106,10 @@ _list = [r"atklip\graph_objects\pyqtgraph\widgets",
 # convert_all([r"atklip\indicators\talipp\indicators"])
 
 # convert_all(pyqt_graph_folders)
-convert_one(r"atklip\graph_objects\pyqtgraph\GraphicsScene\mouseEvents.py")
+"atklip\graph_objects\pyqtgraph\GraphicsScene\GraphicsScene.py"
+"atklip\graph_objects\pyqtgraph\graphicsItems\PlotDataItem.py"
+#convert_one(r"atklip\graph_objects\pyqtgraph\GraphicsScene\mouseEvents.py")
+convert_one(r"atklip\graph_objects\pyqtgraph\graphicsItems\PlotDataItem.py")
 
 # convert_one("graph_objects\pyqtgraph\WidgetGroup.py")
 

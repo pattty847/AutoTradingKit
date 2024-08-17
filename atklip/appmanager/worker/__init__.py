@@ -1,4 +1,5 @@
-from .qthreadpools import FastWorker,ProcessWorker,FastStartThread,\
-    SimpleWorker,ThreadingAsyncWorker,RequestAsyncWorker
+from .qthreadpools import ProcessWorker,\
+    SimpleWorker,ThreadingAsyncWorker,RequestAsyncWorker,FastWorker
 from .qthreads import  QtheadAsyncWorker
 
+from .threadings import FastStartThread

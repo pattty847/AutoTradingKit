@@ -308,7 +308,9 @@ class PlotDataItem(GraphicsObject):
 
         """
         GraphicsObject.__init__(self)
+        
         self.setFlag(self.GraphicsItemFlag.ItemHasNoContents)
+        self.setFlag(self.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
         # Original data, mapped data, and data processed for display is now all held in PlotDataset objects.
         # The convention throughout PlotDataItem is that a PlotDataset is only instantiated if valid data is available.
         self._dataset        = None # will hold a PlotDataset for the original data, accessed by getOriginalData()

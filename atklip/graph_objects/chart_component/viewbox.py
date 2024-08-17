@@ -26,11 +26,11 @@ class PlotViewBox(ViewBox):
     def __init__(self, type_chart="trading",plotwidget=None, main=None,*args, **kwds):
         kwds['enableMenu'] = False
         ViewBox.__init__(self, *args, **kwds)
-        # self.setFlag(self.GraphicsItemFlag.ItemClipsChildrenToShape, True)
-        # self.setFlag(self.GraphicsItemFlag.ItemClipsToShape, True)
+        self.setFlag(self.GraphicsItemFlag.ItemClipsChildrenToShape, True)
+        self.setFlag(self.GraphicsItemFlag.ItemClipsToShape, True)
         # self.setFlag(self.GraphicsItemFlag.ItemAcceptsInputMethod, False)
         self.setFlag(self.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
-        # self.setFlag(self.GraphicsItemFlag.ItemContainsChildrenInShape,True)
+        self.setFlag(self.GraphicsItemFlag.ItemContainsChildrenInShape,True)
   
         self.symbol,self.interval = None,None
         

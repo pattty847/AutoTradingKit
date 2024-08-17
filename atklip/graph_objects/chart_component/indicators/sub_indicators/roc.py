@@ -82,16 +82,16 @@ class BasicROC(PlotDataItem):
         self.price_low.setPos(self.has["inputs"]["price_low"])
         
         self.threadpool = QThreadPool(self)
-        #self.threadpool.setMaxThreadCount(8)
+        self.threadpool.setMaxThreadCount(1)
         
         self.chart.sig_update_source.connect(self.change_source,Qt.ConnectionType.AutoConnection)
         self.chart.sig_remove_source.connect(self.replace_source,Qt.ConnectionType.AutoConnection)
         
         self.sig_change_yaxis_range.connect(get_last_pos_worker, Qt.ConnectionType.AutoConnection)
         
-        self.has["inputs"]["source"].sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
-        self.has["inputs"]["source"].sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.QueuedConnection)
-        self.has["inputs"]["source"].sig_add_candle.connect(self.setdata_worker,Qt.ConnectionType.QueuedConnection)
+        self.has["inputs"]["source"].sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
+        self.has["inputs"]["source"].sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
+        self.has["inputs"]["source"].sig_add_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
 
 
     def delete(self):
@@ -128,9 +128,9 @@ class BasicROC(PlotDataItem):
         self.has["name"] = f"ROC {self.has["inputs"]["period"]} {self.has["inputs"]["type"]}"
         self.sig_change_indicator_name.emit(self.has["name"])
         
-        self.has["inputs"]["source"].sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
-        self.has["inputs"]["source"].sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.QueuedConnection)
-        self.has["inputs"]["source"].sig_add_candle.connect(self.setdata_worker,Qt.ConnectionType.QueuedConnection)
+        self.has["inputs"]["source"].sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
+        self.has["inputs"]["source"].sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
+        self.has["inputs"]["source"].sig_add_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
 
     def replace_source(self,source_name):
         if self.has["inputs"]["source_name"] == source_name:
@@ -203,9 +203,10 @@ class BasicROC(PlotDataItem):
 
     def threadpool_asyncworker(self,candle=None):
         self.worker = None
-        self.worker = FastWorker(self,self.first_load_data)
-        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.SingleShotConnection)
-        self.threadpool.start(self.worker)
+        self.worker = FastWorker(self.threadpool,self.first_load_data)
+        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.AutoConnection)
+        self.worker.start()
+        #self.threadpool.start(self.worker)
     def first_load_data(self,setdata):
         self.disconnect_connection()
         df:pd.DataFrame = self.has["inputs"]["source"].get_df()
@@ -227,9 +228,9 @@ class BasicROC(PlotDataItem):
         self.has["name"] = f"ROC {self.has["inputs"]["period"]} {self.has["inputs"]["type"]}"
         self.sig_change_indicator_name.emit(self.has["name"])
         
-        self.has["inputs"]["source"].sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
-        self.has["inputs"]["source"].sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.QueuedConnection)
-        self.has["inputs"]["source"].sig_add_candle.connect(self.setdata_worker,Qt.ConnectionType.QueuedConnection)
+        self.has["inputs"]["source"].sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
+        self.has["inputs"]["source"].sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
+        self.has["inputs"]["source"].sig_add_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
 
 
     def setVisible(self, visible):
@@ -273,9 +274,10 @@ class BasicROC(PlotDataItem):
 
     def setdata_worker(self,sig_update_candle):
         self.worker = None
-        self.worker = FastWorker(self,self.update_data,sig_update_candle)
-        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.SingleShotConnection)
-        self.threadpool.start(self.worker)
+        self.worker = FastWorker(self.threadpool,self.update_data,sig_update_candle)
+        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.AutoConnection)
+        self.worker.start()
+        #self.threadpool.start(self.worker)
     
     def set_Data(self,data):
         xData = data[0]

@@ -1,7 +1,7 @@
 import asyncio
+from threading import Thread
 import traceback
-from PySide6.QtCore import QThread, Signal, QCoreApplication, Slot
-
+from PySide6.QtCore import QObject, Signal, Slot, Slot, QThread
 class QtheadAsyncWorker(QThread):
     update_signal = Signal(object)
     finished = Signal()
@@ -100,6 +100,7 @@ class SimpleWorker(QThread):
     def start_thread(self):
         self.start()
     def stop_thread(self):
+        self.terminate()
         self.deleteLater()
     @Slot()
     def run(self):
@@ -113,3 +114,41 @@ class SimpleWorker(QThread):
                 self.finished.emit()
             except:
                 pass
+
+class WorkerSignals(QObject):
+    setdata = Signal(tuple)  # setdata có graph object
+    error = Signal()
+    finished = Signal()
+    update_signal = Signal(list)
+    sig_object = Signal(object)
+    sig_process_value = Signal(float)
+
+class FastWorker(Thread):
+    "Worker này dùng để emit candle data"
+    def __init__(self,parent,fn, *args, **kwargs):
+        super(FastWorker, self).__init__()
+        self.fn = fn
+        self.args = args
+        self.kwargs = kwargs
+        self.signals = WorkerSignals() 
+        self.kwargs['setdata'] = self.signals.setdata
+        self.started.connect(self.run)
+        self.finished.connect(self.stop_thread)
+        self.signals.error.connect(self.stop_thread)
+
+    def start_thread(self):
+        self.start()
+    def stop_thread(self):
+        self._stop()
+        self.deleteLater()
+    def run(self):
+        try:
+            self.fn(*self.args, **self.kwargs)
+        except Exception as e:
+            traceback.print_exception(e)
+            self.signals.error.emit()
+        finally:
+            try:
+                self.finished.emit()
+            except:
+                self.deleteLater()

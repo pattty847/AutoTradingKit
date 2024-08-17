@@ -58,7 +58,7 @@ class BasicMA(GraphicsObject):
         self.is_reset = False
         
         self.threadpool = QThreadPool(self)
-        #self.threadpool.setMaxThreadCount(8)
+        self.threadpool.setMaxThreadCount(1)
         
         self.x_data, self.y_data = np.array([]),np.array([])
         self._bar_picutures: Dict[int, QPicture] = {}
@@ -75,9 +75,9 @@ class BasicMA(GraphicsObject):
         
         self.signal_delete.connect(self.delete)
         
-        self.has["inputs"]["source"].sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
-        self.has["inputs"]["source"].sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.QueuedConnection)
-        self.has["inputs"]["source"].sig_add_candle.connect(self.setdata_worker,Qt.ConnectionType.QueuedConnection)
+        self.has["inputs"]["source"].sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
+        self.has["inputs"]["source"].sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
+        self.has["inputs"]["source"].sig_add_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
         
     def delete(self):
         self.chart.sig_remove_item.emit(self)
@@ -178,9 +178,10 @@ class BasicMA(GraphicsObject):
     def threadpool_asyncworker(self,candle=None):
         self.disconnect_connection()
         self.worker = None
-        worker = FastWorker(self,self.first_load_data)
-        worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.AutoConnection)
-        self.threadpool.start(worker)
+        self.worker = FastWorker(self.threadpool,self.first_load_data)
+        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.AutoConnection)
+        self.worker.start()
+        #self.threadpool.start(self.worker)
     def get_yaxis_param(self):
         _value = None
         try:
@@ -229,9 +230,10 @@ class BasicMA(GraphicsObject):
 
     def setdata_worker(self,sig_update_candle):
         self.worker = None
-        worker = FastWorker(self,self.update_data,sig_update_candle)
-        worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.SingleShotConnection)
-        self.threadpool.start(worker)
+        self.worker = FastWorker(self.threadpool,self.update_data,sig_update_candle)
+        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.SingleShotConnection)
+        self.worker.start()
+        #self.threadpool.start(self.worker)
     @property
     def xData(self):
         return self.x_data 
@@ -356,7 +358,7 @@ class BasicMA(GraphicsObject):
         _data = self._INDICATOR.to_numpy()
         _index = df["index"].to_numpy()
         setdata.emit((_index,_data))
-        QCoreApplication.processEvents()
+        #QCoreApplication.processEvents()
         
     def on_click_event(self,_object):
         print("zooo day__________________",_object)

@@ -162,7 +162,7 @@ class BaseMenu(ScrollInterface):
         # item.moveToThread(QApplication.instance().thread())
         item.btn_fovarite.added_to_favorite()
         self.sig_add_item.emit(item)
-        # QCoreApplication.processEvents()
+        # #QCoreApplication.processEvents()
 
     def load_favorite(self):
         #self.sig_show_process.emit(True)
@@ -187,7 +187,7 @@ class BaseMenu(ScrollInterface):
                     _list_symbols = self.dict_favorites[exchange_id]
                     for symbol in _list_symbols:
                         self.sig_add_to_favorite.emit((symbol,exchange_id))
-                        QCoreApplication.processEvents()
+                        #QCoreApplication.processEvents()
         #self.sig_show_process.emit(False)
 
     def get_all_symbols_by_exchange(self,exchange_id):
@@ -203,7 +203,7 @@ class BaseMenu(ScrollInterface):
             for exchange_id in list(self.dict_favorites.keys()):
                 _list_symbols = self.dict_favorites[exchange_id]
                 update_signal.emit([_list_symbols,exchange_id])
-                QCoreApplication.processEvents()
+                #QCoreApplication.processEvents()
             
     def add_Widget(self,widget):
         self.insertWidget(0,widget,stretch=0, alignment=Qt.AlignmentFlag.AlignTop)
@@ -286,14 +286,14 @@ class BaseMenu(ScrollInterface):
                     AppConfig.sig_set_single_data.emit((f"topbar.symbol.{exchange_id}",self._list_symbols))
                     
                     update_signal.emit([self._list_symbols,exchange_id])
-                    QCoreApplication.processEvents()
+                    #QCoreApplication.processEvents()
             except Exception as e:
                 traceback.print_exception(e)
             await exchange.close()
             crypto_ex.deleteLater()
         else:
             update_signal.emit([self._list_symbols,exchange_id])
-            QCoreApplication.processEvents()
+            #QCoreApplication.processEvents()
           
     def add_symbol(self, data):
         self.dict_favorites = AppConfig.get_config_value(f"topbar.symbol.favorite")
@@ -312,7 +312,7 @@ class BaseMenu(ScrollInterface):
                     if symbol in _list_symbols:
                         item.btn_fovarite.added_to_favorite()
             self.sig_add_item.emit(item)
-            QCoreApplication.processEvents()
+            #QCoreApplication.processEvents()
         self.isAdded = True
         self.sig_update_symbols.emit(exchange)
         self.sig_show_process.emit(False)
@@ -334,7 +334,7 @@ class BaseMenu(ScrollInterface):
                     if symbol in _list_symbols:
                         item.btn_fovarite.added_to_favorite()
             self.sig_add_item.emit(item)
-            QCoreApplication.processEvents()
+            #QCoreApplication.processEvents()
             #time.sleep(0.01)
         self.loading = False
         self.sig_show_process.emit(False)
@@ -354,7 +354,7 @@ class BaseMenu(ScrollInterface):
                 if not self.loading and self.exchange_id!="favorite":
                     self.sig_show_process.emit(True)
                     self.sig_update_symbol.emit(n)
-                    QCoreApplication.processEvents()
+                    #QCoreApplication.processEvents()
                     #self.old_vertival_val = None
             if e.angleDelta().y() < 0:
                 self.delegate.vScrollBar.scrollValue(60)
@@ -380,7 +380,7 @@ class ListSymbolMenuByExchange(QStackedWidget):
             menu = BaseMenu(self.sig_add_remove_favorite,sig_change_symbol,self,exchange)
             self._list_menu.append(menu)
             self.sig_add_basemenu.emit(menu)
-            QCoreApplication.processEvents()
+            #QCoreApplication.processEvents()
         #self.setSpacing(0)
         self.changePage("favorite")
         self.sig_add_remove_favorite.connect(self.add_remove_favorite_item,Qt.ConnectionType.AutoConnection)
