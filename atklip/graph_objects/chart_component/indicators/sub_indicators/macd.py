@@ -288,9 +288,9 @@ class BasicMACD(GraphicsObject):
     def threadpool_asyncworker(self,candle=None):
         self.worker = None
         if candle == None:
-            self.worker = FastWorker("sub",self.first_load_data)
+            self.worker = FastWorker(self.threadpool,self.first_load_data)
         else:
-            self.worker = FastWorker("sub",self.update_data,candle)
+            self.worker = FastWorker(self.threadpool,self.update_data,candle)
         self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.AutoConnection)
         self.worker.signals.setdata.connect(self.update_histogram,Qt.ConnectionType.AutoConnection)
         self.worker.start()
@@ -360,7 +360,7 @@ class BasicMACD(GraphicsObject):
 
     def setdata_worker(self,sig_update_candle):
         self.worker = None
-        self.worker = FastWorker("sub",self.update_data,sig_update_candle)
+        self.worker = FastWorker(self.threadpool,self.update_data,sig_update_candle)
         self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.AutoConnection)
         self.worker.start()
         #self.threadpool.start(self.worker)

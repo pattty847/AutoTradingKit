@@ -110,7 +110,7 @@ class Volume(GraphicsObject):
     def reset_threadpool_asyncworker(self):
         self.worker = None
         self._is_change_source = True
-        self.worker = FastWorker("sub",self.update_last_data)
+        self.worker = FastWorker(self.threadpool,self.update_last_data)
         self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.AutoConnection)
         self.worker.signals.finished.connect(self.setup_connections,Qt.ConnectionType.AutoConnection)
         self.worker.start()
@@ -122,7 +122,7 @@ class Volume(GraphicsObject):
     def threadpool_asyncworker(self,candle=[]):
         self.worker = None
         self._is_change_source = True
-        self.worker = FastWorker("sub",self.update_last_data)
+        self.worker = FastWorker(self.threadpool,self.update_last_data)
         self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.AutoConnection)
         self.worker.start()
         #self.threadpool.start(self.worker)
@@ -314,14 +314,14 @@ class SingleVolume(GraphicsObject):
 
     def reset_threadpool_asyncworker(self):
         self.worker = None
-        self.worker = FastWorker("sub",self.update_last_data)
+        self.worker = FastWorker(self.threadpool,self.update_last_data)
         self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.AutoConnection)
         self.worker.start()
         #self.threadpool.start(self.worker)
     
     def threadpool_asyncworker(self, last_candle:List[OHLCV]=[]):
         self.worker = None
-        self.worker = FastWorker("sub",self.update_last_data)
+        self.worker = FastWorker(self.threadpool,self.update_last_data)
         self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.AutoConnection)
         self.worker.start()
         #self.threadpool.start(self.worker)

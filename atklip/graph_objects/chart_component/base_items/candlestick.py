@@ -324,7 +324,7 @@ class CandleStick(GraphicsObject):
         
     def threadpool_asyncworker(self,candle=None):
         self.worker = None
-        self.worker = FastWorker("view",self.update_last_data)
+        self.worker = FastWorker(self.threadpool,self.update_last_data)
         self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.AutoConnection)
         self.worker.signals.finished.connect(self.set_price_line,Qt.ConnectionType.AutoConnection)
         self.worker.start()
@@ -512,7 +512,7 @@ class SingleCandleStick(GraphicsObject):
   
     def reset_threadpool_asyncworker(self):
         self.worker = None
-        self.worker = FastWorker("view",self.update_last_data)
+        self.worker = FastWorker(self.threadpool,self.update_last_data)
         self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.AutoConnection)
         self.worker.signals.finished.connect(self.set_price_line,Qt.ConnectionType.AutoConnection)
         self.worker.start()
@@ -520,7 +520,7 @@ class SingleCandleStick(GraphicsObject):
     
     def threadpool_asyncworker(self, last_candle:List[OHLCV]=[]):
         self.worker = None
-        self.worker = FastWorker("view",self.update_last_data)
+        self.worker = FastWorker(self.threadpool,self.update_last_data)
         self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.AutoConnection)
         self.price_line.update_data(last_candle)
         self.worker.start()
