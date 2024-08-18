@@ -1,6 +1,7 @@
 import asyncio,os
 from asyncio import run
 import sys
+from threading import Thread
 import traceback
 from typing import Callable
 from PySide6.QtCore import QObject, Signal, QRunnable, Slot, QThreadPool
@@ -43,24 +44,25 @@ class FastWorker(QRunnable):
     "Worker này dùng để update  data trong một cho graph object khi có data mới"
     def __init__(self,threadpool:str|QThreadPool="view",fn:Callable=None, *args, **kwargs):
         super(FastWorker, self).__init__()
+        self.setAutoDelete(True)
         self.fn = fn
         self.args = args
-        self.kwargs = kwargs #.copy()
+        self.kwargs = kwargs.copy()
         self.signals = WorkerSignals() 
+        self.kwargs['setdata'] = self.signals.setdata
+        # self.threadpool = Thread(target=self.run, daemon=True, args=())
         if threadpool != None:
             self.threadpool = QThreadPool_global
         else:
             self.threadpool = QThreadPool_global
-        self.kwargs['setdata'] = self.signals.setdata
-        self.setAutoDelete(True)
-    
+        
     def start(self,prio:int=0):
-        self.threadpool.start(self,prio)
+        # self.threadpool.start()
+        self.threadpool.start(self)
     
     # def stop_worker(self):
     #     self.signals.deleteLater()
-
-    @Slot()
+    # @Slot()
     def run(self):
         try:
             self.fn(*self.args, **self.kwargs)

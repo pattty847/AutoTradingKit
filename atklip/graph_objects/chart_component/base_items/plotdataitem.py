@@ -10,6 +10,8 @@ class PlotLineItem(GraphicsObject):
     def __init__(self, *args, **kargs):
         GraphicsObject.__init__(self)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
+        self.setCacheMode(QGraphicsItem.CacheMode.DeviceCoordinateCache)
+        
         # self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemClipsChildrenToShape, True)
         # self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemClipsToShape, True)
         # self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemAcceptsInputMethod, False)
@@ -19,6 +21,7 @@ class PlotLineItem(GraphicsObject):
         self.picture = QPicture()
         self._line = PlotDataItem(*args, **kargs)
         self._line.setFlag(QGraphicsItem.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
+        self._line.setCacheMode(QGraphicsItem.CacheMode.DeviceCoordinateCache)
         self._line.setParentItem(self)
         self.opts = self._line.opts
     @property
@@ -30,9 +33,9 @@ class PlotLineItem(GraphicsObject):
     def setPen(self, *args, **kargs):
         self._line.setPen(self, *args, **kargs)
     def setData(self, *args, **kargs):
-        
         self._line.setData(*args, **kargs)
-        
+        self.prepareGeometryChange()
+        self.informViewBoundsChanged()
     def boundingRect(self) -> QRectF:
         return self._line.boundingRect()
     def paint(self,p:QPainter,*args):

@@ -28,7 +28,6 @@ class PlotViewBox(ViewBox):
         ViewBox.__init__(self, *args, **kwds)
         self.setFlag(self.GraphicsItemFlag.ItemClipsChildrenToShape, True)
         self.setFlag(self.GraphicsItemFlag.ItemClipsToShape, True)
-        # self.setFlag(self.GraphicsItemFlag.ItemAcceptsInputMethod, False)
         self.setFlag(self.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
         self.setFlag(self.GraphicsItemFlag.ItemContainsChildrenInShape,True)
   
@@ -128,7 +127,7 @@ class PlotViewBox(ViewBox):
 
     def draw_line_last_price(self, price):
         color = "#027df7"
-        line_l = InfiniteLine(angle=0, movable=False, pen=makepen(color, style='.', width=2),)
+        line_l = InfiniteLine(angle=0, movable=False, pen=self.makepen(color, style='.', width=2),)
         line_l.setPos(price)
         line_l.setName("last_price")
         line_l.setZValue(999)

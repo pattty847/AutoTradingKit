@@ -16,7 +16,7 @@ class Worker(QRunnable):
     def run(self):
         # Mô phỏng công việc nặng và cập nhật tiến trình
         for i in range(1010):
-            #time.sleep(0.0001)  # Giả lập công việc
+            time.sleep(0.0001)  # Giả lập công việc
             self.signals.progress.emit(i)  # Gửi tiến trình cập nhật
         
         # Gửi tín hiệu hoàn thành khi công việc kết thúc

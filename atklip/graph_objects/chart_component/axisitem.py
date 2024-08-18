@@ -311,7 +311,7 @@ class CustomDateAxisItem(AxisItem):
             self.picture.play(painter)
             painter.end()
         
-        #self.prepareGeometryChange()
+        self.prepareGeometryChange()
         self.informViewBoundsChanged()
 
     def draw_vertical_line(self,p):
@@ -910,7 +910,7 @@ class CustomPriceAxisItem(AxisItem):
             self.picture.play(painter)
             painter.end()
         
-        #self.prepareGeometryChange()
+        self.prepareGeometryChange()
         self.informViewBoundsChanged()
     
     def change_value(self, args):
@@ -939,7 +939,7 @@ class CustomPriceAxisItem(AxisItem):
             self.picture.play(painter)
             painter.end()
         
-        #self.prepareGeometryChange()
+        self.prepareGeometryChange()
         self.informViewBoundsChanged()
 
     def wheelEvent(self, event):

@@ -2,6 +2,7 @@ from functools import lru_cache
 from typing import Union, Optional, Any, List, TYPE_CHECKING
 import time
 from PySide6 import QtGui
+from PySide6.QtGui import QPainter
 from PySide6.QtCore import Signal,QPointF,Qt,QEvent,QThreadPool,QCoreApplication
 from PySide6.QtWidgets import QGraphicsView
 import numpy as np
@@ -57,11 +58,13 @@ class ViewSubPanel(PlotWidget):
 
         super().__init__(parent=parent,background=background, plotItem= self.PlotItem,**kwargs)
         
-        self.setViewportUpdateMode(QGraphicsView.ViewportUpdateMode.BoundingRectViewportUpdate)
+        self.setViewportUpdateMode(QGraphicsView.ViewportUpdateMode.SmartViewportUpdate)
+        self.setRenderHint(QPainter.RenderHint.Antialiasing, False)
+        self.setCacheMode(QGraphicsView.CacheModeFlag.CacheBackground)
 
         self.crosshair_enabled = kwargs.get(Crosshair.ENABLED, False)
         self._parent = parent
-        # self.setCacheMode(QGraphicsView.CacheModeFlag.CacheBackground)
+        # 
 
         self.list_candle_indicators = []
 

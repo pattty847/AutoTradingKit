@@ -71,7 +71,10 @@ class ViewPlotWidget(PlotWidget):
         self.crosshair_enabled = kwargs.get(Crosshair.ENABLED, False)
         
         #self.setRenderHints(QPainter.RenderHint.Antialiasing|QPainter.RenderHint.TextAntialiasing) #|QPainter.RenderHint.SmoothPixmapTransform
-        self.setViewportUpdateMode(QGraphicsView.ViewportUpdateMode.BoundingRectViewportUpdate)
+        
+        self.setViewportUpdateMode(QGraphicsView.ViewportUpdateMode.SmartViewportUpdate)
+        self.setRenderHint(QPainter.RenderHint.Antialiasing, False)
+        self.setCacheMode(QGraphicsView.CacheModeFlag.CacheBackground)
         
         self._parent = parent
 
@@ -134,7 +137,7 @@ class ViewPlotWidget(PlotWidget):
         self.replay_object = CustomReplayObject()
         self.vLine_replay = InfiniteLine(angle=90, movable=False, pen=mkPen(color=QColor(0,35,255), width=2.5,style=Qt.SolidLine))
 
-        self.setCacheMode(QGraphicsView.CacheModeFlag.CacheBackground)
+        
         
         self.draw_object = None
         

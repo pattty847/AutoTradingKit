@@ -1,3 +1,4 @@
+import time
 from typing import Tuple, List,TYPE_CHECKING
 
 import numpy as np
@@ -32,7 +33,6 @@ class BasicMA(PlotLineItem):
     def __init__(self,chart,indicator_type: PD_MAType,pen:str="yellow",period:int=3,_type:str="close",id = None,clickable=True) -> None:
         """Choose colors of candle"""
         PlotLineItem.__init__(self)
-        self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
         self.chart:Chart = chart
         
         self.has = {
@@ -173,7 +173,7 @@ class BasicMA(PlotLineItem):
     def threadpool_asyncworker(self,candle=None):
         self.worker = None
         self.worker = FastWorker(self.threadpool,self.first_load_data)
-        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.AutoConnection)
+        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
         self.worker.start()
         #self.threadpool.start(self.worker)
     def get_yaxis_param(self):
@@ -198,7 +198,6 @@ class BasicMA(PlotLineItem):
         
         _data = self._INDICATOR.to_numpy()
         _index = df["index"].to_numpy()
-
         setdata.emit((_index,_data))
         self.sig_change_yaxis_range.emit()
         
@@ -224,7 +223,7 @@ class BasicMA(PlotLineItem):
     def setdata_worker(self,sig_update_candle):
         self.worker = None
         self.worker = FastWorker(self.threadpool,self.update_data,sig_update_candle)
-        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.AutoConnection)
+        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
         self.worker.start()
         #self.threadpool.start(self.worker)
     
@@ -232,9 +231,8 @@ class BasicMA(PlotLineItem):
         xData = data[0]
         yData = data[1]
         self.setData(xData, yData)
-        # 
         # self.prepareGeometryChange()
-        self.informViewBoundsChanged()
+        # self.informViewBoundsChanged()
 
     def get_last_point(self):
         _time = self.xData[-1]
