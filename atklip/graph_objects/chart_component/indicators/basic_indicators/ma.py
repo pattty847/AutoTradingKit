@@ -220,7 +220,7 @@ class BasicMA(PlotLineItem):
             self.show()
         else:
             self.hide()
-    
+
     def setdata_worker(self,sig_update_candle):
         self.worker = None
         self.worker = FastWorker(self.threadpool,self.update_data,sig_update_candle)

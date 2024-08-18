@@ -288,6 +288,7 @@ class BasicBB(GraphicsObject):
         #self.threadpool.start(self.worker)
     
     def set_Data(self,data):
+        self.prepareGeometryChange()
         xData = data[0]
         lb = data[1]
         cb = data[2]
@@ -296,8 +297,8 @@ class BasicBB(GraphicsObject):
         self.lowline.setData(xData,lb)
         self.centerline.setData(xData,cb)
         self.highline.setData(xData,ub)
-        self.prepareGeometryChange()
-        self.informViewBoundsChanged()
+        
+        # self.informViewBoundsChanged()
 
     def get_yaxis_param(self):
         _value = None

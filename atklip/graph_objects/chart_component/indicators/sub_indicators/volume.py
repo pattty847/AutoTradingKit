@@ -241,6 +241,7 @@ class Volume(GraphicsObject):
 
     def setData(self, data) -> None:
         """y_data must be in format [[open, close, min, max], ...]"""
+        self.prepareGeometryChange()
         x_data, y_data = data[0], data[1]
         if not isinstance(x_data, np.ndarray):
             x_data = np.array(x_data)
@@ -258,7 +259,7 @@ class Volume(GraphicsObject):
         [self.draw_volume(_open,close,volume,w,x_data,index) for index, (_open, close,volume) in enumerate(y_data)]
         # p.end()
         self._to_update = True
-        self.prepareGeometryChange()
+        
         self.informViewBoundsChanged()
 
     def update_last_data(self, setdata) -> None:
@@ -352,6 +353,7 @@ class SingleVolume(GraphicsObject):
 
     def setData(self, data) -> None:
         """y_data must be in format [[open, close, min, max], ...]"""
+        self.prepareGeometryChange()
         x_data, y_data = data[0], data[1]
         if not isinstance(x_data, np.ndarray):
             x_data = np.array(x_data)
@@ -367,7 +369,7 @@ class SingleVolume(GraphicsObject):
         _open, close,volume = y_data[-1][0],y_data[-1][1],y_data[-1][2]
         self.draw_volume(p,_open,close,volume,w,t)
         p.end()
-        self.prepareGeometryChange()
+        
         self.informViewBoundsChanged()
 
     def update_last_data(self,setdata) -> None:

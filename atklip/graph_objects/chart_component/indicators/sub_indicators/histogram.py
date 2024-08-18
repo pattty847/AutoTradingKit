@@ -126,6 +126,7 @@ class Histogram(GraphicsObject):
 
     def setData(self, data) -> None:
         """y_data must be in format [[open, close, min, max], ...]"""
+        self.prepareGeometryChange()
         x_data, y_data = data[0], data[1]
         if not isinstance(x_data, np.ndarray):
             x_data = np.array(x_data)
@@ -140,7 +141,7 @@ class Histogram(GraphicsObject):
             w = 1 / 5
         [self.draw_histogram(p,value,w,x_data,index) for index, value in enumerate(y_data)]
         p.end()
-        self.prepareGeometryChange()
+        
 
     def update_last_data(self, setdata) -> None:
         x_data, y_data = self.has["inputs"]["source"].get_index_volumes(stop=len(self.has["inputs"]["source"].candles))
@@ -240,6 +241,7 @@ class SingleHistogram(GraphicsObject):
     
     def setData(self, data) -> None:
         """y_data must be in format [[open, close, min, max], ...]"""
+        self.prepareGeometryChange()
         x_data, y_data = data[0], data[1]
         if not isinstance(x_data, np.ndarray):
             x_data = np.array(x_data)
@@ -257,7 +259,7 @@ class SingleHistogram(GraphicsObject):
         value = y_data[-1]
         self.draw_histogram(p,value,w,t)
         p.end()
-        self.prepareGeometryChange()
+        
         #self.informViewBoundsChanged()
         # self.bounds = [None, None]
         # self.sigPlotChanged.emit(self)

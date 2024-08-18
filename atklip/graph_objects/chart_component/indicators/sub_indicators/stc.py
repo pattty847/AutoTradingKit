@@ -310,6 +310,7 @@ class BasicSTC(GraphicsObject):
         return self.stc_line.boundingRect()
     
     def set_Data(self,data):
+        self.prepareGeometryChange()
         xData = data[0]
         lb = data[1]
         cb = data[2]
@@ -321,7 +322,7 @@ class BasicSTC(GraphicsObject):
             self.stoch_line.setData(xData,ub)
         except Exception as e:
             pass
-        self.prepareGeometryChange()
+        
         self.informViewBoundsChanged()
         
     def get_last_point(self):
