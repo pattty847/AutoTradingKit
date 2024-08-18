@@ -5,7 +5,7 @@ import traceback
 from typing import Callable
 from PySide6.QtCore import QObject, Signal, QRunnable, Slot, QThreadPool
 
-from .threadpool import QThreadPool_global
+from .threadpool import QThreadPool_sub,QThreadPool_view
 
 
 class WorkerSignals(QObject):
@@ -41,16 +41,18 @@ class ProcessWorker(QRunnable):
 
 class FastWorker(QRunnable):
     "Worker này dùng để update  data trong một cho graph object khi có data mới"
-    def __init__(self,threadpool:QThreadPool=None,fn:Callable=None, *args, **kwargs):
+    def __init__(self,threadpool:str|QThreadPool="view",fn:Callable=None, *args, **kwargs):
         super(FastWorker, self).__init__()
         self.fn = fn
         self.args = args
         self.kwargs = kwargs #.copy()
         self.signals = WorkerSignals() 
-        if threadpool != None:
-            self.threadpool = QThreadPool_global
+        if threadpool == "view":
+            self.threadpool = QThreadPool_view
+        elif threadpool == "sub":
+            self.threadpool = QThreadPool_sub
         else:
-            self.threadpool = QThreadPool_global
+            self.threadpool = threadpool
         self.kwargs['setdata'] = self.signals.setdata
         self.setAutoDelete(True)
     

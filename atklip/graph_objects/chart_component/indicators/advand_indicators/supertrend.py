@@ -115,7 +115,7 @@ class BasicSPTrend(PlotDataItem):
     
     def setdata_worker(self,lastcandle):
         self.worker = None
-        self.worker = FastWorker(self.threadpool,self.update_data,lastcandle)
+        self.worker = FastWorker("view",self.update_data,lastcandle)
         self.worker.signals.setdata.connect(self.set_Data)
         self.worker.start()
         #self.threadpool.start(self.worker)
@@ -285,7 +285,7 @@ class CurrentSPTrend(PlotDataItem):
     
     def setdata_worker(self,lastcandle):
         self.worker = None
-        self.worker = FastWorker(self.threadpool,self.update_data,lastcandle)
+        self.worker = FastWorker("view",self.update_data,lastcandle)
         self.worker.signals.setdata.connect(self.set_Data)
         self.worker.start()
         #self.threadpool.start(self.worker)

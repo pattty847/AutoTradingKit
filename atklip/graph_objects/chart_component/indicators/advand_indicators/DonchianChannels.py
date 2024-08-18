@@ -200,7 +200,7 @@ class BasicDonchianChannels(GraphicsObject):
         
     def threadpool_asyncworker(self,candle=None):
         self.worker = None
-        self.worker = FastWorker(self.threadpool,self.first_load_data)
+        self.worker = FastWorker("view",self.first_load_data)
         self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.AutoConnection)
         self.worker.start()
         #self.threadpool.start(self.worker)
@@ -273,7 +273,7 @@ class BasicDonchianChannels(GraphicsObject):
     
     def setdata_worker(self,sig_update_candle):
         self.worker = None
-        self.worker = FastWorker(self.threadpool,self.update_data,sig_update_candle)
+        self.worker = FastWorker("view",self.update_data,sig_update_candle)
         self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.AutoConnection)
         self.worker.start()
         #self.threadpool.start(self.worker)

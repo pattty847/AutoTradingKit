@@ -221,14 +221,14 @@ class Chart(ViewPlotWidget):
             else:
                 break
             # try:
-            #     await asyncio.sleep(0.3)
+            #     await asyncio.sleep(0.5)
             # except:
-            #     print("this a misstake")
             #     pass
         if exchange != None:
-            AppLogger.writer("INFO",f"{__name__}-{symbol}-{interval} have closed")
+            AppLogger.writer("INFO",f"{__name__} - {symbol}-{interval} have closed")
         try:
             await exchange.close()
+            AppLogger.writer("INFO",f"{__name__} - {exchange.id}-{symbol}-{interval} have closed")
         except Exception as e:
             pass
         print("turn-off")
