@@ -307,7 +307,7 @@ class BasicTSI(GraphicsObject):
         return self.signal.boundingRect()
     
     def set_Data(self,data):
-        self.prepareGeometryChange()
+        
         xData = data[0]
         lb = data[1]
         cb = data[2]
@@ -318,6 +318,7 @@ class BasicTSI(GraphicsObject):
         except Exception as e:
             pass
         
+        self.prepareGeometryChange()
         self.informViewBoundsChanged()
         
     def get_last_point(self):

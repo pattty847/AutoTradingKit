@@ -53,14 +53,14 @@ class IsocurveItem(GraphicsObject):
         self.level = level
         self.data = data
         self.path = None
-        self.prepareGeometryChange()
+        
         self.update()
 
     def setLevel(self, level):
         """Set the level at which the isocurve is drawn."""
         self.level = level
         self.path = None
-        self.prepareGeometryChange()
+        
         self.update()
 
     def setPen(self, *args, **kwargs):

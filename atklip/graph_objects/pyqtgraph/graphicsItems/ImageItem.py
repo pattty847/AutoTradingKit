@@ -457,7 +457,7 @@ class ImageItem(GraphicsObject):
         Clear the assigned image.
         """
         self.image = None
-        self.prepareGeometryChange()
+        
         self.informViewBoundsChanged()
         self.update()
 
@@ -556,7 +556,7 @@ class ImageItem(GraphicsObject):
             ):
                 kwargs['autoDownsample'] = True
             if shapeChanged:
-                self.prepareGeometryChange()
+                
                 self.informViewBoundsChanged()
 
         profile()

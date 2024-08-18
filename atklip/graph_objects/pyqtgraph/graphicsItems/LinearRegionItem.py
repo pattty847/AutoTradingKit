@@ -264,7 +264,7 @@ class LinearRegionItem(GraphicsObject):
         
         if self._boundingRectCache != br:
             self._boundingRectCache = br
-            self.prepareGeometryChange()
+            
         
         return br
         
@@ -291,7 +291,7 @@ class LinearRegionItem(GraphicsObject):
             elif self.swapMode == 'push':
                 self.lines[1-i].setValue(self.lines[i].value())
         
-        self.prepareGeometryChange()
+        
         self.sigRegionChanged.emit(self)
 
     def _line0Moved(self):
@@ -321,7 +321,7 @@ class LinearRegionItem(GraphicsObject):
         for i, l in enumerate(self.lines):
             l.setPos(self.cursorOffsets[i] + ev.pos())
         self.lines[0].blockSignals(False)
-        self.prepareGeometryChange()
+        
         
         if ev.isFinish():
             self.moving = False

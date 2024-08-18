@@ -232,8 +232,9 @@ class BasicMA(PlotLineItem):
         xData = data[0]
         yData = data[1]
         self.setData(xData, yData)
+        # 
         # self.prepareGeometryChange()
-        # self.informViewBoundsChanged()
+        self.informViewBoundsChanged()
 
     def get_last_point(self):
         _time = self.xData[-1]

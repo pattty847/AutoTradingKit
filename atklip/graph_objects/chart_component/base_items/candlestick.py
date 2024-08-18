@@ -449,7 +449,7 @@ class CandleStick(GraphicsObject):
 
     def setData(self, data) -> None:
         """y_data must be in format [[open, close, min, max], ...]"""
-        self.prepareGeometryChange()
+        
         self._to_update = False
         w = 1 / 5
         x_data, y_data = data[0],data[1]
@@ -461,6 +461,7 @@ class CandleStick(GraphicsObject):
         # p.end()
         self._to_update = True
         
+        self.prepareGeometryChange()
         self.informViewBoundsChanged()
         
     def update_last_data(self, setdata) -> None:
@@ -560,7 +561,6 @@ class SingleCandleStick(GraphicsObject):
 
     def setData(self, data) -> None:
         """y_data must be in format [[open, close, min, max], ...]"""
-        self.prepareGeometryChange()
         x_data, y_data = data[0], data[1]
         if not isinstance(x_data, np.ndarray):
             x_data = np.array(x_data)
@@ -578,6 +578,7 @@ class SingleCandleStick(GraphicsObject):
         p.end()
         self.chart.sig_update_y_axis.emit()
         
+        self.prepareGeometryChange()
         self.informViewBoundsChanged()
 
     def update_last_data(self,setdata) -> None:

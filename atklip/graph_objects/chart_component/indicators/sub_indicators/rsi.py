@@ -289,8 +289,9 @@ class BasicRSI(PlotDataItem):
             self.setData(xData, yData)
         except Exception as e:
             pass
+        # 
         # self.prepareGeometryChange()
-        # self.informViewBoundsChanged()
+        self.informViewBoundsChanged()
         
     def get_last_point(self):
         _time = self.xData[-1]

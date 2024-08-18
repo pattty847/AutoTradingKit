@@ -39,7 +39,7 @@ class PriceLine(InfiniteLine):
 
     def update_data(self,lastcandle):
         # print(type(lastcandle))
-        self.prepareGeometryChange()
+        
         if isinstance(lastcandle,list):
             lastcandle:OHLCV=lastcandle[-1]
         _open = lastcandle.open
@@ -47,10 +47,11 @@ class PriceLine(InfiniteLine):
         colorline = "green" if _close >= _open else "red"
         self.pen.setColor(mkColor(colorline))
         self.setPos(_close)
+        self.prepareGeometryChange()
         self.informViewBoundsChanged()
             
     def update_price_line_indicator(self,lastcandle:list[OHLCV]|float):
-        self.prepareGeometryChange()
+        
         colorline = "white"
         if isinstance(lastcandle, list):
             colorline = "green" if lastcandle[-1].close >= lastcandle[-1].open else "red"
@@ -72,4 +73,5 @@ class PriceLine(InfiniteLine):
                     self.pen.setColor(mkColor(colorline))
                     self.setPos(point)
         
+        self.prepareGeometryChange()
         self.informViewBoundsChanged()

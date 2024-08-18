@@ -225,7 +225,7 @@ class PColorMeshItem(GraphicsObject):
         )
 
         if boundsChanged:
-            self.prepareGeometryChange()
+            
             self.informViewBoundsChanged()
 
         self.update()

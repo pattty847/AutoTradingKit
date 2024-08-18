@@ -67,7 +67,7 @@ class BarGraphItem(GraphicsObject):
         self._shape = None
         self._prepareData()
         self._updateColors(opts)
-        self.prepareGeometryChange()
+        
         self.update()
         self.informViewBoundsChanged()
 

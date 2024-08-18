@@ -324,7 +324,7 @@ class InfiniteLine(GraphicsObject):
         if self._bounds != br or self._lastViewSize != vs:
             self._bounds = br
             self._lastViewSize = vs
-            self.prepareGeometryChange()
+            
         
         self._endPoints = (left, right)
         self._lastViewRect = vr

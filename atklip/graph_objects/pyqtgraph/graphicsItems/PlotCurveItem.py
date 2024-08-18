@@ -328,7 +328,7 @@ class PlotCurveItem(GraphicsObject):
 
     def viewTransformChanged(self):
         self.invalidateBounds()
-        self.prepareGeometryChange()
+        
 
     #def boundingRect(self):
         #if self._boundingRect is None:
@@ -514,7 +514,7 @@ class PlotCurveItem(GraphicsObject):
         self.xData = kargs['x'].view(np.ndarray)
         
         self.invalidateBounds()
-        self.prepareGeometryChange()
+        
         self.informViewBoundsChanged()
 
         profiler('copy')

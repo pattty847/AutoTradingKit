@@ -218,7 +218,7 @@ class AxisItem(GraphicsWidget):
         """
         self.grid = grid
         self.picture = None
-        self.prepareGeometryChange()
+        
         self.update()
 
     def setLogMode(self, *args, **kwargs):
@@ -266,7 +266,7 @@ class AxisItem(GraphicsWidget):
         """
         self.style['tickFont'] = font
         self.picture = None
-        self.prepareGeometryChange()
+        
         ## Need to re-allocate space depending on font size?
 
         self.update()

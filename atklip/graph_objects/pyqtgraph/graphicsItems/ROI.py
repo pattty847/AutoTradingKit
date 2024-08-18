@@ -334,7 +334,7 @@ class ROI(GraphicsObject):
             newPos = self.state['pos'] + c - c1
             self.setPos(newPos, update=False, finish=False)
         
-        self.prepareGeometryChange()
+        
         self.state['size'] = size
         if update:
             self.stateChanged(finish=finish)
@@ -1022,7 +1022,7 @@ class ROI(GraphicsObject):
                 if state[k] != self.lastState[k]:
                     changed = True
         
-        self.prepareGeometryChange()
+        
         if changed:
             ## Move all handles to match the current configuration of the ROI
             for h in self.handles:
@@ -1500,7 +1500,7 @@ class Handle(UIGraphicsItem):
             self._shape = s
             # beware--this can cause the view to adjust,
             # which would immediately invalidate the shape.
-            self.prepareGeometryChange()  
+              
         return self._shape
     
     def boundingRect(self):
@@ -2272,7 +2272,7 @@ class CrosshairROI(ROI):
 
     def invalidate(self):
         self._shape = None
-        self.prepareGeometryChange()
+        
         
     def boundingRect(self):
         return self.shape().boundingRect()

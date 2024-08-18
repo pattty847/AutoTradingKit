@@ -202,8 +202,9 @@ class MACDHistogram(GraphicsObject):
         w = 1 / 5
         [self.draw_volume(value,w,x_data,index) for index, value in enumerate(y_data)]
         self._to_update = True
+        # 
         # self.prepareGeometryChange()
-        # self.informViewBoundsChanged()
+        self.informViewBoundsChanged()
         # self._panel.informViewBoundsChanged()
 
     def update_last_data(self,data, setdata) -> None:
@@ -272,7 +273,7 @@ class SingleMACDHistogram(GraphicsObject):
 
     def setData(self, data) -> None:
         """y_data must be in format [[open, close, min, max], ...]"""
-        self.prepareGeometryChange()
+        
         x_data, y_data = data[0], data[1]
         if not isinstance(x_data, np.ndarray):
             x_data = np.array(x_data)
@@ -289,6 +290,7 @@ class SingleMACDHistogram(GraphicsObject):
         self.draw_volume(p,value,w,t)
         p.end()
         
+        self.prepareGeometryChange()
         self.informViewBoundsChanged()
 
     def update_last_data(self,last_candle,setdata) -> None:

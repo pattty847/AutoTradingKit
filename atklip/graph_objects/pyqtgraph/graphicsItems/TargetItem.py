@@ -204,7 +204,7 @@ class TargetItem(UIGraphicsItem):
 
             # beware--this can cause the view to adjust
             # which would immediately invalidate the shape.
-            self.prepareGeometryChange()
+            
         return self._shape
 
     def generateShape(self):

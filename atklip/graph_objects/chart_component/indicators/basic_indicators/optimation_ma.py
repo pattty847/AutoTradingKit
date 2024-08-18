@@ -343,6 +343,7 @@ class BasicMA(GraphicsObject):
         [self.draw_line(index) for index in range(len(y_data)) if y_data[index] is not np.nan]
         # p.end()
         self._to_update = True
+        
         self.prepareGeometryChange()
         self.informViewBoundsChanged()
         

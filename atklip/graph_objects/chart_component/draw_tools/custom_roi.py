@@ -227,7 +227,7 @@ class MyHandle(Handle, UIGraphicsItem):
             if s is None:
                 return self.path
             self._shape = s
-            self.prepareGeometryChange()  ## beware--this can cause the view to adjust, which would immediately invalidate the shape.
+              ## beware--this can cause the view to adjust, which would immediately invalidate the shape.
         return self._shape
     
     def boundingRect(self):

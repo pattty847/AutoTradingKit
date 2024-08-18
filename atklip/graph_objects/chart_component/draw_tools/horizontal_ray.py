@@ -239,8 +239,9 @@ class HorizontalRayNoHandle(MyLineNoHandleROI):
             
     
     # def paintEvent(self, event):
+    #     
     #     self.prepareGeometryChange()
-    #     self.informViewBoundsChanged()
+        self.informViewBoundsChanged()
     
     def paint(self, p, *args):
         
@@ -256,8 +257,9 @@ class HorizontalRayNoHandle(MyLineNoHandleROI):
         #print(h1, h2)
         
         p.drawLine(h1, h2)
-        self.prepareGeometryChange()
-        #self.informViewBoundsChanged()
+        
+        #self.prepareGeometryChange()
+        self.informViewBoundsChanged()
         
     def boundingRect(self):
         return self.shape().boundingRect()
@@ -581,8 +583,9 @@ class Horizontal_ray(CustomLineSegmentROI):
             
     
     # def paintEvent(self, event):
+    #     
     #     self.prepareGeometryChange()
-    #     self.informViewBoundsChanged()
+        self.informViewBoundsChanged()
     
     def paint(self, p, *args):
         
@@ -598,8 +601,9 @@ class Horizontal_ray(CustomLineSegmentROI):
         #print(h1, h2)
         
         p.drawLine(h1, h2)
-        self.prepareGeometryChange()
-        #self.informViewBoundsChanged()
+        
+        #self.prepareGeometryChange()
+        self.informViewBoundsChanged()
         
     def boundingRect(self):
         return self.shape().boundingRect()

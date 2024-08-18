@@ -284,7 +284,7 @@ class CustomDateAxisItem(AxisItem):
     
     def change_value(self, args):
         #print(args, type(args))
-        self.prepareGeometryChange()
+        
         if len(args) == 1:
             color,price =args[0][0], args[0][1]
         else:
@@ -310,8 +310,9 @@ class CustomDateAxisItem(AxisItem):
             self.picture = picture
             self.picture.play(painter)
             painter.end()
-
-        #self.informViewBoundsChanged()
+        
+        #self.prepareGeometryChange()
+        self.informViewBoundsChanged()
 
     def draw_vertical_line(self,p):
         #print("đa vao day")
@@ -890,7 +891,7 @@ class CustomPriceAxisItem(AxisItem):
         self.picture.play(p)
     @Slot()
     def change_view(self):
-        self.prepareGeometryChange()
+        
         profiler = debug.Profiler()
         try:
             picture = QPicture()
@@ -909,10 +910,11 @@ class CustomPriceAxisItem(AxisItem):
             self.picture.play(painter)
             painter.end()
         
-        #self.informViewBoundsChanged()
+        #self.prepareGeometryChange()
+        self.informViewBoundsChanged()
     
     def change_value(self, args):
-        self.prepareGeometryChange()
+        
         if len(args) == 1:
             # if args[0][1] != None:
             self.cross_color,self.cross_price =args[0][0], args[0][1]
@@ -937,7 +939,8 @@ class CustomPriceAxisItem(AxisItem):
             self.picture.play(painter)
             painter.end()
         
-        #self.informViewBoundsChanged()
+        #self.prepareGeometryChange()
+        self.informViewBoundsChanged()
 
     def wheelEvent(self, event):
         #print("wheelEvent drag la vao day......")

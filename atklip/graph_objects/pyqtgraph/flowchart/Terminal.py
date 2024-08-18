@@ -507,7 +507,7 @@ class ConnectionItem(GraphicsObject):
             stop = Point(self.target)
         else:
             return
-        self.prepareGeometryChange()
+        
         
         self.path = self.generatePath(start, stop)
         self.shapePath = None
@@ -559,7 +559,7 @@ class ConnectionItem(GraphicsObject):
 
     def viewRangeChanged(self):
         self.shapePath = None
-        self.prepareGeometryChange()
+        
         
     def shape(self):
         if self.shapePath is None:

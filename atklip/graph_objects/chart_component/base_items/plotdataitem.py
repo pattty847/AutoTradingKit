@@ -30,7 +30,9 @@ class PlotLineItem(GraphicsObject):
     def setPen(self, *args, **kargs):
         self._line.setPen(self, *args, **kargs)
     def setData(self, *args, **kargs):
+        
         self._line.setData(*args, **kargs)
+        
     def boundingRect(self) -> QRectF:
         return self._line.boundingRect()
     def paint(self,p:QPainter,*args):

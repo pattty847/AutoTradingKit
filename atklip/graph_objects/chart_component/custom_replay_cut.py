@@ -34,8 +34,9 @@ class CustomReplayObject(GraphicsObject):
         p.drawRect(QtCore.QRectF(x0, h0, x1, h1))
         p.end()
 
-        self.prepareGeometryChange()
-        #self.informViewBoundsChanged()
+        
+        #self.prepareGeometryChange()
+        self.informViewBoundsChanged()
         # self.bounds = [None, None]
         # self.sigPlotChanged.emit(self)
     

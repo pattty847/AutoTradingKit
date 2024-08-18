@@ -314,13 +314,14 @@ class BasicSTOCH(GraphicsObject):
         return self.signal.boundingRect()
     
     def set_Data(self,data):
-        self.prepareGeometryChange()
+        
         xData = data[0]
         lb = data[1]
         cb = data[2]
         self.stoch_line.setData(xData,lb)
         self.signal.setData(xData,cb)
         
+        self.prepareGeometryChange()
         self.informViewBoundsChanged()
         
     def get_last_point(self):
