@@ -220,10 +220,10 @@ class Chart(ViewPlotWidget):
                     break
             else:
                 break
-            # try:
-            #     await asyncio.sleep(0.5)
-            # except:
-            #     pass
+            try:
+                await asyncio.sleep(0.5)
+            except:
+                pass
         if exchange != None:
             AppLogger.writer("INFO",f"{__name__} - {symbol}-{interval} have closed")
         try:

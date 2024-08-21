@@ -309,7 +309,7 @@ class BasicUO(PlotDataItem):
         except Exception as e:
             pass
         # 
-        # self.prepareGeometryChange()
+        self.prepareGeometryChange()
         self.informViewBoundsChanged()
         
     def get_last_point(self):
