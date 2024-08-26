@@ -6,11 +6,12 @@ import shutil
 
 def convert_to_cython(py_file):
     cy_file = ""
-    with open(py_file, 'r',encoding= "utf-8") as f:
-        py_code = f.read()
-        cy_file = os.path.splitext(py_file)[0] + ".pyx"
-        with open(cy_file, 'w',encoding="utf-8") as f:
-            f.write(py_code)
+    if "init" not in py_file:
+        with open(py_file, 'r',encoding= "utf-8") as f:
+            py_code = f.read()
+            cy_file = os.path.splitext(py_file)[0] + ".pyx"
+            with open(cy_file, 'w',encoding="utf-8") as f:
+                f.write(py_code)
     return cy_file
 
 folders = [r"atklip\indicators\talipp",r"atklip\indicators\talipp\indicators",r"atklip\indicators\candle",
@@ -106,10 +107,11 @@ _list = [r"atklip\graph_objects\pyqtgraph\widgets",
 # convert_all([r"atklip\indicators\talipp\indicators"])
 
 # convert_all(pyqt_graph_folders)
-"atklip\graph_objects\pyqtgraph\GraphicsScene\GraphicsScene.py"
-"atklip\graph_objects\pyqtgraph\graphicsItems\PlotDataItem.py"
+# "atklip\graph_objects\pyqtgraph\GraphicsScene\GraphicsScene.py"
+# "atklip\graph_objects\pyqtgraph\graphicsItems\PlotDataItem.py"
+# "D:\AutoTradingKit\atklip\indicators\pandas_ta\utils"
 #convert_one(r"atklip\graph_objects\pyqtgraph\GraphicsScene\mouseEvents.py")
-convert_one(r"atklip\graph_objects\pyqtgraph\graphicsItems\PlotDataItem.py")
+convert_all([r"D:\AutoTradingKit\atklip\indicators\pandas_ta\utils"])
 
 # convert_one("graph_objects\pyqtgraph\WidgetGroup.py")
 
