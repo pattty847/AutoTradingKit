@@ -221,7 +221,7 @@ class Chart(ViewPlotWidget):
             else:
                 break
             try:
-                await asyncio.sleep(0.5)
+                await asyncio.sleep(0.3)
             except:
                 pass
         if exchange != None:

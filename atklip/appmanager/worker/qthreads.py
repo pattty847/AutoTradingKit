@@ -1,7 +1,7 @@
 import asyncio
 from threading import Thread
 import traceback
-from PySide6.QtCore import QObject, Signal, Slot, Slot, QThread
+from PySide6.QtCore import QObject, Signal, Slot, Slot, QThread,QCoreApplication
 class QtheadAsyncWorker(QThread):
     update_signal = Signal(object)
     finished = Signal()

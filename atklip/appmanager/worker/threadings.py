@@ -4,6 +4,7 @@ from typing import Coroutine
 from threading import Thread
 import traceback
 import asyncio
+import trio
 from PySide6.QtCore import Signal, QObject, QCoreApplication, Slot,QThread,Qt
 
 

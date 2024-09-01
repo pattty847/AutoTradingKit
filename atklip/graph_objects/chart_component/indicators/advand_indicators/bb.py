@@ -362,7 +362,7 @@ class BasicBB(GraphicsObject):
     def mouseClickEvent(self, ev):
         if ev.button() == Qt.MouseButton.LeftButton:
             self.on_click.emit(self)
-        super().mouseClickEvent(ev)
+        super().mousePressEvent(ev)
 
     def setObjectName(self, name):
         self.indicator_name = name

@@ -13,4 +13,5 @@ ccxt
 talipp
 PyOpenGL==3.1.7
 cython
+trio
 
