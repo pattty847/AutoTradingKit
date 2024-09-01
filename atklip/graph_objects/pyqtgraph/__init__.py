@@ -464,3 +464,6 @@ def setPalette(app, style):
     else:
         raise TypeError('style either be a string or QPalette')
     app.setPalette(p)
+
+
+setConfigOptions(useNumba=True,segmentedLineMode="off",useCupy=True,mouseRateLimit=500)

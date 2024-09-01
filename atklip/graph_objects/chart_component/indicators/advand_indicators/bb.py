@@ -20,6 +20,7 @@ from atklip.app_utils import *
 if TYPE_CHECKING:
     from atklip.graph_objects.chart_component.viewchart import Chart
 
+
 class BasicBB(GraphicsObject):
     on_click = Signal(QObject)
     signal_visible = Signal(bool)
