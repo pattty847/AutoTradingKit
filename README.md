@@ -151,9 +151,19 @@ run mainwindow.py to start app: python mainwindow.py
 
 ```
 
-## Usage
+## USE LINK
 
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+https://github.com/bfolkens/py-market-profile
+
+https://github.com/neurotrader888/VSAIndicator
+
+https://github.com/neurotrader888/RSI-PCA
+
+https://github.com/beinghorizontal/tpo_project
+
+https://github.com/letianzj/quanttrader/tree/master
+
+https://github.com/beinghorizontal/Support-Resistance
 
 ## Support
 

@@ -1,41 +1,84 @@
 # -*- coding: utf-8 -*-
-from pandas import concat, DataFrame
-from atklip.indicators.pandas_ta import Imports
-from atklip.indicators.pandas_ta.overlap import ma
-from atklip.indicators.pandas_ta.utils import get_offset, verify_series, signals
+from pandas import concat, DataFrame, Series
+from atklip.indicators.pandas_ta._typing import DictLike, Int
+from atklip.indicators.pandas_ta.maps import Imports
+from atklip.indicators.pandas_ta.overlap import ema
+from atklip.indicators.pandas_ta.utils import (
+    signals,
+    v_offset,
+    v_pos_default,
+    v_series,
+    v_talib
+)
 
 
-def macd(close, fast=None, slow=None, signal=None, mamode="ema",talib=None, offset=None, **kwargs):
-    """Indicator: Moving Average, Convergence/Divergence (MACD)"""
-    # Validate arguments
-    fast = int(fast) if fast and fast > 0 else 12
-    slow = int(slow) if slow and slow > 0 else 26
-    signal = int(signal) if signal and signal > 0 else 9
+
+def macd(
+    close: Series, fast: Int = None, slow: Int = None,
+    signal: Int = None, talib: bool = None,
+    offset: Int = None, **kwargs: DictLike
+) -> DataFrame:
+    """Moving Average Convergence Divergence (MACD)
+
+    The MACD is a popular indicator to that is used to identify a security's
+    trend. While APO and MACD are the same calculation, MACD also returns
+    two more series called Signal and Histogram. The Signal is an EMA of
+    MACD and the Histogram is the difference of MACD and Signal.
+
+    Sources:
+        https://www.tradingview.com/wiki/MACD_(Moving_Average_Convergence/Divergence)
+        AS Mode: https://tr.tradingview.com/script/YFlKXHnP/
+
+    Args:
+        close (pd.Series): Series of 'close's
+        fast (int): The short period. Default: 12
+        slow (int): The long period. Default: 26
+        signal (int): The signal period. Default: 9
+        talib (bool): If TA Lib is installed and talib is True, Returns
+            the TA Lib version. Default: True
+        offset (int): How many periods to offset the result. Default: 0
+
+    Kwargs:
+        asmode (value, optional): When True, enables AS version of MACD.
+            Default: False
+        fillna (value, optional): pd.DataFrame.fillna(value)
+
+    Returns:
+        pd.DataFrame: macd, histogram, signal columns
+    """
+    # Validate
+    fast = v_pos_default(fast, 12)
+    slow = v_pos_default(slow, 26)
+    signal = v_pos_default(signal, 9)
     if slow < fast:
         fast, slow = slow, fast
-    close = verify_series(close, max(fast, slow, signal))
-    offset = get_offset(offset)
-    mode_tal = bool(talib) if isinstance(talib, bool) else True
+    _length = slow + signal - 1
+    close = v_series(close, _length)
 
-    if close is None: return
+    if close is None:
+        return
 
+    mode_tal = v_talib(talib)
+    offset = v_offset(offset)
     as_mode = kwargs.setdefault("asmode", False)
 
-    # Calculate Result
+    # Calculate
     if Imports["talib"] and mode_tal:
         from talib import MACD
         macd, signalma, histogram = MACD(close, fast, slow, signal)
     else:
-        fastma = ma(mamode,close, length=fast)
-        slowma = ma(mamode,close, length=slow)
+        fastma = ema(close, length=fast, talib=mode_tal)
+        slowma = ema(close, length=slow, talib=mode_tal)
 
         macd = fastma - slowma
-        signalma = ma(mamode,macd.loc[macd.first_valid_index():,], length=signal)
+        macd_fvi = macd.loc[macd.first_valid_index():, ]
+        signalma = ema(close=macd_fvi, length=signal, talib=mode_tal)
         histogram = macd - signalma
 
     if as_mode:
         macd = macd - signalma
-        signalma = ma(mamode,macd.loc[macd.first_valid_index():,], length=signal)
+        macd_fvi = macd.loc[macd.first_valid_index():, ]
+        signalma = ema(close=macd_fvi, length=signal, talib=mode_tal)
         histogram = macd - signalma
 
     # Offset
@@ -44,27 +87,26 @@ def macd(close, fast=None, slow=None, signal=None, mamode="ema",talib=None, offs
         histogram = histogram.shift(offset)
         signalma = signalma.shift(offset)
 
-    # Handle fills
+    # Fill
     if "fillna" in kwargs:
         macd.fillna(kwargs["fillna"], inplace=True)
         histogram.fillna(kwargs["fillna"], inplace=True)
         signalma.fillna(kwargs["fillna"], inplace=True)
-    if "fill_method" in kwargs:
-        macd.fillna(method=kwargs["fill_method"], inplace=True)
-        histogram.fillna(method=kwargs["fill_method"], inplace=True)
-        signalma.fillna(method=kwargs["fill_method"], inplace=True)
 
-    # Name and Categorize it
+    # Name and Category
     _asmode = "AS" if as_mode else ""
     _props = f"_{fast}_{slow}_{signal}"
     macd.name = f"MACD{_asmode}{_props}"
-    histogram.name = f"HISTOGRAM{_asmode}h{_props}"
-    signalma.name = f"SIGNAL{_asmode}s{_props}"
+    histogram.name = f"MACD{_asmode}h{_props}"
+    signalma.name = f"MACD{_asmode}s{_props}"
     macd.category = histogram.category = signalma.category = "momentum"
 
-    # Prepare DataFrame to return
-    data = {macd.name: macd, histogram.name: histogram, signalma.name: signalma}
-    df = DataFrame(data)
+    data = {
+        macd.name: macd,
+        histogram.name: histogram,
+        signalma.name: signalma
+    }
+    df = DataFrame(data, index=close.index)
     df.name = f"MACD{_asmode}{_props}"
     df.category = macd.category
 
@@ -102,48 +144,3 @@ def macd(close, fast=None, slow=None, signal=None, mamode="ema",talib=None, offs
         return signalsdf
     else:
         return df
-
-
-macd.__doc__ = \
-"""Moving Average Convergence Divergence (MACD)
-
-The MACD is a popular indicator to that is used to identify a security's trend.
-While APO and MACD are the same calculation, MACD also returns two more series
-called Signal and Histogram. The Signal is an EMA of MACD and the Histogram is
-the difference of MACD and Signal.
-
-Sources:
-    https://www.tradingview.com/wiki/MACD_(Moving_Average_Convergence/Divergence)
-    AS Mode: https://tr.tradingview.com/script/YFlKXHnP/
-
-Calculation:
-    Default Inputs:
-        fast=12, slow=26, signal=9
-    EMA = Exponential Moving Average
-    MACD = EMA(close, fast) - EMA(close, slow)
-    Signal = EMA(MACD, signal)
-    Histogram = MACD - Signal
-
-    if asmode:
-        MACD = MACD - Signal
-        Signal = EMA(MACD, signal)
-        Histogram = MACD - Signal
-
-Args:
-    close (pd.Series): Series of 'close's
-    fast (int): The short period. Default: 12
-    slow (int): The long period. Default: 26
-    signal (int): The signal period. Default: 9
-    talib (bool): If TA Lib is installed and talib is True, Returns the TA Lib
-        version. Default: True
-    offset (int): How many periods to offset the result. Default: 0
-
-Kwargs:
-    asmode (value, optional): When True, enables AS version of MACD.
-        Default: False
-    fillna (value, optional): pd.DataFrame.fillna(value)
-    fill_method (value, optional): Type of fill method
-
-Returns:
-    pd.DataFrame: macd, histogram, signal columns.
-"""

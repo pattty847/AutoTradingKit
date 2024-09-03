@@ -22,12 +22,8 @@ class MainWidget(QWidget,Ui_MainWidget):
 
         self.tabItem = tabItem
         
-        # self.chartbox_splitter.sig_setup_menu.connect(self.topbar.setup_indicator_menu,Qt.ConnectionType.AutoConnection)
-        # self.chartbox_splitter.sig_setup_menu.connect(self.topbar.setup_symbol_menu,Qt.ConnectionType.AutoConnection)
-        
         self.chartbox_splitter.setup_chart(self,current_ex,current_symbol,curent_interval)
         
-
         self.rightbar.object.splitToolButton.clicked.connect(lambda :self.extend_right_menu(self.rightview))
 
         self.chartbox_splitter.chart.sig_change_tab_infor.connect(self.change_tab_infor,Qt.ConnectionType.AutoConnection)
@@ -36,6 +32,7 @@ class MainWidget(QWidget,Ui_MainWidget):
         self.topbar.sig_change_symbol.connect(self.chartbox_splitter.chart.on_reset_exchange,Qt.ConnectionType.AutoConnection)
         self.topbar.sig_change_inteval.connect(self.chartbox_splitter.chart.on_change_inteval,Qt.ConnectionType.AutoConnection)
         self.topbar.sig_goto_date.connect(self.chartbox_splitter.chart.sig_goto_date,Qt.ConnectionType.AutoConnection)
+        
         self.topbar.sig_add_indicator_to_chart.connect(self.chartbox_splitter.sig_add_indicator_to_chart,Qt.ConnectionType.AutoConnection)
         self.topbar.sig_change_candle_type.connect(self.chartbox_splitter.chart.sig_change_candle_type,Qt.ConnectionType.AutoConnection)
         "signal from TopBar"
@@ -46,6 +43,12 @@ class MainWidget(QWidget,Ui_MainWidget):
         self.topbar.setup_indicator_menu()
         self.topbar.setup_symbol_menu()
         FluentStyleSheet.SPLITTER.apply(self.chartbox_splitter)
+    
+    def resizeEvent(self, e):
+        super().resizeEvent(e)
+        if self.progress.isVisible():
+            self.progress.run_process(True)
+
     def change_tab_infor(self,data):
         symbol = data[0]
         interval = data[1]

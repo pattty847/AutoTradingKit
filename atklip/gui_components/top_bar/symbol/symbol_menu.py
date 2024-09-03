@@ -187,7 +187,7 @@ class BaseMenu(ScrollInterface):
                     _list_symbols = self.dict_favorites[exchange_id]
                     for symbol in _list_symbols:
                         self.sig_add_to_favorite.emit((symbol,exchange_id))
-                        #QCoreApplication.processEvents()
+                        QCoreApplication.processEvents()
         #self.sig_show_process.emit(False)
 
     def get_all_symbols_by_exchange(self,exchange_id):
@@ -203,7 +203,7 @@ class BaseMenu(ScrollInterface):
             for exchange_id in list(self.dict_favorites.keys()):
                 _list_symbols = self.dict_favorites[exchange_id]
                 update_signal.emit([_list_symbols,exchange_id])
-                #QCoreApplication.processEvents()
+                QCoreApplication.processEvents()
             
     def add_Widget(self,widget):
         self.insertWidget(0,widget,stretch=0, alignment=Qt.AlignmentFlag.AlignTop)
@@ -312,7 +312,7 @@ class BaseMenu(ScrollInterface):
                     if symbol in _list_symbols:
                         item.btn_fovarite.added_to_favorite()
             self.sig_add_item.emit(item)
-            #QCoreApplication.processEvents()
+            QCoreApplication.processEvents()
         self.isAdded = True
         self.sig_update_symbols.emit(exchange)
         self.sig_show_process.emit(False)
@@ -334,7 +334,7 @@ class BaseMenu(ScrollInterface):
                     if symbol in _list_symbols:
                         item.btn_fovarite.added_to_favorite()
             self.sig_add_item.emit(item)
-            #QCoreApplication.processEvents()
+            QCoreApplication.processEvents()
             #time.sleep(0.01)
         self.loading = False
         self.sig_show_process.emit(False)

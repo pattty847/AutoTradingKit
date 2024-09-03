@@ -42,12 +42,9 @@ class FastStartThread(QObject):
     def create_task(self, coro: Coroutine) -> None:
         self.loop.call_soon_threadsafe(self.loop.create_task, coro)
 
-    @Slot()
     def run(self):
         try:
             self.create_task(self.fn(*self.args, **self.kwargs))
-            #asyncio.run(self.fn(*self.args, **self.kwargs))
-            #self.loop.run_until_complete(self.fn(*self.args, **self.kwargs))
             self.loop.run_forever()
         except Exception as e:
             traceback.print_exception(e)
@@ -90,7 +87,6 @@ class ThreadingAsyncWorker(QObject):
     def create_task(self, coro: Coroutine) -> None:
         self.loop.call_soon_threadsafe(self.loop.create_task, coro)
 
-    @Slot()
     def run(self):
         try:
             # self.create_task(self.fn(*self.args, **self.kwargs))
@@ -133,7 +129,6 @@ class RequestAsyncWorker(QObject):
             except Exception as e:
                 traceback.print_exception(e)
         self.deleteLater()
-    @Slot()
     def run(self):
         try:
             self.loop.create_task(self.fn(*self.args, **self.kwargs))
@@ -177,7 +172,6 @@ class FastWorker(QObject):
         # self._thread.quit()
         # self._thread.deleteLater()
         self.deleteLater()
-    @Slot()
     def run(self):
         try:
             self.fn(*self.args, **self.kwargs)

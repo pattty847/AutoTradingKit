@@ -1,132 +1,123 @@
-import pandas as pd
-from pandas_ta.utils import get_offset, verify_series
+# -*- coding: utf-8 -*-
+from sys import float_info as sflt
+from numpy import isnan, maximum, minimum, nan
+from pandas import DataFrame, Series
+from atklip.indicators.pandas_ta._typing import DictLike, Int, IntFloat
+from atklip.indicators.pandas_ta.ma import ma
+from atklip.indicators.pandas_ta.utils import (
+    v_bool,
+    v_mamode,
+    v_offset,
+    v_pos_default,
+    v_scalar,
+    v_series,
+    v_talib
+)
 
 
-# def smc(df, length=None, offset=None, **kwargs):
-#     """Indicator: Smart Money Indicator"""
-#     # Validate Arguments
-#     length = int(length) if length and length > 0 else 14
+def smc(
+    open_: Series, high: Series, low: Series, close: Series,
+    abr_length: Int = None, close_length: Int = None, vol_length: Int = None,
+    percent: Int = None, vol_ratio: IntFloat = None, asint: bool = None,
+    mamode: str = None, talib: bool = None,
+    offset: Int = None, **kwargs: DictLike
+) -> DictLike:
+    """Smart Money Comcept (SMC)
 
-#     offset = get_offset(offset)
+    The Smart Money concept combines several techniques to identify significant
+    price movements that might indicate 'smart money' actions. It uses candlestick
+    patterns, moving averages, and imbalance calculations.
 
-#     if df is None:
-#         return
+    Sources:
+        https://www.tradingview.com/script/CnB3fSph-Smart-Money-Concepts-LuxAlgo/
 
-#     # Calculate Result
-#     df["up"] = df["open"] < df["close"]
-#     df["down"] = df["open"] > df["close"]
-#     df["doji"] = df["open"] == df["close"]
-#     df["body_hi"] = df[["open", "close"]].max(axis=1)
-#     df["body_lo"] = df[["open", "close"]].min(axis=1)
-#     df["body"] = df["body_hi"] - df["body_lo"]
-#     df["body_avg"] = df["body"].rolling(window=length).mean()
-#     df["has_up_shadow"] = (df["high"] - df["body_hi"]) > 0.05 * df["body"]
-#     df["has_dn_shadow"] = (df["body_lo"] - df["low"]) > 0.05 * df["body"]
-#     df["down_trend"] = df["close"] < df["close"].rolling(window=50).mean()
+    Args:
+        abr_length (int): Average Bar Range (abr) window length. Default: 14
+        close_length (int): The moving average length for 'close'. Default: 50
+        vol_length (int): The length for calculating volatility. Default: 20
+        percent (int): Percent of wick that exceeds the body. Default: 5
+        vol_ratio (float): Volatility ratio to determine high volatility condition.
+            Default: 1.5
+        asint (bool): Keep results numerical instead of boolean.
+            Default: True
+        mamode (str): See ``help(ta.ma)``. Default: 'sma'
+        talib (bool): If TA Lib is installed and talib is True, Returns
+            the TA Lib version. Default: True
+        offset (int): How many periods to offset the result. Default: 0
 
-#     # Imbalance calculations
-#     df["top_imbalance_size"] = df["low"].shift(2) - df["high"]
-#     df["bottom_imbalance_size"] = df["low"] - df["high"].shift(2)
-#     day_adr = (
-#         df["high"].rolling(window=length).max() - df["low"].rolling(window=length).min()
-#     )
-#     df["top_imbalance_percentage"] = (df["top_imbalance_size"] / day_adr) * 100
-#     df["bottom_imbalance_percentage"] = (df["bottom_imbalance_size"] / day_adr) * 100
+    Returns:
+        pd.DataFrame: High Volatility, Bottom Imbalance Flag, Bottom Imbalance Value,
+            Bottom Imbalance Percent, Top Imbalance Flag, Top Imbalance Value,
+            Top Imbalance Percent Columns
+    """
+    # Validate
+    abr_length = v_pos_default(abr_length, 14)
+    close_length = v_pos_default(close_length, 50)
+    vol_length = v_pos_default(vol_length, 20)
+    if close_length < abr_length:
+        abr_length, close_length = close_length, abr_length
+    _length = max(abr_length, close_length, vol_length) + 1
 
-#     # Adding flags for significant imbalances
-#     df["top_imbalance_flag"] = (df["top_imbalance_size"] > 0) & (
-#         df["top_imbalance_percentage"] > 1
-#     )
-#     df["bottom_imbalance_flag"] = (df["bottom_imbalance_size"] > 0) & (
-#         df["bottom_imbalance_percentage"] > 1
-#     )
+    open_ = v_series(open_, _length)
+    high = v_series(high, _length)
+    low = v_series(low, _length)
+    close = v_series(close, _length)
 
-#     # Offset
-#     if offset != 0:
-#         df = df.shift(offset)
+    if open_ is None or high is None or low is None or close is None:
+        return
 
-#     # Handle fills
-#     if "fillna" in kwargs:
-#         df.fillna(kwargs["fillna"], inplace=True)
-#     if "fill_method" in kwargs:
-#         df.fillna(method=kwargs["fill_method"], inplace=True)
+    percent = v_pos_default(percent, 5)
+    body_percent = 0.01 * percent
+    vol_ratio = v_scalar(vol_ratio, 1.5)
+    asint = v_bool(asint)
+    mamode = v_mamode(mamode, "sma")
+    mode_tal = v_talib(talib)
+    offset = v_offset(offset)
 
-#     # Name and Categorize it
-#     df.name = f"SMI_{length}"
-#     df.category = "momentum"
+    # Calculate
+    body_high, body_low = maximum(open_, close), minimum(open_, close)
+    body = body_high - body_low + sflt.epsilon
+    close_ma = ma(mamode, body, length=close_length, talib=mode_tal)
 
+    # Calculate imbalance sizes and percentages based on Average Bar Range (abr)
+    abr = high.rolling(window=abr_length).max() - low.rolling(window=abr_length).min()
+    top_imbalance = low.shift(2) - high
+    btm_imbalance = low - high.shift(2)
+    top_imbalance_pct = 100 * top_imbalance / abr
+    btm_imbalance_pct = 100 * btm_imbalance / abr
+    hld = high - low + sflt.epsilon
+    high_volatility = hld > vol_ratio * ma(mamode, hld, length=vol_length, talib=mode_tal)
 
+    btm_imbalance_flag = (btm_imbalance > 0) & (btm_imbalance_pct > 1)
+    top_imbalance_flag = (top_imbalance > 0) & (top_imbalance_pct > 1)
 
-def smc(df):
-    # Temporarily rename columns for compatibility
-    # df = df.rename(
-    #     columns={"bid_o": "open", "bid_c": "close", "bid_h": "high", "bid_l": "low"}
-    # )
+    if asint:
+        high_volatility = high_volatility.astype(int)
+        btm_imbalance_flag = btm_imbalance_flag.astype(int)
+        top_imbalance_flag = top_imbalance_flag.astype(int)
 
-    df["up"] = df["open"] < df["close"]
-    df["down"] = df["open"] > df["close"]
-    df["doji"] = df["open"] == df["close"]
-    df["body_hi"] = df[["open", "close"]].max(axis=1)
-    df["body_lo"] = df[["open", "close"]].min(axis=1)
-    df["body"] = df["body_hi"] - df["body_lo"]
-    df["body_avg"] = df["body"].rolling(window=14).mean()
-    df["small_body"] = df["body"] < df["body_avg"]
-    df["long_body"] = df["body"] > df["body_avg"]
-    df["white_body"] = df["open"] < df["close"]
-    df["black_body"] = df["open"] > df["close"]
-    df["up_shadow"] = df["high"] - df["body_hi"]
-    df["dn_shadow"] = df["body_lo"] - df["low"]
-    df["has_up_shadow"] = df["up_shadow"] > 0.05 * df["body"]
-    df["has_dn_shadow"] = df["dn_shadow"] > 0.05 * df["body"]
-    df["down_trend"] = df["close"] < df["close"].rolling(window=50).mean()
+    _props = f"_{abr_length}_{close_length}_{vol_length}_{percent}"
+    data = {
+        f"SMChv{_props}": high_volatility,
+        f"SMCbf{_props}": btm_imbalance_flag,
+        f"SMCbi{_props}": btm_imbalance,
+        f"SMCbp{_props}": btm_imbalance_pct,
+        f"SMCtf{_props}": top_imbalance_flag,
+        f"SMCti{_props}": top_imbalance,
+        f"SMCtp{_props}": top_imbalance_pct,
+    }
+    df = DataFrame(data, index=close.index)
 
-    # Calculate imbalance sizes and percentages based on day average range
-    df["top_imbalance_size"] = df["low"].shift(2) - df["high"]
-    df["bottom_imbalance_size"] = df["low"] - df["high"].shift(2)
-    day_adr = df["high"].rolling(window=14).max() - df["low"].rolling(window=14).min()
-    df["top_imbalance_percentage"] = (df["top_imbalance_size"] / day_adr) * 100
-    df["bottom_imbalance_percentage"] = (df["bottom_imbalance_size"] / day_adr) * 100
-    df["volatility"] = df["high"] - df["low"]
-    df["vol_avg"] = df["volatility"].rolling(window=20).mean()
-    df["high_volatility"] = df["volatility"] > 1.5 * df["vol_avg"]
-    
-    # Adding flags for significant imbalances
-    df["top_imbalance_flag"] = (df["top_imbalance_size"] > 0) & (
-        df["top_imbalance_percentage"] > 1
-    )
-    df["bottom_imbalance_flag"] = (df["bottom_imbalance_size"] > 0) & (
-        df["bottom_imbalance_percentage"] > 1
-    )
-    
-    # Correct way to fill NaN values
-    df.ffill(inplace=True)  # Forward fill
-    df.bfill(inplace=True)  # Backward fill if any NaN at the start
+    # Offset
+    if offset != 0:
+        df = df.shift(offset)
+
+    # Fill
+    df.ffill(inplace=True)
+    df.bfill(inplace=True)
+
+    # Name and Category
+    df.name = f"SMC{_props}"
+    df.category = "momentum"
 
     return df
-
-
-smc.__doc__ = """Smart Money Comcept (SMC)
-
-The Smart Money concept combines several techniques to identify significant
-price movements that might indicate 'smart money' actions. It uses candlestick
-patterns, moving averages, and imbalance calculations.
-
-Sources:
-    None (custom method)
-
-Calculation:
-    Default Inputs:
-        length=14
-
-Args:
-    df (pd.DataFrame): DataFrame containing 'open', 'high', 'low', 'close' data
-    length (int): The length of the period for rolling calculations. Default: 14
-    offset (int): How many periods to offset the result. Default: 0
-
-Kwargs:
-    fillna (value, optional): pd.DataFrame.fillna(value)
-    fill_method (value, optional): Type of fill method
-
-Returns:
-    pd.DataFrame: Original DataFrame with new columns for the indicator.
-"""

@@ -243,8 +243,8 @@ class JAPAN_CANDLE(QObject):
         new_candle:OHLCV = new_candles[-1]
         if self.first_gen:
             if len(self.candles) == 0:
-                "lấy mốc thời gian 2018 thời điểm data bắt đầu"
-                new_candle.index = 1514754000
+                "lấy mốc thời gian 1.1.2000 thời điểm data bắt đầu"
+                new_candle.index = 946684800
                 self.candles.append(new_candle)
                 self.dict_index_ohlcv[new_candle.index] = new_candle
                 self.dict_time_ohlcv[new_candle.time] = new_candle

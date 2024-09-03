@@ -115,6 +115,7 @@ class ThreadingAsyncWorker(QRunnable):
     "Worker này dùng để update  data trong một cho graph object khi có data mới"
     def __init__(self,fn, *args, **kwargs):
         super(ThreadingAsyncWorker, self).__init__()
+        self.setAutoDelete(True)
         self.fn = fn
         self.args = args
         self.kwargs = kwargs
@@ -122,7 +123,6 @@ class ThreadingAsyncWorker(QRunnable):
         self.qtheadpool = QThreadPool()
         self.signals.finished.connect(self.stop_thread)
         self.signals.error.connect(self.stop_thread)
-        self.setAutoDelete(True)
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop)
 
@@ -132,20 +132,22 @@ class ThreadingAsyncWorker(QRunnable):
     def stop_thread(self):
         if self.loop != None:
             try:
-                self.loop.stop()
-                self.loop.close()
+                asyncio.set_event_loop(None)
+                self.loop.call_soon_threadsafe(self.loop.stop)
             except Exception as e:
                 self.loop = None
             try:
                 self.qtheadpool.deleteLater()
+                self.signals.deleteLater()
             except Exception as e:
                 self.qtheadpool = None
+                self.loop = None
+                self.signals.deleteLater()
     @Slot()
     def run(self):
         try:
             self.loop.run_until_complete(self.fn(*self.args, **self.kwargs))
         except Exception as e:
-            traceback.print_exception(e)
             self.signals.error.emit()
         finally:
             try:
@@ -158,6 +160,7 @@ class RequestAsyncWorker(QRunnable):
     "Worker này dùng để update  data trong một cho graph object khi có data mới"
     def __init__(self,fn, *args, **kwargs):
         super(RequestAsyncWorker, self).__init__()
+        self.setAutoDelete(True)
         self.fn = fn
         self.args = args
         self.kwargs = kwargs
@@ -166,7 +169,6 @@ class RequestAsyncWorker(QRunnable):
         self.kwargs['update_signal'] = self.signals.update_signal
         self.signals.finished.connect(self.stop_thread)
         self.signals.error.connect(self.stop_thread)
-        self.setAutoDelete(True)
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop)
 
@@ -176,21 +178,22 @@ class RequestAsyncWorker(QRunnable):
     def stop_thread(self):
         if self.loop != None:
             try:
-                self.loop.stop()
-                self.loop.close()
+                asyncio.set_event_loop(None)
+                self.loop.call_soon_threadsafe(self.loop.stop)
             except Exception as e:
                 self.loop = None
             try:
                 self.qtheadpool.deleteLater()
+                self.signals.deleteLater()
             except Exception as e:
                 self.qtheadpool = None
+                self.loop = None
+                self.signals.deleteLater()
     @Slot()
     def run(self):
         try:
             self.loop.run_until_complete(self.fn(*self.args, **self.kwargs))
-            #self.loop.run_forever()
         except Exception as e:
-            traceback.print_exception(e)
             self.signals.error.emit()
         finally:
             try:

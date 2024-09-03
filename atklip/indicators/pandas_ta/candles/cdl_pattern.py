@@ -1,46 +1,84 @@
 # -*- coding: utf-8 -*-
-from typing import Sequence, Union
 from pandas import Series, DataFrame
+from atklip.indicators.pandas_ta._typing import DictLike, Int, IntFloat, List, Union
+from atklip.indicators.pandas_ta.maps import Imports
+from atklip.indicators.pandas_ta.utils import v_offset, v_scalar, v_series
+from atklip.indicators.pandas_ta.candles import cdl_doji, cdl_inside
 
-from . import cdl_doji, cdl_inside
-from atklip.indicators.pandas_ta.utils import get_offset, verify_series
-from atklip.indicators.pandas_ta import Imports
 
 
 ALL_PATTERNS = [
-    "2crows", "3blackcrows", "3inside", "3linestrike", "3outside", "3starsinsouth",
-    "3whitesoldiers", "abandonedbaby", "advanceblock", "belthold", "breakaway",
-    "closingmarubozu", "concealbabyswall", "counterattack", "darkcloudcover", "doji",
-    "dojistar", "dragonflydoji", "engulfing", "eveningdojistar", "eveningstar",
-    "gapsidesidewhite", "gravestonedoji", "hammer", "hangingman", "harami",
-    "haramicross", "highwave", "hikkake", "hikkakemod", "homingpigeon",
-    "identical3crows", "inneck", "inside", "invertedhammer", "kicking", "kickingbylength",
-    "ladderbottom", "longleggeddoji", "longline", "marubozu", "matchinglow", "mathold",
-    "morningdojistar", "morningstar", "onneck", "piercing", "rickshawman",
-    "risefall3methods", "separatinglines", "shootingstar", "shortline", "spinningtop",
-    "stalledpattern", "sticksandwich", "takuri", "tasukigap", "thrusting", "tristar",
-    "unique3river", "upsidegap2crows", "xsidegap3methods"
+    "2crows", "3blackcrows", "3inside", "3linestrike", "3outside",
+    "3starsinsouth", "3whitesoldiers", "abandonedbaby", "advanceblock",
+    "belthold", "breakaway", "closingmarubozu", "concealbabyswall",
+    "counterattack", "darkcloudcover", "doji", "dojistar", "dragonflydoji",
+    "engulfing", "eveningdojistar", "eveningstar", "gapsidesidewhite",
+    "gravestonedoji", "hammer", "hangingman", "harami", "haramicross",
+    "highwave", "hikkake", "hikkakemod", "homingpigeon", "identical3crows",
+    "inneck", "inside", "invertedhammer", "kicking", "kickingbylength",
+    "ladderbottom", "longleggeddoji", "longline", "marubozu", "matchinglow",
+    "mathold", "morningdojistar", "morningstar", "onneck", "piercing",
+    "rickshawman", "risefall3methods", "separatinglines", "shootingstar",
+    "shortline", "spinningtop", "stalledpattern", "sticksandwich", "takuri",
+    "tasukigap", "thrusting", "tristar", "unique3river", "upsidegap2crows",
+    "xsidegap3methods"
 ]
 
 
-def cdl_pattern(open_, high, low, close, name: Union[str, Sequence[str]]="all", scalar=None, offset=None, **kwargs) -> DataFrame:
-    """Candle Pattern"""
-    # Validate Arguments
-    open_ = verify_series(open_)
-    high = verify_series(high)
-    low = verify_series(low)
-    close = verify_series(close)
-    offset = get_offset(offset)
-    scalar = float(scalar) if scalar else 100
+def cdl_pattern(
+    open_: Series, high: Series, low: Series, close: Series,
+    name: Union[str, List[str]] = "all", scalar: IntFloat = None,
+    offset: Int = None, **kwargs: DictLike
+) -> DataFrame:
+    """TA Lib Candle Patterns
 
-    # Patterns that implemented in pandas-ta
-    pta_patterns = {
-        "doji": cdl_doji, "inside": cdl_inside,
-    }
+    A wrapper around all TA Lib's candle patterns.
+
+    Examples:
+
+        Get all candle patterns (This is the default behaviour)::
+
+            df = df.ta.cdl_pattern(name="all")
+
+        Get only one pattern::
+
+            df = df.ta.cdl_pattern(name="doji")
+
+        Get some patterns::
+
+            df = df.ta.cdl_pattern(name=["doji", "inside"])
+
+    Args:
+        open_ (pd.Series): Series of 'open's
+        high (pd.Series): Series of 'high's
+        low (pd.Series): Series of 'low's
+        close (pd.Series): Series of 'close's
+        name: (Union[str, Sequence[str]]): name of the patterns
+        scalar (float): How much to magnify. Default: 100
+        offset (int): How many periods to offset the result. Default: 0
+
+    Kwargs:
+        fillna (value, optional): pd.DataFrame.fillna(value)
+    Returns:
+        pd.DataFrame: one column for each pattern.
+    """
+    # Validate Arguments
+    open_ = v_series(open_, 1)
+    high = v_series(high, 1)
+    low = v_series(low, 1)
+    close = v_series(close, 1)
+    offset = v_offset(offset)
+    scalar = v_scalar(scalar, 100)
+
+    if open_ is None or high is None or low is None or close is None:
+        return
+
+    # Patterns implemented in Pandas TA
+    pta_patterns = {"doji": cdl_doji, "inside": cdl_inside}
 
     if name == "all":
         name = ALL_PATTERNS
-    if type(name) is str:
+    if isinstance(name, str):
         name = [name]
 
     if Imports["talib"]:
@@ -53,75 +91,40 @@ def cdl_pattern(open_, high, low, close, name: Union[str, Sequence[str]]="all", 
             continue
 
         if n in pta_patterns:
-            pattern_result = pta_patterns[n](open_, high, low, close, offset=offset, scalar=scalar, **kwargs)
+            pattern_result = pta_patterns[n](
+                open_, high, low, close, offset=offset, scalar=scalar, **kwargs
+            )
+            if not isinstance(pattern_result, Series):
+                continue
             result[pattern_result.name] = pattern_result
+
         else:
             if not Imports["talib"]:
-                print(f"[X] Please install TA-Lib to use {n}. (pip install TA-Lib)")
+                print(f"[X] Install TA-Lib to use {n}. (pip install TA-Lib)")
                 continue
 
-            pattern_func = tala.Function(f"CDL{n.upper()}")
-            pattern_result = Series(pattern_func(open_, high, low, close, **kwargs) / 100 * scalar)
+            pf = tala.Function(f"CDL{n.upper()}")
+            pattern_result = Series(
+                0.01 * scalar * pf(open_, high, low, close, **kwargs)
+            )
             pattern_result.index = close.index
 
             # Offset
             if offset != 0:
                 pattern_result = pattern_result.shift(offset)
 
-            # Handle fills
+            # Fill
             if "fillna" in kwargs:
                 pattern_result.fillna(kwargs["fillna"], inplace=True)
-            if "fill_method" in kwargs:
-                pattern_result.fillna(method=kwargs["fill_method"], inplace=True)
-
             result[f"CDL_{n.upper()}"] = pattern_result
 
-    if len(result) == 0: return
+    if len(result) == 0:
+        return
 
-    # Prepare DataFrame to return
+    # Name and Category
     df = DataFrame(result)
     df.name = "CDL_PATTERN"
     df.category = "candles"
     return df
 
-
-cdl_pattern.__doc__ = \
-"""Candle Pattern
-
-A wrapper around all candle patterns.
-
-Examples:
-
-Get all candle patterns (This is the default behaviour)
->>> df = df.ta.cdl_pattern(name="all")
-Or
->>> df.ta.cdl("all", append=True) # = df.ta.cdl_pattern("all", append=True)
-
-Get only one pattern
->>> df = df.ta.cdl_pattern(name="doji")
-Or
->>> df.ta.cdl("doji", append=True)
-
-Get some patterns
->>> df = df.ta.cdl_pattern(name=["doji", "inside"])
-Or
->>> df.ta.cdl(["doji", "inside"], append=True)
-
-Args:
-    open_ (pd.Series): Series of 'open's
-    high (pd.Series): Series of 'high's
-    low (pd.Series): Series of 'low's
-    close (pd.Series): Series of 'close's
-    name: (Union[str, Sequence[str]]): name of the patterns
-    scalar (float): How much to magnify. Default: 100
-    offset (int): How many periods to offset the result. Default: 0
-
-Kwargs:
-    fillna (value, optional): pd.DataFrame.fillna(value)
-    fill_method (value, optional): Type of fill method
-
-Returns:
-    pd.DataFrame: one column for each pattern.
-"""
-
-cdl = cdl_pattern
+cdl = cdl_pattern  # Alias

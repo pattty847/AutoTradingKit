@@ -17,7 +17,7 @@ from atklip.app_utils import *
 from atklip.appmanager.setting import AppConfig
 
 if TYPE_CHECKING:
-    from atklip.gui_components import TabBar
+    from atklip.gui_components.qfluentwidgets.components import TabBar
 "thiếu quản lý tab khi xóa 1 tab bất kỳ, switch to tab khác và xóa tab muốn xóa, thử lưu router key vào 1 dict"
 class WindowBase(BackgroundAnimationWidget, FramelessWindow):
     """ Fluent window base class """
@@ -53,17 +53,10 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
         self.onTabAddRequested()
 
     def initWindow(self):
-        # self.resize(1400, 1000)
         desktop = screen.getCurrentScreenGeometry()
         w, h = desktop.width(), desktop.height()
-        self.resize(w, h)
-        
-        # if self.window().isMaximized():
-        #     self.window().showNormal()
-        # else:
-        #     self.window().showMaximized()
-
-        self.setGeometry(int(w/2 - self.width()/2),int(h/2 - self.height()/2),w,h)
+        self.setGeometry(int(w/4 - self.width()/4),int(h/4 - self.height()/4),w/2,h/2)
+        self.resize(w/2, h/2)
     def load_pre_config(self):
         curent_tab = AppConfig.get_config_value("profiles.current_tab")
         if curent_tab == None:
@@ -84,12 +77,18 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
         self.titleBar.resize(self.width(), self.titleBar.height())
         self.stackedWidget.resize(self.width(), self.height() - 45)
         interface = self.stackedWidget.currentWidget()
-        if interface.progress.isVisible():
-            interface.progress.run_process(True)
+        if isinstance(interface,MainWidget):
+            if interface.progress.isVisible():
+                interface.progress.run_process(True)
+
     def addInterface(self, interface: MainWidget) -> None:
         """ add sub interface """
         self.stackedWidget.addWidget(interface)
-    
+        interface.progress.run_process(True)
+        self.stackedWidget.resize(self.width(), self.height() - 45)
+        interface.resize(self.width(), self.height())
+        
+
     def removeInterface(self, interface: MainWidget) -> None:
         """ add sub interface """
         self.stackedWidget.removeWidget(interface)
@@ -129,7 +128,7 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
     def addTab(self, routeKey, text, icon,current_ex,current_symbol,curent_interval):
         tabItem = self.tabBar.addTab(routeKey, text, icon)
         self.tabBar.setCurrentTab(routeKey)
-        #self.stackedWidget.resize(self.width(), self.height() - self.titleBar.height())
+        # self.stackedWidget.resize(self.width(), self.height() - self.titleBar.height())
         TabInterface = MainWidget(self,tabItem,routeKey,current_ex,current_symbol,curent_interval)
         
         old_interface = self.stackedWidget.currentWidget()
@@ -137,7 +136,6 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
             old_interface.hide()
             TabInterface.resize(old_interface.width(),old_interface.height())
             
-        TabInterface.progress.run_process(True)
         self.addInterface(TabInterface)
         self.switchTo(TabInterface)
 

@@ -39,7 +39,7 @@ class TitleBar(MSFluentTitleBar):
         # add tab bar
         self.tabBar = TabBar(self)
 
-        self.tabBar.setMovable(True)
+        self.tabBar.setMovable(False)
         self.tabBar.setTabMaximumWidth(180)
         self.tabBar.setTabShadowEnabled(True)
         self.tabBar.setTabSelectedBackgroundColor(QColor(255, 255, 255, 125), QColor(255, 255, 255, 50))

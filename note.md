@@ -1,3 +1,13 @@
+Thêm 1 số indicators PANDAS-TA
+
+https://github.com/twopirllc/pandas-ta/pull/661/files#diff-45fcc49d657dcb2c763943b43322a3c91d2b054484f0d1e2d18388ae3124e714
+
+
+
+
+
+
+
 Khi sử dụng lệnh `cythonize`, bạn có thể cung cấp nhiều tham số để tinh chỉnh quá trình biên dịch. Dưới đây là một số tham số phổ biến mà bạn có thể sử dụng:
 
 1. **-3, --3** : Kiểm tra cú pháp và sử dụng Python 3 trong quá trình biên dịch.

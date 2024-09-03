@@ -1,53 +1,55 @@
 # -*- coding: utf-8 -*-
-from atklip.indicators.pandas_ta.utils import verify_series
-from numpy import nan as npNaN
+from numpy import nan
 from pandas import Series
+from atklip.indicators.pandas_ta._typing import Int
+from atklip.indicators.pandas_ta.utils import v_drift, v_series
 
 
-def pvr(close, volume):
-    """ Indicator: Price Volume Rank"""
-    # Validate arguments
-    close = verify_series(close)
-    volume = verify_series(volume)
 
-    # Calculate Result
-    close_diff = close.diff().fillna(0)
-    volume_diff = volume.diff().fillna(0)
-    pvr_ = Series(npNaN, index=close.index)
-    pvr_.loc[(close_diff >= 0) & (volume_diff >= 0)] = 1
-    pvr_.loc[(close_diff >= 0) & (volume_diff < 0)]  = 2
-    pvr_.loc[(close_diff < 0) & (volume_diff >= 0)]  = 3
-    pvr_.loc[(close_diff < 0) & (volume_diff < 0)]   = 4
+def pvr(
+    close: Series, volume: Series, drift: Int = None,
+) -> Series:
+    """Price Volume Rank
 
-    # Name and Categorize it
-    pvr_.name = f"PVR"
-    pvr_.category = "volume"
+    The Price Volume Rank was developed by Anthony J. Macek and is described
+    in his article in the June, 1994 issue of Technical Analysis of
+    Stocks & Commodities (TASC) Magazine. It was developed as a simple
+    indicator that could be calculated even without a computer. The basic
+    interpretation is to buy when the PV Rank is below 2.5 and
+    sell when it is above 2.5.
 
-    return pvr_
+    Sources:
+        https://www.fmlabs.com/reference/default.htm?url=PVrank.htm
 
+    Args:
+        close (pd.Series): Series of 'close's
+        volume (pd.Series): Series of 'volume's
+        drift (int): The difference period. Default: 1
 
-pvr.__doc__ = \
-"""Price Volume Rank
+    Returns:
+        pd.Series: New feature generated.
+    """
+    # Validate
+    drift = v_drift(drift)
+    close = v_series(close, drift)
+    volume = v_series(volume, drift)
 
-The Price Volume Rank was developed by Anthony J. Macek and is described in his
-article in the June, 1994 issue of Technical Analysis of Stocks & Commodities
-Magazine. It was developed as a simple indicator that could be calculated even
-without a computer. The basic interpretation is to buy when the PV Rank is below
-2.5 and sell when it is above 2.5.
+    if close is None or volume is None:
+        return
 
-Sources:
-    https://www.fmlabs.com/reference/default.htm?url=PVrank.htm
+    # Calculate
+    close_diff = close.diff(drift).fillna(0)
+    volume_diff = volume.diff(drift).fillna(0)
 
-Calculation:
-    return 1 if 'close change' >= 0 and 'volume change' >= 0
-    return 2 if 'close change' >= 0 and 'volume change' < 0
-    return 3 if 'close change' < 0 and 'volume change' >= 0
-    return 4 if 'close change' < 0 and 'volume change' < 0
+    pvr = Series(nan, index=close.index)
 
-Args:
-    close (pd.Series): Series of 'close's
-    volume (pd.Series): Series of 'volume's
+    pvr.loc[(close_diff >= 0) & (volume_diff >= 0)] = 1
+    pvr.loc[(close_diff >= 0) & (volume_diff < 0)] = 2
+    pvr.loc[(close_diff < 0) & (volume_diff >= 0)] = 3
+    pvr.loc[(close_diff < 0) & (volume_diff < 0)] = 4
 
-Returns:
-    pd.Series: New feature generated.
-"""
+    # Name and Category
+    pvr.name = f"PVR"
+    pvr.category = "volume"
+
+    return pvr
