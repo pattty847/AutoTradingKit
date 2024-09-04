@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from pandas import concat, DataFrame, Series
+from atklip.indicators.pandas_ta.ma import ma
 from atklip.indicators.pandas_ta._typing import DictLike, Int
 from atklip.indicators.pandas_ta.maps import Imports
 from atklip.indicators.pandas_ta.overlap import ema
@@ -15,7 +16,7 @@ from atklip.indicators.pandas_ta.utils import (
 
 def macd(
     close: Series, fast: Int = None, slow: Int = None,
-    signal: Int = None, talib: bool = None,
+    signal: Int = None,  mamode="ema", talib: bool = None,
     offset: Int = None, **kwargs: DictLike
 ) -> DataFrame:
     """Moving Average Convergence Divergence (MACD)
@@ -67,18 +68,18 @@ def macd(
         from talib import MACD
         macd, signalma, histogram = MACD(close, fast, slow, signal)
     else:
-        fastma = ema(close, length=fast, talib=mode_tal)
-        slowma = ema(close, length=slow, talib=mode_tal)
+        fastma = ma(mamode,close, length=fast)
+        slowma = ma(mamode,close, length=slow)
 
         macd = fastma - slowma
         macd_fvi = macd.loc[macd.first_valid_index():, ]
-        signalma = ema(close=macd_fvi, length=signal, talib=mode_tal)
+        signalma = ma(mamode,macd_fvi, length=signal)
         histogram = macd - signalma
 
     if as_mode:
         macd = macd - signalma
         macd_fvi = macd.loc[macd.first_valid_index():, ]
-        signalma = ema(close=macd_fvi, length=signal, talib=mode_tal)
+        signalma = ma(mamode,macd_fvi, length=signal)
         histogram = macd - signalma
 
     # Offset
@@ -97,8 +98,8 @@ def macd(
     _asmode = "AS" if as_mode else ""
     _props = f"_{fast}_{slow}_{signal}"
     macd.name = f"MACD{_asmode}{_props}"
-    histogram.name = f"MACD{_asmode}h{_props}"
-    signalma.name = f"MACD{_asmode}s{_props}"
+    histogram.name = f"HISTOGRAM{_asmode}h{_props}"
+    signalma.name = f"SIGNAL{_asmode}s{_props}"
     macd.category = histogram.category = signalma.category = "momentum"
 
     data = {

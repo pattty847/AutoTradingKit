@@ -11,18 +11,18 @@ pandas
 numba
 ccxt
 talipp
-PyOpenGL==3.1.7
+PyOpenGL
 cython
 trio
 dotenv
-ipython==8.21.0
-matplotlib==3.8.2
-matplotlib-inline==0.1.6
-multitasking==0.0.11
-pandas-datareader==0.10.0
-pyarrow==15.0.0
+ipython
+# matplotlib
+# matplotlib-inline
+multitasking
+pandas-datareader
+pyarrow
 setuptools
-streamlit==1.31.0
+streamlit
 # TA-Lib==0.4.28
 # yfinance==0.2.40
 

@@ -360,7 +360,7 @@ class BasicBB(GraphicsObject):
         print("zooo day__________________")
         pass
 
-    def mouseClickEvent(self, ev):
+    def mousePressEvent(self, ev):
         if ev.button() == Qt.MouseButton.LeftButton:
             self.on_click.emit(self)
         super().mousePressEvent(ev)
