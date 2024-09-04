@@ -6,7 +6,7 @@ import traceback
 from typing import Callable
 from PySide6.QtCore import QObject, Signal, QRunnable, Slot, QThreadPool
 
-from .threadpool import QThreadPool_global
+from .threadpool import QThreadPool_global,ThreadPoolExecutor_global
 
 
 class WorkerSignals(QObject):
@@ -72,7 +72,40 @@ class FastWorker(QRunnable):
         finally:
             # self.signals.finished.emit()
             self.signals.deleteLater()
-            
+
+# class FastWorker(QObject):
+#     "Worker này dùng để update  data trong một cho graph object khi có data mới"
+#     def __init__(self,threadpool:str|QThreadPool="view",fn:Callable=None, *args, **kwargs):
+#         super(FastWorker, self).__init__()
+#         # self.setAutoDelete(True)
+#         self.fn = fn
+#         self.args = args
+#         self.kwargs = kwargs.copy()
+#         self.signals = WorkerSignals() 
+#         self.kwargs['setdata'] = self.signals.setdata
+#         if threadpool != None:
+#             self.threadpool = ProcessPoolExecutor_global
+#         else:
+#             self.threadpool = ProcessPoolExecutor_global
+        
+#     def start(self,prio:int=0):
+#         # self.threadpool.start()
+#         funture = self.threadpool.submit(self.run)
+    
+#     # def stop_worker(self):
+#     #     self.signals.deleteLater()
+#     # @Slot()
+#     def run(self):
+#         try:
+#             self.fn(*self.args, **self.kwargs)
+#         except Exception as e:
+#             traceback.print_exception(e)
+#             # self.signals.error.emit()
+#         finally:
+#             # self.signals.finished.emit()
+#             self.signals.deleteLater()
+
+     
 class FastStartSignal(QObject):
     error = Signal()
     finished = Signal()
