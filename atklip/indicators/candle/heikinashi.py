@@ -9,7 +9,7 @@ from atklip.indicators import OHLCV
 from .candle import JAPAN_CANDLE
 # if TYPE_CHECKING:
 #     from .smooth_candle import SMOOTH_CANDLE
-from atklip.appmanager import FastWorker
+from atklip.appmanager import FastWorker,CandleWorker
 
 @njit(cache=True)
 def caculate(pre_open, pre_close,_open,_high,_low,_close,precicion):
@@ -49,9 +49,6 @@ class HEIKINASHI(QObject):
         
         self.df = pd.DataFrame([])
         
-        self.threadpool = QThreadPool(self)
-        self.threadpool.setMaxThreadCount(1)
-        
         self._candles.sig_reset_all.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
         self._candles.sig_update_candle.connect(self.update,Qt.ConnectionType.AutoConnection)
         self._candles.sig_add_candle.connect(self.update,Qt.ConnectionType.AutoConnection)
@@ -68,14 +65,11 @@ class HEIKINASHI(QObject):
     
     def get_last_row_df(self):
         return self.df.iloc[-1]
-        
-    def threadpool_asyncworker(self):
-        #if self._candles.candles != []:
+    
+    def threadpool_asyncworker(self,_candle):
         self.worker = None
-        self.worker = FastWorker(self.threadpool,self.gen_data)
-        self.worker.signals.finished.connect(self.sig_reset_all,Qt.ConnectionType.AutoConnection)
+        self.worker = CandleWorker(self.update,_candle)
         self.worker.start()
-        #self.threadpool.start(self.worker)
     
     def get_candles_as_dataframe(self):
         df = pd.DataFrame([data.__dict__ for data in self.candles])

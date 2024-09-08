@@ -78,7 +78,6 @@ class Volume(GraphicsObject):
         self._to_update: bool = False
         self._is_change_source: bool = False
 
-        self.threadpool = QThreadPool(self)
         self.sig_change_yaxis_range.connect(get_last_pos_worker, Qt.ConnectionType.AutoConnection)
     def get_inputs(self):
         inputs =  {}
@@ -110,7 +109,7 @@ class Volume(GraphicsObject):
     def reset_threadpool_asyncworker(self):
         self.worker = None
         self._is_change_source = True
-        self.worker = FastWorker(self.threadpool,self.update_last_data)
+        self.worker = FastWorker(self.update_last_data)
         self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.AutoConnection)
         self.worker.signals.finished.connect(self.setup_connections,Qt.ConnectionType.AutoConnection)
         self.worker.start()
@@ -122,7 +121,7 @@ class Volume(GraphicsObject):
     def threadpool_asyncworker(self,candle=[]):
         self.worker = None
         self._is_change_source = True
-        self.worker = FastWorker(self.threadpool,self.update_last_data)
+        self.worker = FastWorker(self.update_last_data)
         self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.AutoConnection)
         self.worker.start()
         #self.threadpool.start(self.worker)
@@ -310,19 +309,18 @@ class SingleVolume(GraphicsObject):
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
         self.setAcceptedMouseButtons(Qt.MouseButton.NoButton)
         
-        self.threadpool = QThreadPool(self)
         sig_update_candle.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
 
     def reset_threadpool_asyncworker(self):
         self.worker = None
-        self.worker = FastWorker(self.threadpool,self.update_last_data)
+        self.worker = FastWorker(self.update_last_data)
         self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.AutoConnection)
         self.worker.start()
         #self.threadpool.start(self.worker)
     
     def threadpool_asyncworker(self, last_candle:List[OHLCV]=[]):
         self.worker = None
-        self.worker = FastWorker(self.threadpool,self.update_last_data)
+        self.worker = FastWorker(self.update_last_data)
         self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.AutoConnection)
         self.worker.start()
         #self.threadpool.start(self.worker)

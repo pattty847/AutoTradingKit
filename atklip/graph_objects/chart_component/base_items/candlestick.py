@@ -324,7 +324,7 @@ class CandleStick(GraphicsObject):
         
     def threadpool_asyncworker(self,candle=None):
         self.worker = None
-        self.worker = FastWorker(self.threadpool,self.update_last_data)
+        self.worker = FastWorker(self.update_last_data)
         self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.AutoConnection)
         self.worker.signals.finished.connect(self.set_price_line,Qt.ConnectionType.AutoConnection)
         self.worker.start()
@@ -469,8 +469,8 @@ class CandleStick(GraphicsObject):
         try:
             if len(x_data) != len(y_data):
                 raise Exception("Len of x_data must be the same as y_data")
-            #setdata.emit((x_data, y_data))
-            self.setData((x_data, y_data))
+            setdata.emit((x_data, y_data))
+            # self.setData((x_data, y_data))
             #QCoreApplication.processEvents()
         except Exception as e:
             pass
@@ -502,8 +502,7 @@ class SingleCandleStick(GraphicsObject):
         self.colorline = 'white'
 
         self.old_w = []
-        #self.setAcceptHoverEvents(True)
-        self.threadpool = QThreadPool(self)
+
         self._canldes.sig_update_candle.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
         self._canldes.sig_add_candle.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
         self._canldes.sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
@@ -513,7 +512,7 @@ class SingleCandleStick(GraphicsObject):
   
     def reset_threadpool_asyncworker(self):
         self.worker = None
-        self.worker = FastWorker(self.threadpool,self.update_last_data)
+        self.worker = FastWorker(self.update_last_data)
         self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.AutoConnection)
         self.worker.signals.finished.connect(self.set_price_line,Qt.ConnectionType.AutoConnection)
         self.worker.start()
@@ -521,7 +520,7 @@ class SingleCandleStick(GraphicsObject):
     
     def threadpool_asyncworker(self, last_candle:List[OHLCV]=[]):
         self.worker = None
-        self.worker = FastWorker(self.threadpool,self.update_last_data)
+        self.worker = FastWorker(self.update_last_data)
         self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.AutoConnection)
         self.price_line.update_data(last_candle)
         self.worker.start()
@@ -587,11 +586,10 @@ class SingleCandleStick(GraphicsObject):
                 last_candle = self._canldes.last_data()
                 x_data, _y_data = [last_candle.index], [[last_candle.open,last_candle.high,last_candle.low,last_candle.close]]
                 try:
-                    self.setData((x_data, _y_data))
-                    #setdata.emit((x_data, _y_data))
+                    # self.setData((x_data, _y_data))
+                    setdata.emit((x_data, _y_data))
                     #QCoreApplication.processEvents()
                     self.yaxis_lastprice.emit()
-                    
                 except Exception as e:
                     pass
     def getData(self) -> Tuple[List[float], List[Tuple[float, ...]]]:

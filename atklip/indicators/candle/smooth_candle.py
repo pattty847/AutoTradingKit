@@ -9,7 +9,7 @@ from PySide6.QtCore import Qt, Signal,QObject,QCoreApplication,QThreadPool
 from atklip.indicators.talipp import OHLCV, INDICATOR, IndicatorType,MAType
 from .candle import JAPAN_CANDLE
 from .heikinashi import HEIKINASHI
-from atklip.appmanager import FastWorker
+from atklip.appmanager import FastWorker,CandleWorker
 
 class SMOOTH_CANDLE(QObject):
     """
@@ -62,9 +62,8 @@ class SMOOTH_CANDLE(QObject):
 
     def threadpool_asyncworker(self,_candle):
         self.worker = None
-        self.worker = FastWorker(self.threadpool,self.update,_candle)
+        self.worker = CandleWorker(self.update,_candle)
         self.worker.start()
-        #self.threadpool.start(self.worker)
         
     def get_candles_as_dataframe(self):
         df = pd.DataFrame([data.__dict__ for data in self.candles])

@@ -57,9 +57,7 @@ class BasicMA(GraphicsObject):
         self._INDICATOR : pd.Series = pd.Series([])
         self.is_reset = False
         
-        self.threadpool = QThreadPool(self)
-        self.threadpool.setMaxThreadCount(1)
-        
+
         self.x_data, self.y_data = np.array([]),np.array([])
         self._bar_picutures: Dict[int, QPicture] = {}
         self.picture: QPicture = QPicture()
@@ -178,7 +176,7 @@ class BasicMA(GraphicsObject):
     def threadpool_asyncworker(self,candle=None):
         self.disconnect_connection()
         self.worker = None
-        self.worker = FastWorker(self.threadpool,self.first_load_data)
+        self.worker = FastWorker(self.first_load_data)
         self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.AutoConnection)
         self.worker.start()
         #self.threadpool.start(self.worker)
@@ -230,7 +228,7 @@ class BasicMA(GraphicsObject):
 
     def setdata_worker(self,sig_update_candle):
         self.worker = None
-        self.worker = FastWorker(self.threadpool,self.update_data,sig_update_candle)
+        self.worker = FastWorker(self.update_data,sig_update_candle)
         self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.SingleShotConnection)
         self.worker.start()
         #self.threadpool.start(self.worker)

@@ -79,7 +79,7 @@ class MACDHistogram(GraphicsObject):
     def threadpool_asyncworker(self,data):
         self._is_change_source = True
         self.worker = None
-        self.worker = FastWorker(self.threadpool,self.update_last_data,data)
+        self.worker = FastWorker(self.update_last_data,data)
         self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.AutoConnection)
         self.worker.start()
         #self.threadpool.start(self.worker)
@@ -236,14 +236,12 @@ class SingleMACDHistogram(GraphicsObject):
         self.old_w = []
         self.setAcceptHoverEvents(True)
 
-        self.threadpool = QThreadPool(self)
-        self.threadpool.setMaxThreadCount(1)
         sig_update_histogram.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
 
     
     def threadpool_asyncworker(self, last_candle:List):
         self.worker = None
-        self.worker = FastWorker(self.threadpool,self.update_last_data,last_candle)
+        self.worker = FastWorker(self.update_last_data,last_candle)
         self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.AutoConnection)
         self.worker.start()
         #self.threadpool.start(self.worker)

@@ -11,7 +11,7 @@ from atklip.indicators.talipp import OHLCV, INDICATOR, IndicatorType,MAType,Indi
 from .candle import JAPAN_CANDLE
 from .heikinashi import HEIKINASHI
 from .smooth_candle import SMOOTH_CANDLE
-from atklip.appmanager import FastWorker
+from atklip.appmanager import FastWorker,CandleWorker
 
 class N_SMOOTH_CANDLE(QObject):
     """
@@ -52,8 +52,6 @@ class N_SMOOTH_CANDLE(QObject):
         
         self.df = pd.DataFrame([])
         
-        self.threadpool = QThreadPool(self)
-        self.threadpool.setMaxThreadCount(1)
         self._candles.sig_reset_all.connect(self.fisrt_gen_data,Qt.ConnectionType.AutoConnection)
         self._candles.sig_update_candle.connect(self.update,Qt.ConnectionType.AutoConnection)
         self._candles.sig_add_candle.connect(self.update,Qt.ConnectionType.AutoConnection)
@@ -73,9 +71,8 @@ class N_SMOOTH_CANDLE(QObject):
     
     def threadpool_asyncworker(self,_candle):
         self.worker = None
-        self.worker = FastWorker(self.threadpool,self.update,_candle)
+        self.worker = CandleWorker(self.update,_candle)
         self.worker.start()
-        #self.threadpool.start(self.worker)
         
     def get_candles_as_dataframe(self, candles: List[OHLCV]=[]):
         if candles == []:

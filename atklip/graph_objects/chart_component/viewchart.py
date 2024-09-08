@@ -16,7 +16,7 @@ from .proxy_signal import Signal_Proxy
 
 from atklip.app_utils import *
 
-from atklip.appmanager import FastStartThread,AppLogger
+from atklip.appmanager import FastStartThread,AppLogger,ThreadPoolExecutor_global
 
 from atklip.graph_objects.chart_component.proxy_signal import Signal_Proxy
 
@@ -242,6 +242,10 @@ class Chart(ViewPlotWidget):
                     await value.exchange.close()
                 value.exchange = None
                 value.deleteLater()
+        if self.worker != None:
+            if isinstance(self.worker,FastStartThread):
+                self.worker.stop_thread()
+        ThreadPoolExecutor_global.shutdown(cancel_futures=True)
 
     def set_market_by_symbol(self,exchange):
         """

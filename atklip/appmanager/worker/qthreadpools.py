@@ -40,70 +40,52 @@ class ProcessWorker(QRunnable):
         finally:
             self.signals.finished.emit()  # Done
 
-class FastWorker(QRunnable):
+class FastWorker(QObject):
     "Worker này dùng để update  data trong một cho graph object khi có data mới"
-    def __init__(self,threadpool:str|QThreadPool="view",fn:Callable=None, *args, **kwargs):
+    def __init__(self,fn:Callable=None, *args, **kwargs):
         super(FastWorker, self).__init__()
-        self.setAutoDelete(True)
+        # self.setAutoDelete(True)
         self.fn = fn
         self.args = args
         self.kwargs = kwargs.copy()
         self.signals = WorkerSignals() 
         self.kwargs['setdata'] = self.signals.setdata
-        # self.threadpool = Thread(target=self.run, daemon=True, args=())
-        if threadpool != None:
-            self.threadpool = QThreadPool_global
-        else:
-            self.threadpool = QThreadPool_global
+        self.threadpool = ThreadPoolExecutor_global
+        # self.threadpool = QThreadPool_global
         
     def start(self,prio:int=0):
-        # self.threadpool.start()
-        self.threadpool.start(self)
+        funture = self.threadpool.submit(self.run)
+        # self.threadpool.start(self)
     
-    # def stop_worker(self):
-    #     self.signals.deleteLater()
-    # @Slot()
+    @Slot()
     def run(self):
         try:
             self.fn(*self.args, **self.kwargs)
         except Exception as e:
             traceback.print_exception(e)
-            # self.signals.error.emit()
         finally:
-            # self.signals.finished.emit()
             self.signals.deleteLater()
 
-# class FastWorker(QObject):
-#     "Worker này dùng để update  data trong một cho graph object khi có data mới"
-#     def __init__(self,threadpool:str|QThreadPool="view",fn:Callable=None, *args, **kwargs):
-#         super(FastWorker, self).__init__()
-#         # self.setAutoDelete(True)
-#         self.fn = fn
-#         self.args = args
-#         self.kwargs = kwargs.copy()
-#         self.signals = WorkerSignals() 
-#         self.kwargs['setdata'] = self.signals.setdata
-#         if threadpool != None:
-#             self.threadpool = ProcessPoolExecutor_global
-#         else:
-#             self.threadpool = ProcessPoolExecutor_global
+class CandleWorker(QObject):
+    "Worker này dùng để update  data trong một cho graph object khi có data mới"
+    def __init__(self,fn:Callable=None, *args, **kwargs):
+        super(CandleWorker, self).__init__()
+        self.fn = fn
+        self.args = args
+        self.kwargs = kwargs.copy()
+        self.threadpool = ThreadPoolExecutor_global
         
-#     def start(self,prio:int=0):
-#         # self.threadpool.start()
-#         funture = self.threadpool.submit(self.run)
-    
-#     # def stop_worker(self):
-#     #     self.signals.deleteLater()
-#     # @Slot()
-#     def run(self):
-#         try:
-#             self.fn(*self.args, **self.kwargs)
-#         except Exception as e:
-#             traceback.print_exception(e)
-#             # self.signals.error.emit()
-#         finally:
-#             # self.signals.finished.emit()
-#             self.signals.deleteLater()
+    def start(self):
+        funture = self.threadpool.submit(self.run)
+
+    @Slot()
+    def run(self):
+        try:
+            self.fn(*self.args, **self.kwargs)
+        except Exception as e:
+            traceback.print_exception(e)
+        finally:
+            self.deleteLater()
 
      
 class FastStartSignal(QObject):

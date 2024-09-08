@@ -100,9 +100,7 @@ class BasicTSI(GraphicsObject):
         self.destroyed.connect(self.price_line.deleteLater)
         self.last_pos.connect(self.price_line.update_price_line_indicator,Qt.ConnectionType.AutoConnection)
 
-        self.threadpool = QThreadPool(self)
         self.worker = None
-        self.threadpool.setMaxThreadCount(1)
         
         self.sig_change_yaxis_range.connect(get_last_pos_worker, Qt.ConnectionType.AutoConnection)
         
@@ -232,9 +230,9 @@ class BasicTSI(GraphicsObject):
     def threadpool_asyncworker(self,candle=None):
         self.worker = None
         if candle == None:
-            self.worker = FastWorker(self.threadpool,self.first_load_data)
+            self.worker = FastWorker(self.first_load_data)
         else:
-            self.worker = FastWorker(self.threadpool,self.update_data,candle)
+            self.worker = FastWorker(self.update_data,candle)
         self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.AutoConnection)
         self.worker.start()
         #self.threadpool.start(self.worker)
@@ -295,7 +293,7 @@ class BasicTSI(GraphicsObject):
 
     def setdata_worker(self,sig_update_candle):
         self.worker = None
-        self.worker = FastWorker(self.threadpool,self.update_data,sig_update_candle)
+        self.worker = FastWorker(self.update_data,sig_update_candle)
         self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.AutoConnection)
         self.worker.start()
         #self.threadpool.start(self.worker)

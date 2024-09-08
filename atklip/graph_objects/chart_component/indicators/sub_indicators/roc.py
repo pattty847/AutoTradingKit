@@ -81,9 +81,6 @@ class BasicROC(PlotDataItem):
         self.price_low.setParentItem(self)
         self.price_low.setPos(self.has["inputs"]["price_low"])
         
-        self.threadpool = QThreadPool(self)
-        self.threadpool.setMaxThreadCount(1)
-        
         self.chart.sig_update_source.connect(self.change_source,Qt.ConnectionType.AutoConnection)
         self.chart.sig_remove_source.connect(self.replace_source,Qt.ConnectionType.AutoConnection)
         
@@ -203,7 +200,7 @@ class BasicROC(PlotDataItem):
 
     def threadpool_asyncworker(self,candle=None):
         self.worker = None
-        self.worker = FastWorker(self.threadpool,self.first_load_data)
+        self.worker = FastWorker(self.first_load_data)
         self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.AutoConnection)
         self.worker.start()
         #self.threadpool.start(self.worker)
@@ -274,7 +271,7 @@ class BasicROC(PlotDataItem):
 
     def setdata_worker(self,sig_update_candle):
         self.worker = None
-        self.worker = FastWorker(self.threadpool,self.update_data,sig_update_candle)
+        self.worker = FastWorker(self.update_data,sig_update_candle)
         self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.AutoConnection)
         self.worker.start()
         #self.threadpool.start(self.worker)
