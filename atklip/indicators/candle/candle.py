@@ -20,6 +20,7 @@ class JAPAN_CANDLE(QObject):
     sig_reset_all = Signal()
     signal_delete = Signal()
     sig_update_source = Signal()
+    
     def __init__(self) -> None:
         super().__init__(parent=None)
         self.first_gen = False
@@ -199,6 +200,7 @@ class JAPAN_CANDLE(QObject):
 
     def gen_data(self,ohlcv,_precision):
         self.first_gen = False
+        self.df = pd.DataFrame([])
         self.candles = []
         [self.gen_update(OHLCV(ohlcv[i][1],ohlcv[i][2],ohlcv[i][3],ohlcv[i][4],round((ohlcv[i][2]+ohlcv[i][3])/2,_precision), round((ohlcv[i][2]+ohlcv[i][3]+ohlcv[i][4])/3,_precision), round((ohlcv[i][1]+ohlcv[i][2]+ohlcv[i][3]+ohlcv[i][4])/4,_precision),ohlcv[i][5],ohlcv[i][0]/1000,i)) for i in range(len(ohlcv))]
         self.first_gen = True

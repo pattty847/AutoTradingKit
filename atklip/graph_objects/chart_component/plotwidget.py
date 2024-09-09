@@ -81,9 +81,11 @@ class ViewPlotWidget(PlotWidget):
         self.list_candle_indicators = []
         
         self.jp_candle = JAPAN_CANDLE()
-
+        
         self._precision = 3
-
+        
+        self.heikinashi = HEIKINASHI(self._precision,self.jp_candle)
+        
         self.bodydata = []
         self.timedata = []
 

@@ -206,7 +206,7 @@ class BasicBB(GraphicsObject):
     def threadpool_asyncworker(self,candle=None):
         self.worker = None
         self.worker = FastWorker(self.first_load_data)
-        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.AutoConnection)
+        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
         self.worker.start()
         #self.threadpool.start(self.worker)
     def first_load_data(self,setdata):
@@ -282,7 +282,7 @@ class BasicBB(GraphicsObject):
     def setdata_worker(self,sig_update_candle):
         self.worker = None
         self.worker = FastWorker(self.update_data,sig_update_candle)
-        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.AutoConnection)
+        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
         self.worker.start()
         #self.threadpool.start(self.worker)
     

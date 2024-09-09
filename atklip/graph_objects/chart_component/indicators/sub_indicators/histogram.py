@@ -81,8 +81,8 @@ class Histogram(GraphicsObject):
     def threadpool_asyncworker(self):
         self.worker = None
         self.worker = FastWorker(self.update_last_data)
-        self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.AutoConnection)
-        self.worker.signals.finished.connect(self.sig_change_yaxis_range)
+        self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.QueuedConnection)
+        self.worker.signals.finished.connect(self.sig_change_yaxis_range,Qt.ConnectionType.QueuedConnection)
         self.worker.start()
         #self.threadpool.start(self.worker)
     def get_yaxis_param(self):
@@ -203,13 +203,13 @@ class SingleHistogram(GraphicsObject):
     def reset_threadpool_asyncworker(self):
         self.worker = None
         worker = FastWorker(self.update_last_data)
-        worker.signals.setdata.connect(self.setData,Qt.ConnectionType.AutoConnection)
+        worker.signals.setdata.connect(self.setData,Qt.ConnectionType.QueuedConnection)
         self.threadpool.start(worker)
     
     def threadpool_asyncworker(self, last_candle:List[OHLCV]):
         self.worker = None
         self.worker = FastWorker(self.update_last_data)
-        self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.AutoConnection)
+        self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.QueuedConnection)
         self.worker.start()
         #self.threadpool.start(self.worker)
 

@@ -224,6 +224,7 @@ class BasicMA(PlotLineItem):
         self.worker.start()
         #self.threadpool.start(self.worker)
     
+    
     def set_Data(self,data):
         xData = data[0]
         yData = data[1]
@@ -235,6 +236,8 @@ class BasicMA(PlotLineItem):
         _time = self.xData[-1]
         _value = self.yData[-1]
         return _time,_value
+    
+    
     def update_data(self,last_candle:List[OHLCV],setdata):
         df:pd.DataFrame = self.has["inputs"]["source"].get_df()
         self._INDICATOR = ta.ma(f"{self.has["inputs"]["ma_type"].name}".lower(), df[f"{self.has["inputs"]["type"]}"],length=self.has["inputs"]["period"])
@@ -243,7 +246,6 @@ class BasicMA(PlotLineItem):
         _index = df["index"].to_numpy()
         setdata.emit((_index,_data))
         #QCoreApplication.processEvents()
-    
         
     def on_click_event(self,_object):
         print("zooo day__________________",_object)

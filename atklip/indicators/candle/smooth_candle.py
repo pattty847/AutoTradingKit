@@ -25,15 +25,16 @@ class SMOOTH_CANDLE(QObject):
     dict_index_time = {}
     signal_delete = Signal()
     sig_update_source = Signal()
-    def __init__(self,precision,_candles: JAPAN_CANDLE|HEIKINASHI,ma_type,period) -> None:
+    def __init__(self,precision,_candles,ma_type,period) -> None:
         super().__init__(parent=None)
         self.ma_type:MAType = ma_type
         self.period:int= period
-        self._candles =_candles
+        self._candles: JAPAN_CANDLE|HEIKINASHI =_candles
         
-        if not isinstance(self._candles,JAPAN_CANDLE):
-            self._candles.setParent(self)
-            self.signal_delete.connect(self._candles.signal_delete)
+        # if not isinstance(self._candles,JAPAN_CANDLE):
+        #     self._candles.setParent(self)
+        #     self.signal_delete.connect(self._candles.signal_delete)
+        
         self.signal_delete.connect(self.deleteLater)
         self._candles.sig_update_source.connect(self.sig_update_source,Qt.ConnectionType.AutoConnection)
         self._precision = precision

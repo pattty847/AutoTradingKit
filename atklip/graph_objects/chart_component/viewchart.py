@@ -32,7 +32,7 @@ class Chart(ViewPlotWidget):
         self.secretkey = secretkey
 
         self.exchange_name,self.symbol, self.interval =exchange_name, symbol,interval
-
+        
         self.sig_reset_exchange = False
         self.is_reseting =  False
         self.worker = None
@@ -169,6 +169,12 @@ class Chart(ViewPlotWidget):
         self.jp_candle.gen_data(data,self._precision)
         self.jp_candle.source_name = f"jp {self.symbol} {self.interval}"
         self.update_sources(self.jp_candle)
+        
+        self.heikinashi.source_name = f"heikin {self.symbol} {self.interval}"
+        self.update_sources(self.heikinashi)
+        
+        self.heikinashi.fisrt_gen_data()
+        
         await self.loop_watch_ohlcv(crypto_ex,exchange,symbol,interval)
         
     async def loop_watch_ohlcv(self,crypto_ex,exchange,symbol,interval):
@@ -206,10 +212,9 @@ class Chart(ViewPlotWidget):
                         #print("update candle")
                         pre_ohlcv = OHLCV(_ohlcv[-2][1],_ohlcv[-2][2],_ohlcv[-2][3],_ohlcv[-2][4], round((_ohlcv[-2][2]+_ohlcv[-2][3])/2,self._precision) , round((_ohlcv[-2][2]+_ohlcv[-2][3]+_ohlcv[-2][4])/3,self._precision), round((_ohlcv[-2][1]+_ohlcv[-2][2]+_ohlcv[-2][3]+_ohlcv[-2][4])/4,self._precision),_ohlcv[-2][5],_ohlcv[-2][0]/1000,0)
                         last_ohlcv = OHLCV(_ohlcv[-1][1],_ohlcv[-1][2],_ohlcv[-1][3],_ohlcv[-1][4], round((_ohlcv[-1][2]+_ohlcv[-1][3])/2,self._precision) , round((_ohlcv[-1][2]+_ohlcv[-1][3]+_ohlcv[-1][4])/3,self._precision), round((_ohlcv[-1][1]+_ohlcv[-1][2]+_ohlcv[-1][3]+_ohlcv[-1][4])/4,self._precision),_ohlcv[-1][5],_ohlcv[-1][0]/1000,0)
-                        new_update = self.jp_candle.update([pre_ohlcv,last_ohlcv])
-                        #print(last_ohlcv)
-                        # last_df = self.jp_candle.get_last_row_df()
-                        # df = self.jp_candle.get_df()
+                        self.jp_candle.update([pre_ohlcv,last_ohlcv])
+                        self.heikinashi.update( self.jp_candle.candles[-2:])
+      
                         if firt_run == False:
                             self.first_run.emit()
                             #QCoreApplication.processEvents()
@@ -220,10 +225,10 @@ class Chart(ViewPlotWidget):
                     break
             else:
                 break
-            try:
-                await asyncio.sleep(0.3)
-            except:
-                pass
+            # try:
+            #     await asyncio.sleep(1)
+            # except:
+            #     pass
         if exchange != None:
             AppLogger.writer("INFO",f"{__name__} - {symbol}-{interval} have closed")
         try:
@@ -298,7 +303,7 @@ class Chart(ViewPlotWidget):
             indicator.threadpool_asyncworker()
 
         elif _group_indicator == "Candle Indicator":
-            candle = self.get_candle(_indicator_type)
+            candle:CandleStick = self.get_candle(_indicator_type)
             panel = IndicatorPanel(mainwindow,self, candle)
             # self.container_indicator_wg.sig_add_panel.emit(panel)
             self.container_indicator_wg.add_indicator_panel(panel)
@@ -306,7 +311,7 @@ class Chart(ViewPlotWidget):
             self.add_item(candle)
             candle.first_setup_candle()
             self.auto_xrange()
-            self.jp_candle.sig_add_candle.emit(self.jp_candle.candles[-2:])
+            candle.source.sig_add_candle.emit(candle.source.candles[-2:])
 
         elif _group_indicator == "Advance Indicator":
             if _indicator_type==IndicatorType.BB:

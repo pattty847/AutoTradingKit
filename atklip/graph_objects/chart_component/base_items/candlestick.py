@@ -27,11 +27,7 @@ class CandleStick(GraphicsObject):
     def __init__(self,chart,_type, high_color: str = '#089981', low_color: str = '#f23645') -> None:
         """Choose colors of candle"""
         GraphicsObject.__init__(self)
-        # self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemClipsChildrenToShape, True)
-        # self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemClipsToShape, True)
-        # self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemAcceptsInputMethod, False)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
-        self.setAcceptedMouseButtons(Qt.MouseButton.NoButton)
         self.setZValue(999)
         
         self.chart:Chart|SubChart = chart
@@ -51,7 +47,7 @@ class CandleStick(GraphicsObject):
                     "source":self.source,
                     "ma_type":ma_type,
                     "ma_period":period,
-                    "n_smooth_period": 5,
+                    "n_smooth_period": n,
                     "show":True
                     },
 
@@ -81,7 +77,7 @@ class CandleStick(GraphicsObject):
         
         self.sig_change_indicator_name.emit(self.has["name"])
         
-        if not isinstance(self.has["inputs"]["source"],JAPAN_CANDLE):
+        if not isinstance(self.has["inputs"]["source"],JAPAN_CANDLE) and not isinstance(self.has["inputs"]["source"],HEIKINASHI):
             self.has["inputs"]["source"].setParent(self)
             self.signal_delete.connect(self.has["inputs"]["source"].signal_delete)
 
@@ -96,11 +92,6 @@ class CandleStick(GraphicsObject):
         self.historic_candle = SingleCandleStick(self.chart,self.source,has=self.has)
         self.historic_candle.setParentItem(self)
 
-        #self.setAcceptHoverEvents(True)
-
-        self.threadpool = QThreadPool(self)
-        self.threadpool.setMaxThreadCount(1)
-        
         self.signal_delete.connect(self.delete_source)
         self.sig_deleted_source.connect(self.chart.remove_source)
         
@@ -115,8 +106,6 @@ class CandleStick(GraphicsObject):
         
     def update_source(self):
         self._is_change_source = True
-        # self.source.sig_reset_all.disconnect(self.update_source)
-        # self.source.sig_add_candle.disconnect(self.threadpool_asyncworker)
         self.delete_source()
         source_name = self.has["name"].split(" ")[0]
         self.has["inputs"]["source"].source_name = f"{source_name} {self.chart.symbol} {self.chart.interval}"
@@ -127,8 +116,6 @@ class CandleStick(GraphicsObject):
         self.source = self.has["inputs"]["source"]
         
         self.sig_change_indicator_name.emit(self.has["name"])
-        # self.source.sig_reset_all.connect(self.update_source,Qt.ConnectionType.AutoConnection)
-        # self.source.sig_add_candle.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
         self.first_setup_candle()
     
     def update_inputs(self,_input,_source):
@@ -160,7 +147,7 @@ class CandleStick(GraphicsObject):
             self._is_change_source = True
             self.source.sig_reset_all.disconnect(self.update_source)
             self.source.sig_add_candle.disconnect(self.threadpool_asyncworker)
-            if not isinstance(self.source,JAPAN_CANDLE):
+            if not isinstance(self.source,JAPAN_CANDLE) and not isinstance(self.source,HEIKINASHI):
                 self.source.signal_delete.emit()
                 
             if isinstance(self.source,JAPAN_CANDLE):
@@ -201,7 +188,7 @@ class CandleStick(GraphicsObject):
         self._is_change_source = True
         self.source.sig_reset_all.disconnect(self.update_source)
         self.source.sig_add_candle.disconnect(self.threadpool_asyncworker)
-        if not isinstance(self.source,JAPAN_CANDLE):
+        if not isinstance(self.source,JAPAN_CANDLE) and not isinstance(self.source,HEIKINASHI):
             self.source.signal_delete.emit()
             
         if isinstance(self.source,JAPAN_CANDLE):
@@ -249,37 +236,32 @@ class CandleStick(GraphicsObject):
             smooth_jp_candle.fisrt_gen_data()
             return smooth_jp_candle, ma_type,period, n
         
+        elif _type.value == "n_smooth_jp":
+            n_smooth_jp = N_SMOOTH_CANDLE(self.precision,self.chart.jp_candle,n,ma_type,period)
+            n_smooth_jp.source_name = f"super_sm_jp {self.symbol} {self.interval}"
+            self.chart.update_sources(n_smooth_jp)
+            n_smooth_jp.fisrt_gen_data()
+            return n_smooth_jp, ma_type, period,n
+        
         elif _type.value == "heikin":
-            heikinashi = HEIKINASHI(self.precision,self.chart.jp_candle)
-            heikinashi.source_name = f"heikin {self.symbol} {self.interval}"
-            self.chart.update_sources(heikinashi)
-            heikinashi.fisrt_gen_data()
-            return heikinashi, None,None, n
+            self.chart.update_sources(self.chart.heikinashi)
+            return self.chart.heikinashi, None,None, n
             
         elif _type.value == "smooth_heikin":
-            smooth_heikin = HEIKINASHI(self.precision,self.chart.jp_candle)
-            smooth_heikin_candle = SMOOTH_CANDLE(self.precision,smooth_heikin,ma_type,period)
-            smooth_heikin_candle.source_name = f"sm_heikin {self.symbol} {self.interval}"
-            self.chart.update_sources(smooth_heikin_candle)
+            smooth_heikin = SMOOTH_CANDLE(self.precision,self.chart.heikinashi,ma_type,period)
+            smooth_heikin.source_name = f"sm_heikin {self.symbol} {self.interval}"
+            self.chart.update_sources(smooth_heikin)
             smooth_heikin.fisrt_gen_data()
-            return smooth_heikin_candle, ma_type,period,n
-        
+            return smooth_heikin, ma_type,period, n
+            
         elif _type.value == "n_smooth_heikin":
-            smooth_heikin = HEIKINASHI(self.precision,self.chart.jp_candle)
-            smooth_heikin_5 = N_SMOOTH_CANDLE(self.precision,smooth_heikin,n,ma_type,period)
-            smooth_heikin_5.source_name = f"super_sm_heikin {self.symbol} {self.interval}"
-            self.chart.update_sources(smooth_heikin_5)
-            smooth_heikin.fisrt_gen_data()
-            return smooth_heikin_5, ma_type, period,n
+            n_smooth_heikin = N_SMOOTH_CANDLE(self.precision,self.chart.heikinashi,n,ma_type,period)
+            n_smooth_heikin.source_name = f"super_sm_heikin {self.symbol} {self.interval}"
+            self.chart.update_sources(n_smooth_heikin)
+            n_smooth_heikin.fisrt_gen_data()
+            return n_smooth_heikin, ma_type, period,n
+            
 
-        elif _type.value == "n_smooth_jp":
-            smooth_jp_candle_5 = N_SMOOTH_CANDLE(self.precision,self.chart.jp_candle,n,ma_type,period)
-            smooth_jp_candle_5.source_name = f"super_sm_jp {self.symbol} {self.interval}"
-            self.chart.update_sources(smooth_jp_candle_5)
-            smooth_jp_candle_5.fisrt_gen_data()
-            return smooth_jp_candle_5, ma_type, period,n
-        
-     
     def get_inputs(self):
         interval =  self.has["inputs"].get("interval")
         if interval != None:
@@ -325,11 +307,10 @@ class CandleStick(GraphicsObject):
     def threadpool_asyncworker(self,candle=None):
         self.worker = None
         self.worker = FastWorker(self.update_last_data)
-        self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.AutoConnection)
-        self.worker.signals.finished.connect(self.set_price_line,Qt.ConnectionType.AutoConnection)
+        self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.QueuedConnection)
+        self.worker.signals.finished.connect(self.set_price_line,Qt.ConnectionType.QueuedConnection)
         self.worker.start()
-        #self.threadpool.start(self.worker)
-        
+
     def get_yaxis_param(self):
         if len(self.has["inputs"]["source"].candles) > 0:
             last_candle = self.has["inputs"]["source"].last_data()
@@ -421,7 +402,7 @@ class CandleStick(GraphicsObject):
     def draw_candle(self,_open,_max,_min,close,w,x_data,index):
         t = x_data[index]
         "dieu kien de han che viec ve lai khi add new candle"
-        if self._bar_picutures.get(t) == None:
+        if not self._bar_picutures.get(t):
             candle_picture:QPicture =QPicture()
             p:QPainter =QPainter(candle_picture)
             if _open > close:
@@ -473,14 +454,14 @@ class CandleStick(GraphicsObject):
             # self.setData((x_data, y_data))
             #QCoreApplication.processEvents()
         except Exception as e:
-            pass
+            print(f"loi update {e}")
     
 class SingleCandleStick(GraphicsObject):
     """Live candlestick plot, plotting data [[open, close, min, max], ...]"""
     sigPlotChanged = Signal(object)
     yaxis_lastprice =  Signal()
 
-    def __init__(self,chart,_candles: JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE, has) -> None:
+    def __init__(self,chart,_candles, has) -> None:
         """Choose colors of candle"""
         GraphicsObject.__init__(self)
 
@@ -491,8 +472,7 @@ class SingleCandleStick(GraphicsObject):
         self.has = has
         self.chart:Chart|SubChart = chart 
         
-        precision = self.chart._precision
-        self._canldes = _candles
+        self._canldes: JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE = _candles
         
         self.price_line = PriceLine()  # for z value
         self.price_line.setParentItem(self)
@@ -513,15 +493,15 @@ class SingleCandleStick(GraphicsObject):
     def reset_threadpool_asyncworker(self):
         self.worker = None
         self.worker = FastWorker(self.update_last_data)
-        self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.AutoConnection)
-        self.worker.signals.finished.connect(self.set_price_line,Qt.ConnectionType.AutoConnection)
+        self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.QueuedConnection)
+        self.worker.signals.finished.connect(self.set_price_line,Qt.ConnectionType.QueuedConnection)
         self.worker.start()
         #self.threadpool.start(self.worker)
     
     def threadpool_asyncworker(self, last_candle:List[OHLCV]=[]):
         self.worker = None
         self.worker = FastWorker(self.update_last_data)
-        self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.AutoConnection)
+        self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.QueuedConnection)
         self.price_line.update_data(last_candle)
         self.worker.start()
         #self.threadpool.start(self.worker)

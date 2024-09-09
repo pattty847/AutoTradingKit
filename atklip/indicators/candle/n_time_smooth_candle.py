@@ -10,7 +10,7 @@ from atklip.indicators.talipp import OHLCV, INDICATOR, IndicatorType,MAType,Indi
 
 from .candle import JAPAN_CANDLE
 from .heikinashi import HEIKINASHI
-from .smooth_candle import SMOOTH_CANDLE
+
 from atklip.appmanager import FastWorker,CandleWorker
 
 class N_SMOOTH_CANDLE(QObject):
@@ -39,9 +39,9 @@ class N_SMOOTH_CANDLE(QObject):
         self._candles:JAPAN_CANDLE|HEIKINASHI =_candles
         self.n:int = n
         
-        if not isinstance(self._candles,JAPAN_CANDLE):
-            self._candles.setParent(self)
-            self.signal_delete.connect(self._candles.signal_delete)
+        # if not isinstance(self._candles,JAPAN_CANDLE):
+        #     self._candles.setParent(self)
+        #     self.signal_delete.connect(self._candles.signal_delete)
             
         self.signal_delete.connect(self.deleteLater)
         self._candles.sig_update_source.connect(self.sig_update_source,Qt.ConnectionType.AutoConnection)
@@ -384,4 +384,3 @@ class N_SMOOTH_CANDLE(QObject):
                     return True
                 
         return False
-            

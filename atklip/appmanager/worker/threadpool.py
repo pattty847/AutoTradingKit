@@ -10,6 +10,7 @@ num_threads = multiprocessing.cpu_count()
 QThreadPool_global.setMaxThreadCount(num_threads)
 
 global ThreadPoolExecutor_global
-ThreadPoolExecutor_global = ThreadPoolExecutor(max_workers=num_threads*10)
+ThreadPoolExecutor_global = ThreadPoolExecutor(max_workers=num_threads*50)
 
-# ProcessPoolExecutor_global = ProcessPoolExecutor(max_workers=num_threads)
+# global ProcessPoolExecutor_global
+# ProcessPoolExecutor_global = ProcessPoolExecutor(max_workers=num_threads*2)

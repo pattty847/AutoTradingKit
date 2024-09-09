@@ -3,6 +3,7 @@ from numpy import isnan
 from pandas import DataFrame, Series
 from atklip.indicators.pandas_ta._typing import DictLike, Int, IntFloat
 from atklip.indicators.pandas_ta.overlap.ema import ema
+from atklip.indicators.pandas_ta.ma import ma
 from atklip.indicators.pandas_ta.utils import (
     v_drift,
     v_offset,
@@ -14,7 +15,7 @@ from atklip.indicators.pandas_ta.utils import (
 
 
 def trix(
-    close: Series, length: Int = None, signal: Int = None,
+    close: Series, length: Int = None, signal: Int = None,mamode: str = "ema",
     scalar: IntFloat = None, drift: Int = None,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
@@ -55,15 +56,19 @@ def trix(
     offset = v_offset(offset)
 
     # Calculate
-    ema1 = ema(close=close, length=length, **kwargs)
+    
+    # ema1 = ema(close=close, length=length, **kwargs)
+    ema1 = ma(mamode, source=close, length=length, **kwargs)
     if all(isnan(ema1)):
         return  # Emergency Break
 
-    ema2 = ema(close=ema1, length=length, **kwargs)
+    # ema2 = ema(close=ema1, length=length, **kwargs)
+    ema2 = ma(mamode, source=ema1, length=length, **kwargs)
     if all(isnan(ema2)):
         return  # Emergency Break
 
-    ema3 = ema(close=ema2, length=length, **kwargs)
+    # ema3 = ema(close=ema2, length=length, **kwargs)
+    ema3 = ma(mamode, source=ema2, length=length, **kwargs)
     if all(isnan(ema3)):
         return  # Emergency Break
 

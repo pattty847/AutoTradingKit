@@ -1,3 +1,5 @@
+from concurrent.futures import Future
+from multiprocessing import Process, Queue
 import asyncio,os
 from asyncio import run
 import sys
@@ -53,8 +55,11 @@ class FastWorker(QObject):
         self.threadpool = ThreadPoolExecutor_global
         # self.threadpool = QThreadPool_global
         
-    def start(self,prio:int=0):
-        funture = self.threadpool.submit(self.run)
+    def start(self):
+        try:
+            funture = self.threadpool.submit(self.run)
+        except RuntimeError:
+            pass
         # self.threadpool.start(self)
     
     @Slot()
@@ -65,6 +70,9 @@ class FastWorker(QObject):
             traceback.print_exception(e)
         finally:
             self.signals.deleteLater()
+            self.deleteLater()
+
+
 
 class CandleWorker(QObject):
     "Worker này dùng để update  data trong một cho graph object khi có data mới"
@@ -76,7 +84,10 @@ class CandleWorker(QObject):
         self.threadpool = ThreadPoolExecutor_global
         
     def start(self):
-        funture = self.threadpool.submit(self.run)
+        try:
+            funture = self.threadpool.submit(self.run)
+        except RuntimeError:
+            pass
 
     @Slot()
     def run(self):

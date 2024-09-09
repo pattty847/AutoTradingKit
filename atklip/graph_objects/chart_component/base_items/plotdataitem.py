@@ -11,7 +11,7 @@ class PlotLineItem(GraphicsObject):
         GraphicsObject.__init__(self)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
         self.setCacheMode(QGraphicsItem.CacheMode.DeviceCoordinateCache)
-        
+        self.setZValue(999)
         # self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemClipsChildrenToShape, True)
         # self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemClipsToShape, True)
         # self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemAcceptsInputMethod, False)

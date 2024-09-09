@@ -3,6 +3,7 @@ from numpy import nan
 from pandas import DataFrame, Series
 from atklip.indicators.pandas_ta._typing import DictLike, Int, IntFloat
 from atklip.indicators.pandas_ta.overlap import ema
+from atklip.indicators.pandas_ta.ma import ma
 from atklip.indicators.pandas_ta.utils import (
     non_zero_range,
     v_offset,
@@ -14,7 +15,7 @@ from atklip.indicators.pandas_ta.utils import (
 
 def stc(
     close: Series, tclength: Int = None,
-    fast: Int = None, slow: Int = None, factor: IntFloat = None,
+    fast: Int = None, slow: Int = None, mamode: str = "ema",factor: IntFloat = None,
     offset: Int = None, **kwargs: DictLike
 ) -> DataFrame:
     """Schaff Trend Cycle (STC)
@@ -106,8 +107,10 @@ def stc(
         pff, pf = schaff_tc(close, xmacd, tclength, factor)
     else:
         # MACD (traditional/full)
-        fastma = ema(close, length=fast)
-        slowma = ema(close, length=slow)
+        # fastma = ema(close, length=fast)
+        # slowma = ema(close, length=slow)
+        fastma = ma(mamode, close, length=fast)
+        slowma = ma(mamode, close, length=slow)
         xmacd = fastma - slowma
         pff, pf = schaff_tc(close, xmacd, tclength, factor)
 
