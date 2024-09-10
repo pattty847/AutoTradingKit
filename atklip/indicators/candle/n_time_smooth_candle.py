@@ -39,9 +39,9 @@ class N_SMOOTH_CANDLE(QObject):
         self._candles:JAPAN_CANDLE|HEIKINASHI =_candles
         self.n:int = n
         
-        # if not isinstance(self._candles,JAPAN_CANDLE):
-        #     self._candles.setParent(self)
-        #     self.signal_delete.connect(self._candles.signal_delete)
+        if not isinstance(self._candles,JAPAN_CANDLE) and not isinstance(self._candles,HEIKINASHI):
+            self._candles.setParent(self)
+            self.signal_delete.connect(self._candles.signal_delete)
             
         self.signal_delete.connect(self.deleteLater)
         self._candles.sig_update_source.connect(self.sig_update_source,Qt.ConnectionType.AutoConnection)
@@ -63,8 +63,10 @@ class N_SMOOTH_CANDLE(QObject):
     def source_name(self,_source_name):
         self._source_name = _source_name
         
-    def get_df(self):
-        return self.df
+    def get_df(self,n:int=None):
+        if not n:
+            return self.df
+        return self.df.tail(n)
     
     def get_last_row_df(self):
         return self.df.iloc[-1]

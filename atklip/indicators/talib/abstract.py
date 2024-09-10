@@ -1,4 +1,4 @@
-import talib._ta_lib as _ta_lib
+from atklip.indicators.talib import _ta_lib as _ta_lib
 from ._ta_lib import Function as _Function, __TA_FUNCTION_NAMES__, _get_defaults_and_docs
 
 # add some backwards compat for backtrader

@@ -35,8 +35,10 @@ class JAPAN_CANDLE(QObject):
     def source_name(self,_name):
         self._source_name = _name
     
-    def get_df(self):
-        return self.df
+    def get_df(self,n:int=None):
+        if not n:
+            return self.df
+        return self.df.tail(n)
     
     def get_last_row_df(self):
         return self.df.iloc[-1]

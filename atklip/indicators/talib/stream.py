@@ -1,4 +1,4 @@
-import talib._ta_lib as _ta_lib
+from atklip.indicators.talib import _ta_lib as _ta_lib
 from ._ta_lib import __TA_FUNCTION_NAMES__
 
 

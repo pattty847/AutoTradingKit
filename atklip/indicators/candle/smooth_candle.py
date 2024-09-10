@@ -6,7 +6,10 @@ from typing import List,Tuple
 from dataclasses import dataclass
 from PySide6.QtCore import Qt, Signal,QObject,QCoreApplication,QThreadPool
 
-from atklip.indicators.talipp import OHLCV, INDICATOR, IndicatorType,MAType
+from atklip.indicators import pandas_ta as ta
+from atklip.indicators.ma_type import  PD_MAType
+from atklip.indicators.ohlcv import   OHLCV
+
 from .candle import JAPAN_CANDLE
 from .heikinashi import HEIKINASHI
 from atklip.appmanager import FastWorker,CandleWorker
@@ -27,13 +30,13 @@ class SMOOTH_CANDLE(QObject):
     sig_update_source = Signal()
     def __init__(self,precision,_candles,ma_type,period) -> None:
         super().__init__(parent=None)
-        self.ma_type:MAType = ma_type
+        self.ma_type:PD_MAType = ma_type
         self.period:int= period
         self._candles: JAPAN_CANDLE|HEIKINASHI =_candles
         
-        # if not isinstance(self._candles,JAPAN_CANDLE):
-        #     self._candles.setParent(self)
-        #     self.signal_delete.connect(self._candles.signal_delete)
+        if not isinstance(self._candles,JAPAN_CANDLE) and not isinstance(self._candles,HEIKINASHI):
+            self._candles.setParent(self)
+            self.signal_delete.connect(self._candles.signal_delete)
         
         self.signal_delete.connect(self.deleteLater)
         self._candles.sig_update_source.connect(self.sig_update_source,Qt.ConnectionType.AutoConnection)
@@ -55,8 +58,10 @@ class SMOOTH_CANDLE(QObject):
     def source_name(self,_name):
         self._source_name = _name
     
-    def get_df(self):
-        return self.df
+    def get_df(self,n:int=None):
+        if not n:
+            return self.df
+        return self.df.tail(n)
     
     def get_last_row_df(self):
         return self.df.iloc[-1] 
@@ -240,10 +245,10 @@ class SMOOTH_CANDLE(QObject):
     #@lru_cache(maxsize=128)
     def get_ma_ohlc_at_index(self,index):
         #print(index,)
-        _index = self.opens.output_times[index]
-        ohlc = [self.opens.output_values[index],self.highs.output_values[index],self.lows.output_values[index],self.closes.output_values[index],\
-            self.hl2s.output_values[index],self.hlc3s.output_values[index],self.ohlc4s.output_values[index]]
-        return _index, ohlc
+        # _index = self.opens.iloc[index]
+        ohlc = [self.opens.iloc[index],self.highs.iloc[index],self.lows.iloc[index],self.closes.iloc[index],\
+            self.hl2s.iloc[index],self.hlc3s.iloc[index],self.ohlc4s.iloc[index]]
+        return  ohlc
     
     def update_ma_ohlc(self,lastcandle:OHLCV):
         _new_time = lastcandle.time
@@ -251,24 +256,69 @@ class SMOOTH_CANDLE(QObject):
             _last_time = self.candles[-1].time
 
             if _new_time == _last_time:
-                self.highs.update(lastcandle)
-                self.lows.update(lastcandle)
-                self.closes.update(lastcandle)
-                self.opens.update(lastcandle)
-                self.hl2s.update(lastcandle)
-                self.hlc3s.update(lastcandle)
-                self.ohlc4s.update(lastcandle)
-            else:
-                self.highs.add(lastcandle)
-                self.lows.add(lastcandle)
-                self.closes.add(lastcandle)
-                self.opens.add(lastcandle)
-                self.hl2s.add(lastcandle)
-                self.hlc3s.add(lastcandle)
-                self.ohlc4s.add(lastcandle)
+                df:pd.DataFrame = self._candles.get_df(self.period+1)
+                highs = ta.ma(f"{self.ma_type.name}".lower(), df["high"].tail(self.period+1),length=self.period)
+                highs = highs.astype('float32')
+                self.highs.iloc[-1] = highs.iloc[-1]
 
-    def compute(self, i:int):
-        _index, ohlc = self.get_ma_ohlc_at_index(i)
+                lows = ta.ma(f"{self.ma_type.name}".lower(), df["low"].tail(self.period+1),length=self.period)
+                lows = lows.astype('float32')
+                self.lows.iloc[-1] = lows.iloc[-1]
+
+                closes = ta.ma(f"{self.ma_type.name}".lower(), df["close"].tail(self.period+1),length=self.period)
+                closes = closes.astype('float32')
+                self.closes.iloc[-1] = closes.iloc[-1]
+
+                opens = ta.ma(f"{self.ma_type.name}".lower(), df["open"].tail(self.period+1),length=self.period)
+                opens = opens.astype('float32')
+                self.opens.iloc[-1] = opens.iloc[-1]
+
+                hl2s = ta.ma(f"{self.ma_type.name}".lower(), df["hl2"].tail(self.period+1),length=self.period)
+                hl2s = hl2s.astype('float32')
+                self.hl2s.iloc[-1] = hl2s.iloc[-1]
+
+                hlc3s = ta.ma(f"{self.ma_type.name}".lower(), df["hlc3"].tail(self.period+1),length=self.period)
+                hlc3s = hlc3s.astype('float32')
+                self.hlc3s.iloc[-1] = hlc3s.iloc[-1]
+
+                ohlc4s = ta.ma(f"{self.ma_type.name}".lower(), df["ohlc4"].tail(self.period+1),length=self.period)
+                ohlc4s = ohlc4s.astype('float32')
+                self.ohlc4s.iloc[-1] = ohlc4s.iloc[-1]
+
+            else:
+                df:pd.DataFrame = self._candles.get_df(self.period+1)
+                highs = ta.ma(f"{self.ma_type.name}".lower(), df["high"].tail(self.period+1),length=self.period)
+                highs = highs.astype('float32')
+                self.highs = pd.concat([self.highs, pd.Series([highs.iloc[-1]], index=[len(self.highs)])])
+
+                lows = ta.ma(f"{self.ma_type.name}".lower(), df["low"].tail(self.period+1),length=self.period)
+                lows = lows.astype('float32')
+                self.lows = pd.concat([self.lows, pd.Series([lows.iloc[-1]], index=[len(self.lows)])])
+
+                closes = ta.ma(f"{self.ma_type.name}".lower(), df["close"].tail(self.period+1),length=self.period)
+                closes = closes.astype('float32')
+                self.closes = pd.concat([self.closes, pd.Series([closes.iloc[-1]], index=[len(self.closes)])])
+
+                opens = ta.ma(f"{self.ma_type.name}".lower(), df["open"].tail(self.period+1),length=self.period)
+                opens = opens.astype('float32')
+                self.opens = pd.concat([self.opens, pd.Series([opens.iloc[-1]], index=[len(self.opens)])])
+
+                hl2s = ta.ma(f"{self.ma_type.name}".lower(), df["hl2"].tail(self.period+1),length=self.period)
+                hl2s = hl2s.astype('float32')
+                self.hl2s = pd.concat([self.hl2s, pd.Series([hl2s.iloc[-1]], index=[len(self.hl2s)])])
+
+                hlc3s = ta.ma(f"{self.ma_type.name}".lower(), df["hlc3"].tail(self.period+1),length=self.period)
+                hlc3s = hlc3s.astype('float32')
+                self.hlc3s = pd.concat([self.hlc3s, pd.Series([hlc3s.iloc[-1]], index=[len(self.hlc3s)])])
+
+                ohlc4s = ta.ma(f"{self.ma_type.name}".lower(), df["ohlc4"].tail(self.period+1),length=self.period)
+                ohlc4s = ohlc4s.astype('float32')
+                self.ohlc4s = pd.concat([self.ohlc4s, pd.Series([ohlc4s.iloc[-1]], index=[len(self.ohlc4s)])])
+                
+
+    def compute(self,index, i:int):
+        _index = index[i]
+        ohlc = self.get_ma_ohlc_at_index(i)
         _open, _high, _low, _close, _hl2, _hlc3, _ohlc4 = ohlc[0],ohlc[1],ohlc[2],ohlc[3],ohlc[4],ohlc[5],ohlc[6]
         if _open != None and  _high != None and _low != None and _close != None:
             _open, _high, _low, _close, _hl2, _hlc3, _ohlc4 = round(ohlc[0],self._precision),round(ohlc[1],self._precision),round(ohlc[2],self._precision),round(ohlc[3],self._precision),\
@@ -280,16 +330,34 @@ class SMOOTH_CANDLE(QObject):
     def fisrt_gen_data(self):
         self.candles = []
         self.is_genering = True
-        self.highs = INDICATOR.get_ma(self.ma_type,period=self.period,input_values=self._candles.candles,_type="high")
-        self.lows = INDICATOR.get_ma(self.ma_type,period=self.period,input_values=self._candles.candles,_type="low")
-        self.closes = INDICATOR.get_ma(self.ma_type,period=self.period,input_values=self._candles.candles,_type="close")
-        self.opens = INDICATOR.get_ma(self.ma_type,period=self.period,input_values=self._candles.candles,_type="open")
         
-        self.hl2s = INDICATOR.get_ma(self.ma_type,period=self.period,input_values=self._candles.candles,_type="hl2")
-        self.hlc3s = INDICATOR.get_ma(self.ma_type,period=self.period,input_values=self._candles.candles,_type="hlc3")
-        self.ohlc4s = INDICATOR.get_ma(self.ma_type,period=self.period,input_values=self._candles.candles,_type="ohlc4")
+        df:pd.DataFrame = self._candles.get_df(self.period+1)
+        self.highs = ta.ma(f"{self.ma_type.name}".lower(), df["high"],length=self.period)
+        self.highs = self.highs.astype('float32')
+
+        self.lows = ta.ma(f"{self.ma_type.name}".lower(), df["low"],length=self.period)
+        self.lows = self.lows.astype('float32')
+
+        self.closes = ta.ma(f"{self.ma_type.name}".lower(), df["close"],length=self.period)
+        self.closes = self.closes.astype('float32')
+
+        self.opens = ta.ma(f"{self.ma_type.name}".lower(), df["open"],length=self.period)
+        self.opens = self.opens.astype('float32')
+
+        self.hl2s = ta.ma(f"{self.ma_type.name}".lower(), df["hl2"],length=self.period)
+        self.hl2s = self.hl2s.astype('float32')
+
+        self.hlc3s = ta.ma(f"{self.ma_type.name}".lower(), df["hlc3"],length=self.period)
+        self.hlc3s = self.hlc3s.astype('float32')
+
+        self.ohlc4s = ta.ma(f"{self.ma_type.name}".lower(), df["ohlc4"],length=self.period)
+        self.ohlc4s = self.ohlc4s.astype('float32')
+
+   
+        _index = df["index"].to_numpy()
         
-        [self.compute(i) for i in range(len(self._candles.candles))]
+        
+        [self.compute(_index,i) for i in range(len(df))]
         
         self.df = pd.DataFrame([data.__dict__ for data in self.candles])
         self.is_genering = False
@@ -305,16 +373,35 @@ class SMOOTH_CANDLE(QObject):
             self.is_genering = True
             self.first_gen = False
             self.candles = []
-            self.highs = INDICATOR.get_ma(self.ma_type,period=self.period,input_values=self._candles.candles,_type="high")
-            self.lows = INDICATOR.get_ma(self.ma_type,period=self.period,input_values=self._candles.candles,_type="low")
-            self.closes = INDICATOR.get_ma(self.ma_type,period=self.period,input_values=self._candles.candles,_type="close")
-            self.opens = INDICATOR.get_ma(self.ma_type,period=self.period,input_values=self._candles.candles,_type="open")
-            
-            self.hl2s = INDICATOR.get_ma(self.ma_type,period=self.period,input_values=self._candles.candles,_type="hl2")
-            self.hlc3s = INDICATOR.get_ma(self.ma_type,period=self.period,input_values=self._candles.candles,_type="hlc3")
-            self.ohlc4s = INDICATOR.get_ma(self.ma_type,period=self.period,input_values=self._candles.candles,_type="ohlc4")
-            
-            [self.compute(i) for i in range(len(self._candles.candles))]
+
+            df:pd.DataFrame = self._candles.get_df()
+            self.highs = ta.ma(f"{self.ma_type.name}".lower(), df["high"],length=self.period)
+            self.highs = self.highs.astype('float32')
+
+            self.lows = ta.ma(f"{self.ma_type.name}".lower(), df["low"],length=self.period)
+            self.lows = self.lows.astype('float32')
+
+            self.closes = ta.ma(f"{self.ma_type.name}".lower(), df["close"],length=self.period)
+            self.closes = self.closes.astype('float32')
+
+            self.opens = ta.ma(f"{self.ma_type.name}".lower(), df["open"],length=self.period)
+            self.opens = self.opens.astype('float32')
+
+            self.hl2s = ta.ma(f"{self.ma_type.name}".lower(), df["hl2"],length=self.period)
+            self.hl2s = self.hl2s.astype('float32')
+
+            self.hlc3s = ta.ma(f"{self.ma_type.name}".lower(), df["hlc3"],length=self.period)
+            self.hlc3s = self.hlc3s.astype('float32')
+
+            self.ohlc4s = ta.ma(f"{self.ma_type.name}".lower(), df["ohlc4"],length=self.period)
+            self.ohlc4s = self.ohlc4s.astype('float32')
+
+
+            _index = df["index"].to_numpy()
+
+            print(len(df))
+
+            [self.compute(_index,i) for i in range(len(df))]
             
             self.df = pd.DataFrame([data.__dict__ for data in self.candles])
             self.first_gen = True
@@ -323,12 +410,13 @@ class SMOOTH_CANDLE(QObject):
     
 
     def update(self, _candle:List[OHLCV]):
+        return
         if (self.first_gen == True) and (self.is_genering == False):
             if self._candles.candles != []:
                 # new_candle =  self._candles.candles[-1]
                 new_candle = _candle[-1]
                 self.update_ma_ohlc(new_candle)
-                _index, ohlc = self.get_ma_ohlc_at_index(-1)
+                ohlc = self.get_ma_ohlc_at_index(-1)
                 _open, _high, _low, _close = round(ohlc[0],self._precision),round(ohlc[1],self._precision),round(ohlc[2],self._precision),round(ohlc[3],self._precision)
                 
                 hl2 = round(ohlc[4],self._precision)
