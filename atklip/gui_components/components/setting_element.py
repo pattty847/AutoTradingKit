@@ -163,6 +163,8 @@ class IntEdit(QWidget,SingleValue):
         self.indicator = indicator
         self._input = _input
         self.setupUi(self)
+        self.value.setRange(1,1000)
+        self.value.setSingleStep(1)
         self.setFixedHeight(35)
     def set_name(self,name):
         self.tittle.setText(name)
@@ -203,6 +205,8 @@ class FloatEdit(QWidget,DoubleValue):
         self.indicator = indicator
         self._input = _input
         self.setupUi(self)
+        self.value.setRange(0.1,1000)
+        self.value.setSingleStep(0.1)
         self.setFixedHeight(35)
     def set_name(self,name):
         self.tittle.setText(name)
