@@ -104,7 +104,7 @@ class MaTypeEdit(ComboboxEdit):
                              "WMA":MAType.WMA,"ZLEMA":MAType.ZLEMA}
             _ma_type =  MAType.__getitem__(_type_name)
         else:
-            self._dict_values = {"ZLMA":PD_MAType.ZLMA,
+            self._dict_values = {"SSF":PD_MAType.SSF,
                                 "WMA":PD_MAType.WMA,
                                 "VIDYA":PD_MAType.VIDYA,
                                 "TRIMA":PD_MAType.TRIMA,
@@ -120,7 +120,7 @@ class MaTypeEdit(ComboboxEdit):
                                 "HMA":PD_MAType.HMA,
                                 "EMA":PD_MAType.EMA,
                                 "DEMA":PD_MAType.DEMA,
-                                "ALMA":PD_MAType.ALMA,
+                                # "ALMA":PD_MAType.ALMA,
                                 "FWMA":PD_MAType.FWMA}
             _ma_type =  PD_MAType.__getitem__(_type_name)
         

@@ -158,7 +158,7 @@ class BasicIndicator(BasicMenu):
         self.setObjectName(self._type_indicator)
         
         self.list_indicators = [IndicatorType.FWMA ,
-                                IndicatorType.ALMA ,
+                                # IndicatorType.ALMA ,
                                 IndicatorType.DEMA ,
                                 IndicatorType.EMA ,
                                 IndicatorType.HMA ,
@@ -174,7 +174,8 @@ class BasicIndicator(BasicMenu):
                                 IndicatorType.TRIMA ,
                                 IndicatorType.VIDYA ,
                                 IndicatorType.WMA ,
-                                IndicatorType.ZLMA,
+                                IndicatorType.SSF ,
+                                # IndicatorType.ZLMA,
                                 ]
         
         self.load_indicators()
@@ -242,7 +243,7 @@ class AdvanceIndicator(BasicMenu):
                                 IndicatorType.DonchianChannels,
                                 IndicatorType.ChandeKrollStop,
                                 IndicatorType.VWAP,IndicatorType.VWMA,
-                                IndicatorType.ALMA,IndicatorType.T3,
+                                IndicatorType.T3,
                               ]
         self.load_indicators()
         #self.addSpacer("VERTICAL")

@@ -1,9 +1,14 @@
 from enum import Enum
 
 
+_mas = [
+        "dema", "ema", "fwma", "hma", "linreg", "midpoint", "pwma", "rma",
+        "sinwma", "sma", "ssf", "swma", "t3", "tema", "trima", "vidya", "wma"
+    ]
+
 class PD_MAType(Enum):
     FWMA = "fwma"
-    ALMA = "ALMA"
+    # ALMA = "alma"
     DEMA = "dema"
     EMA = "ema"
     HMA = "hma"
@@ -19,13 +24,14 @@ class PD_MAType(Enum):
     TRIMA = "trima"
     VIDYA = "vidya"
     WMA = "wma"
-    ZLMA = "zlma"
+    # ZLMA = "zlma"
+    SSF = "ssf"
     
 
 class IndicatorType(Enum):
     
     FWMA = "fwma"
-    ALMA = "alma"
+    # ALMA = "alma"
     DEMA = "dema"
     EMA = "ema"
     HMA = "hma"
@@ -41,7 +47,8 @@ class IndicatorType(Enum):
     TRIMA = "trima"
     VIDYA = "vidya"
     WMA = "wma"
-    ZLMA = "zlma"
+    # ZLMA = "zlma"
+    SSF = "ssf"
     
     SMC = "Smart Money Concept"
     IBS = "IBS"
