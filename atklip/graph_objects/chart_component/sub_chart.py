@@ -246,7 +246,7 @@ class SubChart(PlotWidget):
         if len(data) == 0:
             raise BadSymbol(f"{self.exchange_name} data not received")
         self.set_market_by_symbol(exchange)
-        self.jp_candle.gen_data(data,self._precision)
+        self.jp_candle.fisrt_gen_data(data,self._precision)
         self.jp_candle.source_name = f"jp {self.symbol} {self.interval}"
         self.update_sources(self.jp_candle)
         await self.loop_watch_ohlcv(crypto_ex,exchange,symbol,interval)

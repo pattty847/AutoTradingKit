@@ -5,7 +5,7 @@ from typing import List,Tuple,TYPE_CHECKING,Dict
 from dataclasses import dataclass
 from numba import njit,jit
 from PySide6.QtCore import Qt, Signal,QObject,QCoreApplication,QThreadPool
-from atklip.indicators import OHLCV
+from atklip.indicators.ohlcv import OHLCV
 from .candle import JAPAN_CANDLE
 # if TYPE_CHECKING:
 #     from .smooth_candle import SMOOTH_CANDLE
@@ -285,15 +285,7 @@ class HEIKINASHI(QObject):
 
     def reset(self):
         self.candles = []
-    def gen_data(self,setdata):
-        self.first_gen = False
-        self.candles = []
-        [self.compute(candle) for candle in self._candles.candles]
-        
-        self.df = pd.DataFrame([data.__dict__ for data in self.candles])
-        
-        self.first_gen = True
-        return self.candles
+    
     def fisrt_gen_data(self):
         self.first_gen = False
         self.candles = []

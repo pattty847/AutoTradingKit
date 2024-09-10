@@ -1,11 +1,6 @@
 from enum import Enum
 
 
-_mas = [
-        "dema", "ema", "fwma", "hma", "linreg", "midpoint", "pwma", "rma",
-        "sinwma", "sma", "ssf", "swma", "t3", "tema", "trima", "vidya", "wma"
-    ]
-
 class PD_MAType(Enum):
     FWMA = "fwma"
     # ALMA = "alma"

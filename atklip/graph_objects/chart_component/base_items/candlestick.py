@@ -11,7 +11,8 @@ from atklip.indicators.candle import JAPAN_CANDLE,HEIKINASHI,SMOOTH_CANDLE,N_SMO
 from atklip.appmanager import FastWorker
 from .price_lines import PriceLine
 
-from atklip.indicators import  MAType,OHLCV
+from atklip.indicators.ma_type import  PD_MAType
+from atklip.indicators.ohlcv import OHLCV
 
 if TYPE_CHECKING:
     from atklip.graph_objects.chart_component.viewchart import Chart
@@ -147,6 +148,7 @@ class CandleStick(GraphicsObject):
             self._is_change_source = True
             self.source.sig_reset_all.disconnect(self.update_source)
             self.source.sig_add_candle.disconnect(self.threadpool_asyncworker)
+            
             if not isinstance(self.source,JAPAN_CANDLE) and not isinstance(self.source,HEIKINASHI):
                 self.source.signal_delete.emit()
                 
@@ -223,7 +225,7 @@ class CandleStick(GraphicsObject):
         self.source.sig_add_candle.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
     
     
-    def get_source(self,_type,ma_type:MAType=MAType.EMA, period:int=3,n:int=3):
+    def get_source(self,_type,ma_type:PD_MAType=PD_MAType.EMA, period:int=3,n:int=3):
 
         if _type.value == "japan" or _type.value == "Sub_Chart":
             self.chart.update_sources(self.chart.jp_candle)

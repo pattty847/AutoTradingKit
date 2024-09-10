@@ -1,7 +1,7 @@
 from functools import lru_cache
 from typing import Dict, List,Tuple
 from dataclasses import dataclass
-from atklip.indicators import OHLCV
+from atklip.indicators.ohlcv import OHLCV
 import pandas as pd
 import numpy as np,array
 
@@ -200,7 +200,7 @@ class JAPAN_CANDLE(QObject):
         all_data_np = np.array(all_data)
         return all_index_np,all_data_np
 
-    def gen_data(self,ohlcv,_precision):
+    def fisrt_gen_data(self,ohlcv,_precision):
         self.first_gen = False
         self.df = pd.DataFrame([])
         self.candles = []

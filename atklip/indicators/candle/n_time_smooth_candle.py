@@ -6,10 +6,12 @@ from typing import Any, Dict, List,Tuple
 from dataclasses import dataclass
 from PySide6.QtCore import Qt, Signal,QObject,QCoreApplication,QThreadPool
 
-from atklip.indicators.talipp import OHLCV, INDICATOR, IndicatorType,MAType,Indicator
+from atklip.indicators.ma_type import PD_MAType
+from atklip.indicators.ohlcv import OHLCV
 
 from .candle import JAPAN_CANDLE
 from .heikinashi import HEIKINASHI
+from .smooth_candle import SMOOTH_CANDLE
 
 from atklip.appmanager import FastWorker,CandleWorker
 
@@ -25,16 +27,14 @@ class N_SMOOTH_CANDLE(QObject):
     sig_reset_all = Signal()
     candles : List[OHLCV] = []
     dict_index_time = {}
-    
-    dict_n_ma:Dict[str,Indicator] = {}
-    
-    dict_n_ohlcv:Dict[str,List[OHLCV]] = {}
-
+    dict_n_ma:Dict[str,pd.Series] = {}
+    dict_n_ohlcv:Dict[str,JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE] = {}
     signal_delete = Signal()
     sig_update_source = Signal()
+    
     def __init__(self,precision,_candles,n,ma_type,period) -> None:
         super().__init__(parent=None)
-        self.ma_type:MAType = ma_type
+        self.ma_type:PD_MAType = ma_type
         self.period:int= period
         self._candles:JAPAN_CANDLE|HEIKINASHI =_candles
         self.n:int = n
@@ -43,8 +43,8 @@ class N_SMOOTH_CANDLE(QObject):
             self._candles.setParent(self)
             self.signal_delete.connect(self._candles.signal_delete)
             
-        self.signal_delete.connect(self.deleteLater)
-        self._candles.sig_update_source.connect(self.sig_update_source,Qt.ConnectionType.AutoConnection)
+        self.signal_delete.connect(self.delete_)
+        
         self._precision = precision
         self.first_gen = False
         self.is_genering = True
@@ -52,10 +52,25 @@ class N_SMOOTH_CANDLE(QObject):
         
         self.df = pd.DataFrame([])
         
+        self._candles.sig_update_source.connect(self.sig_update_source,Qt.ConnectionType.AutoConnection)
         self._candles.sig_reset_all.connect(self.fisrt_gen_data,Qt.ConnectionType.AutoConnection)
-        self._candles.sig_update_candle.connect(self.update,Qt.ConnectionType.AutoConnection)
-        self._candles.sig_add_candle.connect(self.update,Qt.ConnectionType.AutoConnection)
+        
+    def delete_smooth_candle(self):
+        self.sig_update_candle = Signal(list)
+        self.sig_add_candle = Signal(list)
+        self.candles : List[OHLCV] = []
+        self.df = pd.DataFrame([])
+        if self.dict_n_ohlcv != {}:
+            _list_smooth_candles = self.dict_n_ohlcv.items()
+            for key,value in _list_smooth_candles:
+                if not isinstance(value,JAPAN_CANDLE) and not isinstance(value,HEIKINASHI):
+                    self.dict_n_ohlcv[key] = None
+                    value.deleteLater()
+        self.dict_n_ohlcv = {}
 
+    def delete_(self):
+        self.delete_smooth_candle()
+        self.deleteLater()
     @property
     def source_name(self):
         return self._source_name
@@ -71,9 +86,9 @@ class N_SMOOTH_CANDLE(QObject):
     def get_last_row_df(self):
         return self.df.iloc[-1]
     
-    def threadpool_asyncworker(self,_candle):
+    def threadpool_asyncworker(self):
         self.worker = None
-        self.worker = CandleWorker(self.update,_candle)
+        self.worker = CandleWorker(self.fisrt_gen_data)
         self.worker.start()
         
     def get_candles_as_dataframe(self, candles: List[OHLCV]=[]):
@@ -250,139 +265,21 @@ class N_SMOOTH_CANDLE(QObject):
         if self.candles != []:
             return self.candles[-1]
         else:
-            self.dict_n_ohlcv[f"{self.n}-candles"][-1]
-    #@lru_cache(maxsize=128)
-    def get_ma_ohlc_at_index(self,index:int,opens:Indicator,highs:Indicator,lows:Indicator,closes:Indicator,hl2s:Indicator,hlc3s:Indicator,ohlc4s:Indicator):
-        #_index = opens.output_times.get(index)
-        ohlc = [opens._dict_time_value.get(index),highs._dict_time_value.get(index),lows._dict_time_value.get(index),closes._dict_time_value.get(index),\
-            hl2s._dict_time_value.get(index),hlc3s._dict_time_value.get(index),ohlc4s._dict_time_value.get(index)]
-        return index, ohlc
-    
-    def update_ma_ohlc(self,lastcandle:OHLCV):
-        _new_time = lastcandle.time
-        _last_time = self.dict_n_ohlcv[f"{self.n}-candles"][-1].time
-        _is_update = False
-        self.dict_n_ohlcv[f"0-candles"] = self._candles.candles
-        if _new_time == _last_time:
-            _is_update =  True
-        for i in range(self.n):
-            _last_candle = self.dict_n_ohlcv[f"{i}-candles"][-1]
-            if _is_update:
-                self.dict_n_ma[f"{i+1}-highs"].update(_last_candle)
-                self.dict_n_ma[f"{i+1}-lows"].update(_last_candle)
-                self.dict_n_ma[f"{i+1}-closes"].update(_last_candle)
-                self.dict_n_ma[f"{i+1}-opens"].update(_last_candle)
-                self.dict_n_ma[f"{i+1}-hl2s"].update(_last_candle)
-                self.dict_n_ma[f"{i+1}-hlc3s"].update(_last_candle)
-                self.dict_n_ma[f"{i+1}-ohlc4s"].update(_last_candle)
-            else:
-                self.dict_n_ma[f"{i+1}-highs"].add(_last_candle)
-                self.dict_n_ma[f"{i+1}-lows"].add(_last_candle)
-                self.dict_n_ma[f"{i+1}-closes"].add(_last_candle)
-                self.dict_n_ma[f"{i+1}-opens"].add(_last_candle)
-                self.dict_n_ma[f"{i+1}-hl2s"].add(_last_candle)
-                self.dict_n_ma[f"{i+1}-hlc3s"].add(_last_candle)
-                self.dict_n_ma[f"{i+1}-ohlc4s"].add(_last_candle)
-            
-            _leng_candle = self.dict_n_ma[f"{i+1}-opens"].output_times[-1]
-            
-            self.compute(self.dict_n_ohlcv[f"{i+1}-candles"],_leng_candle,\
-                                self.dict_n_ma[f"{i+1}-opens"],\
-                                self.dict_n_ma[f"{i+1}-highs"],\
-                                self.dict_n_ma[f"{i+1}-lows"],\
-                                self.dict_n_ma[f"{i+1}-closes"],\
-                                self.dict_n_ma[f"{i+1}-hl2s"],\
-                                self.dict_n_ma[f"{i+1}-hlc3s"],\
-                                self.dict_n_ma[f"{i+1}-ohlc4s"],_is_update)
-        return _is_update
-    
-    def compute(self,candles: List[OHLCV],index:int,opens,highs,lows,closes,hl2s,hlc3s,ohlc4s,is_update: bool=False):
-        _index, ohlc = self.get_ma_ohlc_at_index(index,opens,highs,lows,closes,hl2s,hlc3s,ohlc4s)
-        _open, _high, _low, _close, _hl2, _hlc3, _ohlc4 = ohlc[0],ohlc[1],ohlc[2],ohlc[3],ohlc[4],ohlc[5],ohlc[6]
-        if _open != None and  _high != None and _low != None and _close != None:
-            _open, _high, _low, _close, _hl2, _hlc3, _ohlc4 = \
-                round(ohlc[0],self._precision),round(ohlc[1],self._precision),\
-                round(ohlc[2],self._precision),round(ohlc[3],self._precision),\
-                round(ohlc[4],self._precision),round(ohlc[5],self._precision),round(ohlc[6],self._precision)
-            if is_update:
-                candles[-1] = OHLCV(_open,_high,_low,_close, _hl2, _hlc3, _ohlc4,self._candles.dict_index_ohlcv[_index].volume,self._candles.dict_index_ohlcv[_index].time,_index)
-            else:
-                candles.append(OHLCV(_open,_high,_low,_close, _hl2, _hlc3, _ohlc4,self._candles.dict_index_ohlcv[_index].volume,self._candles.dict_index_ohlcv[_index].time,_index))
-    def reset(self):
-        self.dict_n_ohlcv[f"{self.n}-candles"] = []
-    
+            self.dict_n_ohlcv[f"{self.n}-candles"].candles[-1]
+
     def _gen_data(self):
-        self.dict_n_ohlcv[f"0-candles"] = self._candles.candles
+        self.dict_n_ohlcv[f"0-candles"] = self._candles
         for i in range(self.n):
-            self.dict_n_ma[f"{i+1}-highs"] = INDICATOR.get_ma(self.ma_type,period=self.period,input_values=self.dict_n_ohlcv[f"{i}-candles"],_type="high")
-            self.dict_n_ma[f"{i+1}-lows"] = INDICATOR.get_ma(self.ma_type,period=self.period,input_values=self.dict_n_ohlcv[f"{i}-candles"],_type="low")
-            self.dict_n_ma[f"{i+1}-closes"] = INDICATOR.get_ma(self.ma_type,period=self.period,input_values=self.dict_n_ohlcv[f"{i}-candles"],_type="close")
-            self.dict_n_ma[f"{i+1}-opens"] = INDICATOR.get_ma(self.ma_type,period=self.period,input_values=self.dict_n_ohlcv[f"{i}-candles"],_type="open")
-            self.dict_n_ma[f"{i+1}-hl2s"] = INDICATOR.get_ma(self.ma_type,period=self.period,input_values=self.dict_n_ohlcv[f"{i}-candles"],_type="hl2")
-            self.dict_n_ma[f"{i+1}-hlc3s"] = INDICATOR.get_ma(self.ma_type,period=self.period,input_values=self.dict_n_ohlcv[f"{i}-candles"],_type="hlc3")
-            self.dict_n_ma[f"{i+1}-ohlc4s"] = INDICATOR.get_ma(self.ma_type,period=self.period,input_values=self.dict_n_ohlcv[f"{i}-candles"],_type="ohlc4")
-            
-            self.dict_n_ohlcv[f"{i+1}-candles"] = []
-            
-            [self.compute(self.dict_n_ohlcv[f"{i+1}-candles"],index,\
-                                    self.dict_n_ma[f"{i+1}-opens"],\
-                                    self.dict_n_ma[f"{i+1}-highs"],\
-                                    self.dict_n_ma[f"{i+1}-lows"],\
-                                    self.dict_n_ma[f"{i+1}-closes"],\
-                                    self.dict_n_ma[f"{i+1}-hl2s"],\
-                                    self.dict_n_ma[f"{i+1}-hlc3s"],\
-                                    self.dict_n_ma[f"{i+1}-ohlc4s"]) for index in self.dict_n_ma[f"{i+1}-highs"].output_times]
-            
+            self.dict_n_ohlcv[f"{i+1}-candles"] = SMOOTH_CANDLE(self._precision,self.dict_n_ohlcv[f"{i}-candles"],self.ma_type,self.period)
+            self.dict_n_ohlcv[f"{i+1}-candles"].fisrt_gen_data()
 
-    def reset_data(self,n):
-        self.n = n
-        self.fisrt_gen_data()
-     
     def fisrt_gen_data(self):
-        self.is_genering = True
-        self.dict_n_ohlcv[f"{self.n}-candles"] = []
-        self.candles = self.dict_n_ohlcv[f"{self.n}-candles"]
+        self.delete_smooth_candle()
         self._gen_data()
-        self.candles = self.dict_n_ohlcv[f"{self.n}-candles"]
-        
-        self.df = pd.DataFrame([data.__dict__ for data in self.candles])
-        
-        self.is_genering = False
-        if self.first_gen == False:
-            self.first_gen = True
-            self.is_genering = False
+        self.sig_update_candle = self.dict_n_ohlcv[f"{self.n}-candles"].sig_update_candle
+        self.sig_add_candle = self.dict_n_ohlcv[f"{self.n}-candles"].sig_add_candle
+        # self.sig_reset_all = self.dict_n_ohlcv[f"{self.n}-candles"].sig_reset_all
+        self.candles = self.dict_n_ohlcv[f"{self.n}-candles"].candles
+        self.df = self.dict_n_ohlcv[f"{self.n}-candles"].df
         self.sig_reset_all.emit()
-
-
-    def update(self, _candle:List[OHLCV]):
-        if (self.first_gen == True) and (self.is_genering == False):
-            if self._candles.candles != []:
-                new_candle = _candle[-1]
-                is_update = self.update_ma_ohlc(new_candle)
-                self.candles = self.dict_n_ohlcv[f"{self.n}-candles"]
-                
-                if is_update:
-                    
-                    self.df.iloc[-1] = [self.candles[-1].open,
-                                        self.candles[-1].high,
-                                        self.candles[-1].low,
-                                        self.candles[-1].close,
-                                        self.candles[-1].hl2,
-                                        self.candles[-1].hlc3,
-                                        self.candles[-1].ohlc4,
-                                        self.candles[-1].volume,
-                                        self.candles[-1].time,
-                                        self.candles[-1].index
-                                        ]
-                    
-                    self.sig_update_candle.emit(self.dict_n_ohlcv[f"{self.n}-candles"][-2:])
-                    #QCoreApplication.processEvents()
-                    return False
-                else:
-                    new_row = pd.DataFrame([data.__dict__ for data in self.candles[-1:]])
-                    self.df = pd.concat([self.df, new_row], ignore_index=True)
-                    self.sig_add_candle.emit(self.dict_n_ohlcv[f"{self.n}-candles"][-2:])
-                    #QCoreApplication.processEvents()
-                    return True
-                
-        return False
+         

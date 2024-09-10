@@ -12,7 +12,7 @@ from atklip.gui_components.qfluentwidgets.common.icon import FluentIcon as FIF
 from PySide6.QtWidgets import QWidget
 
 from atklip.indicators.candle import JAPAN_CANDLE,HEIKINASHI,SMOOTH_CANDLE
-from atklip.indicators import OHLCV,IndicatorType,PD_MAType,MAType
+from atklip.indicators.ma_type import PD_MAType
 from atklip.app_utils import mkPen, mkBrush
 
 "Inputs setting"
@@ -98,31 +98,25 @@ class MaTypeEdit(ComboboxEdit):
         _type = _inputs.get("ma_type")
         _type_name = _type.name
         
-        if "is_candle" in indicator.has.keys():
-            self._dict_values = {"SMA":MAType.SMA,"SMMA":MAType.SMMA,"DEMA":MAType.DEMA,
-                             "EMA":MAType.EMA,"TEMA":MAType.TEMA,"HMA":MAType.HMA,
-                             "WMA":MAType.WMA,"ZLEMA":MAType.ZLEMA}
-            _ma_type =  MAType.__getitem__(_type_name)
-        else:
-            self._dict_values = {"SSF":PD_MAType.SSF,
-                                "WMA":PD_MAType.WMA,
-                                "VIDYA":PD_MAType.VIDYA,
-                                "TRIMA":PD_MAType.TRIMA,
-                                "TEMA":PD_MAType.TEMA,
-                                "T3":PD_MAType.T3,
-                                "SWMA":PD_MAType.SWMA,
-                                "SMA":PD_MAType.SMA,
-                                "SINWMA":PD_MAType.SINWMA,
-                                "RMA":PD_MAType.RMA,
-                                "PWMA":PD_MAType.PWMA,
-                                "MIDPOINT":PD_MAType.MIDPOINT,
-                                "LINREG":PD_MAType.LINREG,
-                                "HMA":PD_MAType.HMA,
-                                "EMA":PD_MAType.EMA,
-                                "DEMA":PD_MAType.DEMA,
-                                # "ALMA":PD_MAType.ALMA,
-                                "FWMA":PD_MAType.FWMA}
-            _ma_type =  PD_MAType.__getitem__(_type_name)
+        self._dict_values = {"SSF":PD_MAType.SSF,
+                            "WMA":PD_MAType.WMA,
+                            "VIDYA":PD_MAType.VIDYA,
+                            "TRIMA":PD_MAType.TRIMA,
+                            "TEMA":PD_MAType.TEMA,
+                            "T3":PD_MAType.T3,
+                            "SWMA":PD_MAType.SWMA,
+                            "SMA":PD_MAType.SMA,
+                            "SINWMA":PD_MAType.SINWMA,
+                            "RMA":PD_MAType.RMA,
+                            "PWMA":PD_MAType.PWMA,
+                            "MIDPOINT":PD_MAType.MIDPOINT,
+                            "LINREG":PD_MAType.LINREG,
+                            "HMA":PD_MAType.HMA,
+                            "EMA":PD_MAType.EMA,
+                            "DEMA":PD_MAType.DEMA,
+                            # "ALMA":PD_MAType.ALMA,
+                            "FWMA":PD_MAType.FWMA}
+        _ma_type =  PD_MAType.__getitem__(_type_name)
         
         list_types = list(self._dict_values.keys())
         

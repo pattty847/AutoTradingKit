@@ -74,8 +74,11 @@ class Chart(ViewPlotWidget):
     
     def update_sources(self,source:HEIKINASHI|SMOOTH_CANDLE|JAPAN_CANDLE|N_SMOOTH_CANDLE):
         _list_values = list(self.sources.items())
-        for key,value in _list_values:
-            if value == source:
+        for item in _list_values:
+            key,value = item[0], item[1]
+            if key == source.source_name:
+                del self.sources[key]
+            elif value == source:
                 del self.sources[key] 
         self.sources[source.source_name] = source
     
@@ -166,7 +169,7 @@ class Chart(ViewPlotWidget):
         if len(data) == 0:
             raise BadSymbol(f"{self.exchange_name} data not received")
         self.set_market_by_symbol(exchange)
-        self.jp_candle.gen_data(data,self._precision)
+        self.jp_candle.fisrt_gen_data(data,self._precision)
         self.jp_candle.source_name = f"jp {self.symbol} {self.interval}"
         self.update_sources(self.jp_candle)
         
