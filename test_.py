@@ -31,7 +31,7 @@ class MainWindow(QMainWindow):
         # Thiết lập giao diện
         self.label = QLabel("Đang xử lý các tác vụ...")
         self.progress_bars = []
-        self.max_workers = 4
+        self.max_workers = 10
         
         layout = QVBoxLayout()
         layout.addWidget(self.label)

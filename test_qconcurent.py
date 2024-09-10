@@ -1,55 +1,44 @@
-import sys
+from concurrent.futures import ProcessPoolExecutor, as_completed
 import time
-from PySide6.QtCore import Qt
-from PySide6.QtConcurrent import QtConcurrent
-from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QVBoxLayout, QWidget
+from multiprocessing import Process, Queue
 
+# Hàm giả lập nhiệm vụ xử lý trong tiến trình con
+def worker_function(i, q):
+    n = 0
+    while True:
+        time.sleep(0.01)  # Giả lập công việc tốn thời gian
+        result = f"Kết quả từ tiến trình {i} -- {n} "
+        n+=1
+        q.put(result)  # Đưa kết quả vào queue
+        yield result
 
-# Hàm thực hiện công việc nặng
-def heavy_computation():
-    time.sleep(5)  # Giả lập công việc nặng bằng cách ngủ trong 5 giây
-    return "Kết quả từ tác vụ nền"
+def main():
+    # Tạo một Queue để chia sẻ dữ liệu giữa các tiến trình
+    queue = Queue()
 
+    # Tạo danh sách các tiến trình
+    processes = []
+    num_processes = 5  # Số tiến trình cần chạy
 
-class MainWindow(QMainWindow):
-    def __init__(self):
-        super().__init__()
+    # Khởi tạo và chạy các tiến trình
+    for i in range(num_processes):
+        p = Process(target=worker_function, args=(i, queue))
+        processes.append(p)
+        p.start()
 
-        self.initUI()
+    # Thu thập kết quả từ queue trong main_thread
+    while True:
+        for _ in range(num_processes):
+            # print(queue)
+            result = queue.get()  # Lấy kết quả từ queue
+            print(f"Xử lý kết quả trong main_thread: {result}")
 
-    def initUI(self):
-        self.setWindowTitle("QtConcurrent Example")
+    # Đợi tất cả tiến trình kết thúc
+    for p in processes:
+        p.join()
 
-        # Layout và widget
-        layout = QVBoxLayout()
+    print("Tất cả tiến trình đã hoàn thành.")
 
-        self.label = QLabel("Nhấn nút để bắt đầu tác vụ")
-        layout.addWidget(self.label)
-
-        self.button = QPushButton("Bắt đầu tác vụ")
-        self.button.clicked.connect(self.start_task)
-        layout.addWidget(self.button)
-
-        container = QWidget()
-        container.setLayout(layout)
-        self.setCentralWidget(container)
-
-    def start_task(self):
-        self.label.setText("Đang thực hiện tác vụ...")
-
-        # Sử dụng QtConcurrent.run để thực hiện tác vụ nặng trong nền
-        future = QtConcurrent.ThreadFunctionResult(heavy_computation)
-
-        # Khi tác vụ hoàn thành, cập nhật giao diện
-        future.resultReady.connect(self.task_finished)
-
-    def task_finished(self):
-        # Cập nhật kết quả sau khi tác vụ hoàn thành
-        self.label.setText("Tác vụ hoàn thành! Kết quả: " + future.result())
-
-
+# Gọi hàm main để chạy chương trình
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    window.show()
-    sys.exit(app.exec())
+    main()

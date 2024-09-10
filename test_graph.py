@@ -48,7 +48,8 @@ class MainWindow(QMainWindow):
         self.process.readyReadStandardError.connect(self.handle_stderr)
 
         # Start the process (running 'ping' command)
-        self.process.start("ping", ["-t","8.8.8.8"])
+        #self.process.start("ping", ["-t","8.8.8.8"])
+        self.process.start("function_test.py")
 
     def handle_stdout(self):
         output = self.process.readAllStandardOutput().data().decode()
