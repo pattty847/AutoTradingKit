@@ -11,7 +11,7 @@ from atklip.indicators.pandas_ta.volume import ad
 def adosc(
     high: Series, low: Series, close: Series, volume: Series,
     open_: Series = None, fast: Int = None, slow: Int = None,
-    talib: bool = None,
+    talib: bool = True,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """Accumulation/Distribution Oscillator or Chaikin Oscillator
@@ -58,7 +58,7 @@ def adosc(
 
     # Calculate
     if Imports["talib"] and mode_tal:
-        from talib import ADOSC
+        from atklip.indicators.talib import ADOSC
         adosc = ADOSC(high, low, close, volume, fast, slow)
     else:
         # remove length so it doesn't override ema length

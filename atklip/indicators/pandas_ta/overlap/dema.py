@@ -9,7 +9,7 @@ from .ema import ema
 
 
 def dema(
-    close: Series, length: Int = None, talib: bool = None,
+    close: Series, length: Int = None, talib: bool = True,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """Double Exponential Moving Average (DEMA)
@@ -45,7 +45,7 @@ def dema(
 
     # Calculate
     if Imports["talib"] and mode_tal:
-        from talib import DEMA
+        from atklip.indicators.talib import DEMA
         dema = DEMA(close, length)
     else:
         ema1 = ema(close=close, length=length, talib=mode_tal)

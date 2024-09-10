@@ -16,7 +16,7 @@ from atklip.indicators.pandas_ta.utils import (
 
 def aroon(
     high: Series, low: Series,
-    length: Int = None, scalar: IntFloat = None, talib: bool = None,
+    length: Int = None, scalar: IntFloat = None, talib: bool = True,
     offset: Int = None, **kwargs: DictLike
 ) -> DataFrame:
     """Aroon & Aroon Oscillator (AROON)
@@ -56,7 +56,7 @@ def aroon(
 
     # Calculate
     if Imports["talib"] and mode_tal:
-        from talib import AROON, AROONOSC
+        from atklip.indicators.talib import AROON, AROONOSC
         aroon_down, aroon_up = AROON(high, low, length)
         aroon_osc = AROONOSC(high, low, length)
     else:

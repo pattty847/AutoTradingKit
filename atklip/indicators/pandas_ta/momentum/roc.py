@@ -23,7 +23,7 @@ def nb_roc(x, n, k):
 
 def roc(
     close: Series, length: Int = None,
-    scalar: IntFloat = None, talib: bool = None,
+    scalar: IntFloat = None, talib: bool = True,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """Rate of Change (ROC)
@@ -63,7 +63,7 @@ def roc(
 
     # Calculate
     if Imports["talib"] and mode_tal:
-        from talib import ROC
+        from atklip.indicators.talib import ROC
         roc = ROC(close, length)
     else:
         # roc = scalar * mom(close=close, length=length, talib=mode_tal) \

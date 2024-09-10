@@ -16,7 +16,7 @@ from atklip.indicators.pandas_ta.utils import (
 
 def ema(
     close: Series, length: Int = None,
-    talib: bool = None, presma: bool = None,
+    talib: bool = True, presma: bool = None,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """Exponential Moving Average (EMA)
@@ -62,7 +62,7 @@ def ema(
 
     # Calculate
     if Imports["talib"] and mode_tal and length > 1:
-        from talib import EMA
+        from atklip.indicators.talib import EMA
         ema = EMA(close, length)
     else:
         if presma:  # TA Lib implementation

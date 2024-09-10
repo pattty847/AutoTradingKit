@@ -18,7 +18,7 @@ from atklip.indicators.pandas_ta.utils import (
 
 def rsi(
     close: Series, length: Int = None, scalar: IntFloat = None,
-    mamode: str = None, talib: bool = None,
+    mamode: str = None, talib: bool = True,
     drift: Int = None, offset: Int = None,
     **kwargs: DictLike
 ) -> Series:
@@ -62,7 +62,7 @@ def rsi(
 
     # Calculate
     if Imports["talib"] and mode_tal:
-        from talib import RSI
+        from atklip.indicators.talib import RSI
         rsi = RSI(close, length)
     else:
         negative = close.diff(drift)

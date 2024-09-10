@@ -16,7 +16,7 @@ from atklip.indicators.pandas_ta.utils import (
 
 def cmo(
     close: Series, length: Int = None, scalar: IntFloat = None,
-    talib: bool = None, drift: Int = None,
+    talib: bool = True, drift: Int = None,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """Chande Momentum Oscillator (CMO)
@@ -56,7 +56,7 @@ def cmo(
 
     # Calculate
     if Imports["talib"] and mode_tal:
-        from talib import CMO
+        from atklip.indicators.talib import CMO
         cmo = CMO(close, length)
     else:
         mom = close.diff(drift)

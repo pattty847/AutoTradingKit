@@ -8,7 +8,7 @@ from atklip.indicators.pandas_ta.utils import non_zero_range, v_offset, v_series
 
 def ad(
     high: Series, low: Series, close: Series, volume: Series,
-    open_: Series = None, talib: bool = None,
+    open_: Series = None, talib: bool = True,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """Accumulation/Distribution (AD)
@@ -45,7 +45,7 @@ def ad(
 
     # Calculate
     if Imports["talib"] and mode_tal and volume.size:
-        from talib import AD
+        from atklip.indicators.talib import AD
         ad = AD(high, low, close, volume)
     else:
         if open_ is not None:

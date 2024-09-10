@@ -23,6 +23,7 @@ pandas-datareader
 pyarrow
 setuptools
 streamlit
+polars
 # TA-Lib==0.4.28
 # yfinance==0.2.40
 

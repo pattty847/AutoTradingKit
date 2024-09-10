@@ -51,7 +51,7 @@ def nb_atrts(x, ma, atr_, length, ma_length):
 def atrts(
     high: Series, low: Series, close: Series, length: Int = None,
     ma_length: Int = None, multiplier: IntFloat = None,
-    mamode: str = None, talib: bool = None, drift: Int = None,
+    mamode: str = None, talib: bool = True, drift: Int = None,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """ATR Trailing Stop (ATRTS)
@@ -107,7 +107,7 @@ def atrts(
 
     # Calculate
     if Imports["talib"] and mode_tal:
-        from talib import ATR
+        from atklip.indicators.talib import ATR
         atr_ = ATR(high, low, close, length)
     else:
         atr_ = atr(

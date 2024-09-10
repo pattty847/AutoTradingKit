@@ -10,7 +10,7 @@ from atklip.indicators.pandas_ta.utils import v_pos_default, v_series, v_talib
 
 def apo(
     close: Series, fast: Int = None, slow: Int = None,
-    mamode: str = None, talib: bool = None,
+    mamode: str = None, talib: bool = True,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """Absolute Price Oscillator (APO)
@@ -54,7 +54,7 @@ def apo(
 
     # Calculate
     if Imports["talib"] and mode_tal:
-        from talib import APO
+        from atklip.indicators.talib import APO
         apo = APO(close, fast, slow, tal_ma(mamode))
     else:
         fastma = ma(mamode, close, length=fast, talib=mode_tal)

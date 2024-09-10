@@ -7,7 +7,7 @@ from atklip.indicators.pandas_ta.utils import v_offset, v_series, v_talib
 
 
 def hlc3(
-    high: Series, low: Series, close: Series, talib: bool = None,
+    high: Series, low: Series, close: Series, talib: bool = True,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """HLC3
@@ -39,7 +39,7 @@ def hlc3(
 
     # Calculate
     if Imports["talib"] and mode_tal and close.size:
-        from talib import TYPPRICE
+        from atklip.indicators.talib import TYPPRICE
         hlc3 = TYPPRICE(high, low, close)
     else:
         avg = (high.to_numpy() + low.to_numpy() + close.to_numpy()) / 3.0

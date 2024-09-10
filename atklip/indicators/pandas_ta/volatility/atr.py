@@ -19,7 +19,7 @@ from .true_range import true_range
 
 def atr(
     high: Series, low: Series, close: Series, length: Int = None,
-    mamode: str = None, talib: bool = None,
+    mamode: str = None, talib: bool = True,
     prenan: bool = None, drift: Int = None,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
@@ -69,7 +69,7 @@ def atr(
 
     # Calculate
     if Imports["talib"] and mode_tal:
-        from talib import ATR
+        from atklip.indicators.talib import ATR
         atr = ATR(high, low, close, length)
     else:
         tr = true_range(

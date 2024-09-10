@@ -7,7 +7,7 @@ from atklip.indicators.pandas_ta.utils import v_offset, v_series, v_talib
 
 
 def wcp(
-    high: Series, low: Series, close: Series, talib: bool = None,
+    high: Series, low: Series, close: Series, talib: bool = True,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """Weighted Closing Price (WCP)
@@ -46,7 +46,7 @@ def wcp(
 
     # Calculate
     if Imports["talib"] and mode_tal:
-        from talib import WCLPRICE
+        from atklip.indicators.talib import WCLPRICE
         wcp = WCLPRICE(high, low, close)
     else:
         weight = high.to_numpy() + low.to_numpy() + 2 * close.to_numpy()

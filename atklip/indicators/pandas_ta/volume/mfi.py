@@ -18,7 +18,7 @@ from atklip.indicators.pandas_ta.utils import (
 
 def mfi(
     high: Series, low: Series, close: Series, volume: Series,
-    length: Int = None, talib: bool = None, drift: Int = None,
+    length: Int = None, talib: bool = True, drift: Int = None,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """Money Flow Index (MFI)
@@ -63,7 +63,7 @@ def mfi(
 
     # Calculate
     if Imports["talib"] and mode_tal:
-        from talib import MFI
+        from atklip.indicators.talib import MFI
         mfi = MFI(high, low, close, volume, length)
     else:
         m, _ones = close.size, ones(length)

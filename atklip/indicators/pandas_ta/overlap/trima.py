@@ -8,7 +8,7 @@ from .sma import sma
 
 
 def trima(
-    close: Series, length: Int = None, talib: bool = None,
+    close: Series, length: Int = None, talib: bool = True,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """Triangular Moving Average (TRIMA)
@@ -47,7 +47,7 @@ def trima(
 
     # Calculate
     if Imports["talib"] and mode_tal:
-        from talib import TRIMA
+        from atklip.indicators.talib import TRIMA
         trima = TRIMA(close, length)
     else:
         half_length = round(0.5 * (length + 1))

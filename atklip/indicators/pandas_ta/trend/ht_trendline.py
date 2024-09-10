@@ -84,7 +84,7 @@ def nb_ht_trendline(x):
 
 
 def ht_trendline(
-    close: Series = None, talib: bool = None,
+    close: Series = None, talib: bool = True,
     prenan: Int = None, offset: Int = None,
     **kwargs: DictLike
 ) -> Series:
@@ -123,7 +123,7 @@ def ht_trendline(
     offset = v_offset(offset)
 
     if Imports["talib"] and mode_tal:
-        from talib import HT_TRENDLINE
+        from atklip.indicators.talib import HT_TRENDLINE
         tl = HT_TRENDLINE(close)
     else:
         np_close = close.to_numpy()

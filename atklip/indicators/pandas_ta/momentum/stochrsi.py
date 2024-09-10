@@ -18,7 +18,7 @@ from atklip.indicators.pandas_ta.utils import (
 def stochrsi(
     close: Series, length: Int = None, rsi_length: Int = None,
     k: Int = None, d: Int = None, mamode: str = None,
-    talib: bool = None, offset: Int = None, **kwargs: DictLike
+    talib: bool = True, offset: Int = None, **kwargs: DictLike
 ) -> DataFrame:
     """Stochastic (STOCHRSI)
 
@@ -70,7 +70,7 @@ def stochrsi(
 
     # Calculate
     # if Imports["talib"] and mode_tal:
-    #     from talib import RSI
+    #     from atklip.indicators.talib import RSI
     #     rsi_ = RSI(close, length)
     # else:
 

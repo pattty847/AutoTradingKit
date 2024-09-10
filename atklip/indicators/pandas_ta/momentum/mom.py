@@ -19,7 +19,7 @@ def nb_mom(x, n):
 
 
 def mom(
-    close: Series, length: Int = None, talib: bool = None,
+    close: Series, length: Int = None, talib: bool = True,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """Momentum (MOM)
@@ -55,7 +55,7 @@ def mom(
 
     # Calculate
     if Imports["talib"] and mode_tal:
-        from talib import MOM
+        from atklip.indicators.talib import MOM
         mom = MOM(close, length)
     else:
         np_close = close.values

@@ -8,7 +8,7 @@ from atklip.indicators.pandas_ta.utils import v_lowerbound, v_offset, v_series, 
 
 def variance(
     close: Series, length: Int = None,
-    ddof: Int = None, talib: bool = None,
+    ddof: Int = None, talib: bool = True,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """Rolling Variance
@@ -51,7 +51,7 @@ def variance(
 
     # Calculate
     if Imports["talib"] and mode_tal:
-        from talib import VAR
+        from atklip.indicators.talib import VAR
         variance = VAR(close, length)
     else:
         variance = close.rolling(length, min_periods=min_periods).var(ddof)

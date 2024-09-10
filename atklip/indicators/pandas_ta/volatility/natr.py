@@ -19,7 +19,7 @@ from atklip.indicators.pandas_ta.volatility import atr
 def natr(
     high: Series, low: Series, close: Series,
     length: Int = None, scalar: IntFloat = None, mamode: str = None,
-    talib: bool = None, prenan: bool = None, drift: Int = None,
+    talib: bool = True, prenan: bool = None, drift: Int = None,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """Normalized Average True Range (NATR)
@@ -67,7 +67,7 @@ def natr(
 
     # Calculate
     if Imports["talib"] and mode_tal:
-        from talib import NATR
+        from atklip.indicators.talib import NATR
         natr = NATR(high, low, close, length)
     else:
         natr = (scalar / close) * \

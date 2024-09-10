@@ -18,7 +18,7 @@ from atklip.indicators.pandas_ta.utils import (
 def stoch(
     high: Series, low: Series, close: Series,
     k: Int = None, d: Int = None, smooth_k: Int = None,
-    mamode: str = None, talib: bool = None,
+    mamode: str = None, talib: bool = True,
     offset: Int = None, **kwargs: DictLike
 ) -> DataFrame:
     """Stochastic (STOCH)
@@ -73,7 +73,7 @@ def stoch(
 
     # Calculate
     if Imports["talib"] and mode_tal and smooth_k > 2:
-        from talib import STOCH
+        from atklip.indicators.talib import STOCH
         stoch_ = STOCH(
             high, low, close, k, d, tal_ma(mamode), d, tal_ma(mamode)
         )

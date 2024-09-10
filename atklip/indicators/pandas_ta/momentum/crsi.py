@@ -98,7 +98,7 @@ def percent_rank(x: Series, lookback: Int) -> Series:
 
 def crsi(
     close: Series, length_rsi: Int = None, length_streak: Int = None,
-    length_rank: Int = None, scalar: IntFloat = None, talib: bool = None,
+    length_rank: Int = None, scalar: IntFloat = None, talib: bool = True,
     drift: Int = None, offset: Int = None, **kwargs: DictLike,
 ) -> Series:
     """Connors Relative Strength Index (RSI)
@@ -154,7 +154,7 @@ def crsi(
     streak = Series(consecutive_streak(np_close), index=close.index)
 
     if Imports["talib"] and mode_tal:
-        from talib import RSI
+        from atklip.indicators.talib import RSI
         close_rsi = RSI(close, length_rsi)
         streak_rsi = RSI(streak, length_streak)
     else:

@@ -22,7 +22,7 @@ from atklip.indicators.pandas_ta.volatility import atr
 def adx(
     high: Series, low: Series, close: Series, length: Int = None,
     lensig: Int = None, adxr_length: Int = None, scalar: IntFloat = None,
-    talib: bool = None, tvmode: bool = None, mamode: str = None,
+    talib: bool = True, tvmode: bool = None, mamode: str = None,
     drift: Int = None, offset: Int = None, **kwargs: DictLike
 ) -> DataFrame:
     """Average Directional Movement (ADX)
@@ -101,7 +101,7 @@ def adx(
     neg = neg.apply(zero)
 
     if not mode_tv and Imports["talib"] and mode_tal and length > 1:
-        from talib import ADX, MINUS_DM, PLUS_DM
+        from atklip.indicators.talib import ADX, MINUS_DM, PLUS_DM
         adx = ADX(high, low, close, length)
         dmp = PLUS_DM(high, low, length)
         dmn = MINUS_DM(high, low, length)

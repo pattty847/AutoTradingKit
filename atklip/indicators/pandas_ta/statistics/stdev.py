@@ -10,7 +10,7 @@ from .variance import variance
 
 def stdev(
     close: Series, length: Int = None,
-    ddof: Int = None, talib: bool = None,
+    ddof: Int = None, talib: bool = True,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """Rolling Standard Deviation
@@ -48,7 +48,7 @@ def stdev(
 
     # Calculate
     if Imports["talib"] and mode_tal:
-        from talib import STDDEV
+        from atklip.indicators.talib import STDDEV
         stdev = STDDEV(close, length)
     else:
         stdev = variance(

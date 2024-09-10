@@ -22,7 +22,7 @@ def nb_sma(x, n):
 
 
 def sma(
-    close: Series, length: Int = None, talib: bool = None,
+    close: Series, length: Int = None, talib: bool = True,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """Simple Moving Average (SMA)
@@ -64,7 +64,7 @@ def sma(
 
     # Calculate
     if Imports["talib"] and mode_tal and length > 1:
-        from talib import SMA
+        from atklip.indicators.talib import SMA
         sma = SMA(close, length)
     else:
         np_close = close.to_numpy()

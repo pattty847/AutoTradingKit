@@ -7,7 +7,7 @@ from atklip.indicators.pandas_ta.utils import v_offset, v_pos_default, v_series,
 
 
 def midprice(
-    high: Series, low: Series, length: Int = None, talib: bool = None,
+    high: Series, low: Series, length: Int = None, talib: bool = True,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """Midprice
@@ -46,7 +46,7 @@ def midprice(
 
     # Calculate
     if Imports["talib"] and mode_tal:
-        from talib import MIDPRICE
+        from atklip.indicators.talib import MIDPRICE
         midprice = MIDPRICE(high, low, length)
     else:
         lowest_low = low.rolling(length, min_periods=min_periods).min()

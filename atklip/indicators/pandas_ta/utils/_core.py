@@ -116,7 +116,7 @@ def simplify_columns(df, n: Int=3) -> ListStr:
 def tal_ma(name: str) -> Int:
     """Helper Function that returns the Enum value for TA Lib's MA Type"""
     if Imports["talib"] and isinstance(name, str) and len(name) > 1:
-        from talib import MA_Type
+        from atklip.indicators.talib import MA_Type
         name = name.lower()
         if name == "sma":
             return MA_Type.SMA   # 0
@@ -174,7 +174,7 @@ def ms2secs(ms, p: Int) -> IntFloat:
 
 
 def _speed_group(
-        df: DataFrame, group: ListStr = [], talib: bool = False,
+        df: DataFrame, group: ListStr = [], talib: bool = True,
         index_name: str = "Indicator", p: Int = 4
     ) -> ListStr:
     result = []
@@ -190,7 +190,7 @@ def _speed_group(
 
 def speed_test(df: DataFrame,
         only: ListStr = None, excluded: ListStr = None,
-        top: Int = None, talib: bool = False,
+        top: Int = None, talib: bool = True,
         ascending: bool = False, sortby: str = "secs",
         gradient: bool = False, places: Int = 5, stats: bool = False,
         verbose: bool = False, silent: bool = False

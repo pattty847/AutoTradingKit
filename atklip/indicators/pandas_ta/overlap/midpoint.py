@@ -7,7 +7,7 @@ from atklip.indicators.pandas_ta.utils import v_offset, v_pos_default, v_series,
 
 
 def midpoint(
-    close: Series, length: Int = None, talib: bool = None,
+    close: Series, length: Int = None, talib: bool = True,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """Midpoint
@@ -43,7 +43,7 @@ def midpoint(
 
     # Calculate
     if Imports["talib"] and mode_tal:
-        from talib import MIDPOINT
+        from atklip.indicators.talib import MIDPOINT
         midpoint = MIDPOINT(close, length)
     else:
         lowest = close.rolling(length, min_periods=min_periods).min()

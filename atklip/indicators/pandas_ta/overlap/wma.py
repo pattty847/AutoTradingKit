@@ -35,7 +35,7 @@ def nb_wma(x, n, asc, prenan):
 
 def wma(
     close: Series, length: Int = None,
-    asc: bool = None, talib: bool = None,
+    asc: bool = None, talib: bool = True,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """Weighted Moving Average (WMA)
@@ -73,7 +73,7 @@ def wma(
 
     # Calculate
     if Imports["talib"] and mode_tal:
-        from talib import WMA
+        from atklip.indicators.talib import WMA
         wma = WMA(close, length)
     else:
         np_close = close.to_numpy()

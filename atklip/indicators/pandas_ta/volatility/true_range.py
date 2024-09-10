@@ -16,7 +16,7 @@ from atklip.indicators.pandas_ta.utils import (
 
 def true_range(
     high: Series, low: Series, close: Series,
-    talib: bool = None, prenan: bool = None, drift: Int = None,
+    talib: bool = True, prenan: bool = None, drift: Int = None,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """True Range
@@ -60,7 +60,7 @@ def true_range(
 
     # Calculate
     if Imports["talib"] and mode_tal:
-        from talib import TRANGE
+        from atklip.indicators.talib import TRANGE
         true_range = TRANGE(high, low, close)
     else:
         hl_range = non_zero_range(high, low)

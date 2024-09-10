@@ -10,7 +10,7 @@ from atklip.indicators.pandas_ta.utils import v_offset, v_pos_default, v_series,
 
 def cci(
     high: Series, low: Series, close: Series, length: Int = None,
-    c: IntFloat = None, talib: bool = None,
+    c: IntFloat = None, talib: bool = True,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """Commodity Channel Index (CCI)
@@ -52,7 +52,7 @@ def cci(
 
     # Calculate
     if Imports["talib"] and mode_tal:
-        from talib import CCI
+        from atklip.indicators.talib import CCI
         cci = CCI(high, low, close, length)
     else:
         typical_price = hlc3(high=high, low=low, close=close, talib=mode_tal)

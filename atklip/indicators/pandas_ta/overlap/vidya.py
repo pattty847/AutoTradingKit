@@ -16,7 +16,7 @@ from atklip.indicators.pandas_ta.utils import (
 def vidya(
     close: Series, length: Int = None,
     drift: Int = None, offset: Int = None,
-    talib: bool = None, **kwargs: DictLike
+    talib: bool = True, **kwargs: DictLike
 ) -> Series:
     """Variable Index Dynamic Average (VIDYA)
 
@@ -57,7 +57,7 @@ def vidya(
     alpha = 2 / (length + 1)
 
     if Imports["talib"] and mode_tal:
-        from talib import CMO
+        from atklip.indicators.talib import CMO
         cmo_ = CMO(close, length)
     else:
         cmo_ = _cmo(close, length, drift)

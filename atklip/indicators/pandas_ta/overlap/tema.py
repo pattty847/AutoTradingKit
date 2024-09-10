@@ -8,7 +8,7 @@ from .ema import ema
 
 
 def tema(
-    close: Series, length: Int = None, talib: bool = None,
+    close: Series, length: Int = None, talib: bool = True,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """Triple Exponential Moving Average (TEMA)
@@ -45,7 +45,7 @@ def tema(
 
     # Calculate
     if Imports["talib"] and mode_tal:
-        from talib import TEMA
+        from atklip.indicators.talib import TEMA
         tema = TEMA(close, length)
     else:
         ema1 = ema(close=close, length=length, talib=mode_tal, **kwargs)

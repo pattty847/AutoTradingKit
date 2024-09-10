@@ -14,7 +14,7 @@ from atklip.indicators.pandas_ta.utils import (
 
 def bop(
     open_: Series, high: Series, low: Series, close: Series,
-    scalar: IntFloat = None, talib: bool = None,
+    scalar: IntFloat = None, talib: bool = True,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """Balance of Power (BOP)
@@ -51,7 +51,7 @@ def bop(
 
     # Calculate
     if Imports["talib"] and mode_tal and close.size:
-        from talib import BOP
+        from atklip.indicators.talib import BOP
         bop = BOP(open_, high, low, close)
     else:
         high_low_range = non_zero_range(high, low)

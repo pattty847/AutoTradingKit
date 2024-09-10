@@ -87,7 +87,7 @@ class BasicMA(PlotLineItem):
         
         df:pd.DataFrame = self.has["inputs"]["source"].get_df()
         self._INDICATOR = ta.ma(f"{self.has["inputs"]["ma_type"].name}".lower(), df[f"{self.has["inputs"]["type"]}"],length=self.has["inputs"]["period"])
-        self._INDICATOR = self._INDICATOR.astype('float64')
+        self._INDICATOR = self._INDICATOR.astype('float32')
         _data = self._INDICATOR.to_numpy()
         _index = df["index"].to_numpy()
 
@@ -192,7 +192,7 @@ class BasicMA(PlotLineItem):
         df:pd.DataFrame = self.has["inputs"]["source"].get_df()
         self._INDICATOR = ta.ma(f"{self.has["inputs"]["ma_type"].name}".lower(), df[f"{self.has["inputs"]["type"]}"],length=self.has["inputs"]["period"])
         
-        self._INDICATOR = self._INDICATOR.astype('float64')
+        self._INDICATOR = self._INDICATOR.astype('float32')
         
         _data = self._INDICATOR.to_numpy()
         _index = df["index"].to_numpy()
@@ -242,7 +242,7 @@ class BasicMA(PlotLineItem):
     def update_data(self,last_candle:List[OHLCV],setdata):
         df:pd.DataFrame = self.has["inputs"]["source"].get_df()
         self._INDICATOR = ta.ma(f"{self.has["inputs"]["ma_type"].name}".lower(), df[f"{self.has["inputs"]["type"]}"],length=self.has["inputs"]["period"])
-        self._INDICATOR = self._INDICATOR.astype('float64')
+        self._INDICATOR = self._INDICATOR.astype('float32')
         _data = self._INDICATOR.to_numpy()
         _index = df["index"].to_numpy()
         setdata.emit((_index,_data))

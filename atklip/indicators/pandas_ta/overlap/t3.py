@@ -9,7 +9,7 @@ from .ema import ema
 
 
 def t3(
-    close: Series, length: Int = None, a: IntFloat = None, talib: bool = None,
+    close: Series, length: Int = None, a: IntFloat = None, talib: bool = True,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """Tim Tillson's T3 Moving Average (T3)
@@ -49,7 +49,7 @@ def t3(
 
     # Calculate
     if Imports["talib"] and mode_tal:
-        from talib import T3
+        from atklip.indicators.talib import T3
         t3 = T3(close, length, a)
     else:
         c1 = -a * a**2

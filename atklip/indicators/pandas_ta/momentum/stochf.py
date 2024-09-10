@@ -18,7 +18,7 @@ from atklip.indicators.pandas_ta.utils import (
 def stochf(
     high: Series, low: Series, close: Series,
     k: Int = None, d: Int = None,
-    mamode: str = None, talib: bool = None,
+    mamode: str = None, talib: bool = True,
     offset: Int = None, **kwargs: DictLike
 ) -> DataFrame:
     """Fast Stochastic (STOCHF)
@@ -65,7 +65,7 @@ def stochf(
 
     # Calculate
     if Imports["talib"] and mode_tal:
-        from talib import STOCHF
+        from atklip.indicators.talib import STOCHF
         stochf_ = STOCHF(high, low, close, k, d, tal_ma(mamode))
         stochf_k, stochf_d = stochf_[0], stochf_[1]
     else:

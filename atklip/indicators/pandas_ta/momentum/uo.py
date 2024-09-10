@@ -16,7 +16,7 @@ def uo(
     high: Series, low: Series, close: Series,
     fast: Int = None, medium: Int = None, slow: Int = None,
     fast_w: IntFloat = None, medium_w: IntFloat = None, slow_w: IntFloat = None,
-    talib: bool = None, drift: Int = None,
+    talib: bool = True, drift: Int = None,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """Ultimate Oscillator (UO)
@@ -69,7 +69,7 @@ def uo(
 
     # Calculate
     if Imports["talib"] and mode_tal:
-        from talib import ULTOSC
+        from atklip.indicators.talib import ULTOSC
         uo = ULTOSC(high, low, close, fast, medium, slow)
     else:
         close_drift = close.shift(drift)

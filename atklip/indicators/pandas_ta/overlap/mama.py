@@ -95,7 +95,7 @@ def nb_mama(x, fastlimit, slowlimit, prenan):
 
 def mama(
     close: Series, fastlimit: IntFloat = None, slowlimit: IntFloat = None,
-    prenan: Int = None, talib: bool = None,
+    prenan: Int = None, talib: bool = True,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """Ehler's MESA Adaptive Moving Average (MAMA)
@@ -145,7 +145,7 @@ def mama(
     # Calculate
     np_close = close.to_numpy()
     if Imports["talib"] and mode_tal:
-        from talib import MAMA
+        from atklip.indicators.talib import MAMA
         mama, fama = MAMA(np_close, fastlimit, slowlimit)
     else:
         mama, fama = nb_mama(np_close, fastlimit, slowlimit, prenan)

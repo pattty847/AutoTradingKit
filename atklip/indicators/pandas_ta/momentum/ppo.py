@@ -18,7 +18,7 @@ from atklip.indicators.pandas_ta.utils import (
 
 def ppo(
     close: Series, fast: Int = None, slow: Int = None, signal: Int = None,
-    scalar: IntFloat = None, mamode: str = None, talib: bool = None,
+    scalar: IntFloat = None, mamode: str = None, talib: bool = True,
     offset: Int = None, **kwargs: DictLike
 ) -> DataFrame:
     """Percentage Price Oscillator (PPO)
@@ -64,7 +64,7 @@ def ppo(
 
     # Calculate
     if Imports["talib"] and mode_tal:
-        from talib import PPO
+        from atklip.indicators.talib import PPO
         ppo = PPO(close, fast, slow, tal_ma(mamode))
     else:
         fastma = ma(mamode, close, length=fast, talib=mode_tal)

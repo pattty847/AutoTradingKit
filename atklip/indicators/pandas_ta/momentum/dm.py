@@ -17,7 +17,7 @@ from atklip.indicators.pandas_ta.utils import (
 
 def dm(
     high: Series, low: Series, length: Int = None,
-    mamode: str = None, talib: bool = None, drift: Int = None,
+    mamode: str = None, talib: bool = True, drift: Int = None,
     offset: Int = None, **kwargs: DictLike
 ) -> DataFrame:
     """Directional Movement (DM)
@@ -59,7 +59,7 @@ def dm(
     offset = v_offset(offset)
 
     if Imports["talib"] and mode_tal and high.size and low.size:
-        from talib import MINUS_DM, PLUS_DM
+        from atklip.indicators.talib import MINUS_DM, PLUS_DM
         pos = PLUS_DM(high, low, length)
         neg = MINUS_DM(high, low, length)
     else:

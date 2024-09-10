@@ -16,7 +16,7 @@ from atklip.indicators.pandas_ta.utils import (
 
 def macd(
     close: Series, fast: Int = None, slow: Int = None,
-    signal: Int = None,  mamode="ema", talib: bool = None,
+    signal: Int = None,  mamode="ema", talib: bool = True,
     offset: Int = None, **kwargs: DictLike
 ) -> DataFrame:
     """Moving Average Convergence Divergence (MACD)
@@ -65,7 +65,7 @@ def macd(
 
     # Calculate
     if Imports["talib"] and mode_tal:
-        from talib import MACD
+        from atklip.indicators.talib import MACD
         macd, signalma, histogram = MACD(close, fast, slow, signal)
     else:
         fastma = ma(mamode,close, length=fast)

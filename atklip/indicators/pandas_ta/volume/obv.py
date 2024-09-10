@@ -7,7 +7,7 @@ from atklip.indicators.pandas_ta.utils import signed_series, v_offset, v_series,
 
 
 def obv(
-    close: Series, volume: Series, talib: bool = None,
+    close: Series, volume: Series, talib: bool = True,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """On Balance Volume (OBV)
@@ -46,7 +46,7 @@ def obv(
 
     # Calculate
     if Imports["talib"] and mode_tal:
-        from talib import OBV
+        from atklip.indicators.talib import OBV
         obv = OBV(close, volume)
     else:
         sv = signed_series(close, initial=1) * volume

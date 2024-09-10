@@ -18,7 +18,7 @@ from atklip.indicators.pandas_ta.utils import (
 
 def bbands(
     close: Series, length: Int = None, std: IntFloat = None, ddof: Int = 0,
-    mamode: str = None, talib: bool = None,
+    mamode: str = None, talib: bool = True,
     offset: Int = None, **kwargs: DictLike
 ) -> DataFrame:
     """Bollinger Bands (BBANDS)
@@ -63,7 +63,7 @@ def bbands(
 
     # Calculate
     if Imports["talib"] and mode_tal:
-        from talib import BBANDS
+        from atklip.indicators.talib import BBANDS
         upper, mid, lower = BBANDS(close, length, std, std, tal_ma(mamode))
     else:
         std_dev = stdev(close=close, length=length, ddof=ddof, talib=mode_tal)

@@ -8,7 +8,7 @@ from atklip.indicators.pandas_ta.utils import v_offset, v_pos_default, v_series,
 
 def willr(
     high: Series, low: Series, close: Series,
-    length: Int = None, talib: bool = None,
+    length: Int = None, talib: bool = True,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """William's Percent R (WILLR)
@@ -53,7 +53,7 @@ def willr(
 
     # Calculate
     if Imports["talib"] and mode_tal:
-        from talib import WILLR
+        from atklip.indicators.talib import WILLR
         willr = WILLR(high, low, close, length)
     else:
         lowest_low = low.rolling(length, min_periods=min_periods).min()
