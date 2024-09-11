@@ -1,6 +1,7 @@
 import traceback,asyncio,time
+from typing import Dict
 from PySide6 import QtCore
-from PySide6.QtCore import Qt, Signal, QCoreApplication, QKeyCombination, QThreadPool
+from PySide6.QtCore import Qt, Signal, QCoreApplication, QKeyCombination, QThreadPool,QObject
 from PySide6.QtGui import QKeyEvent
 
 from atklip.graph_objects.chart_component.base_items import CandleStick
@@ -42,7 +43,7 @@ class Chart(ViewPlotWidget):
 
         self.vb.symbol, self.vb.interval = self.symbol, self.interval
         
-        self.sources = {}
+        self.sources: Dict[str:QObject] = {}
         self.exchanges = {}
 
         self.sig_add_indicator_panel.connect(self.setup_indicator,Qt.ConnectionType.AutoConnection)
@@ -73,13 +74,16 @@ class Chart(ViewPlotWidget):
         return f"{self.symbol}_{self.interval}",self.exchanges.get(f"{self.symbol}_{self.interval}")
     
     def update_sources(self,source:HEIKINASHI|SMOOTH_CANDLE|JAPAN_CANDLE|N_SMOOTH_CANDLE):
-        _list_values = list(self.sources.items())
-        for item in _list_values:
-            key,value = item[0], item[1]
-            if key == source.source_name:
-                del self.sources[key]
-            elif value == source:
-                del self.sources[key] 
+        _key = f"{self.symbol} {self.interval}"
+        while True:
+            for key,value in list(self.sources.items()):
+                if not key.__contains__(_key):
+                    del self.sources[key] 
+                if value == source:
+                    if key in list(self.sources.keys()):
+                        del self.sources[key]
+            else:
+                break
         self.sources[source.source_name] = source
     
     def remove_source(self,source:HEIKINASHI|SMOOTH_CANDLE|JAPAN_CANDLE|N_SMOOTH_CANDLE):
@@ -215,8 +219,9 @@ class Chart(ViewPlotWidget):
                         #print("update candle")
                         pre_ohlcv = OHLCV(_ohlcv[-2][1],_ohlcv[-2][2],_ohlcv[-2][3],_ohlcv[-2][4], round((_ohlcv[-2][2]+_ohlcv[-2][3])/2,self._precision) , round((_ohlcv[-2][2]+_ohlcv[-2][3]+_ohlcv[-2][4])/3,self._precision), round((_ohlcv[-2][1]+_ohlcv[-2][2]+_ohlcv[-2][3]+_ohlcv[-2][4])/4,self._precision),_ohlcv[-2][5],_ohlcv[-2][0]/1000,0)
                         last_ohlcv = OHLCV(_ohlcv[-1][1],_ohlcv[-1][2],_ohlcv[-1][3],_ohlcv[-1][4], round((_ohlcv[-1][2]+_ohlcv[-1][3])/2,self._precision) , round((_ohlcv[-1][2]+_ohlcv[-1][3]+_ohlcv[-1][4])/3,self._precision), round((_ohlcv[-1][1]+_ohlcv[-1][2]+_ohlcv[-1][3]+_ohlcv[-1][4])/4,self._precision),_ohlcv[-1][5],_ohlcv[-1][0]/1000,0)
-                        self.jp_candle.update([pre_ohlcv,last_ohlcv])
-                        self.heikinashi.update( self.jp_candle.candles[-2:])
+                        _is_add_candle = self.jp_candle.update([pre_ohlcv,last_ohlcv])
+                        
+                        self.heikinashi.update( self.jp_candle.candles[-2:],_is_add_candle)
       
                         if firt_run == False:
                             self.first_run.emit()
@@ -228,10 +233,10 @@ class Chart(ViewPlotWidget):
                     break
             else:
                 break
-            # try:
-            #     await asyncio.sleep(1)
-            # except:
-            #     pass
+            try:
+                await asyncio.sleep(0.3)
+            except:
+                pass
         if exchange != None:
             AppLogger.writer("INFO",f"{__name__} - {symbol}-{interval} have closed")
         try:
@@ -296,7 +301,7 @@ class Chart(ViewPlotWidget):
         _indicator_type = indicator_data[0][1]
         mainwindow = indicator_data[1]
         
-        print("view chart", _group_indicator,_indicator_type)
+        # print("view chart", _group_indicator,_indicator_type)
         
         if _group_indicator == "Basic Indicator":
             indicator = BasicMA(self,indicator_type=_indicator_type,period=13,_type="close",pen="#ffaa00")

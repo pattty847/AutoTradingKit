@@ -297,14 +297,39 @@ class HEIKINASHI(QObject):
         self.sig_reset_all.emit()
         return self.candles
 
-    def update(self, _candles:List[OHLCV]):
+    def update(self, _candles:List[OHLCV],_is_add_candle):
         if self.first_gen:
             new_candle = _candles[-1] #    _candle[-1]
             if len(self.candles) < 2:
                 return False
             else:
-                if new_candle.time == self.candles[-1].time:
-                    _index = self.candles[-1].index
+                _index = new_candle.index
+                if _is_add_candle:
+                    # _index = new_candle.index
+                    ha_open = round((self.candles[-1].open+self.candles[-1].close)/2,self.precicion)
+                    ha_close = round((new_candle.open+new_candle.high+new_candle.low+new_candle.close)/4,self.precicion)
+                    # ha_open = (self.candles[-1].open+self.candles[-1].close)/2
+                    # ha_close = (new_candle.open+new_candle.high+new_candle.low+new_candle.close)/4
+                    ha_high = max(ha_open, ha_close, new_candle.high)
+                    ha_low = min(ha_open, ha_close, new_candle.low)
+                    
+                    hl2 = round((ha_high+ha_low)/2,self.precicion)
+                    hlc3 = round((ha_high+ha_low+ha_close)/3,self.precicion)
+                    ohlc4 = round((ha_open+ha_high+ha_low+ha_close)/4,self.precicion)
+                    
+                    ha_candle = OHLCV(ha_open,ha_high,ha_low,ha_close,hl2,hlc3,ohlc4,new_candle.volume,new_candle.time,_index)
+                    self.candles.append(ha_candle)
+                    
+                    self.dict_index_ohlcv[ha_candle.index] = ha_candle
+                    self.dict_time_ohlcv[ha_candle.time] = ha_candle
+                    
+                    new_row = pd.DataFrame([data.__dict__ for data in self.candles[-1:]])
+                    # concatenate the existing DataFrame and the new row
+                    self.df = pd.concat([self.df, new_row], ignore_index=True)
+                    self.sig_add_candle.emit(self.candles[-2:])
+                    #QCoreApplication.processEvents()
+                    return True
+                else:
                     ha_open = round((self.candles[-2].open+self.candles[-2].close)/2,self.precicion)
                     ha_close =  round((new_candle.open+new_candle.high+new_candle.low+new_candle.close)/4,self.precicion)
                     # ha_open = (self.candles[-2].open+self.candles[-2].close)/2
@@ -344,28 +369,5 @@ class HEIKINASHI(QObject):
                         self.sig_update_candle.emit(self.candles[-2:])
                         #QCoreApplication.processEvents()
                         return False
-                else:
-                    _index = self.candles[-1].index + 1
-                    ha_open = round((self.candles[-1].open+self.candles[-1].close)/2,self.precicion)
-                    ha_close = round((new_candle.open+new_candle.high+new_candle.low+new_candle.close)/4,self.precicion)
-                    # ha_open = (self.candles[-1].open+self.candles[-1].close)/2
-                    # ha_close = (new_candle.open+new_candle.high+new_candle.low+new_candle.close)/4
-                    ha_high = max(ha_open, ha_close, new_candle.high)
-                    ha_low = min(ha_open, ha_close, new_candle.low)
                     
-                    hl2 = round((ha_high+ha_low)/2,self.precicion)
-                    hlc3 = round((ha_high+ha_low+ha_close)/3,self.precicion)
-                    ohlc4 = round((ha_open+ha_high+ha_low+ha_close)/4,self.precicion)
                     
-                    ha_candle = OHLCV(ha_open,ha_high,ha_low,ha_close,hl2,hlc3,ohlc4,new_candle.volume,new_candle.time,_index)
-                    self.candles.append(ha_candle)
-                    
-                    self.dict_index_ohlcv[ha_candle.index] = ha_candle
-                    self.dict_time_ohlcv[ha_candle.time] = ha_candle
-                    
-                    new_row = pd.DataFrame([data.__dict__ for data in self.candles[-1:]])
-                    # concatenate the existing DataFrame and the new row
-                    self.df = pd.concat([self.df, new_row], ignore_index=True)
-                    self.sig_add_candle.emit(self.candles[-2:])
-                    #QCoreApplication.processEvents()
-                    return True

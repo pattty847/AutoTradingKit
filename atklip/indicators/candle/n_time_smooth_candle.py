@@ -4,7 +4,7 @@ import time
 import pandas as pd
 from typing import Any, Dict, List,Tuple
 from dataclasses import dataclass
-from PySide6.QtCore import Qt, Signal,QObject,QCoreApplication,QThreadPool
+from PySide6.QtCore import Qt, Signal,QObject,QCoreApplication
 
 from atklip.indicators import pandas_ta as ta
 from atklip.indicators.ma_type import  PD_MAType
@@ -13,7 +13,7 @@ from atklip.indicators.ohlcv import   OHLCV
 from .candle import JAPAN_CANDLE
 from .heikinashi import HEIKINASHI
 
-from atklip.appmanager import FastWorker,CandleWorker
+from atklip.appmanager import CandleWorker
 
 class N_SMOOTH_CANDLE(QObject):
     """
@@ -50,13 +50,12 @@ class N_SMOOTH_CANDLE(QObject):
         self._precision = precision
         self.first_gen = False
         self.is_genering = True
-        self._source_name = f"{self.n}_SMOOTH_CANDLE"
-        
+        self._source_name = f"N_SMOOTH_CANDLE_{self.period}_{self.n}"
         self.df = pd.DataFrame([])
         
         self._candles.sig_reset_all.connect(self.fisrt_gen_data,Qt.ConnectionType.AutoConnection)
-        self._candles.sig_update_candle.connect(self.update,Qt.ConnectionType.AutoConnection)
-        self._candles.sig_add_candle.connect(self.update,Qt.ConnectionType.AutoConnection)
+        self._candles.sig_update_candle.connect(self.update,Qt.ConnectionType.QueuedConnection)
+        self._candles.sig_add_candle.connect(self.update,Qt.ConnectionType.QueuedConnection)
 
     @property
     def source_name(self):
@@ -263,14 +262,14 @@ class N_SMOOTH_CANDLE(QObject):
     def update_ma_ohlc(self,lastcandle:OHLCV):
         _new_time = lastcandle.time
         self.dict_n_ohlcv[f"0-candles"] = self._candles.get_df()
-        _last_time = self.dict_n_ohlcv[f"{self.n}-candles"]["time"].iloc[-1]
+        _last_time = self.df["time"].iloc[-1]
         _is_update = False
 
         if _new_time == _last_time:
             _is_update =  True
         
         for i in range(self.n):
-            df = self.dict_n_ohlcv[f"{i}-candles"].tail(self.period*5) #
+            df = self.dict_n_ohlcv[f"{i}-candles"].tail(self.period*self.n*5) #
             highs = ta.ma(f"{self.ma_type.name}".lower(), df["high"],length=self.period)
             highs = highs.astype('float32')
             lows = ta.ma(f"{self.ma_type.name}".lower(), df["low"],length=self.period)
@@ -312,7 +311,8 @@ class N_SMOOTH_CANDLE(QObject):
 
                 self.dict_n_ohlcv[f"{i+1}-candles"] = pd.concat([self.dict_n_ohlcv[f"{i+1}-candles"],new_df],ignore_index=True)
 
-                    
+        self.df = self.dict_n_ohlcv[f"{self.n}-candles"]          
+        
         return _is_update
     
     def compute(self,pre_frame: pd.DataFrame,opens,highs,lows,closes,hl2s,hlc3s,ohlc4s):
@@ -379,8 +379,10 @@ class N_SMOOTH_CANDLE(QObject):
      
     def fisrt_gen_data(self):
         self.is_genering = True
-        self.dict_n_ohlcv[f"{self.n}-candles"] = []
-        self.candles = self.dict_n_ohlcv[f"{self.n}-candles"]
+        self.df = pd.DataFrame([])
+        self.candles:List[OHLCV] = []
+        self.dict_n_ohlcv.clear()
+        self.dict_n_ma.clear()
         self._gen_data()
         self.df = self.dict_n_ohlcv[f"{self.n}-candles"]
         self.gen_candles()
@@ -399,6 +401,7 @@ class N_SMOOTH_CANDLE(QObject):
                 _open,_high,_low,_close,hl2,hlc3,ohlc4,_volume,_time,_index = self.df["open"].iloc[-1],self.df["high"].iloc[-1],self.df["low"].iloc[-1],self.df["close"].iloc[-1],\
                   self.df["hl2"].iloc[-1], self.df["hlc3"].iloc[-1], self.df["ohlc4"].iloc[-1],self.df["volume"].iloc[-1],\
                       self.df["time"].iloc[-1],self.df["index"].iloc[-1]
+                
                 ohlcv = OHLCV(_open,_high,_low,_close,hl2,hlc3,ohlc4,_volume,_time,_index)
                 
                 if is_update:

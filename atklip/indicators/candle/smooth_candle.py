@@ -34,6 +34,7 @@ class SMOOTH_CANDLE(QObject):
         self.period:int= period
         self._candles: JAPAN_CANDLE|HEIKINASHI|self =_candles
         
+        
         if not isinstance(self._candles,JAPAN_CANDLE) and not isinstance(self._candles,HEIKINASHI):
             self._candles.setParent(self)
             self.signal_delete.connect(self._candles.signal_delete)
@@ -43,13 +44,13 @@ class SMOOTH_CANDLE(QObject):
         self._precision = precision
         self.first_gen = False
         self.is_genering = True
-        self._source_name = "SMOOTH_CANDLE"
+        self._source_name = f"{self.period}_SMOOTH_CANDLE"
 
         self.df = pd.DataFrame([])
 
         self._candles.sig_reset_all.connect(self.fisrt_gen_data,Qt.ConnectionType.AutoConnection)
-        self._candles.sig_update_candle.connect(self.update,Qt.ConnectionType.AutoConnection)
-        self._candles.sig_add_candle.connect(self.update,Qt.ConnectionType.AutoConnection)
+        self._candles.sig_update_candle.connect(self.update,Qt.ConnectionType.QueuedConnection)
+        self._candles.sig_add_candle.connect(self.update,Qt.ConnectionType.QueuedConnection)
 
     @property
     def source_name(self):
@@ -314,8 +315,9 @@ class SMOOTH_CANDLE(QObject):
     def reset(self):
         self.candles = []
     def fisrt_gen_data(self):
-        self.candles = []
         self.is_genering = True
+        self.df = pd.DataFrame([])
+        self.candles:List[OHLCV] = []
         
         df:pd.DataFrame = self._candles.get_df()
         self.highs = ta.ma(f"{self.ma_type.name}".lower(), df["high"],length=self.period)
@@ -402,10 +404,8 @@ class SMOOTH_CANDLE(QObject):
                     _index = self.candles[-1].index + 1
                     ha_candle = OHLCV(_open,_high,_low,_close,hl2,hlc3,ohlc4,new_candle.volume,new_candle.time,_index)
                     self.candles.append(ha_candle)
-                    
                     new_row = pd.DataFrame([data.__dict__ for data in self.candles[-1:]])
                     self.df = pd.concat([self.df, new_row], ignore_index=True)
-                    
                     self.sig_add_candle.emit(self.candles[-2:])
                     #QCoreApplication.processEvents()
                     return True
