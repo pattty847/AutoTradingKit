@@ -59,7 +59,7 @@ def ema(
     presma = v_bool(presma, True)
     offset = v_offset(offset)
     adjust = kwargs.setdefault("adjust", False)
-
+    
     # Calculate
     if Imports["talib"] and mode_tal and length > 1:
         from atklip.indicators.talib import EMA

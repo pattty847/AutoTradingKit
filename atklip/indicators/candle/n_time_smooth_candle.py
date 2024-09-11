@@ -262,14 +262,15 @@ class N_SMOOTH_CANDLE(QObject):
     
     def update_ma_ohlc(self,lastcandle:OHLCV):
         _new_time = lastcandle.time
-        _last_time = self.candles[-1].time
+        self.dict_n_ohlcv[f"0-candles"] = self._candles.get_df()
+        _last_time = self.dict_n_ohlcv[f"{self.n}-candles"]["time"].iloc[-1]
         _is_update = False
 
         if _new_time == _last_time:
             _is_update =  True
-                 
+        
         for i in range(self.n):
-            df = self.dict_n_ohlcv[f"{i}-candles"].tail(self.period*5)
+            df = self.dict_n_ohlcv[f"{i}-candles"].tail(self.period*5) #
             highs = ta.ma(f"{self.ma_type.name}".lower(), df["high"],length=self.period)
             highs = highs.astype('float32')
             lows = ta.ma(f"{self.ma_type.name}".lower(), df["low"],length=self.period)
@@ -308,9 +309,10 @@ class N_SMOOTH_CANDLE(QObject):
                                         "time": [df["time"].iloc[-1]],
                                         "index": [df["index"].iloc[-1]]
                                     })
-                
+
                 self.dict_n_ohlcv[f"{i+1}-candles"] = pd.concat([self.dict_n_ohlcv[f"{i+1}-candles"],new_df],ignore_index=True)
 
+                    
         return _is_update
     
     def compute(self,pre_frame: pd.DataFrame,opens,highs,lows,closes,hl2s,hlc3s,ohlc4s):
@@ -393,7 +395,7 @@ class N_SMOOTH_CANDLE(QObject):
             if self._candles.candles != []:
                 new_candle = _candle[-1]
                 is_update = self.update_ma_ohlc(new_candle)
-                
+                self.df = self.dict_n_ohlcv[f"{self.n}-candles"]
                 _open,_high,_low,_close,hl2,hlc3,ohlc4,_volume,_time,_index = self.df["open"].iloc[-1],self.df["high"].iloc[-1],self.df["low"].iloc[-1],self.df["close"].iloc[-1],\
                   self.df["hl2"].iloc[-1], self.df["hlc3"].iloc[-1], self.df["ohlc4"].iloc[-1],self.df["volume"].iloc[-1],\
                       self.df["time"].iloc[-1],self.df["index"].iloc[-1]

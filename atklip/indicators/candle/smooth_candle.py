@@ -246,8 +246,9 @@ class SMOOTH_CANDLE(QObject):
     def get_ma_ohlc_at_index(self,index):
         #print(index,)
         # _index = self.opens.iloc[index]
-        _open, _high, _low, _close, _hl2, _hlc3, _ohlc4 = self.opens.iloc[index],self.highs.iloc[index],self.lows.iloc[index],self.closes.iloc[index],\
-            self.hl2s.iloc[index],self.hlc3s.iloc[index],self.ohlc4s.iloc[index]
+        _open, _high, _low, _close, _hl2, _hlc3, _ohlc4 = self.df["open"].iloc[index],\
+            self.df["high"].iloc[index],self.df["low"].iloc[index],self.df["close"].iloc[index],\
+            self.df["hl2"].iloc[index],self.df["hlc3"].iloc[index],self.df["ohlc4"].iloc[index]
         
         if _open != None and  _high != None and _low != None and _close != None:
             _open, _high, _low, _close, _hl2, _hlc3, _ohlc4 = round(_open,self._precision),round(_high,self._precision),round(_low,self._precision),round(_close,self._precision),\
@@ -276,35 +277,32 @@ class SMOOTH_CANDLE(QObject):
             ohlc4s = ohlc4s.astype('float32')
 
             if _new_time == _last_time:
-                self.highs.iloc[-1] = highs.iloc[-1]
-
-                self.lows.iloc[-1] = lows.iloc[-1]
-
-                self.closes.iloc[-1] = closes.iloc[-1]
-
-                self.opens.iloc[-1] = opens.iloc[-1]
-
-                self.hl2s.iloc[-1] = hl2s.iloc[-1]
-
-                self.hlc3s.iloc[-1] = hlc3s.iloc[-1]
-
-                self.ohlc4s.iloc[-1] = ohlc4s.iloc[-1]
-
+                
+                self.df.iloc[-1] = [opens.iloc[-1],
+                                    highs.iloc[-1],
+                                    lows.iloc[-1],
+                                    closes.iloc[-1],
+                                    hl2s.iloc[-1],
+                                    hlc3s.iloc[-1],
+                                    ohlc4s.iloc[-1],
+                                    df["volume"].iloc[-1],
+                                    df["time"].iloc[-1],
+                                    df["index"].iloc[-1]]
             else:
-                self.highs = pd.concat([self.highs, pd.Series([highs.iloc[-1]])], ignore_index=True)
+                new_df = pd.DataFrame({ "open": [opens.iloc[-1]],
+                                        "high": [highs.iloc[-1]],
+                                        "low": [lows.iloc[-1]],
+                                        "close": [closes.iloc[-1]],
+                                        "hl2": [hl2s.iloc[-1]],
+                                        "hlc3": [hlc3s.iloc[-1]],
+                                        "ohlc4": [ohlc4s.iloc[-1]],
+                                        "volume": [df["volume"].iloc[-1]],
+                                        "time": [df["time"].iloc[-1]],
+                                        "index": [df["index"].iloc[-1]]
+                                    })
 
-                self.lows = pd.concat([self.lows, pd.Series([lows.iloc[-1]])], ignore_index=True)
+                self.df = pd.concat([self.df,new_df],ignore_index=True)
 
-                self.closes = pd.concat([self.closes, pd.Series([closes.iloc[-1]])], ignore_index=True)
-                
-                self.opens = pd.concat([self.opens, pd.Series([opens.iloc[-1]])], ignore_index=True)
-
-                self.hl2s = pd.concat([self.hl2s, pd.Series([hl2s.iloc[-1]])], ignore_index=True)
-
-                self.hlc3s = pd.concat([self.hlc3s, pd.Series([hlc3s.iloc[-1]])], ignore_index=True)
-
-                self.ohlc4s = pd.concat([self.ohlc4s, pd.Series([ohlc4s.iloc[-1]])], ignore_index=True)
-                
 
     def compute(self,index, i:int):
         _index = index[i]
