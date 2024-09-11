@@ -259,66 +259,51 @@ class SMOOTH_CANDLE(QObject):
         _new_time = lastcandle.time
         if self.candles != []:
             _last_time = self.candles[-1].time
+            df:pd.DataFrame = self._candles.get_df(self.period*5)
+            highs = ta.ma(f"{self.ma_type.name}".lower(), df["high"],length=self.period)
+            highs = highs.astype('float32')
+            lows = ta.ma(f"{self.ma_type.name}".lower(), df["low"],length=self.period)
+            lows = lows.astype('float32')
+            closes = ta.ma(f"{self.ma_type.name}".lower(), df["close"],length=self.period)
+            closes = closes.astype('float32')
+            opens = ta.ma(f"{self.ma_type.name}".lower(), df["open"],length=self.period)
+            opens = opens.astype('float32')
+            hl2s = ta.ma(f"{self.ma_type.name}".lower(), df["hl2"],length=self.period)
+            hl2s = hl2s.astype('float32')
+            hlc3s = ta.ma(f"{self.ma_type.name}".lower(), df["hlc3"],length=self.period)
+            hlc3s = hlc3s.astype('float32')
+            ohlc4s = ta.ma(f"{self.ma_type.name}".lower(), df["ohlc4"],length=self.period)
+            ohlc4s = ohlc4s.astype('float32')
 
             if _new_time == _last_time:
-                df:pd.DataFrame = self._candles.get_df(self.period*5) #self.period+1
-                highs = ta.ma(f"{self.ma_type.name}".lower(), df["high"],length=self.period)
-                highs = highs.astype('float32')
                 self.highs.iloc[-1] = highs.iloc[-1]
 
-                lows = ta.ma(f"{self.ma_type.name}".lower(), df["low"],length=self.period)
-                lows = lows.astype('float32')
                 self.lows.iloc[-1] = lows.iloc[-1]
 
-                closes = ta.ma(f"{self.ma_type.name}".lower(), df["close"],length=self.period)
-                closes = closes.astype('float32')
                 self.closes.iloc[-1] = closes.iloc[-1]
 
-                opens = ta.ma(f"{self.ma_type.name}".lower(), df["open"],length=self.period)
-                opens = opens.astype('float32')
                 self.opens.iloc[-1] = opens.iloc[-1]
 
-                hl2s = ta.ma(f"{self.ma_type.name}".lower(), df["hl2"],length=self.period)
-                hl2s = hl2s.astype('float32')
                 self.hl2s.iloc[-1] = hl2s.iloc[-1]
 
-                hlc3s = ta.ma(f"{self.ma_type.name}".lower(), df["hlc3"],length=self.period)
-                hlc3s = hlc3s.astype('float32')
                 self.hlc3s.iloc[-1] = hlc3s.iloc[-1]
 
-                ohlc4s = ta.ma(f"{self.ma_type.name}".lower(), df["ohlc4"],length=self.period)
-                ohlc4s = ohlc4s.astype('float32')
                 self.ohlc4s.iloc[-1] = ohlc4s.iloc[-1]
 
             else:
-                df:pd.DataFrame = self._candles.get_df(self.period+1)
-                highs = ta.ma(f"{self.ma_type.name}".lower(), df["high"],length=self.period)
-                highs = highs.astype('float32')
-                self.highs = pd.concat([self.highs, pd.Series([highs.iloc[-1]], index=[len(self.highs)])])
+                self.highs = pd.concat([self.highs, pd.Series([highs.iloc[-1]])], ignore_index=True)
 
-                lows = ta.ma(f"{self.ma_type.name}".lower(), df["low"],length=self.period)
-                lows = lows.astype('float32')
-                self.lows = pd.concat([self.lows, pd.Series([lows.iloc[-1]], index=[len(self.lows)])])
+                self.lows = pd.concat([self.lows, pd.Series([lows.iloc[-1]])], ignore_index=True)
 
-                closes = ta.ma(f"{self.ma_type.name}".lower(), df["close"],length=self.period)
-                closes = closes.astype('float32')
-                self.closes = pd.concat([self.closes, pd.Series([closes.iloc[-1]], index=[len(self.closes)])])
+                self.closes = pd.concat([self.closes, pd.Series([closes.iloc[-1]])], ignore_index=True)
+                
+                self.opens = pd.concat([self.opens, pd.Series([opens.iloc[-1]])], ignore_index=True)
 
-                opens = ta.ma(f"{self.ma_type.name}".lower(), df["open"],length=self.period)
-                opens = opens.astype('float32')
-                self.opens = pd.concat([self.opens, pd.Series([opens.iloc[-1]], index=[len(self.opens)])])
+                self.hl2s = pd.concat([self.hl2s, pd.Series([hl2s.iloc[-1]])], ignore_index=True)
 
-                hl2s = ta.ma(f"{self.ma_type.name}".lower(), df["hl2"],length=self.period)
-                hl2s = hl2s.astype('float32')
-                self.hl2s = pd.concat([self.hl2s, pd.Series([hl2s.iloc[-1]], index=[len(self.hl2s)])])
+                self.hlc3s = pd.concat([self.hlc3s, pd.Series([hlc3s.iloc[-1]])], ignore_index=True)
 
-                hlc3s = ta.ma(f"{self.ma_type.name}".lower(), df["hlc3"],length=self.period)
-                hlc3s = hlc3s.astype('float32')
-                self.hlc3s = pd.concat([self.hlc3s, pd.Series([hlc3s.iloc[-1]], index=[len(self.hlc3s)])])
-
-                ohlc4s = ta.ma(f"{self.ma_type.name}".lower(), df["ohlc4"],length=self.period)
-                ohlc4s = ohlc4s.astype('float32')
-                self.ohlc4s = pd.concat([self.ohlc4s, pd.Series([ohlc4s.iloc[-1]], index=[len(self.ohlc4s)])])
+                self.ohlc4s = pd.concat([self.ohlc4s, pd.Series([ohlc4s.iloc[-1]])], ignore_index=True)
                 
 
     def compute(self,index, i:int):
@@ -359,10 +344,20 @@ class SMOOTH_CANDLE(QObject):
    
         _index = df["index"].to_numpy()
         
+        self.df = pd.DataFrame({  "open": self.opens,
+                                    "high": self.highs,
+                                    "low": self.lows,
+                                    "close": self.closes,
+                                    "hl2": self.hl2s,
+                                    "hlc3": self.hlc3s,
+                                    "ohlc4": self.ohlc4s,
+                                    "volume": df["volume"],
+                                    "time": df["time"],
+                                    "index": df["index"]
+                                })
         
-        [self.compute(_index,i) for i in range(len(df))]
-        
-        self.df = pd.DataFrame([data.__dict__ for data in self.candles])
+        [self.compute(_index,i) for i in range(len(self.df))]
+
         self.is_genering = False
         if self.first_gen == False:
             self.first_gen = True
