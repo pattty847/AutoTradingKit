@@ -16,7 +16,7 @@ from atklip.graph_objects.chart_component.globarvar import global_signal
 
 from atklip.graph_objects.chart_component.indicators.indicator_setting_wg import IndicatorSettingMenu
 
-from atklip.indicators.candle import JAPAN_CANDLE
+from atklip.controls.candle import JAPAN_CANDLE
 
 "import all indicators"
 from atklip.graph_objects.chart_component.indicators import * 

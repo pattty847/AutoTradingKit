@@ -7,8 +7,8 @@ from PySide6.QtWidgets import QGraphicsItem
 
 from atklip.graph_objects.pyqtgraph import mkPen, GraphicsObject, mkBrush
 
-from atklip.indicators import OHLCV,IndicatorType
-from atklip.indicators.candle import JAPAN_CANDLE,HEIKINASHI,SMOOTH_CANDLE
+from atklip.controls import OHLCV,IndicatorType
+from atklip.controls.candle import JAPAN_CANDLE,HEIKINASHI,SMOOTH_CANDLE
 
 from atklip.graph_objects.chart_component.proxy_signal import Signal_Proxy
 from atklip.appmanager import FastWorker

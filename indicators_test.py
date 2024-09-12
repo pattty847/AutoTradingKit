@@ -1,11 +1,11 @@
 import random
 
-from atklip.indicators.talipp.indicators import  AccuDist, ADX, ALMA, AO, Aroon, ATR, BB, BOP, CCI, ChaikinOsc, ChandeKrollStop, CHOP, \
+from atklip.controls.talipp.indicators import  AccuDist, ADX, ALMA, AO, Aroon, ATR, BB, BOP, CCI, ChaikinOsc, ChandeKrollStop, CHOP, \
     CoppockCurve, DEMA, DonchianChannels, DPO, EMA, EMV,FibRetracement, ForceIndex, HMA, Ichimoku, KAMA, KeltnerChannels, KST, KVO, \
     MACD, MassIndex,McGinleyDynamic, MeanDev, OBV, PivotsHL, ROC, RSI, ParabolicSAR, SFX, SMA, SMMA, SOBV, STC, StdDev, Stoch, StochRSI, \
     SuperTrend, T3, TEMA, TRIX, TSI, TTM, UO, VTX, VWAP, VWMA, WMA, ZLEMA
 
-from atklip.indicators.talipp.ohlcv import OHLCVFactory,OHLCV
+from atklip.controls.talipp.ohlcv import OHLCVFactory,OHLCV
 import time
 
 def generate_random_ohlcv_data(num_records):

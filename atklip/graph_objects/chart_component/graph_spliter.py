@@ -12,7 +12,7 @@ from .axisitem import *
 from .sub_panel_indicator import ViewSubPanel 
 from .proxy_signal import Signal_Proxy
 from atklip.graph_objects.chart_component.indicators import *
-from atklip.indicators import IndicatorType
+from atklip.controls import IndicatorType
 from atklip.gui_components.qfluentwidgets.components.dialog_box import MessageBox
 from PySide6.QtCore import QCoreApplication,QSize
 from PySide6.QtGui import QCloseEvent,QIcon

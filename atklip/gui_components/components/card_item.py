@@ -6,7 +6,7 @@ from atklip.gui_components.qfluentwidgets.common import CryptoIcon as CI, Fluent
 from atklip.gui_components.qfluentwidgets.components import IconWidget,BodyLabel,HBoxLayout,CardWidget
 
 from atklip.gui_components.components._pushbutton import Favorite_Button,CircleICon,Help_Button,Candle_Button
-from atklip.indicators import IndicatorType,PD_MAType
+from atklip.controls import IndicatorType,PD_MAType
 
 if TYPE_CHECKING:  # pragma
     from atklip.gui_components.top_bar import IntervalButton

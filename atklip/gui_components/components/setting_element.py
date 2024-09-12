@@ -11,8 +11,8 @@ from .color_value_ui import Ui_color_value as ColorValue
 from atklip.gui_components.qfluentwidgets.common.icon import FluentIcon as FIF
 from PySide6.QtWidgets import QWidget
 
-from atklip.indicators.candle import JAPAN_CANDLE,HEIKINASHI,SMOOTH_CANDLE
-from atklip.indicators.ma_type import PD_MAType
+from atklip.controls.candle import JAPAN_CANDLE,HEIKINASHI,SMOOTH_CANDLE
+from atklip.controls.ma_type import PD_MAType
 from atklip.app_utils import mkPen, mkBrush
 
 "Inputs setting"

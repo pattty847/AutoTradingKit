@@ -3,7 +3,7 @@ from typing import Union, Optional, Any, List, TYPE_CHECKING
 from functools import lru_cache
 from .plotitem import ViewPlotItem
 from .custom_replay_cut import CustomReplayObject
-from atklip.indicators import *
+from atklip.controls import *
 
 from PySide6 import QtGui
 from PySide6.QtCore import Signal,QPointF,Qt,QSize,QEvent,QCoreApplication
@@ -12,7 +12,7 @@ from PySide6.QtWidgets import QGraphicsView
 from atklip.graph_objects.pyqtgraph import mkPen, PlotWidget, InfiniteLine,SignalProxy
 
 
-from atklip.indicators.candle import SMOOTH_CANDLE, JAPAN_CANDLE
+from atklip.controls.candle import SMOOTH_CANDLE, JAPAN_CANDLE
 
 from .globarvar import global_signal
 from .proxy_signal import Signal_Proxy

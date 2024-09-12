@@ -1,7 +1,7 @@
 from typing import Dict, Tuple, List,TYPE_CHECKING
 import numpy as np
 import pandas as pd
-from atklip.indicators import pandas_ta as ta
+from atklip.controls import pandas_ta as ta
 
 from PySide6.QtCore import Signal, QRect, QRectF, QPointF,QThreadPool,Qt,QLineF,QCoreApplication
 from PySide6.QtGui import QPainter, QPicture,QPainterPath
@@ -10,8 +10,8 @@ from PySide6.QtWidgets import QGraphicsItem,QStyleOptionGraphicsItem,QWidget
 from atklip.graph_objects.pyqtgraph import mkPen, GraphicsObject, mkBrush
 
 from atklip.graph_objects.pyqtgraph.graphicsItems.PlotDataItem import PlotDataItem
-from atklip.indicators import OHLCV,IndicatorType
-from atklip.indicators.candle import JAPAN_CANDLE,HEIKINASHI,SMOOTH_CANDLE
+from atklip.controls import OHLCV,IndicatorType
+from atklip.controls.candle import JAPAN_CANDLE,HEIKINASHI,SMOOTH_CANDLE
 
 from atklip.graph_objects.chart_component.proxy_signal import Signal_Proxy
 from atklip.appmanager import FastWorker

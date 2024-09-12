@@ -18,29 +18,39 @@ class FastStartThread(QObject):
         self.exchange = exchange
         self.fn = fn
         self.args = args
-        self.kwargs = kwargs.copy()
+        self.kwargs = kwargs
+        self._thread = Thread(target=self.run, daemon=True, args=())
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
         self.finished.connect(self.stop_thread)
-        self.threadpool = ThreadPoolExecutor_global
-        
+        self.destroyed.connect(self.stop_thread)
+        #self.parent().destroyed.connect(self.stop_thread)
     
     def start_thread(self):
-        try:
-            funture = self.threadpool.submit(self.run)
-        except RuntimeError:
-            pass
+        self._thread.start()
     
     def stop_thread(self):
+        if self.loop != None:
+            try:
+                asyncio.set_event_loop(None)
+                self.loop.call_soon_threadsafe(self.loop.stop)
+            except Exception as e:
+                traceback.print_exception(e)
         self.deleteLater()
     
-    @Slot()
+    def create_task(self, coro: Coroutine) -> None:
+        self.loop.call_soon_threadsafe(self.loop.create_task, coro)
+
     def run(self):
         try:
-            asyncio.run(self.fn(*self.args, **self.kwargs))
+            self.create_task(self.fn(*self.args, **self.kwargs))
+            self.loop.run_forever()
         except Exception as e:
             traceback.print_exception(e)
             self.error.emit(str(e))
         finally:
-            self.finished.emit()
+            pass
+
 
 class ThreadingAsyncWorker(QObject):
     finished = Signal()

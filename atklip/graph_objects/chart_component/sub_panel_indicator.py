@@ -13,7 +13,7 @@ from atklip.graph_objects.chart_component.base_items import  PriceLine
 from atklip.graph_objects.chart_component.indicators import *
 from .plotitem import ViewPlotItem
 from .proxy_signal import Signal_Proxy
-from atklip.indicators import *
+from atklip.controls import *
 
 from atklip.graph_objects.chart_component.indicator_panel import SubIndicatorContainer
 from atklip.graph_objects.chart_component.indicator_panel import IndicatorPanel

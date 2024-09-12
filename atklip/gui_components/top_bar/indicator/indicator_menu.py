@@ -6,7 +6,7 @@ from atklip.gui_components.qfluentwidgets import FluentIcon as FIF
 from atklip.gui_components.components import ScrollInterface,ICON_TEXT_BUTTON,Indicator_Item,MovingWidget
 from atklip.gui_components.qfluentwidgets.common import FluentStyleSheet
 from atklip.appmanager.setting import AppConfig
-from atklip.indicators import IndicatorType,PD_MAType
+from atklip.controls import IndicatorType,PD_MAType
 
 from PySide6.QtWidgets import QStackedWidget,QAbstractScrollArea, QWidget,QApplication
 from PySide6.QtCore import Signal,Qt

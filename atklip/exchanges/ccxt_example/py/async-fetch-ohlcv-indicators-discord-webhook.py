@@ -1,5 +1,5 @@
 from asyncio import run, gather, ensure_future
-from atklip.indicators import pandas_ta as ta
+from atklip.controls import pandas_ta as ta
 import pandas as pd
 import ccxt.async_support as ccxt  # noqa: E402
 

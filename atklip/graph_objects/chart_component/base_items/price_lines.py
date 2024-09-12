@@ -4,8 +4,8 @@ from atklip.graph_objects.pyqtgraph import InfiniteLine,mkColor,mkPen
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QGraphicsItem
 
-from atklip.indicators import OHLCV
-from atklip.indicators import IndicatorType
+from atklip.controls import OHLCV
+from atklip.controls import IndicatorType
 
 class PriceLine(InfiniteLine):
     """Line plot"""

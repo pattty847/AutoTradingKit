@@ -6,7 +6,7 @@ import sys
 root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(root + '/python')
 
-from atklip.indicators import pandas_ta as ta
+from atklip.controls import pandas_ta as ta
 import pandas as pd
 import ccxt
 

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from asyncio import gather, run
-from atklip.indicators import pandas_ta as ta
+from atklip.controls import pandas_ta as ta
 import pandas as pd
 import os
 import sys

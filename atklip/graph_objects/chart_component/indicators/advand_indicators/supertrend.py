@@ -9,9 +9,9 @@ from atklip.graph_objects.pyqtgraph import functions as fn
 from PySide6.QtCore import Signal, QObject, QRectF, QPointF,QThreadPool,Qt
 from PySide6.QtGui import QPainter, QPicture,QColor
 
-from atklip.indicators.talipp import INDICATOR, IndicatorType
-from atklip.indicators.talipp.ohlcv import OHLCV
-from atklip.indicators.candle import JAPAN_CANDLE,HEIKINASHI
+from atklip.controls.talipp import INDICATOR, IndicatorType
+from atklip.controls.talipp.ohlcv import OHLCV
+from atklip.controls.candle import JAPAN_CANDLE,HEIKINASHI
 
 from atklip.appmanager import FastWorker
 from atklip.app_utils import *

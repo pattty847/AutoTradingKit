@@ -10,8 +10,8 @@ from atklip.graph_objects.chart_component import ViewPlotWidget
 from atklip.exchanges import CryptoExchange
 from ccxt.base.errors import *
 # from ccxt.base.errors import BadSymbol
-from atklip.indicators import IndicatorType,OHLCV
-from atklip.indicators.candle import HEIKINASHI, SMOOTH_CANDLE,JAPAN_CANDLE, N_SMOOTH_CANDLE
+from atklip.controls import IndicatorType,OHLCV
+from atklip.controls.candle import HEIKINASHI, SMOOTH_CANDLE,JAPAN_CANDLE, N_SMOOTH_CANDLE
 
 from .proxy_signal import Signal_Proxy
 

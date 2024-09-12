@@ -8,11 +8,11 @@ import pandas as pd
 
 from atklip.graph_objects.pyqtgraph import FillBetweenItem,GraphicsObject,PlotDataItem
 
-from atklip.indicators import PD_MAType,IndicatorType
+from atklip.controls import PD_MAType,IndicatorType
 
-from atklip.indicators import pandas_ta as ta
+from atklip.controls import pandas_ta as ta
 
-from atklip.indicators import OHLCV
+from atklip.controls import OHLCV
 
 from atklip.appmanager import FastWorker
 from atklip.app_utils import *
