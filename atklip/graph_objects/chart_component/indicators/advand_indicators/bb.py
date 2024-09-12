@@ -98,6 +98,13 @@ class BasicBB(GraphicsObject):
                     pass
     
     def reset_indicator(self):
+        self.worker = None
+        self.worker = FastWorker(self.regen_indicator)
+        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.start()
+
+
+    def regen_indicator(self,setdata):
         df:pd.DataFrame = self.has["inputs"]["source"].get_df()
         self._INDICATOR = ta.bbands(df[f"{self.has["inputs"]["type"]}"],length=self.has["inputs"]["period"],std=self.has["inputs"]["std_dev_mult"],\
                                         mamode=f"{self.has["inputs"]["ma_type"].name}".lower())
@@ -120,7 +127,8 @@ class BasicBB(GraphicsObject):
         ub = self._INDICATOR[upper_name].to_numpy()
         xdata = df["index"].to_numpy()
         
-        self.set_Data((xdata,lb,cb,ub))
+        # self.set_Data((xdata,lb,cb,ub))
+        setdata.emit((xdata,lb,cb,ub))
         
         "update o day"
         

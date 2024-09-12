@@ -95,8 +95,15 @@ class BasicDonchianChannels(GraphicsObject):
             self.has["inputs"]["source"].sig_add_candle.disconnect(self.setdata_worker)
         except RuntimeError:
                     pass
-    
     def reset_indicator(self):
+        self.worker = None
+        self.worker = FastWorker(self.regen_indicator)
+        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.start()
+
+
+    def regen_indicator(self,setdata):
+    # def reset_indicator(self):
         df:pd.DataFrame = self.has["inputs"]["source"].get_df()
         self._INDICATOR = ta.donchian(high=df["high"],low=df["low"],lower_length=self.has["inputs"]["period_lower"],upper_length=self.has["inputs"]["period_upper"])
         column_names = self._INDICATOR.columns.tolist()
@@ -116,7 +123,8 @@ class BasicDonchianChannels(GraphicsObject):
         cb = self._INDICATOR[mid_name].to_numpy()
         ub = self._INDICATOR[upper_name].to_numpy()
         xdata = df["index"].to_numpy()
-        self.set_Data((xdata,lb,cb,ub))
+        # self.set_Data((xdata,lb,cb,ub))
+        setdata.emit((xdata,lb,cb,ub))
         "update o day"
         self.has["name"] = f"DC {self.has["inputs"]["period_lower"]} {self.has["inputs"]["period_upper"]}"
         self.sig_change_indicator_name.emit(self.has["name"])

@@ -110,6 +110,12 @@ class BasicVTX(GraphicsObject):
                     pass
     
     def reset_indicator(self):
+        self.worker = None
+        self.worker = FastWorker(self.regen_indicator)
+        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.start()
+
+    def regen_indicator(self,setdata):
         df:pd.DataFrame = self.has["inputs"]["source"].get_df()
         self._INDICATOR = ta.vortex(high=df[f"high"],
                                     low=df[f"low"],
@@ -134,7 +140,8 @@ class BasicVTX(GraphicsObject):
         self.has["name"] = f"VTX {self.has["inputs"]["period"]}"
         self.sig_change_indicator_name.emit(self.has["name"])
         
-        self.set_Data((xdata,vortex,signalma))
+        # self.set_Data((xdata,vortex,signalma))
+        setdata.emit((xdata,vortex,signalma))
         self.sig_change_yaxis_range.emit()
         #QCoreApplication.processEvents()
         

@@ -134,8 +134,15 @@ class BasicMACD(GraphicsObject):
             self.has["inputs"]["source"].sig_add_candle.disconnect(self.threadpool_asyncworker)
         except Exception as e:
                     pass
-    
     def reset_indicator(self):
+        self.worker = None
+        self.worker = FastWorker(self.regen_indicator)
+        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.signals.setdata.connect(self.update_histogram,Qt.ConnectionType.QueuedConnection)
+        self.worker.start()
+
+    def regen_indicator(self,setdata):
+    # def reset_indicator(self):
         df:pd.DataFrame = self.has["inputs"]["source"].get_df()
         self._INDICATOR = ta.macd(close=df[f"{self.has["inputs"]["type"]}"],
                                   fast=self.has["inputs"]["fast_period"],
@@ -164,9 +171,10 @@ class BasicMACD(GraphicsObject):
         self.has["name"] = f"MACD {self.has["inputs"]["ma_type"].name} {self.has["inputs"]["fast_period"]} {self.has["inputs"]["slow_period"]} {self.has["inputs"]["signal_period"]} {self.has["inputs"]["type"]}"
         self.sig_change_indicator_name.emit(self.has["name"])
         
-        self.histogram.setData((xdata,histogram))
+        # self.histogram.setData((xdata,histogram))
         
-        self.set_Data((xdata,macd,signalma,histogram))
+        # self.set_Data((xdata,macd,signalma,histogram))
+        setdata.emit((xdata,macd,signalma,histogram))
         
         self.sig_change_yaxis_range.emit()
         

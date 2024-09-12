@@ -123,6 +123,12 @@ class BasicSTOCH(GraphicsObject):
                     pass
     
     def reset_indicator(self):
+        self.worker = None
+        self.worker = FastWorker(self.regen_indicator)
+        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.start()
+
+    def regen_indicator(self,setdata):
         df:pd.DataFrame = self.has["inputs"]["source"].get_df()
         self._INDICATOR = ta.stoch(high=df["high"],
                                   low=df["low"],
@@ -146,12 +152,12 @@ class BasicSTOCH(GraphicsObject):
         signalma = self._INDICATOR[signalma_name].to_numpy()
         xdata = df["index"].to_numpy()[-len(stoch):]
         
-        print(len(stoch),len(signalma),len(xdata))
-
         self.has["name"] = f"STOCH {self.has["inputs"]["ma_type"].name} {self.has["inputs"]["smooth_k_period"]} {self.has["inputs"]["k_period"]} {self.has["inputs"]["d_period"]}"
         self.sig_change_indicator_name.emit(self.has["name"])
         
-        self.set_Data((xdata,stoch,signalma))
+        # self.set_Data((xdata,stoch,signalma))
+        setdata.emit((xdata,stoch,signalma))
+        
         self.sig_change_yaxis_range.emit()
         #QCoreApplication.processEvents()
         

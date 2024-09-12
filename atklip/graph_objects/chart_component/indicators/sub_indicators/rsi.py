@@ -105,6 +105,12 @@ class BasicRSI(PlotDataItem):
                     pass
     
     def reset_indicator(self):
+        self.worker = None
+        self.worker = FastWorker(self.regen_indicator)
+        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.start()
+
+    def regen_indicator(self,setdata):
         df:pd.DataFrame = self.has["inputs"]["source"].get_df()
         self._INDICATOR = ta.rsi(close=df[f"{self.has["inputs"]["type"]}"],
                                   length=self.has["inputs"]["period"],
@@ -121,7 +127,8 @@ class BasicRSI(PlotDataItem):
             y_data = self._INDICATOR[rsi_name].to_numpy()  
         xdata = df["index"].to_numpy()
         
-        self.set_Data((xdata,y_data))
+        # self.set_Data((xdata,y_data))
+        setdata.emit((xdata,y_data))
         
         self.sig_change_yaxis_range.emit()
 

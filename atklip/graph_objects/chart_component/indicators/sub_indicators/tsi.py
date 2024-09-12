@@ -124,6 +124,12 @@ class BasicTSI(GraphicsObject):
                     pass
     
     def reset_indicator(self):
+        self.worker = None
+        self.worker = FastWorker(self.regen_indicator)
+        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.start()
+
+    def regen_indicator(self,setdata):
         df:pd.DataFrame = self.has["inputs"]["source"].get_df()
         self._INDICATOR = ta.tsi(close=df[f"{self.has["inputs"]["type"]}"],
                                   fast=self.has["inputs"]["fast_period"],
@@ -147,7 +153,8 @@ class BasicTSI(GraphicsObject):
         
         self.has["name"] = f"TSI {self.has["inputs"]["ma_type"].name} {self.has["inputs"]["fast_period"]} {self.has["inputs"]["slow_period"]} {self.has["inputs"]["signal_period"]} {self.has["inputs"]["type"]}"
         self.sig_change_indicator_name.emit(self.has["name"])
-        self.set_Data((xdata,tsi,signalma))
+        # self.set_Data((xdata,tsi,signalma))
+        setdata.emit((xdata,tsi,signalma))
         self.sig_change_yaxis_range.emit()
         #QCoreApplication.processEvents()
         self.has["inputs"]["source"].sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)

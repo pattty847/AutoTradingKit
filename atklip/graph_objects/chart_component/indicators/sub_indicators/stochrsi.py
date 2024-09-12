@@ -125,6 +125,12 @@ class BasicSTOCHRSI(GraphicsObject):
                     pass
     
     def reset_indicator(self):
+        self.worker = None
+        self.worker = FastWorker(self.regen_indicator)
+        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.start()
+
+    def regen_indicator(self,setdata):
         df:pd.DataFrame = self.has["inputs"]["source"].get_df()
         self._INDICATOR = ta.stochrsi(close=df[f"{self.has["inputs"]["type"]}"],
                                   length=self.has["inputs"]["period"],
@@ -150,7 +156,8 @@ class BasicSTOCHRSI(GraphicsObject):
         self.has["name"] = f"STOCHRSI {self.has["inputs"]["ma_type"].name} {self.has["inputs"]["period"]} {self.has["inputs"]["k_period"]} {self.has["inputs"]["d_period"]} {self.has["inputs"]["type"]}"
         self.sig_change_indicator_name.emit(self.has["name"])
         
-        self.set_Data((xdata,stochrsi,signalma))
+        # self.set_Data((xdata,stochrsi,signalma))
+        setdata.emit((xdata,stochrsi,signalma))
         self.sig_change_yaxis_range.emit()
         #QCoreApplication.processEvents()
         

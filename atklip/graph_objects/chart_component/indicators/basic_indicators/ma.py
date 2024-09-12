@@ -83,6 +83,12 @@ class BasicMA(PlotLineItem):
                     pass
     
     def reset_indicator(self):
+        self.worker = None
+        self.worker = FastWorker(self.regen_indicator)
+        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.start()
+
+    def regen_indicator(self,setdata):
         self._INDICATOR =None
         
         df:pd.DataFrame = self.has["inputs"]["source"].get_df()
@@ -91,7 +97,8 @@ class BasicMA(PlotLineItem):
         _data = self._INDICATOR.to_numpy()
         _index = df["index"].to_numpy()
 
-        self.set_Data((_index,_data))
+        # self.set_Data((_index,_data))
+        setdata.emit((_index,_data))
         
         self.sig_change_yaxis_range.emit()
         

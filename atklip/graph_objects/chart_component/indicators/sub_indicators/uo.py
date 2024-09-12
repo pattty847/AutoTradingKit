@@ -108,6 +108,12 @@ class BasicUO(PlotDataItem):
                     pass
     
     def reset_indicator(self):
+        self.worker = None
+        self.worker = FastWorker(self.regen_indicator)
+        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.start()
+
+    def regen_indicator(self,setdata):
         
         df:pd.DataFrame = self.has["inputs"]["source"].get_df()
         self._INDICATOR = ta.uo(high=df["high"],
@@ -131,7 +137,8 @@ class BasicUO(PlotDataItem):
             y_data = self._INDICATOR[uo_name].to_numpy()  
         xdata = df["index"].to_numpy()
         
-        self.set_Data((xdata,y_data))
+        # self.set_Data((xdata,y_data))
+        setdata.emit((xdata,y_data))
         self.sig_change_yaxis_range.emit()
         
         self.has["name"] = f"UO {self.has["inputs"]["slow_period"]} {self.has["inputs"]["medium_period"]} {self.has["inputs"]["fast_period"]}"
