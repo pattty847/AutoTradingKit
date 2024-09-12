@@ -19,10 +19,10 @@ folders = [r"indicators\talipp",r"indicators\talipp\indicators",r"indicators\can
            r"graph_objects\chart_component",r"graph_objects\chart_component\base_items",
            r"graph_objects\chart_component\basic_indicators",
            r"exchanges",
-           r"gui_components\qfluentwidgets\common", r"gui_components\qfluentwidgets\components\widgets", 
-           r"gui_components\qfluentwidgets\components\date_time", r"gui_components\qfluentwidgets\components\container",
-           r"gui_components\qfluentwidgets\components\navigation", r"gui_components\qfluentwidgets\components\settings",
-           r"gui_components\qfluentwidgets\window", r"gui_components\components"]
+           r"gui\qfluentwidgets\common", r"gui\qfluentwidgets\components\widgets", 
+           r"gui\qfluentwidgets\components\date_time", r"gui\qfluentwidgets\components\container",
+           r"gui\qfluentwidgets\components\navigation", r"gui\qfluentwidgets\components\settings",
+           r"gui\qfluentwidgets\window", r"gui\components"]
 
 list_pyx_path = []
 for folder in folders:

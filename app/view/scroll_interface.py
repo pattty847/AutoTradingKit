@@ -2,7 +2,7 @@
 from PySide6.QtCore import Qt, QEasingCurve
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QWidget
-from atklip.gui_components import (SingleDirectionScrollArea, SmoothScrollArea, ToolTipFilter, PixmapLabel,
+from atklip.gui import (SingleDirectionScrollArea, SmoothScrollArea, ToolTipFilter, PixmapLabel,
                             ScrollArea, ImageLabel, HorizontalPipsPager, PipsScrollButtonDisplayMode, VerticalPipsPager)
 
 from .gallery_interface import GalleryInterface

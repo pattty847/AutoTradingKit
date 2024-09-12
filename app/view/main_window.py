@@ -4,9 +4,9 @@ from PySide6.QtCore import Qt, Signal, QEasingCurve, QUrl, QSize
 from PySide6.QtGui import QIcon, QDesktopServices
 from PySide6.QtWidgets import QApplication, QHBoxLayout, QFrame, QWidget
 
-from atklip.gui_components import (NavigationAvatarWidget, NavigationItemPosition, MessageBox, FluentWindow,
+from atklip.gui import (NavigationAvatarWidget, NavigationItemPosition, MessageBox, FluentWindow,
                             SplashScreen)
-from atklip.gui_components import FluentIcon as FIF
+from atklip.gui import FluentIcon as FIF
 
 from .gallery_interface import GalleryInterface
 from .home_interface import HomeInterface

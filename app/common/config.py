@@ -3,7 +3,7 @@ import sys
 from enum import Enum
 
 from PySide6.QtCore import QLocale
-from atklip.gui_components import (qconfig, QConfig, ConfigItem, OptionsConfigItem, BoolValidator,
+from atklip.gui import (qconfig, QConfig, ConfigItem, OptionsConfigItem, BoolValidator,
                             OptionsValidator, RangeConfigItem, RangeValidator,
                             FolderListValidator, Theme, FolderValidator, ConfigSerializer)
 

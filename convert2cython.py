@@ -18,10 +18,10 @@ folders = [r"atklip\indicators\talipp",r"atklip\indicators\talipp\indicators",r"
            r"atklip\graph_objects\chart_component",r"atklip\graph_objects\chart_component\base_items",
            r"atklip\graph_objects\chart_component\basic_indicators",
            r"atklip\exchanges",
-           r"atklip\gui_components\qfluentwidgets\common", r"atklip\gui_components\qfluentwidgets\components\widgets", 
-           r"atklip\gui_components\qfluentwidgets\components\date_time", r"atklip\gui_components\qfluentwidgets\components\container",
-           r"atklip\gui_components\qfluentwidgets\components\navigation", r"atklip\gui_components\qfluentwidgets\components\settings",
-           r"atklip\gui_components\qfluentwidgets\window", r"atklip\gui_components\components"]
+           r"atklip\gui\qfluentwidgets\common", r"atklip\gui\qfluentwidgets\components\widgets", 
+           r"atklip\gui\qfluentwidgets\components\date_time", r"atklip\gui\qfluentwidgets\components\container",
+           r"atklip\gui\qfluentwidgets\components\navigation", r"atklip\gui\qfluentwidgets\components\settings",
+           r"atklip\gui\qfluentwidgets\window", r"atklip\gui\components"]
 
 indicators = [r"atklip\indicators\candle"]
 pyqt_graph_folders = [r"atklip\graph_objects\pyqtgraph",

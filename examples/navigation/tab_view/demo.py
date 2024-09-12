@@ -5,10 +5,10 @@ from PySide6.QtCore import Qt, QSize, QUrl, QPoint
 from PySide6.QtGui import QIcon, QDesktopServices, QColor
 from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QApplication, QFrame, QStackedWidget
 
-from atklip.gui_components import (NavigationItemPosition, MessageBox, MSFluentTitleBar, MSFluentWindow,
+from atklip.gui import (NavigationItemPosition, MessageBox, MSFluentTitleBar, MSFluentWindow,
                             TabBar, SubtitleLabel, setFont, TabCloseButtonDisplayMode, IconWidget,
                             TransparentDropDownToolButton, TransparentToolButton, setTheme, Theme, isDarkTheme)
-from atklip.gui_components import FluentIcon as FIF
+from atklip.gui import FluentIcon as FIF
 
 
 class Widget(QFrame):

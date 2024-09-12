@@ -1,7 +1,7 @@
 # coding:utf-8
 from PySide6.QtGui import QColor
-from atklip.gui_components.qfluentwidgets.components.widgets.acrylic_label import AcrylicLabel
-from atklip.gui_components import FluentIcon as FIF
+from atklip.gui.qfluentwidgets.components.widgets.acrylic_label import AcrylicLabel
+from atklip.gui import FluentIcon as FIF
 
 from .gallery_interface import GalleryInterface
 from ..common.translator import Translator

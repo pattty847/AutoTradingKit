@@ -3,10 +3,10 @@ from PySide6.QtCore import QPoint, Qt, QStandardPaths
 from PySide6.QtGui import QColor
 from PySide6.QtGui import QAction, QActionGroup
 from  PySide6.QtWidgets import QWidget, QLabel, QVBoxLayout, QFileDialog
-from atklip.gui_components import (RoundMenu, PushButton, Action, CommandBar, Action, TransparentDropDownPushButton,
+from atklip.gui import (RoundMenu, PushButton, Action, CommandBar, Action, TransparentDropDownPushButton,
                             setFont, CommandBarView, Flyout, ImageLabel, FlyoutAnimationType, CheckableMenu,
                             MenuIndicatorType, AvatarWidget, isDarkTheme, BodyLabel, CaptionLabel, HyperlinkButton)
-from atklip.gui_components import FluentIcon as FIF
+from atklip.gui import FluentIcon as FIF
 
 from .gallery_interface import GalleryInterface
 from ..common.translator import Translator

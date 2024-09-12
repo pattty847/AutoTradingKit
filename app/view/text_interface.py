@@ -1,7 +1,7 @@
 # coding:utf-8
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QCompleter
-from atklip.gui_components import (LineEdit, SpinBox, DoubleSpinBox, TimeEdit, DateTimeEdit, DateEdit,
+from atklip.gui import (LineEdit, SpinBox, DoubleSpinBox, TimeEdit, DateTimeEdit, DateEdit,
                             TextEdit, SearchLineEdit, PasswordLineEdit)
 
 from .gallery_interface import GalleryInterface

@@ -1,6 +1,6 @@
 # coding:utf-8
 from PySide6.QtWidgets import QWidget
-from atklip.gui_components import FlowLayout, PushButton
+from atklip.gui import FlowLayout, PushButton
 
 from .gallery_interface import GalleryInterface
 from ..common.translator import Translator

@@ -2,7 +2,7 @@
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap, QColor
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QLabel, QVBoxLayout
-from atklip.gui_components import (StateToolTip, InfoBadge, ToolTipFilter, PushButton, PixmapLabel,
+from atklip.gui import (StateToolTip, InfoBadge, ToolTipFilter, PushButton, PixmapLabel,
                             InfoBar, InfoBarIcon, FluentIcon, InfoBarPosition, ProgressBar,
                             IndeterminateProgressBar, SpinBox, ProgressRing, IndeterminateProgressRing)
 

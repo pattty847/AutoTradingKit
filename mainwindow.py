@@ -1,8 +1,8 @@
 import sys
-from atklip.gui_components.qfluentwidgets.common import setTheme,Theme
-from atklip.gui_components.qfluentwidgets.common.icon import *
-from atklip.gui_components.qfluentwidgets.components.dialog_box import MessageBox
-from atklip.views.fluentwindow import WindowBase
+from atklip.gui.qfluentwidgets.common import setTheme,Theme
+from atklip.gui.qfluentwidgets.common.icon import *
+from atklip.gui.qfluentwidgets.components.dialog_box import MessageBox
+from atklip.gui.views.fluentwindow import WindowBase
 from PySide6.QtCore import QCoreApplication,QSize
 from PySide6.QtGui import QCloseEvent,QIcon
 from PySide6.QtWidgets import QApplication

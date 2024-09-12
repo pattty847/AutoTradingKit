@@ -3,7 +3,7 @@ from PySide6.QtCore import Qt, Signal, QUrl
 from PySide6.QtGui import QPixmap, QDesktopServices
 from PySide6.QtWidgets import QFrame, QLabel, QVBoxLayout, QWidget, QHBoxLayout
 
-from atklip.gui_components import IconWidget, FluentIcon, TextWrap, SingleDirectionScrollArea
+from atklip.gui import IconWidget, FluentIcon, TextWrap, SingleDirectionScrollArea
 from ..common.style_sheet import StyleSheet
 
 

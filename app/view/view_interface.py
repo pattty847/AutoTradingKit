@@ -1,7 +1,7 @@
 # coding:utf-8
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QFrame, QTreeWidgetItem, QHBoxLayout, QTreeWidgetItemIterator, QTableWidgetItem, QListWidgetItem
-from atklip.gui_components import TreeWidget, TableWidget, ListWidget, HorizontalFlipView
+from atklip.gui import TreeWidget, TableWidget, ListWidget, HorizontalFlipView
 
 from .gallery_interface import GalleryInterface
 from ..common.translator import Translator

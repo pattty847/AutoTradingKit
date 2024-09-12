@@ -1,7 +1,7 @@
 # coding: utf-8
 from enum import Enum
 
-from atklip.gui_components import StyleSheetBase, Theme, isDarkTheme, qconfig
+from atklip.gui import StyleSheetBase, Theme, isDarkTheme, qconfig
 
 
 class StyleSheet(StyleSheetBase, Enum):

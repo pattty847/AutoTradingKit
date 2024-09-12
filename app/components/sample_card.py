@@ -3,7 +3,7 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QWidget, QFrame, QLabel, QVBoxLayout, QHBoxLayout
 
-from atklip.gui_components import IconWidget, TextWrap, FlowLayout, CardWidget
+from atklip.gui import IconWidget, TextWrap, FlowLayout, CardWidget
 from ..common.signal_bus import signalBus
 from ..common.style_sheet import StyleSheet
 

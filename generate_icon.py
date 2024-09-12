@@ -2,8 +2,8 @@ import xml.etree.ElementTree as ET
 import os
 def change_svg_color(value, new_color):
     
-    path = f'E:/att-algo-trading-tools/gui_components/qfluentwidgets/_rc/images/icons/{value}.svg'
-    new_path = f'E:/att-algo-trading-tools/gui_components/qfluentwidgets/_rc/images/icons/{value}_{new_color}.svg' 
+    path = f'E:/att-algo-trading-tools/gui/qfluentwidgets/_rc/images/icons/{value}.svg'
+    new_path = f'E:/att-algo-trading-tools/gui/qfluentwidgets/_rc/images/icons/{value}_{new_color}.svg' 
     # Check if any element has a 'fill' attribute
     #print("path", path)
     tree = ET.parse(path)
@@ -31,8 +31,8 @@ def change_svg_color(value, new_color):
     return new_path
 
 def change_svg_color(value:str, new_color):
-    path = f'atklip/gui_components/qfluentwidgets/_rc/images/icons/{value}_white.svg'
-    new_path = f'atklip/gui_components/qfluentwidgets/_rc/images/icons/{value.lower()}_tradingview.svg'
+    path = f'atklip/gui/qfluentwidgets/_rc/images/icons/{value}_white.svg'
+    new_path = f'atklip/gui/qfluentwidgets/_rc/images/icons/{value.lower()}_tradingview.svg'
     if os.path.exists(new_path):
         return new_path
     file = open(path,"r")
@@ -46,8 +46,8 @@ def change_svg_color(value:str, new_color):
 
 
 def change_svg(value:str):
-    path = f'atklip/gui_components/qfluentwidgets/_rc/images/icons/{value}'
-    new_path = f'atklip/gui_components/qfluentwidgets/_rc/images/icons/{value.lower()}'
+    path = f'atklip/gui/qfluentwidgets/_rc/images/icons/{value}'
+    new_path = f'atklip/gui/qfluentwidgets/_rc/images/icons/{value.lower()}'
     # if os.path.exists(new_path):
     #     return new_path
     file = open(path,"r",encoding="utf-8")
@@ -61,7 +61,7 @@ def change_svg(value:str):
     
     return new_path
 
-list_icon = os.listdir(f"atklip/gui_components/qfluentwidgets/_rc/images/icons")
+list_icon = os.listdir(f"atklip/gui/qfluentwidgets/_rc/images/icons")
 
 # {value.lower()}_white.svg
 for i in list_icon:

@@ -1,7 +1,7 @@
 import json
 import threading
 from PySide6.QtCore import QCoreApplication,Signal,QObject,Qt
-from atklip.gui_components.qfluentwidgets.common.icon import *
+from atklip.gui.qfluentwidgets.common.icon import *
 # Gets or creates a logger
 
 config_path = get_real_path("atklip/appdata")

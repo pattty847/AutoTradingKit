@@ -1,7 +1,7 @@
 # coding: utf-8
 from enum import Enum
 
-from atklip.gui_components import FluentIconBase, getIconColor, Theme
+from atklip.gui import FluentIconBase, getIconColor, Theme
 
 
 class Icon(FluentIconBase, Enum):

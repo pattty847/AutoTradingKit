@@ -3,7 +3,7 @@ from typing import List
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QApplication, QFrame, QVBoxLayout, QLabel, QWidget, QHBoxLayout
-from atklip.gui_components import (FluentIcon, IconWidget, FlowLayout, isDarkTheme,
+from atklip.gui import (FluentIcon, IconWidget, FlowLayout, isDarkTheme,
                             Theme, applyThemeColor, SmoothScrollArea, SearchLineEdit, StrongBodyLabel,
                             BodyLabel)
 

@@ -126,11 +126,11 @@ run mainwindow.py to start app: python mainwindow.py
 
 ## Build exe
 
-- replace this function in atklip.gui_components.qfluentwidgets.common.icon để thay đổi đường dẫn đến folders lưu ảnh
+- replace this function in atklip.gui.qfluentwidgets.common.icon để thay đổi đường dẫn đến folders lưu ảnh
 - ```
   def change_svg_color(value:str, new_color):
-      path = f'_internal/atklip/gui_components/qfluentwidgets/_rc/images/icons/{value.lower()}_white.svg'
-      new_path = f'_internal/atklip/gui_components/qfluentwidgets/_rc/images/icons/{value.lower()}_tradingview.svg'
+      path = f'_internal/atklip/gui/qfluentwidgets/_rc/images/icons/{value.lower()}_white.svg'
+      new_path = f'_internal/atklip/gui/qfluentwidgets/_rc/images/icons/{value.lower()}_tradingview.svg'
       if os.path.exists(new_path):
           return new_path
       file = open(path,"r")

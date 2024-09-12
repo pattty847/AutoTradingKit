@@ -1,5 +1,5 @@
 import logging
-from atklip.gui_components.qfluentwidgets.common.icon import *
+from atklip.gui.qfluentwidgets.common.icon import *
 # Gets or creates a logger
 logger_ = logging.getLogger(__name__)  
 # set log level

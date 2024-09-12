@@ -5,7 +5,7 @@ from PySide6.QtCore import Qt, Signal, QRectF
 from PySide6.QtGui import QPixmap, QPainter, QColor, QBrush, QPainterPath, QLinearGradient
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel
 
-from atklip.gui_components import ScrollArea, isDarkTheme, FluentIcon
+from atklip.gui import ScrollArea, isDarkTheme, FluentIcon
 from ..common.config import cfg, HELP_URL, REPO_URL, EXAMPLE_URL, FEEDBACK_URL
 from ..common.icon import Icon, FluentIconBase
 from ..components.link_card import LinkCardView

@@ -1,7 +1,7 @@
 # coding:utf-8
 from PySide6.QtCore import Qt, QEasingCurve
 from PySide6.QtWidgets import QWidget, QStackedWidget, QVBoxLayout, QLabel, QHBoxLayout, QFrame, QSizePolicy
-from atklip.gui_components import (Pivot, qrouter, SegmentedWidget, TabBar, CheckBox, ComboBox,
+from atklip.gui import (Pivot, qrouter, SegmentedWidget, TabBar, CheckBox, ComboBox,
                             TabCloseButtonDisplayMode, BodyLabel, SpinBox, BreadcrumbBar,
                             SegmentedToggleToolWidget, FluentIcon)
 

@@ -1,6 +1,6 @@
 # coding:utf-8
 from PySide6.QtCore import Qt
-from atklip.gui_components import DatePicker, TimePicker, AMTimePicker, ZhDatePicker, CalendarPicker
+from atklip.gui import DatePicker, TimePicker, AMTimePicker, ZhDatePicker, CalendarPicker
 
 from .gallery_interface import GalleryInterface
 from ..common.translator import Translator

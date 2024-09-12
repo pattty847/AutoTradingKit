@@ -1,7 +1,7 @@
 # coding:utf-8
 from PySide6.QtCore import Qt, QUrl
 
-from atklip.gui_components import (PushButton, Dialog, MessageBox, ColorDialog, TeachingTip, TeachingTipTailPosition,
+from atklip.gui import (PushButton, Dialog, MessageBox, ColorDialog, TeachingTip, TeachingTipTailPosition,
                             InfoBarIcon, Flyout, FlyoutView, TeachingTipView, FlyoutAnimationType, SubtitleLabel,
                             LineEdit, MessageBoxBase)
 from ..common.translator import Translator
