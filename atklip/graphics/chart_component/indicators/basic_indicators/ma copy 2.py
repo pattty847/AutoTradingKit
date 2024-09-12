@@ -17,7 +17,6 @@ from atklip.controls import pandas_ta as ta
 from atklip.controls import OHLCV
 
 from atklip.controls.candle import JAPAN_CANDLE,HEIKINASHI,SMOOTH_CANDLE
-from atklip.controls.ma import MA
 from atklip.graphics.chart_component.base_items import PlotLineItem
 from atklip.appmanager import FastWorker
 from atklip.app_utils import *
@@ -37,7 +36,7 @@ class BasicMA(PlotLineItem):
         self.chart:Chart = chart
         
         self.has = {
-            "name": f"{indicator_type.value} {_type} {period}",
+            "name": f"{indicator_type.value} {period} {_type}",
             "y_axis_show":False,
             "inputs":{
                     "source":self.chart.jp_candle,
@@ -57,37 +56,31 @@ class BasicMA(PlotLineItem):
         self.opts.update({'pen':pen})
         self._pen = pen
         self.id = id
+        self.on_click.connect(self.on_click_event)
+        self._INDICATOR : pd.Series = pd.Series([])
         self.is_reset = False
         self.xData, self.yData = np.array([]),np.array([])
         
-        self.INDICATOR  = MA(self,self.has["inputs"]["source"], self.has["inputs"]["type"],
-                              self.has["inputs"]["ma_type"],self.has["inputs"]["period"])
-        
         self.chart.sig_update_source.connect(self.change_source,Qt.ConnectionType.AutoConnection)
+        
         self.chart.sig_remove_source.connect(self.replace_source,Qt.ConnectionType.AutoConnection)
         
         self.signal_delete.connect(self.delete)
         
-    def disconnect_signals(self):
+        self.has["inputs"]["source"].sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
+        self.has["inputs"]["source"].sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
+        self.has["inputs"]["source"].sig_add_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
+        
+    def delete(self):
+        self.chart.sig_remove_item.emit(self)
+    
+    def disconnect_connection(self):
         try:
-            self.INDICATOR.sig_reset_all.disconnect(self.reset_threadpool_asyncworker)
-            self.INDICATOR.sig_update_candle.disconnect(self.setdata_worker)
-            self.INDICATOR.sig_add_candle.disconnect(self.setdata_worker)
+            self.has["inputs"]["source"].sig_reset_all.disconnect(self.reset_threadpool_asyncworker)
+            self.has["inputs"]["source"].sig_update_candle.disconnect(self.setdata_worker)
+            self.has["inputs"]["source"].sig_add_candle.disconnect(self.setdata_worker)
         except RuntimeError:
                     pass
-    
-    def connect_signals(self):
-        self.INDICATOR.sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
-        self.INDICATOR.sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
-        self.INDICATOR.sig_add_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
-    
-    def threadpool_asyncworker(self):
-        self.connect_signals()
-        self.INDICATOR.fisrt_gen_data()
-       
-    def delete(self):
-        self.INDICATOR.deleteLater()
-        self.chart.sig_remove_item.emit(self)
     
     def reset_indicator(self):
         self.worker = None
@@ -96,24 +89,41 @@ class BasicMA(PlotLineItem):
         self.worker.start()
 
     def regen_indicator(self,setdata):
-        df:pd.DataFrame = self.INDICATOR.get_df()
-        _data = df["data"].to_numpy()
+        self._INDICATOR =None
+        
+        df:pd.DataFrame = self.has["inputs"]["source"].get_df()
+        self._INDICATOR = ta.ma(f"{self.has["inputs"]["ma_type"].name}".lower(), df[f"{self.has["inputs"]["type"]}"],length=self.has["inputs"]["period"])
+        self._INDICATOR = self._INDICATOR.astype('float32')
+        _data = self._INDICATOR.to_numpy()
         _index = df["index"].to_numpy()
+
+        # self.set_Data((_index,_data))
         setdata.emit((_index,_data))
+        
         self.sig_change_yaxis_range.emit()
+        
         self.has["name"] = f"{self.has["inputs"]["ma_type"].name} {self.has["inputs"]["period"]} {self.has["inputs"]["type"]}"
         self.sig_change_indicator_name.emit(self.has["name"])
 
+        self.has["inputs"]["source"].sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
+        self.has["inputs"]["source"].sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
+        self.has["inputs"]["source"].sig_add_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
+    
     def replace_source(self,source_name):
         if self.has["inputs"]["source_name"] == source_name:
+            self.disconnect_connection()
             self.has["inputs"]["source"] = self.chart.jp_candle
             self.has["inputs"]["source_name"] = self.chart.jp_candle.source_name
-            self.INDICATOR.change_source(self.has["inputs"]["source"])
+            self.reset_indicator()
             
+    
     def reset_threadpool_asyncworker(self):
+        self.disconnect_connection()
         source_name = self.has["inputs"]["source_name"].split(" ")[0]
         self.has["inputs"]["source"].source_name = f"{source_name} {self.chart.symbol} {self.chart.interval}"
+        self.chart.update_sources(self.has["inputs"]["source"])
         self.reset_indicator()
+        
         
     def change_source(self,source):   
         if self.has["inputs"]["source_name"] == source.source_name:
@@ -139,9 +149,10 @@ class BasicMA(PlotLineItem):
         is_update = False
         if _input == "source":
             if self.chart.sources[_source] != self.has["inputs"][_input]:
+                self.disconnect_connection()
                 self.has["inputs"]["source"] = self.chart.sources[_source]
                 self.has["inputs"]["source_name"] = self.chart.sources[_source].source_name
-                self.INDICATOR.change_inputs(_input,self.has["inputs"]["source"])
+                self.reset_indicator()
         elif _input == "type":
             if _source != self.has["inputs"][_input]:
                 self.has["inputs"][_input] = _source
@@ -154,17 +165,22 @@ class BasicMA(PlotLineItem):
             if _source != self.has["inputs"][_input]:
                 self.has["inputs"][_input] = _source
                 is_update = True
+
         if is_update:
             self.has["name"] = f"{self.has["inputs"]["ma_type"].name} {self.has["inputs"]["period"]} {self.has["inputs"]["type"]}"
             self.sig_change_indicator_name.emit(self.has["name"])
-            self.INDICATOR.change_inputs(_input,_source)
-            
+            self.threadpool_asyncworker()
     def update_styles(self, _input):
         _style = self.has["styles"][_input]
         if _input == "pen" or _input == "width" or _input == "style":
             self.setPen(color=self.has["styles"]["pen"], width=self.has["styles"]["width"],style=self.has["styles"]["style"])
 
-
+    def threadpool_asyncworker(self,candle=None):
+        self.worker = None
+        self.worker = FastWorker(self.first_load_data)
+        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.start()
+        #self.threadpool.start(self.worker)
     def get_yaxis_param(self):
         _value = None
         try:
@@ -172,10 +188,36 @@ class BasicMA(PlotLineItem):
         except:
             pass
         return _value,self._pen
-    
     def get_xaxis_param(self):
         return None,"#363a45"
 
+    def first_load_data(self,setdata):
+        self.disconnect_connection()
+        self._is_change_source = True
+        self._INDICATOR = None
+        
+        df:pd.DataFrame = self.has["inputs"]["source"].get_df()
+        self._INDICATOR = ta.ma(f"{self.has["inputs"]["ma_type"].name}".lower(), df[f"{self.has["inputs"]["type"]}"],length=self.has["inputs"]["period"])
+        
+        self._INDICATOR = self._INDICATOR.astype('float32')
+        
+        _data = self._INDICATOR.to_numpy()
+        _index = df["index"].to_numpy()
+        setdata.emit((_index,_data))
+        self.sig_change_yaxis_range.emit()
+        
+        self.has["name"] = f"{self.has["inputs"]["ma_type"].name} {self.has["inputs"]["period"]} {self.has["inputs"]["type"]}"
+        self.sig_change_indicator_name.emit(self.has["name"])
+
+        self.has["inputs"]["source"].sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
+        self.has["inputs"]["source"].sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
+        self.has["inputs"]["source"].sig_add_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
+    def remove_none_value(self,output_times,output_values,i):
+        if self._INDICATOR != None:
+            if self._INDICATOR.output_values != None:
+                if self._INDICATOR.output_values[i] != None:
+                    output_times.append(self._INDICATOR.output_times[i])
+                    output_values.append(self._INDICATOR.output_values[i])
 
     def setVisible(self, visible):
         if visible:
@@ -183,28 +225,39 @@ class BasicMA(PlotLineItem):
         else:
             self.hide()
 
-    def setdata_worker(self):
+    def setdata_worker(self,sig_update_candle):
         self.worker = None
-        self.worker = FastWorker(self.update_data)
+        self.worker = FastWorker(self.update_data,sig_update_candle)
         self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
-        self.worker.start()    
+        self.worker.start()
+        #self.threadpool.start(self.worker)
+    
     
     def set_Data(self,data):
         self.xData = data[0]
         self.yData = data[1]
         self.setData(self.xData, self.yData)
+        # self.prepareGeometryChange()
+        # self.informViewBoundsChanged()
 
     def get_last_point(self):
         _time = self.xData[-1]
         _value = self.yData[-1]
         return _time,_value
     
-    def update_data(self,setdata):
-        df:pd.DataFrame = self.INDICATOR.get_df()
-        _data = df["data"].to_numpy()
+    
+    def update_data(self,last_candle:List[OHLCV],setdata):
+        df:pd.DataFrame = self.has["inputs"]["source"].get_df()
+        self._INDICATOR = ta.ma(f"{self.has["inputs"]["ma_type"].name}".lower(), df[f"{self.has["inputs"]["type"]}"],length=self.has["inputs"]["period"])
+        self._INDICATOR = self._INDICATOR.astype('float32')
+        _data = self._INDICATOR.to_numpy()
         _index = df["index"].to_numpy()
-        setdata.emit((_index,_data))        
-
+        setdata.emit((_index,_data))
+        #QCoreApplication.processEvents()
+        
+    def on_click_event(self,_object):
+        print("zooo day__________________",_object)
+ 
     def mouseClickEvent(self, ev):
         if ev.button() == Qt.MouseButton.LeftButton:
             self.on_click.emit(self)
@@ -217,6 +270,11 @@ class BasicMA(PlotLineItem):
         return self.indicator_name
     
     def setPen(self, *args, **kargs):
+        """
+        Sets the pen used to draw lines between points.
+        The argument can be a :class:`QtGui.QPen` or any combination of arguments accepted by 
+        :func:`pyqtgraph.mkPen() <pyqtgraph.mkPen>`.
+        """
         pen = fn.mkPen(*args, **kargs)
         self.opts['pen'] = pen
         self._line.updateItems(styleUpdate=True)
