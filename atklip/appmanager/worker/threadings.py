@@ -5,7 +5,7 @@ from threading import Thread
 import traceback
 import asyncio
 from PySide6.QtCore import Signal, QObject, QCoreApplication, Slot,QThread,Qt
-
+from .threadpool import ThreadPoolExecutor_global
 
 class FastStartThread(QObject):
     "Worker này dùng để emit candle data"
@@ -18,39 +18,29 @@ class FastStartThread(QObject):
         self.exchange = exchange
         self.fn = fn
         self.args = args
-        self.kwargs = kwargs
-        self._thread = Thread(target=self.run, daemon=True, args=())
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
+        self.kwargs = kwargs.copy()
         self.finished.connect(self.stop_thread)
-        self.destroyed.connect(self.stop_thread)
-        #self.parent().destroyed.connect(self.stop_thread)
+        self.threadpool = ThreadPoolExecutor_global
+        
     
     def start_thread(self):
-        self._thread.start()
+        try:
+            funture = self.threadpool.submit(self.run)
+        except RuntimeError:
+            pass
     
     def stop_thread(self):
-        if self.loop != None:
-            try:
-                asyncio.set_event_loop(None)
-                self.loop.call_soon_threadsafe(self.loop.stop)
-            except Exception as e:
-                traceback.print_exception(e)
         self.deleteLater()
     
-    def create_task(self, coro: Coroutine) -> None:
-        self.loop.call_soon_threadsafe(self.loop.create_task, coro)
-
+    @Slot()
     def run(self):
         try:
-            self.create_task(self.fn(*self.args, **self.kwargs))
-            self.loop.run_forever()
+            asyncio.run(self.fn(*self.args, **self.kwargs))
         except Exception as e:
             traceback.print_exception(e)
             self.error.emit(str(e))
         finally:
-            pass
-            # self.finished.emit()
+            self.finished.emit()
 
 class ThreadingAsyncWorker(QObject):
     finished = Signal()
@@ -62,36 +52,18 @@ class ThreadingAsyncWorker(QObject):
         self.fn = fn
         self.args = args
         self.kwargs = kwargs
-        self._thread = Thread(target=self.run, daemon=True, args=())
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
+        self._thread = ThreadPoolExecutor_global
         self.finished.connect(self.stop_thread)
-        self.destroyed.connect(self.stop_thread)
-        #self.parent().destroyed.connect(self.stop_thread)
     
     def start_thread(self):
-        self._thread.start()
+        self._thread.submit(self.run)
     
     def stop_thread(self):
-        if self.loop != None:
-            try:
-                asyncio.set_event_loop(None)
-                # self.loop.call_soon_threadsafe(self.loop.stop)
-                self.loop.stop()
-                self.loop.close()
-            except Exception as e:
-                traceback.print_exception(e)
         self.deleteLater()
-    
-    def create_task(self, coro: Coroutine) -> None:
-        self.loop.call_soon_threadsafe(self.loop.create_task, coro)
-
+    @Slot()
     def run(self):
         try:
-            # self.create_task(self.fn(*self.args, **self.kwargs))
-            #asyncio.run(self.fn(*self.args, **self.kwargs))
-            self.loop.run_until_complete(self.fn(*self.args, **self.kwargs))
-            # self.loop.run_forever()
+            asyncio.run(self.fn(*self.args, **self.kwargs))
         except Exception as e:
             traceback.print_exception(e)
             self.error.emit(str(e))
@@ -110,28 +82,19 @@ class RequestAsyncWorker(QObject):
         self.args = args
         self.kwargs = kwargs
         self.kwargs['update_signal'] = self.update_signal
-        self._thread = Thread(target=self.run, daemon=True, args=())
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
+        self._thread = ThreadPoolExecutor_global
         self.finished.connect(self.stop_thread)
-        self.destroyed.connect(self.stop_thread)
-        self.parent().destroyed.connect(self.stop_thread)
     
     def start_thread(self):
-        self._thread.start()
+        self._thread.submit(self.run)
     
     def stop_thread(self):
-        if self.loop != None:
-            try:
-                self.loop.stop()
-                self.loop.close()
-            except Exception as e:
-                traceback.print_exception(e)
+
         self.deleteLater()
+    @Slot()
     def run(self):
         try:
-            self.loop.create_task(self.fn(*self.args, **self.kwargs))
-            self.loop.run_forever()
+            asyncio.run(self.fn(*self.args, **self.kwargs))
         except Exception as e:
             traceback.print_exception(e)
             self.error.emit(str(e))
@@ -158,19 +121,15 @@ class FastWorker(QObject):
         self.kwargs = kwargs
         self.signals = WorkerSignals(self) 
         self.kwargs['setdata'] = self.signals.setdata
-
-        self._thread = Thread(target=self.run, daemon=True, args=())
-        #self._thread = QThread(self)
-        #self._thread.started.connect(self.run)
+        self._thread = ThreadPoolExecutor_global
         self.finished.connect(self.stop_thread)
-        self.destroyed.connect(self.stop_thread)
 
     def start(self):
-        self._thread.start()
+        self._thread.submit(self.run)
     def stop_thread(self):
-        # self._thread.quit()
-        # self._thread.deleteLater()
+        self.signals.deleteLater()
         self.deleteLater()
+    @Slot()
     def run(self):
         try:
             self.fn(*self.args, **self.kwargs)

@@ -6,7 +6,6 @@ from atklip.gui_components.qfluentwidgets import FluentIcon as FIF
 from atklip.gui_components.components import ScrollInterface,ICON_TEXT_BUTTON,Indicator_Item,MovingWidget
 from atklip.gui_components.qfluentwidgets.common import FluentStyleSheet
 from atklip.appmanager.setting import AppConfig
-from atklip.appmanager.worker import SimpleWorker
 from atklip.indicators import IndicatorType,PD_MAType
 
 from PySide6.QtWidgets import QStackedWidget,QAbstractScrollArea, QWidget,QApplication
@@ -66,10 +65,7 @@ class BasicMenu(ScrollInterface):
     def load_indicators(self):
         self._load_indicator()
         self.add_spacer()
-        # worker = SimpleWorker(self,self._load_indicator)
-        # worker.signals.finished.connect(self.add_spacer)
-        # worker.start_thread()
-    
+
     def add_spacer(self):
         self.addSpacer("VERTICAL")
     

@@ -13,7 +13,7 @@ from PySide6.QtCore import QEvent, Signal,QCoreApplication
 from PySide6.QtGui import Qt
 
 from atklip.exchanges import list_exchanges, CryptoExchange
-from atklip.appmanager.worker import RequestAsyncWorker,ThreadingAsyncWorker,SimpleWorker
+from atklip.appmanager.worker import RequestAsyncWorker,ThreadingAsyncWorker
 from atklip.gui_components.components import LoadingProgress
 from atklip.gui_components.qfluentwidgets.common.icon import *
 from atklip.appmanager import AppConfig, AppLogger
@@ -167,9 +167,7 @@ class BaseMenu(ScrollInterface):
     def load_favorite(self):
         #self.sig_show_process.emit(True)
         self._favorite()
-        # worker = SimpleWorker(self,self._favorite)
-        # worker.start_thread()
- 
+
     def check_new_symbol_from_ex(self,exchange_id):
         worker = ThreadingAsyncWorker(self.update_symbols,exchange_id)
         worker.start_thread()

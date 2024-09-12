@@ -103,76 +103,31 @@ class FastStartSignal(QObject):
     error = Signal()
     finished = Signal()
 
-class SimpleWorker(QRunnable):
-    "Worker này dùng để update  data trong một cho graph object khi có data mới"
-    def __init__(self,parent,fn, *args, **kwargs):
-        super(SimpleWorker, self).__init__()
-        self.fn = fn
-        self.args = args
-        self.kwargs = kwargs
-        self.signals = FastStartSignal() 
-        self.qtheadpool = QThreadPool(parent)
-        self.signals.finished.connect(self.stop_thread)
-        self.signals.error.connect(self.stop_thread)
-        parent.destroyed.connect(self.stop_thread)
-        self.setAutoDelete(True)
-    def start_thread(self):
-        self.qtheadpool.start(self)
-    
-    def stop_thread(self):
-        try:
-            self.qtheadpool.deleteLater()
-        except Exception as e:
-            self.qtheadpool = None
-    @Slot()
-    def run(self):
-        try:
-            self.fn(*self.args, **self.kwargs)
-        except Exception as e:
-            traceback.print_exception(e)
-            self.signals.error.emit()
-        finally:
-            try:
-                self.signals.finished.emit()
-            except:
-                pass
-
-class ThreadingAsyncWorker(QRunnable):
+class ThreadingAsyncWorker(QObject):
     "Worker này dùng để update  data trong một cho graph object khi có data mới"
     def __init__(self,fn, *args, **kwargs):
         super(ThreadingAsyncWorker, self).__init__()
-        self.setAutoDelete(True)
         self.fn = fn
         self.args = args
         self.kwargs = kwargs
         self.signals = FastStartSignal() 
-        self.qtheadpool = QThreadPool()
+        self.qtheadpool = ThreadPoolExecutor_global
         self.signals.finished.connect(self.stop_thread)
         self.signals.error.connect(self.stop_thread)
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
 
     def start_thread(self):
-        self.qtheadpool.start(self)
+        self.qtheadpool.submit(self.run)
     
     def stop_thread(self):
-        if self.loop != None:
-            try:
-                asyncio.set_event_loop(None)
-                self.loop.call_soon_threadsafe(self.loop.stop)
-            except Exception as e:
-                self.loop = None
-            try:
-                self.qtheadpool.deleteLater()
-                self.signals.deleteLater()
-            except Exception as e:
-                self.qtheadpool = None
-                self.loop = None
-                self.signals.deleteLater()
+        try:
+            self.signals.deleteLater()
+        except Exception as e:
+            self.signals.deleteLater()
+        self.deleteLater()
     @Slot()
     def run(self):
         try:
-            self.loop.run_until_complete(self.fn(*self.args, **self.kwargs))
+            asyncio.run(self.fn(*self.args, **self.kwargs))
         except Exception as e:
             self.signals.error.emit()
         finally:
@@ -182,43 +137,29 @@ class ThreadingAsyncWorker(QRunnable):
                 pass
 
 
-class RequestAsyncWorker(QRunnable):
+class RequestAsyncWorker(QObject):
     "Worker này dùng để update  data trong một cho graph object khi có data mới"
     def __init__(self,fn, *args, **kwargs):
         super(RequestAsyncWorker, self).__init__()
-        self.setAutoDelete(True)
         self.fn = fn
         self.args = args
         self.kwargs = kwargs
-        self.qtheadpool = QThreadPool()
+        self.qtheadpool = ThreadPoolExecutor_global
         self.signals = WorkerSignals() 
         self.kwargs['update_signal'] = self.signals.update_signal
         self.signals.finished.connect(self.stop_thread)
         self.signals.error.connect(self.stop_thread)
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
 
     def start_thread(self):
-        self.qtheadpool.start(self)
+        self.qtheadpool.submit(self.run)
     
     def stop_thread(self):
-        if self.loop != None:
-            try:
-                asyncio.set_event_loop(None)
-                self.loop.call_soon_threadsafe(self.loop.stop)
-            except Exception as e:
-                self.loop = None
-            try:
-                self.qtheadpool.deleteLater()
-                self.signals.deleteLater()
-            except Exception as e:
-                self.qtheadpool = None
-                self.loop = None
-                self.signals.deleteLater()
+        self.signals.deleteLater()
+        self.deleteLater()
     @Slot()
     def run(self):
         try:
-            self.loop.run_until_complete(self.fn(*self.args, **self.kwargs))
+            asyncio.run(self.fn(*self.args, **self.kwargs))
         except Exception as e:
             self.signals.error.emit()
         finally:

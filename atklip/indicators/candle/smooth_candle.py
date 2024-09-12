@@ -48,9 +48,9 @@ class SMOOTH_CANDLE(QObject):
 
         self.df = pd.DataFrame([])
 
-        self._candles.sig_reset_all.connect(self.fisrt_gen_data,Qt.ConnectionType.AutoConnection)
-        self._candles.sig_update_candle.connect(self.update,Qt.ConnectionType.QueuedConnection)
-        self._candles.sig_add_candle.connect(self.update,Qt.ConnectionType.QueuedConnection)
+        self._candles.sig_reset_all.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
+        self._candles.sig_update_candle.connect(self.update_worker,Qt.ConnectionType.QueuedConnection)
+        self._candles.sig_add_candle.connect(self.update_worker,Qt.ConnectionType.QueuedConnection)
 
     @property
     def source_name(self):
@@ -67,9 +67,14 @@ class SMOOTH_CANDLE(QObject):
     def get_last_row_df(self):
         return self.df.iloc[-1] 
 
-    def threadpool_asyncworker(self,_candle):
+    def update_worker(self,candle):
+        self.worker_ = None
+        self.worker_ = CandleWorker(self.update,candle)
+        self.worker_.start()
+    
+    def threadpool_asyncworker(self):
         self.worker = None
-        self.worker = CandleWorker(self.update,_candle)
+        self.worker = CandleWorker(self.fisrt_gen_data)
         self.worker.start()
         
     def get_candles_as_dataframe(self):
