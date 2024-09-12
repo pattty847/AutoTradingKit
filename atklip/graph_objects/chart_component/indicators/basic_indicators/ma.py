@@ -59,6 +59,7 @@ class BasicMA(PlotLineItem):
         self.on_click.connect(self.on_click_event)
         self._INDICATOR : pd.Series = pd.Series([])
         self.is_reset = False
+        self.xData, self.yData = np.array([]),np.array([])
         
         self.chart.sig_update_source.connect(self.change_source,Qt.ConnectionType.AutoConnection)
         
@@ -226,9 +227,9 @@ class BasicMA(PlotLineItem):
     
     
     def set_Data(self,data):
-        xData = data[0]
-        yData = data[1]
-        self.setData(xData, yData)
+        self.xData = data[0]
+        self.yData = data[1]
+        self.setData(self.xData, self.yData)
         # self.prepareGeometryChange()
         # self.informViewBoundsChanged()
 

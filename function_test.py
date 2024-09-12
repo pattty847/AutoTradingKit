@@ -32,4 +32,6 @@ new_df = pd.DataFrame({ "open": [1],
                         "time": [6],
                         "index":[54]
                     })
-print(new_df)
+_dict = {"dsad":123213}
+_dict.clear()
+print(_dict)

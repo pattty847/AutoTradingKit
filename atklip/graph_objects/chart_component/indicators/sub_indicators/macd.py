@@ -171,8 +171,6 @@ class BasicMACD(GraphicsObject):
         self.sig_change_yaxis_range.emit()
         
         #QCoreApplication.processEvents()
-        
-        
         self.has["inputs"]["source"].sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
         self.has["inputs"]["source"].sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
         self.has["inputs"]["source"].sig_add_candle.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)

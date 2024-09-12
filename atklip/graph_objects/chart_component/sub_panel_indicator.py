@@ -164,10 +164,10 @@ class ViewSubPanel(PlotWidget):
             
             
         if self.indicator:
-            self.indicator.reset_indicator()
+            self.add_item(self.indicator)
             self.panel = IndicatorPanel(mainwindow,self, self.indicator)
             self.container_indicator_wg.add_indicator_panel(self.panel)
-            self.add_item(self.indicator)
+            self.indicator.reset_indicator()
             
     
     def setdockLabel(self,docklabel):

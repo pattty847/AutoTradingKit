@@ -98,7 +98,6 @@ class CandleWorker(QObject):
         finally:
             self.deleteLater()
 
-     
 class FastStartSignal(QObject):
     error = Signal()
     finished = Signal()

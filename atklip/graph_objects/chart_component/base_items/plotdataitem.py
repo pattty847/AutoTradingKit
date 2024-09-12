@@ -24,12 +24,12 @@ class PlotLineItem(GraphicsObject):
         self._line.setCacheMode(QGraphicsItem.CacheMode.DeviceCoordinateCache)
         self._line.setParentItem(self)
         self.opts = self._line.opts
-    @property
-    def xData(self):
-        return self._line.xData
-    @property
-    def yData(self):
-        return self._line.yData
+    # @property
+    # def xData(self):
+    #     return self._line.xData
+    # @property
+    # def yData(self):
+    #     return self._line.yData
     def setPen(self, *args, **kargs):
         self._line.setPen(self, *args, **kargs)
     def setData(self, *args, **kargs):

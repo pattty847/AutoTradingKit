@@ -188,6 +188,8 @@ class Chart(ViewPlotWidget):
         firt_run = False
         _ohlcv = []
         while crypto_ex in list(self.exchanges.values()):
+            if self.exchanges == {}:
+                break
             if not (self.symbol == symbol and self.interval == interval and exchange.id == self.exchange_name):
                 AppLogger.writer("INFO",f"{__name__} - {exchange.id}-{symbol}-{interval} have changed to {self.exchange_name}-{self.symbol}-{self.interval}")
                 break
@@ -249,16 +251,16 @@ class Chart(ViewPlotWidget):
     async def close(self):
         while list(self.exchanges.keys()) != []:
             for key,value in list(self.exchanges.items()):
-                print(key,value)
                 del self.exchanges[key]
                 if value.exchange != None:
                     await value.exchange.close()
                 value.exchange = None
                 value.deleteLater()
+        self.exchanges.clear()
         if self.worker != None:
             if isinstance(self.worker,FastStartThread):
                 self.worker.stop_thread()
-        ThreadPoolExecutor_global.shutdown(cancel_futures=True)
+        ThreadPoolExecutor_global.shutdown(cancel_futures=False)
 
     def set_market_by_symbol(self,exchange):
         """
