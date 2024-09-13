@@ -11,7 +11,7 @@ close = np.random.random(1000000)
 
 
 import pandas as pd
-
+import polars as pl
 # # Tạo một pandas Series mà không có chỉ mục
 # s = pd.Series([10, 20, 30])
 
@@ -20,18 +20,38 @@ import pandas as pd
 
 # print(s)
 
-
-new_df = pd.DataFrame({ "open": [1],
-                        "high": [2],
-                        "low": [5],
-                        "close": [4],
-                        "hl2": [7],
-                        "hlc3": [8],
-                        "ohlc4": [5],
-                        "volume": [6],
-                        "time": [6],
-                        "index":[54]
+t1 = time.time()
+new_df_ = pl.DataFrame({ "open": np.random.random(1000000),
+                        "high": np.random.random(1000000),
+                        "low": np.random.random(1000000)
                     })
-_dict = {"dsad":123213}
-_dict.clear()
-print(_dict)
+df = new_df_.to_numpy()
+t2= time.time()
+print(f"Thời gian xử lý polar: {t1 - t2} giây")
+
+
+t1 = time.time()
+new_df = pd.DataFrame({ "open": np.random.random(1000000),
+                        "high": np.random.random(1000000),
+                        "low": np.random.random(1000000)
+                    })
+df = new_df.to_numpy()
+t2= time.time()
+print(f"Thời gian xử lý pandas: {t1 - t2} giây")
+
+from atklip.controls import talib
+from atklip.controls.talib import stream
+
+close = np.random.random(100)
+
+# the Function API
+output = talib.SMA(close)
+
+# the Streaming API
+latest = stream.SMA(close,10)
+
+# the latest value is the same as the last output value
+print(latest)
+
+
+

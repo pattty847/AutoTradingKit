@@ -23,7 +23,9 @@ pandas-datareader
 pyarrow
 setuptools
 streamlit
-polars
+polars[all]
+polars-lts-cpu
+# pip install 'polars[all]'
 # TA-Lib==0.4.28
 # yfinance==0.2.40
 
