@@ -96,8 +96,8 @@ class CandleStick(GraphicsObject):
         self.signal_delete.connect(self.delete_source)
         self.sig_deleted_source.connect(self.chart.remove_source)
         
-        self.source.sig_reset_all.connect(self.update_source,Qt.ConnectionType.AutoConnection)
-        self.source.sig_add_candle.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
+        self.source.sig_reset_all.connect(self.update_source,Qt.ConnectionType.QueuedConnection)
+        self.source.sig_add_candle.connect(self.threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
   
         # self.first_setup_candle()
     
@@ -186,8 +186,8 @@ class CandleStick(GraphicsObject):
                 self.historic_candle.threadpool_asyncworker(self.source.candles[-2:])
             x_data, y_data = self.source.get_index_data(stop=-1)
             self.setData((x_data, y_data))
-            self.source.sig_reset_all.connect(self.update_source,Qt.ConnectionType.AutoConnection)
-            self.source.sig_add_candle.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
+            self.source.sig_reset_all.connect(self.update_source,Qt.ConnectionType.QueuedConnection)
+            self.source.sig_add_candle.connect(self.threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
 
     def change_interval(self):
         self._is_change_source = True
@@ -224,8 +224,8 @@ class CandleStick(GraphicsObject):
             self.historic_candle.threadpool_asyncworker(self.source.candles[-2:])
         x_data, y_data = self.source.get_index_data(stop=-1)
         self.setData((x_data, y_data))
-        self.source.sig_reset_all.connect(self.update_source,Qt.ConnectionType.AutoConnection)
-        self.source.sig_add_candle.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
+        self.source.sig_reset_all.connect(self.update_source,Qt.ConnectionType.QueuedConnection)
+        self.source.sig_add_candle.connect(self.threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
     
     
     def get_source(self,_type:IndicatorType,ma_type:PD_MAType=PD_MAType.EMA, period:int=3,n:int=3):
@@ -448,7 +448,6 @@ class CandleStick(GraphicsObject):
         [self.draw_candle(_open,_max,_min,close,w,x_data,index) for index, (_open, _max, _min, close) in enumerate(y_data)]
         # p.end()
         self._to_update = True
-        
         self.prepareGeometryChange()
         self.informViewBoundsChanged()
         

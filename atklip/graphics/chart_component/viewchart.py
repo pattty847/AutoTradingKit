@@ -67,7 +67,7 @@ class Chart(ViewPlotWidget):
         del self.exchanges[_id]
         if exchange.exchange != None:
             await exchange.exchange.close()
-        exchange.deleteLater()
+        exchange.sig_delete.emit()
         exchange = None
     
     def get_exchange(self):
@@ -88,7 +88,7 @@ class Chart(ViewPlotWidget):
     
     def remove_source(self,source:HEIKINASHI|SMOOTH_CANDLE|JAPAN_CANDLE|N_SMOOTH_CANDLE):
         if source.source_name in list(self.sources.keys()):
-            self.sig_remove_source.emit(source.source_name)
+            # self.sig_remove_source.emit(source.source_name)
             del self.sources[source.source_name]
             # if not isinstance(source,JAPAN_CANDLE):
             #     source.deleteLater()
@@ -235,10 +235,10 @@ class Chart(ViewPlotWidget):
                     break
             else:
                 break
-            try:
-                await asyncio.sleep(0.3)
-            except:
-                pass
+            # try:
+            #     await asyncio.sleep(0.3)
+            # except:
+            #     pass
         if exchange != None:
             AppLogger.writer("INFO",f"{__name__} - {symbol}-{interval} have closed")
         try:
@@ -306,11 +306,11 @@ class Chart(ViewPlotWidget):
         # print("view chart", _group_indicator,_indicator_type)
         
         if _group_indicator == "Basic Indicator":
-            indicator = BasicMA(self,indicator_type=_indicator_type,period=13,_type="close",pen="#ffaa00")
+            indicator = BasicMA(self,indicator_type=_indicator_type,period=30,_type="close",pen="#ffaa00")
             panel = IndicatorPanel(mainwindow,self, indicator)
             self.container_indicator_wg.add_indicator_panel(panel)
             self.add_item(indicator)
-            indicator.threadpool_asyncworker()
+            indicator.fisrt_gen_data()
 
         elif _group_indicator == "Candle Indicator":
             candle:CandleStick = self.get_candle(_indicator_type)

@@ -40,10 +40,6 @@ class N_SMOOTH_CANDLE(QObject):
         self.period:int= period
         self._candles:JAPAN_CANDLE|HEIKINASHI =_candles
         self.n:int = n
-        
-        if not isinstance(self._candles,JAPAN_CANDLE) and not isinstance(self._candles,HEIKINASHI):
-            self._candles.setParent(self)
-            self.signal_delete.connect(self._candles.signal_delete)
             
         self.signal_delete.connect(self.deleteLater)
         self._candles.sig_update_source.connect(self.sig_update_source,Qt.ConnectionType.AutoConnection)
@@ -76,6 +72,7 @@ class N_SMOOTH_CANDLE(QObject):
         self.worker_ = None
         self.worker_ = CandleWorker(self.update,candle)
         self.worker_.start()
+    
     
     def threadpool_asyncworker(self):
         self.worker = None
@@ -335,8 +332,15 @@ class N_SMOOTH_CANDLE(QObject):
                                 })
         return new_frame
         
-    def reset(self):
-        self.dict_n_ohlcv[f"{self.n}-candles"] = []
+    def refresh_data(self,ma_type,ma_period,n_smooth_period):
+        self.reset_parameters(ma_type,ma_period,n_smooth_period)
+        self.threadpool_asyncworker()
+    
+    def reset_parameters(self,ma_type,ma_period,n_smooth_period):
+        self.ma_type = ma_type
+        self.period = ma_period
+        self.n = n_smooth_period
+        print(self.ma_type,self.period,self.n)
     
     def _gen_data(self):
         self.dict_n_ohlcv[f"0-candles"] = self._candles.get_df()

@@ -31,7 +31,7 @@ class BasicMA(PlotLineItem):
     sig_change_yaxis_range = Signal()
     sig_change_indicator_name = Signal(str)
 
-    def __init__(self,chart,indicator_type: PD_MAType,pen:str="yellow",period:int=3,_type:str="close",id = None,clickable=True) -> None:
+    def __init__(self,chart,indicator_type: PD_MAType,pen:str="yellow",period:int=30,_type:str="close",id = None,clickable=True) -> None:
         """Choose colors of candle"""
         PlotLineItem.__init__(self)
         self.chart:Chart = chart
@@ -64,8 +64,7 @@ class BasicMA(PlotLineItem):
                               self.has["inputs"]["ma_type"],self.has["inputs"]["period"])
         
         self.chart.sig_update_source.connect(self.change_source,Qt.ConnectionType.AutoConnection)
-        self.chart.sig_remove_source.connect(self.replace_source,Qt.ConnectionType.AutoConnection)
-        
+                
         self.signal_delete.connect(self.delete)
         
     def disconnect_signals(self):
@@ -73,6 +72,7 @@ class BasicMA(PlotLineItem):
             self.INDICATOR.sig_reset_all.disconnect(self.reset_threadpool_asyncworker)
             self.INDICATOR.sig_update_candle.disconnect(self.setdata_worker)
             self.INDICATOR.sig_add_candle.disconnect(self.setdata_worker)
+            self.INDICATOR.signal_delete.disconnect(self.replace_source)
         except RuntimeError:
                     pass
     
@@ -80,8 +80,9 @@ class BasicMA(PlotLineItem):
         self.INDICATOR.sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
         self.INDICATOR.sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
         self.INDICATOR.sig_add_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
+        self.INDICATOR.signal_delete.connect(self.replace_source,Qt.ConnectionType.AutoConnection)
     
-    def threadpool_asyncworker(self):
+    def fisrt_gen_data(self):
         self.connect_signals()
         self.INDICATOR.fisrt_gen_data()
        
@@ -96,23 +97,16 @@ class BasicMA(PlotLineItem):
         self.worker.start()
 
     def regen_indicator(self,setdata):
-        df:pd.DataFrame = self.INDICATOR.get_df()
-        _data = df["data"].to_numpy()
-        _index = df["index"].to_numpy()
+        _index,_data = self.INDICATOR.get_data()
         setdata.emit((_index,_data))
         self.sig_change_yaxis_range.emit()
         self.has["name"] = f"{self.has["inputs"]["ma_type"].name} {self.has["inputs"]["period"]} {self.has["inputs"]["type"]}"
         self.sig_change_indicator_name.emit(self.has["name"])
 
-    def replace_source(self,source_name):
-        if self.has["inputs"]["source_name"] == source_name:
-            self.has["inputs"]["source"] = self.chart.jp_candle
-            self.has["inputs"]["source_name"] = self.chart.jp_candle.source_name
-            self.INDICATOR.change_source(self.has["inputs"]["source"])
-            
+    def replace_source(self):
+        self.update_inputs( "source",self.chart.jp_candle.source_name)
+        
     def reset_threadpool_asyncworker(self):
-        source_name = self.has["inputs"]["source_name"].split(" ")[0]
-        self.has["inputs"]["source"].source_name = f"{source_name} {self.chart.symbol} {self.chart.interval}"
         self.reset_indicator()
         
     def change_source(self,source):   
@@ -164,7 +158,6 @@ class BasicMA(PlotLineItem):
         if _input == "pen" or _input == "width" or _input == "style":
             self.setPen(color=self.has["styles"]["pen"], width=self.has["styles"]["width"],style=self.has["styles"]["style"])
 
-
     def get_yaxis_param(self):
         _value = None
         try:
@@ -200,9 +193,7 @@ class BasicMA(PlotLineItem):
         return _time,_value
     
     def update_data(self,setdata):
-        df:pd.DataFrame = self.INDICATOR.get_df()
-        _data = df["data"].to_numpy()
-        _index = df["index"].to_numpy()
+        _index,_data = self.INDICATOR.get_data()
         setdata.emit((_index,_data))        
 
     def mouseClickEvent(self, ev):

@@ -34,11 +34,6 @@ class SMOOTH_CANDLE(QObject):
         self.period:int= period
         self._candles: JAPAN_CANDLE|HEIKINASHI|self =_candles
         
-        
-        if not isinstance(self._candles,JAPAN_CANDLE) and not isinstance(self._candles,HEIKINASHI):
-            self._candles.setParent(self)
-            self.signal_delete.connect(self._candles.signal_delete)
-        
         self.signal_delete.connect(self.deleteLater)
         self._candles.sig_update_source.connect(self.sig_update_source,Qt.ConnectionType.AutoConnection)
         self._precision = precision
@@ -317,8 +312,15 @@ class SMOOTH_CANDLE(QObject):
             _open, _high, _low, _close, _hl2, _hlc3, _ohlc4 = ohlc[0],ohlc[1],ohlc[2],ohlc[3],ohlc[4],ohlc[5],ohlc[6]
             self.candles.append(OHLCV(_open,_high,_low,_close, _hl2, _hlc3, _ohlc4,self._candles.candles[i].volume,self._candles.candles[i].time,_index))
 
-    def reset(self):
-        self.candles = []
+    def refresh_data(self,ma_type,ma_period,n_smooth_period):
+        self.reset_parameters(ma_type,ma_period,n_smooth_period)
+        self.threadpool_asyncworker()
+    
+    def reset_parameters(self,ma_type,ma_period,n_smooth_period = None):
+        self.ma_type = ma_type
+        self.period = ma_period
+        # self.n = n_smooth_period    
+    
     def fisrt_gen_data(self):
         self.is_genering = True
         self.df = pd.DataFrame([])

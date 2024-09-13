@@ -52,8 +52,6 @@ class IndicatorPanel(QWidget):
         
         self.set_name(self._name)
         
-        #self.indicator.signal_delete.connect(self._on_deleted_indicator)
-
     def set_name(self, name):
         self.lb_indicator_name.setText(name)
     
@@ -62,7 +60,8 @@ class IndicatorPanel(QWidget):
         self.chart.container_indicator_wg.remove_indicator_panel(self)
 
         if isinstance(self.indicator,CandleStick):
-            self.chart.remove_source(self.indicator.has["inputs"]["source"])
+            # self.chart.remove_source(self.indicator.has["inputs"]["source"])
+            self.indicator.signal_delete.emit()
         
         self.chart.sig_remove_item.emit(self.indicator)
 

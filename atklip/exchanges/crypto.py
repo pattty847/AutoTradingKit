@@ -2,14 +2,16 @@ import asyncio
 #from ccxt.async_support.base.exchange import Exchange
 from ccxt.base.types import *
 import ccxt.pro as Exchange
-from PySide6.QtCore import QObject
+from PySide6.QtCore import QObject,Signal
 
 # These exchanges will be used for testing the performance of the exchange connector.
 class  CryptoExchange(QObject):
+    sig_delete = Signal()
     def __init__(self,parent: QObject | None = ...):
         super().__init__(parent)
         self.exchange = None
         self.name = ""
+        self.sig_delete.connect(self.deleteLater)
     def setupEchange(self,apikey:str="", secretkey:str="",exchange_name:str="binanceusdm"):
         self.apikey = apikey
         self.secretkey = secretkey
