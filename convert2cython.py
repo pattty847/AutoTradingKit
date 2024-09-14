@@ -98,7 +98,7 @@ def convert_all(folders):
 
 def convert_one(path_:str=r"atklip\graph_objects\chart_component\viewchart.py"):
     pyx_path = convert_to_cython(path_)
-    os.system(f'cythonize --build --inplace -3 --3str --force --keep-going -j 40 {pyx_path}')
+    os.system(f'cythonize --build --inplace -3 --3str --force --keep-going -j 40 {path_}')
 
 
 _list = [r"atklip\graph_objects\pyqtgraph\widgets",
@@ -110,8 +110,8 @@ _list = [r"atklip\graph_objects\pyqtgraph\widgets",
 # "atklip\graph_objects\pyqtgraph\GraphicsScene\GraphicsScene.py"
 # "atklip\graph_objects\pyqtgraph\graphicsItems\PlotDataItem.py"
 # "D:\AutoTradingKit\atklip\indicators\pandas_ta\utils"
-#convert_one(r"atklip\graph_objects\pyqtgraph\GraphicsScene\mouseEvents.py")
-convert_all([r"D:\AutoTradingKit\atklip\indicators\pandas_ta\utils"])
+convert_one(r"ta-lib-python-master/talib/_ta_lib.pyx")
+# convert_all([r"D:\AutoTradingKit\atklip\indicators\pandas_ta\utils"])
 
 # convert_one("graph_objects\pyqtgraph\WidgetGroup.py")
 

@@ -1,1 +1,0 @@
-from .VerticalQTabWidget import VerticalQTabWidget

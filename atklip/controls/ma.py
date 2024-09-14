@@ -73,18 +73,15 @@ def ma(name: str = None, source: Series = None, **kwargs: DictLike) -> Series:
     else: return ema(source, **kwargs)
 
 
-from functools import lru_cache
 import numpy as np
-import time
 import pandas as pd
-from typing import List,Tuple
-from dataclasses import dataclass
-from PySide6.QtCore import Qt, Signal,QObject,QCoreApplication,QThreadPool
+from typing import List
+from PySide6.QtCore import Qt, Signal,QObject
 
 from .ma_type import PD_MAType
 from .ohlcv import   OHLCV
 from atklip.controls.candle import JAPAN_CANDLE,HEIKINASHI,SMOOTH_CANDLE,N_SMOOTH_CANDLE
-from atklip.appmanager import FastWorker,CandleWorker
+from atklip.appmanager import CandleWorker
 
 class MA(QObject):
     sig_update_candle = Signal()

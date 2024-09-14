@@ -118,33 +118,30 @@ def bbands(
     return df
 
 
-from functools import lru_cache
 import numpy as np
-import time
 import pandas as pd
-from typing import List,Tuple
-from dataclasses import dataclass
-from PySide6.QtCore import Qt, Signal,QObject,QCoreApplication,QThreadPool
+from typing import List
+from PySide6.QtCore import Qt, Signal,QObject
 
-from ..ma_type import PD_MAType
-from ..ohlcv import   OHLCV
+from .ma_type import PD_MAType
+from .ohlcv import   OHLCV
 from atklip.controls.candle import JAPAN_CANDLE,HEIKINASHI,SMOOTH_CANDLE,N_SMOOTH_CANDLE
-from atklip.appmanager import FastWorker,CandleWorker
+from atklip.appmanager import CandleWorker
 
 class BBANDS(QObject):
     sig_update_candle = Signal()
     sig_add_candle = Signal()
     sig_reset_all = Signal()
-    signal_delete = Signal()
-    
+    signal_delete = Signal()    
     def __init__(self,parent,_candles,source,ma_type,period) -> None:
         super().__init__(parent=parent)
         self.ma_type:PD_MAType = ma_type
         self.source:str = source
         self.period:int= period
+        
         self._candles: JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE =_candles
         
-        self.signal_delete.connect(self.deleteLater)
+        # self.signal_delete.connect(self.deleteLater)
         self.first_gen = False
         self.is_genering = True
         
@@ -156,13 +153,13 @@ class BBANDS(QObject):
         self.ydata = np.array([])
 
         self.connect_signals()
-
-    
+        
     def disconnect_signals(self):
         try:
             self._candles.sig_reset_all.disconnect(self.started_worker)
             self._candles.sig_update_candle.disconnect(self.update_worker)
             self._candles.sig_add_candle.disconnect(self.add_worker)
+            self._candles.signal_delete.disconnect(self.signal_delete)
         except RuntimeError:
                     pass
     
@@ -170,6 +167,7 @@ class BBANDS(QObject):
         self._candles.sig_reset_all.connect(self.started_worker,Qt.ConnectionType.AutoConnection)
         self._candles.sig_update_candle.connect(self.update_worker,Qt.ConnectionType.QueuedConnection)
         self._candles.sig_add_candle.connect(self.add_worker,Qt.ConnectionType.QueuedConnection)
+        self._candles.signal_delete.connect(self.signal_delete)
     
     
     def change_source(self,_candles:JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE):
@@ -254,38 +252,35 @@ class BBANDS(QObject):
     def add(self,new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]
         if (self.first_gen == True) and (self.is_genering == False):
-            df:pd.DataFrame = self._candles.get_df()
+            df:pd.DataFrame = self._candles.get_df(self.period*10)
+                        
             data = ma(self.ma_type.name.lower(),source=df[self.source],length=self.period)
             data = data.astype('float32')
             
-            _index = df["index"]
+            _data = data.iloc[-1]
             
-            self.df = pd.DataFrame({
-                                'index':_index,
-                                "data":data
+            new_frame = pd.DataFrame({
+                                'index':[new_candle.index],
+                                "data":[_data]
                                 })
             
-            self.xdata,self.ydata = _index.to_numpy(),data.to_numpy()
+            self.df = pd.concat([self.df,new_frame],ignore_index=True)
+            
+            self.xdata,self.ydata = self.xdata,self.ydata = self.df["index"].to_numpy(),self.df["data"].to_numpy()
             
             self.sig_add_candle.emit()
         
     def update(self, new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]
-        
         if (self.first_gen == True) and (self.is_genering == False):
-            df:pd.DataFrame = self._candles.get_df()
-            
+            df:pd.DataFrame = self._candles.get_df(self.period*10)
+                        
             data = ma(self.ma_type.name.lower(),source=df[self.source],length=self.period)
             data = data.astype('float32')
             
-            _index = df["index"]
+            self.df.iloc[-1] = [new_candle.index,data.iloc[-1]]
             
-            self.df = pd.DataFrame({
-                                'index':_index,
-                                "data":data
-                                })
-            
-            self.xdata,self.ydata = _index.to_numpy(),data.to_numpy()
+            self.xdata,self.ydata = self.df["index"].to_numpy(),self.df["data"].to_numpy()
             
             self.sig_update_candle.emit()
             

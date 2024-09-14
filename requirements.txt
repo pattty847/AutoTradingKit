@@ -10,12 +10,10 @@ pyqtgraph
 pandas
 numba
 ccxt
-talipp
 PyOpenGL
 cython
-trio
 dotenv
-ipython
+# ipython
 # matplotlib
 # matplotlib-inline
 multitasking
@@ -25,6 +23,7 @@ setuptools
 streamlit
 polars[all]
 polars-lts-cpu
+polars-ta
 # pip install 'polars[all]'
 # TA-Lib==0.4.28
 # yfinance==0.2.40
