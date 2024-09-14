@@ -25,8 +25,8 @@ from .pgo import pgo
 from .ppo import ppo
 from .psl import psl
 from .qqe import qqe
-from .roc import roc
-from .rsi import rsi
+from .roc import roc, ROC
+from .rsi import rsi, RSI
 from .rsx import rsx
 from .rvgi import rvgi
 from .slope import slope
@@ -34,7 +34,7 @@ from .smc import smc
 from .smi import smi
 from .squeeze import squeeze
 from .squeeze_pro import squeeze_pro
-from .stc import stc
+from .stc import stc, STC
 from .stoch import stoch
 from .stochf import stochf
 from .stochrsi import stochrsi

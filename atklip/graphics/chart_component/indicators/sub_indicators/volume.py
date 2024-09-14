@@ -30,9 +30,6 @@ class Volume(GraphicsObject):
         """Choose colors of candle"""
         GraphicsObject.__init__(self)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
-        # self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemClipsChildrenToShape, True)
-        # self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemClipsToShape, True)
-        # self.setAcceptedMouseButtons(Qt.MouseButton.NoButton)
         self.chart:Chart = chart
         self._panel:ViewSubPanel = panel
         precision = 1
@@ -54,10 +51,10 @@ class Volume(GraphicsObject):
                     }
                 }
         
-        self.has["inputs"]["source"].signal_delete.connect(self.signal_delete)
-        if not isinstance(self.has["inputs"]["source"],JAPAN_CANDLE):
-            self.has["inputs"]["source"].setParent(self)
-            self.signal_delete.connect(self.has["inputs"]["source"].signal_delete)
+        self.chart.jp_candle.signal_delete.connect(self.signal_delete)
+        if not isinstance(self.chart.jp_candle,JAPAN_CANDLE):
+            self.chart.jp_candle.setParent(self)
+            self.signal_delete.connect(self.chart.jp_candle.signal_delete)
         self.precision = precision
         self.output_y_data: List[float] = []
         self.historic_volume = SingleVolume(self.chart,self.has)
@@ -77,7 +74,9 @@ class Volume(GraphicsObject):
         self._rect_area: Tuple[float, float] = None
         self._to_update: bool = False
         self._is_change_source: bool = False
-
+        
+        self.chart.jp_candle.sig_reset_all.connect(self.fisrt_gen_data,Qt.ConnectionType.AutoConnection)
+        self.chart.jp_candle.sig_add_candle.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
         self.sig_change_yaxis_range.connect(get_last_pos_worker, Qt.ConnectionType.AutoConnection)
     def get_inputs(self):
         inputs =  {}
@@ -96,28 +95,22 @@ class Volume(GraphicsObject):
             self.has["styles"]["brush_highcolor"] = mkBrush(_style,width=0.7)
         elif _input == "brush_lowcolor":
             self.has["styles"]["brush_lowcolor"] = mkBrush(_style,width=0.7)
-        self.historic_volume.reset_threadpool_asyncworker()
+        self.historic_volume.fisrt_gen_data()
         self.threadpool_asyncworker()
     def get_min_max(self):
-        x_data, y_data = self.has["inputs"]["source"].get_index_volumes(stop=len(self.has["inputs"]["source"].candles))
-        values = [y[2] for y in y_data]
-        _min,_max = None,None
-        if values != []:
-            _min,_max = min(values), max(values)
+        volumes_fr = self.chart.jp_candle.get_df()
+        sr = volumes_fr["volume"]
+        _min,_max = sr.min(), sr.max()
         return _min,_max
     
-    def reset_threadpool_asyncworker(self):
+    def fisrt_gen_data(self):
         self.worker = None
         self._is_change_source = True
         self.worker = FastWorker(self.update_last_data)
         self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.QueuedConnection)
-        self.worker.signals.finished.connect(self.setup_connections,Qt.ConnectionType.QueuedConnection)
+        self.worker.signals.finished.connect(self.sig_change_yaxis_range,Qt.ConnectionType.QueuedConnection)
         self.worker.start()
-        #self.threadpool.start(self.worker)
-    def setup_connections(self):
-        self.chart.jp_candle.sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
-        self.chart.jp_candle.sig_add_candle.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
-        self.sig_change_yaxis_range.emit()
+
     def threadpool_asyncworker(self,candle=[]):
         self.worker = None
         self._is_change_source = True
@@ -126,8 +119,8 @@ class Volume(GraphicsObject):
         self.worker.start()
         #self.threadpool.start(self.worker)
     def get_yaxis_param(self):
-        if len(self.has["inputs"]["source"].candles) > 0:
-            last_candle = self.has["inputs"]["source"].last_data()
+        if len(self.chart.jp_candle.candles) > 0:
+            last_candle = self.chart.jp_candle.last_data()
             last_volume_ = last_candle.volume
             last_close_price_ = last_candle.close
             last_open_price_ = last_candle.open
@@ -264,7 +257,7 @@ class Volume(GraphicsObject):
 
     def update_last_data(self, setdata) -> None:
         try:
-            x_data, y_data = self.has["inputs"]["source"].get_index_volumes(stop=len(self.has["inputs"]["source"].candles)-1)
+            x_data, y_data = self.chart.jp_candle.get_index_volumes(stop=len(self.chart.jp_candle.candles)-1)
             #self.setData((x_data, y_data))
             setdata.emit((x_data, y_data))
             #QCoreApplication.processEvents()
@@ -273,11 +266,11 @@ class Volume(GraphicsObject):
     
     def reset_indicator(self) -> None:
         try:
-            x_data, y_data = self.has["inputs"]["source"].get_index_volumes(stop=len(self.has["inputs"]["source"].candles))
+            x_data, y_data = self.chart.jp_candle.get_index_volumes(stop=len(self.chart.jp_candle.candles))
             self.setData((x_data, y_data))
         except Exception as e:
             print(e)
-        self.setup_connections()
+        self.sig_change_yaxis_range.emit()
     
     def getData(self) -> Tuple[List[float], List[Tuple[float, ...]]]:
         return self.x_data, self.y_data
@@ -311,7 +304,7 @@ class SingleVolume(GraphicsObject):
         
         sig_update_candle.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
 
-    def reset_threadpool_asyncworker(self):
+    def fisrt_gen_data(self):
         self.worker = None
         self.worker = FastWorker(self.update_last_data)
         self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.QueuedConnection)

@@ -234,6 +234,7 @@ class ViewSubPanel(PlotWidget):
                     return
             time.sleep(0.5)
             self.get_last_pos_of_indicator(setdata)
+            
     def auto_xrange(self,lastpoint):
         _min,_max = lastpoint[0], lastpoint[1]
         # x_left,x_right = self.Chart.xAxis.range[0],self.Chart.xAxis.range[1]

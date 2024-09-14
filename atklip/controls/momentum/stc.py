@@ -195,3 +195,220 @@ def schaff_tc(close, xmacd, tclength, factor):
     pff_series = Series(pff, index=close.index)
 
     return pff_series, pf_series
+
+
+
+import numpy as np
+import pandas as pd
+from typing import List
+from PySide6.QtCore import Qt, Signal,QObject
+
+from atklip.controls.ma_type import PD_MAType
+from atklip.controls.ohlcv import   OHLCV
+from atklip.controls.candle import JAPAN_CANDLE,HEIKINASHI,SMOOTH_CANDLE,N_SMOOTH_CANDLE
+from atklip.appmanager import CandleWorker
+
+class STC(QObject):
+    sig_update_candle = Signal()
+    sig_add_candle = Signal()
+    sig_reset_all = Signal()
+    signal_delete = Signal()    
+    def __init__(self,parent,_candles,source,tclength,fast,slow,ma_type) -> None:
+        super().__init__(parent=parent)
+        
+        self._candles: JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE =_candles
+        
+        self.source:str = source              
+        self.tclength:int= tclength
+        self.fast:int = fast
+        self.slow:int = slow
+    
+        self.ma_type:PD_MAType = ma_type
+
+        # self.signal_delete.connect(self.deleteLater)
+        self.first_gen = False
+        self.is_genering = True
+        
+        self.name = f"STC {self.source} {self.slow} {self.fast} {self.tclength} {self.ma_type.name.lower()}"
+
+        self.df = pd.DataFrame([])
+        
+        self.xdata,self.stc_,self.macd,self.stoch = np.array([]),np.array([]),np.array([]),np.array([])
+
+        self.connect_signals()
+        
+    def disconnect_signals(self):
+        try:
+            self._candles.sig_reset_all.disconnect(self.started_worker)
+            self._candles.sig_update_candle.disconnect(self.update_worker)
+            self._candles.sig_add_candle.disconnect(self.add_worker)
+            self._candles.signal_delete.disconnect(self.signal_delete)
+        except RuntimeError:
+                    pass
+    
+    def connect_signals(self):
+        self._candles.sig_reset_all.connect(self.started_worker,Qt.ConnectionType.AutoConnection)
+        self._candles.sig_update_candle.connect(self.update_worker,Qt.ConnectionType.QueuedConnection)
+        self._candles.sig_add_candle.connect(self.add_worker,Qt.ConnectionType.QueuedConnection)
+        self._candles.signal_delete.connect(self.signal_delete)
+    
+    
+    def change_source(self,_candles:JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE):
+        self.disconnect_signals()
+        self._candles =_candles
+        self.connect_signals()
+        self.started_worker()
+    
+    def change_inputs(self,_input:str,_source:str|int|JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE|PD_MAType):
+        is_update = False
+        print(_input,_source)
+        if _input == "source":
+            self.change_source(_source)
+            return
+        elif _input == "length_period":
+            self.tclength = _source
+            is_update = True
+        elif _input == "fast_period":
+            self.fast = _source
+            is_update = True
+        elif _input == "slow_period":
+            self.slow = _source
+            is_update = True
+        elif _input == "type":
+            self.source = _source
+            is_update = True
+        elif _input == "ma_type":
+            self.ma_type = _source
+            is_update = True
+        if is_update:
+            self.started_worker()
+    
+    @property
+    def indicator_name(self):
+        return self.name
+    @indicator_name.setter
+    def indicator_name(self,_name):
+        self.name = _name
+    
+    def get_df(self,n:int=None):
+        if not n:
+            return self.df
+        return self.df.tail(n)
+    
+    def get_data(self):
+        return self.xdata,self.stc_,self.macd,self.stoch
+    
+    def get_last_row_df(self):
+        return self.df.iloc[-1] 
+
+    def update_worker(self,candle):
+        self.worker_ = None
+        self.worker_ = CandleWorker(self.update,candle)
+        self.worker_.start()
+    
+    def add_worker(self,candle):
+        self.worker_ = None
+        self.worker_ = CandleWorker(self.add,candle)
+        self.worker_.start()
+    
+    def started_worker(self):
+        self.worker = None
+        self.worker = CandleWorker(self.fisrt_gen_data)
+        self.worker.start()
+    
+    def paire_data(self,INDICATOR:pd.DataFrame|pd.Series):
+        
+        column_names = INDICATOR.columns.tolist()
+        
+        stc_name = ''
+        stoch_name = ''
+        macd_name = ''
+        for name in column_names:
+            if name.__contains__("STC") and stc_name == "":
+                stc_name = name
+            if name.__contains__("STCstoch") and stoch_name == "":
+                stoch_name = name
+            if name.__contains__("STCmacd") and macd_name == "":
+                macd_name = name
+        stc_ = INDICATOR[stc_name]
+        macd = INDICATOR[macd_name]
+        stoch = INDICATOR[stoch_name]
+        return stc_,macd,stoch
+    
+    def fisrt_gen_data(self):
+        self.is_genering = True
+        self.df = pd.DataFrame([])
+        
+        df:pd.DataFrame = self._candles.get_df()
+        
+        INDICATOR = stc(close= df[self.source],
+                        tclength= self.tclength,
+                        fast = self.fast,
+                        slow = self.slow,
+                        mamode= self.ma_type.name.lower()
+                        )
+        
+        _index = df["index"]
+        stc_,macd,stoch = self.paire_data(INDICATOR)
+
+        self.df = pd.DataFrame({
+                            'index':_index,
+                            "stc":stc_,
+                            "macd":macd,
+                            "stoch":stoch
+                            })
+                
+        self.xdata,self.stc_,self.macd,self.stoch = self.df["index"].to_numpy(),stc_.to_numpy(),macd.to_numpy(),stoch.to_numpy()
+        
+        self.is_genering = False
+        if self.first_gen == False:
+            self.first_gen = True
+            self.is_genering = False
+        self.sig_reset_all.emit()
+    
+    def add(self,new_candles:List[OHLCV]):
+        new_candle:OHLCV = new_candles[-1]
+        if (self.first_gen == True) and (self.is_genering == False):
+            df:pd.DataFrame = self._candles.get_df(self.slow*5)
+                    
+            INDICATOR = stc(close= df[self.source],
+                        tclength= self.tclength,
+                        fast = self.fast,
+                        slow = self.slow,
+                        mamode= self.ma_type.name.lower()
+                        )
+            
+            stc_,macd,stoch = self.paire_data(INDICATOR)
+            
+            new_frame = pd.DataFrame({
+                                    'index':[new_candle.index],
+                                    "stc":[stc_.iloc[-1]],
+                                    "macd":[macd.iloc[-1]],
+                                    "stoch":[stoch.iloc[-1]]
+                                    })
+            
+            self.df = pd.concat([self.df,new_frame],ignore_index=True)
+            
+            self.xdata,self.stc_,self.macd,self.stoch = self.df["index"].to_numpy(),self.df["stc"].to_numpy(),self.df["macd"].to_numpy(),self.df["stoch"].to_numpy()
+                                            
+            self.sig_add_candle.emit()
+        
+    def update(self, new_candles:List[OHLCV]):
+        new_candle:OHLCV = new_candles[-1]
+        if (self.first_gen == True) and (self.is_genering == False):
+            df:pd.DataFrame = self._candles.get_df(self.slow*5)
+                    
+            INDICATOR = stc(close= df[self.source],
+                        tclength= self.tclength,
+                        fast = self.fast,
+                        slow = self.slow,
+                        mamode= self.ma_type.name.lower()
+                        )
+            
+            stc_,macd,stoch = self.paire_data(INDICATOR)
+                    
+            self.df.iloc[-1] = [new_candle.index,stc_.iloc[-1],macd.iloc[-1],stoch.iloc[-1]]
+                    
+            self.xdata,self.stc_,self.macd,self.stoch = self.df["index"].to_numpy(),self.df["stc"].to_numpy(),self.df["macd"].to_numpy(),self.df["stoch"].to_numpy()
+            
+            self.sig_update_candle.emit()

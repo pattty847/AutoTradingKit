@@ -216,8 +216,7 @@ class DONCHIAN(QObject):
                             "ub":ub
                             })
                 
-        self.xdata,self.lb,self.cb,self.ub = self.df["index"].to_numpy(),self.df["lb"].to_numpy(),\
-                                                self.df["cb"].to_numpy(),self.df["ub"].to_numpy()
+        self.xdata,self.lb,self.cb,self.ub = self.df["index"].to_numpy(),lb.to_numpy(),cb.to_numpy(),ub.to_numpy()
         
         self.is_genering = False
         if self.first_gen == False:

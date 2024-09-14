@@ -176,7 +176,7 @@ class MACD(QObject):
         self.first_gen = False
         self.is_genering = True
         
-        self.name = f"MACD {self.source} {self.ma_type} {self.slow_period} {self.fast_period} {self.signal_period}"
+        self.name = f"MACD {self.source} {self.ma_type.name.lower()} {self.slow_period} {self.fast_period} {self.signal_period}"
 
         self.df = pd.DataFrame([])
         
@@ -304,8 +304,8 @@ class MACD(QObject):
                             "signalma":signalma
                             })
                 
-        self.xdata,self.macd_data,self.histogram,self.signalma = self.df["index"].to_numpy(),self.df["macd"].to_numpy(),\
-                                                self.df["histogram"].to_numpy(),self.df["signalma"].to_numpy()
+        self.xdata,self.macd_data,self.histogram,self.signalma = self.df["index"].to_numpy(),macd_data.to_numpy(),\
+                                                histogram.to_numpy(),signalma.to_numpy()
         
         self.is_genering = False
         if self.first_gen == False:
