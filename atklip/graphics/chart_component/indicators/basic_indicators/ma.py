@@ -31,20 +31,20 @@ class BasicMA(PlotLineItem):
     sig_change_yaxis_range = Signal()
     sig_change_indicator_name = Signal(str)
 
-    def __init__(self,chart,indicator_type: PD_MAType,pen:str="yellow",period:int=30,_type:str="close",id = None,clickable=True) -> None:
+    def __init__(self,chart,indicator_type: PD_MAType,pen:str="yellow",length:int=30,_type:str="close",id = None,clickable=True) -> None:
         """Choose colors of candle"""
         PlotLineItem.__init__(self)
         self.chart:Chart = chart
         
         self.has = {
-            "name": f"{indicator_type.value} {_type} {period}",
+            "name": f"{indicator_type.value} {_type} {length}",
             "y_axis_show":False,
             "inputs":{
                     "source":self.chart.jp_candle,
                     "source_name":self.chart.jp_candle.source_name,
                     "type":_type,
                     "ma_type":indicator_type,
-                    "period":period,
+                    "length":length,
                     "show":True
                     },
 
@@ -61,7 +61,7 @@ class BasicMA(PlotLineItem):
         self.xData, self.yData = np.array([]),np.array([])
         
         self.INDICATOR  = MA(self,self.has["inputs"]["source"], self.has["inputs"]["type"],
-                              self.has["inputs"]["ma_type"],self.has["inputs"]["period"])
+                              self.has["inputs"]["ma_type"],self.has["inputs"]["length"])
         
         self.chart.sig_update_source.connect(self.change_source,Qt.ConnectionType.AutoConnection)
                 
@@ -100,7 +100,7 @@ class BasicMA(PlotLineItem):
         _index,_data = self.INDICATOR.get_data()
         setdata.emit((_index,_data))
         self.sig_change_yaxis_range.emit()
-        self.has["name"] = f"{self.has["inputs"]["ma_type"].name} {self.has["inputs"]["period"]} {self.has["inputs"]["type"]}"
+        self.has["name"] = f"{self.has["inputs"]["ma_type"].name} {self.has["inputs"]["length"]} {self.has["inputs"]["type"]}"
         self.sig_change_indicator_name.emit(self.has["name"])
 
     def replace_source(self):
@@ -113,15 +113,15 @@ class BasicMA(PlotLineItem):
         if self.has["inputs"]["source_name"] == source.source_name:
             self.update_inputs("source",source.source_name)
       
-    def get_source(self,_type,ma_type:PD_MAType=PD_MAType.EMA, period:int=3):
-        if _type.value == "japan":
-            return self.chart.jp_candle, None,None
+    # def get_source(self,_type,ma_type:PD_MAType=PD_MAType.EMA, length:int=3):
+    #     if _type.value == "japan":
+    #         return self.chart.jp_candle, None,None
 
     def get_inputs(self):
         inputs =  {"source":self.has["inputs"]["source"],
                     "type":self.has["inputs"]["type"],
                     "ma_type":self.has["inputs"]["ma_type"],
-                    "period":self.has["inputs"]["period"],}
+                    "length":self.has["inputs"]["length"],}
         return inputs
     
     def get_styles(self):
@@ -144,12 +144,12 @@ class BasicMA(PlotLineItem):
             if _source != self.has["inputs"][_input]:
                 self.has["inputs"][_input] = _source
                 is_update = True
-        elif _input == "period":
+        elif _input == "length":
             if _source != self.has["inputs"][_input]:
                 self.has["inputs"][_input] = _source
                 is_update = True
         if is_update:
-            self.has["name"] = f"{self.has["inputs"]["ma_type"].name} {self.has["inputs"]["period"]} {self.has["inputs"]["type"]}"
+            self.has["name"] = f"{self.has["inputs"]["ma_type"].name} {self.has["inputs"]["length"]} {self.has["inputs"]["type"]}"
             self.sig_change_indicator_name.emit(self.has["name"])
             self.INDICATOR.change_inputs(_input,_source)
             

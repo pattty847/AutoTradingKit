@@ -1,18 +1,15 @@
 import time
 from typing import List,TYPE_CHECKING
 
-from PySide6.QtCore import Signal, QObject, QThreadPool,Qt,QRectF,QCoreApplication
+from PySide6.QtCore import Signal, QObject,Qt,QRectF
 from PySide6.QtWidgets import QGraphicsItem
 from PySide6.QtGui import QPainter,QPicture
 import pandas as pd
 
 from atklip.graphics.pyqtgraph import FillBetweenItem,GraphicsObject,PlotDataItem
 
-from atklip.controls import PD_MAType,IndicatorType
+from atklip.controls import PD_MAType,IndicatorType,DONCHIAN
 
-from atklip.controls import pandas_ta as ta
-
-from atklip.controls import OHLCV
 
 from atklip.appmanager import FastWorker
 from atklip.app_utils import *
@@ -24,6 +21,7 @@ class BasicDonchianChannels(GraphicsObject):
     on_click = Signal(QObject)
     signal_visible = Signal(bool)
     signal_delete = Signal()
+    sig_change_yaxis_range = Signal()
     signal_change_color = Signal(str)
     signal_change_width = Signal(int)
     signal_change_type = Signal(str)
@@ -74,102 +72,58 @@ class BasicDonchianChannels(GraphicsObject):
         
         self.picture: QPicture = QPicture()
         
-        self._INDICATOR : pd.DataFrame = pd.DataFrame([])
-       
+        self.INDICATOR  = DONCHIAN(self,self.has["inputs"]["source"], self.has["inputs"]["period_lower"],
+                              self.has["inputs"]["period_upper"])
         
-        self.chart.sig_update_source.connect(self.change_source,Qt.ConnectionType.AutoConnection)
-        self.chart.sig_remove_source.connect(self.replace_source,Qt.ConnectionType.AutoConnection)
+        self.chart.sig_update_source.connect(self.change_source,Qt.ConnectionType.AutoConnection)   
         self.signal_delete.connect(self.delete)
         
-        self.has["inputs"]["source"].sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
-        self.has["inputs"]["source"].sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
-        self.has["inputs"]["source"].sig_add_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
-
-    def delete(self):
-        self.chart.sig_remove_item.emit(self)
-    
-    def disconnect_connection(self):
+    def disconnect_signals(self):
         try:
-            self.has["inputs"]["source"].sig_reset_all.disconnect(self.reset_threadpool_asyncworker)
-            self.has["inputs"]["source"].sig_update_candle.disconnect(self.setdata_worker)
-            self.has["inputs"]["source"].sig_add_candle.disconnect(self.setdata_worker)
+            self.INDICATOR.sig_reset_all.disconnect(self.reset_threadpool_asyncworker)
+            self.INDICATOR.sig_update_candle.disconnect(self.setdata_worker)
+            self.INDICATOR.sig_add_candle.disconnect(self.setdata_worker)
+            self.INDICATOR.signal_delete.disconnect(self.replace_source)
         except RuntimeError:
                     pass
+    
+    def connect_signals(self):
+        self.INDICATOR.sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
+        self.INDICATOR.sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
+        self.INDICATOR.sig_add_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
+        self.INDICATOR.signal_delete.connect(self.replace_source,Qt.ConnectionType.AutoConnection)
+    
+    def fisrt_gen_data(self):
+        self.connect_signals()
+        self.INDICATOR.fisrt_gen_data()
+       
+    def delete(self):
+        self.INDICATOR.deleteLater()
+        self.chart.sig_remove_item.emit(self)
+    
     def reset_indicator(self):
         self.worker = None
         self.worker = FastWorker(self.regen_indicator)
         self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
         self.worker.start()
 
-
     def regen_indicator(self,setdata):
-    # def reset_indicator(self):
-        df:pd.DataFrame = self.has["inputs"]["source"].get_df()
-        self._INDICATOR = ta.donchian(high=df["high"],low=df["low"],lower_length=self.has["inputs"]["period_lower"],upper_length=self.has["inputs"]["period_upper"])
-        column_names = self._INDICATOR.columns.tolist()
-        lower_name = ''
-        mid_name = ''
-        upper_name = ''
-        
-        for name in column_names:
-            if name.__contains__("DCL_"):
-                lower_name = name
-            elif name.__contains__("DCM_"):
-                mid_name = name
-            elif name.__contains__("DCU_"):
-                upper_name = name
-
-        lb = self._INDICATOR[lower_name].to_numpy()
-        cb = self._INDICATOR[mid_name].to_numpy()
-        ub = self._INDICATOR[upper_name].to_numpy()
-        xdata = df["index"].to_numpy()
-        # self.set_Data((xdata,lb,cb,ub))
+        xdata,lb,cb,ub= self.INDICATOR.get_data()
         setdata.emit((xdata,lb,cb,ub))
-        "update o day"
+        self.sig_change_yaxis_range.emit()
         self.has["name"] = f"DC {self.has["inputs"]["period_lower"]} {self.has["inputs"]["period_upper"]}"
         self.sig_change_indicator_name.emit(self.has["name"])
         
-        self.has["inputs"]["source"].sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
-        self.has["inputs"]["source"].sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
-        self.has["inputs"]["source"].sig_add_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
-    
-    def replace_source(self,source_name):
-        if self.has["inputs"]["source_name"] == source_name:
-            self.disconnect_connection()
-            self.has["inputs"]["source"] = self.chart.jp_candle
-            self.has["inputs"]["source_name"] = self.chart.jp_candle.source_name
-            self.reset_indicator()
-            
+    def replace_source(self):
+        self.update_inputs( "source",self.chart.jp_candle.source_name)
+        
     def reset_threadpool_asyncworker(self):
-        self.disconnect_connection()
-        source_name = self.has["inputs"]["source_name"].split(" ")[0]
-        self.has["inputs"]["source"].source_name = f"{source_name} {self.chart.symbol} {self.chart.interval}"
-        self.chart.update_sources(self.has["inputs"]["source"])
         self.reset_indicator()
-
+        
     def change_source(self,source):   
         if self.has["inputs"]["source_name"] == source.source_name:
             self.update_inputs("source",source.source_name)
-            
-    def update_inputs(self,_input,_source):
-        """"source":self.has["inputs"]["source"],
-                "ma_type":self.has["inputs"]["ma_type"],
-                "ma_period":self.has["inputs"]["ma_period"]"""
-        update = False
-        if _input == "source":
-            if self.chart.sources[_source] != self.has["inputs"][_input]:
-                self.disconnect_connection()
-                self.has["inputs"]["source"] = self.chart.sources[_source]
-                self.has["inputs"]["source_name"] = self.chart.sources[_source].source_name
-                self.reset_indicator()
-        elif _source != self.has["inputs"][_input]:
-                self.has["inputs"][_input] = _source
-                update = True
-        
-        if update:
-            self.has["name"] = f"DC {self.has["inputs"]["period_lower"]} {self.has["inputs"]["period_upper"]}"
-            self.sig_change_indicator_name.emit(self.has["name"])
-            self.threadpool_asyncworker()
+      
     def get_inputs(self):
         inputs =  {"source":self.has["inputs"]["source"],
                     "period_lower":self.has["inputs"]["period_lower"],
@@ -193,6 +147,23 @@ class BasicDonchianChannels(GraphicsObject):
                     "brush_color":self.has["styles"]["brush_color"],
                     }
         return styles
+    
+    def update_inputs(self,_input,_source):
+        is_update = False
+        if _input == "source":
+            if self.chart.sources[_source] != self.has["inputs"][_input]:
+                self.has["inputs"]["source"] = self.chart.sources[_source]
+                self.has["inputs"]["source_name"] = self.chart.sources[_source].source_name
+                self.INDICATOR.change_inputs(_input,self.has["inputs"]["source"])
+        elif _source != self.has["inputs"][_input]:
+                self.has["inputs"][_input] = _source
+                is_update = True
+        
+        if is_update:
+            self.has["name"] = f"DC {self.has["inputs"]["period_lower"]} {self.has["inputs"]["period_upper"]}"
+            self.sig_change_indicator_name.emit(self.has["name"])
+            self.INDICATOR.change_inputs(_input,_source)
+    
     def update_styles(self, _input):
         _style = self.has["styles"][_input]
         if _input == "pen_high_line" or _input == "width_high_line" or _input == "style_high_line":
@@ -203,49 +174,41 @@ class BasicDonchianChannels(GraphicsObject):
             self.lowline.setPen(color=self.has["styles"]["pen_low_line"], width=self.has["styles"]["width_low_line"],style=self.has["styles"]["style_low_line"])
         elif _input == "brush_color":
             self.bb_bank.setBrush(self.has["styles"]["brush_color"])
-        
-    def threadpool_asyncworker(self,candle=None):
-        self.worker = None
-        self.worker = FastWorker(self.first_load_data)
-        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
-        self.worker.start()
-        #self.threadpool.start(self.worker)
-    def first_load_data(self,setdata):
-        self.disconnect_connection()
-        df:pd.DataFrame = self.has["inputs"]["source"].get_df()
-        self._INDICATOR = ta.donchian(high=df["high"],low=df["low"],lower_length=self.has["inputs"]["period_lower"],upper_length=self.has["inputs"]["period_upper"])
-        column_names = self._INDICATOR.columns.tolist()
-        lower_name = ''
-        mid_name = ''
-        upper_name = ''
-        
-        for name in column_names:
-            if name.__contains__("DCL_"):
-                lower_name = name
-            elif name.__contains__("DCM_"):
-                mid_name = name
-            elif name.__contains__("DCU_"):
-                upper_name = name
+    
+    
+    def get_xaxis_param(self):
+        return None,"#363a45"
 
-        lb = self._INDICATOR[lower_name].to_numpy()
-        cb = self._INDICATOR[mid_name].to_numpy()
-        ub = self._INDICATOR[upper_name].to_numpy()
-        xdata = df["index"].to_numpy()
-        setdata.emit((xdata,lb,cb,ub))
-        "update o day"
-        self.has["name"] = f"DC {self.has["inputs"]["period_lower"]} {self.has["inputs"]["period_upper"]}"
-        self.sig_change_indicator_name.emit(self.has["name"])
-        
-        self.has["inputs"]["source"].sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
-        self.has["inputs"]["source"].sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
-        self.has["inputs"]["source"].sig_add_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
-        
 
     def setVisible(self, visible):
         if visible:
             self.show()
         else:
             self.hide()
+
+    def setdata_worker(self):
+        self.worker = None
+        self.worker = FastWorker(self.update_data)
+        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.start()    
+    
+    def set_Data(self,data):
+        
+        xData = data[0]
+        lb = data[1]
+        cb = data[2]
+        ub = data[3]
+        
+        self.lowline.setData(xData,lb)
+        self.centerline.setData(xData,cb)
+        self.highline.setData(xData,ub)
+        
+        self.prepareGeometryChange()
+        self.informViewBoundsChanged()
+
+    def update_data(self,setdata):
+        xdata,lb,cb,ub= self.INDICATOR.get_data()
+        setdata.emit((xdata,lb,cb,ub))        
 
     def boundingRect(self) -> QRectF:
         x_left,x_right = int(self.chart.xAxis.range[0]),int(self.chart.xAxis.range[1])
@@ -273,31 +236,10 @@ class BasicDonchianChannels(GraphicsObject):
             h_low,h_high = self.chart.yAxis.range[0],self.chart.yAxis.range[1]
         rect = QRectF(_start,h_low,_width,h_high-h_low)
         return rect
-        return self.bb_bank.boundingRect()
+    
     def paint(self, p:QPainter, *args):
         self.picture.play(p)
     
-    def setdata_worker(self,sig_update_candle):
-        self.worker = None
-        self.worker = FastWorker(self.update_data,sig_update_candle)
-        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
-        self.worker.start()
-        #self.threadpool.start(self.worker)
-    
-    def set_Data(self,data):
-        
-        xData = data[0]
-        lb = data[1]
-        cb = data[2]
-        ub = data[3]
-        
-        self.lowline.setData(xData,lb)
-        self.centerline.setData(xData,cb)
-        self.highline.setData(xData,ub)
-        
-        self.prepareGeometryChange()
-        self.informViewBoundsChanged()
-
     def get_yaxis_param(self):
         _value = None
         try:
@@ -306,8 +248,6 @@ class BasicDonchianChannels(GraphicsObject):
             pass
         return _value,self.has["styles"]['pen_center_line']
     
-    def get_xaxis_param(self):
-        return None,"#363a45"
     
     def get_last_point(self):
         _time = self.centerline.xData[-1]
@@ -315,7 +255,7 @@ class BasicDonchianChannels(GraphicsObject):
         return _time,_value
     
     def get_min_max(self):
-        y_data = self.signal.yData
+        y_data = self.highline.yData
         _min = None
         _max = None
         try:
@@ -327,30 +267,6 @@ class BasicDonchianChannels(GraphicsObject):
             self.get_min_max()
         return _min,_max
 
-    def update_data(self,last_candle:List[OHLCV],setdata):
-        df:pd.DataFrame = self.has["inputs"]["source"].get_df()
-        self._INDICATOR = ta.donchian(high=df["high"],low=df["low"],lower_length=self.has["inputs"]["period_lower"],upper_length=self.has["inputs"]["period_upper"])
-        column_names = self._INDICATOR.columns.tolist()
-        lower_name = ''
-        mid_name = ''
-        upper_name = ''
-        
-        for name in column_names:
-            if name.__contains__("DCL_"):
-                lower_name = name
-            elif name.__contains__("DCM_"):
-                mid_name = name
-            elif name.__contains__("DCU_"):
-                upper_name = name
-
-        lb = self._INDICATOR[lower_name].to_numpy()
-        cb = self._INDICATOR[mid_name].to_numpy()
-        ub = self._INDICATOR[upper_name].to_numpy()
-        xdata = df["index"].to_numpy()
-        setdata.emit((xdata,lb,cb,ub))
-        #QCoreApplication.processEvents()
-        "update o day"
-       
     def on_click_event(self):
         print("zooo day__________________")
         pass

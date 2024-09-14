@@ -23,7 +23,7 @@ setuptools
 streamlit
 polars[all]
 polars-lts-cpu
-polars-ta
+#polars-ta
 # pip install 'polars[all]'
 # TA-Lib==0.4.28
 # yfinance==0.2.40

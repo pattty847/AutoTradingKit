@@ -176,7 +176,7 @@ class PeriodEdit(IntEdit):
         self.setFixedHeight(35)
         _inputs = self.indicator.get_inputs()
         
-        if _input in ["period","ma_period","period_lower","period_upper","k_period",\
+        if _input in ["length","period","ma_period","period_lower","period_upper","k_period",\
             "d_period","rsi_period","fast_period","medium_period","slow_period",
             "signal_period","length_period","n_smooth_period","smooth_k_period"]:
             _value = _inputs.get(_input)

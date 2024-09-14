@@ -88,11 +88,11 @@ class MA(QObject):
     sig_add_candle = Signal()
     sig_reset_all = Signal()
     signal_delete = Signal()    
-    def __init__(self,parent,_candles,source,ma_type,period) -> None:
+    def __init__(self,parent,_candles,source,ma_type,length) -> None:
         super().__init__(parent=parent)
         self.ma_type:PD_MAType = ma_type
         self.source:str = source
-        self.period:int= period
+        self.length:int= length
         
         self._candles: JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE =_candles
         
@@ -100,7 +100,7 @@ class MA(QObject):
         self.first_gen = False
         self.is_genering = True
         
-        self.name = f"{self.ma_type.name.lower()} {self.source} {self.period}"
+        self.name = f"{self.ma_type.name.lower()} {self.source} {self.length}"
 
         self.df = pd.DataFrame([])
         
@@ -142,8 +142,8 @@ class MA(QObject):
         elif _input == "ma_type":
             self.ma_type = _source
             is_update = True
-        elif _input == "period":
-            self.period = _source
+        elif _input == "length":
+            self.length = _source
             is_update = True
         if is_update:
             self.started_worker()
@@ -186,7 +186,7 @@ class MA(QObject):
         self.df = pd.DataFrame([])
         df:pd.DataFrame = self._candles.get_df()
         
-        data = ma(self.ma_type.name.lower(),source=df[self.source],length=self.period)
+        data = ma(self.ma_type.name.lower(),source=df[self.source],length=self.length)
         data = data.astype('float32')
         
         _index = df["index"]
@@ -207,9 +207,9 @@ class MA(QObject):
     def add(self,new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]
         if (self.first_gen == True) and (self.is_genering == False):
-            df:pd.DataFrame = self._candles.get_df(self.period*10)
+            df:pd.DataFrame = self._candles.get_df(self.length*10)
                         
-            data = ma(self.ma_type.name.lower(),source=df[self.source],length=self.period)
+            data = ma(self.ma_type.name.lower(),source=df[self.source],length=self.length)
             data = data.astype('float32')
             
             _data = data.iloc[-1]
@@ -228,9 +228,9 @@ class MA(QObject):
     def update(self, new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]
         if (self.first_gen == True) and (self.is_genering == False):
-            df:pd.DataFrame = self._candles.get_df(self.period*10)
+            df:pd.DataFrame = self._candles.get_df(self.length*10)
                         
-            data = ma(self.ma_type.name.lower(),source=df[self.source],length=self.period)
+            data = ma(self.ma_type.name.lower(),source=df[self.source],length=self.length)
             data = data.astype('float32')
             
             self.df.iloc[-1] = [new_candle.index,data.iloc[-1]]
@@ -239,5 +239,4 @@ class MA(QObject):
             
             self.sig_update_candle.emit()
             
-        return False
             

@@ -30,8 +30,8 @@ def bbands(
 
     Args:
         close (pd.Series): Series of 'close's
-        length (int): The short period. Default: 5
-        std (int): The long period. Default: 2
+        length (int): The short length. Default: 5
+        std (int): The long length. Default: 2
         ddof (int): Degrees of Freedom to use. Default: 0
         mamode (str): See ``help(ta.ma)``. Default: 'sma'
         talib (bool): If TA Lib is installed and talib is True, Returns
@@ -123,8 +123,8 @@ import pandas as pd
 from typing import List
 from PySide6.QtCore import Qt, Signal,QObject
 
-from .ma_type import PD_MAType
-from .ohlcv import   OHLCV
+from atklip.controls.ma_type import PD_MAType
+from atklip.controls.ohlcv import   OHLCV
 from atklip.controls.candle import JAPAN_CANDLE,HEIKINASHI,SMOOTH_CANDLE,N_SMOOTH_CANDLE
 from atklip.appmanager import CandleWorker
 
@@ -133,24 +133,25 @@ class BBANDS(QObject):
     sig_add_candle = Signal()
     sig_reset_all = Signal()
     signal_delete = Signal()    
-    def __init__(self,parent,_candles,source,ma_type,period) -> None:
+    def __init__(self,parent,_candles,source,ma_type,length,std_dev_mult) -> None:
         super().__init__(parent=parent)
-        self.ma_type:PD_MAType = ma_type
-        self.source:str = source
-        self.period:int= period
         
         self._candles: JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE =_candles
         
+        self.ma_type:PD_MAType = ma_type
+        self.source:str = source
+        self.length:int = length
+        self.std_dev_mult:float = std_dev_mult
+
         # self.signal_delete.connect(self.deleteLater)
         self.first_gen = False
         self.is_genering = True
         
-        self.name = f"{self.ma_type.name.lower()} {self.source} {self.period}"
+        self.name = f"{self.ma_type.name.lower()} {self.source} {self.length} {self.std_dev_mult}"
 
         self.df = pd.DataFrame([])
         
-        self.xdata = np.array([])
-        self.ydata = np.array([])
+        self.xdata,self.lb,self.cb,self.ub = np.array([]),np.array([]),np.array([]),np.array([])
 
         self.connect_signals()
         
@@ -176,7 +177,7 @@ class BBANDS(QObject):
         self.connect_signals()
         self.started_worker()
     
-    def change_inputs(self,_input:str,_source:str|int|JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE):
+    def change_inputs(self,_input:str,_source:str|int|JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE|PD_MAType):
         is_update = False
         if _input == "source":
             self.change_source(_source)
@@ -187,8 +188,11 @@ class BBANDS(QObject):
         elif _input == "ma_type":
             self.ma_type = _source
             is_update = True
-        elif _input == "period":
-            self.period = _source
+        elif _input == "length":
+            self.length = _source
+            is_update = True
+        elif _input == "std_dev_mult":
+            self.std_dev_mult = _source
             is_update = True
         if is_update:
             self.started_worker()
@@ -206,7 +210,7 @@ class BBANDS(QObject):
         return self.df.tail(n)
     
     def get_data(self):
-        return self.xdata,self.ydata
+        return self.xdata,self.lb,self.cb,self.ub
     
     def get_last_row_df(self):
         return self.df.iloc[-1] 
@@ -225,23 +229,50 @@ class BBANDS(QObject):
         self.worker = None
         self.worker = CandleWorker(self.fisrt_gen_data)
         self.worker.start()
+    
+    def paire_data(self,INDICATOR:DataFrame):
+        INDICATOR.astype('float32')
+        column_names = INDICATOR.columns.tolist()
         
+        lower_name = ''
+        mid_name = ''
+        upper_name = ''
+        for name in column_names:
+            if name.__contains__("BBL_"):
+                lower_name = name
+            elif name.__contains__("BBM_"):
+                mid_name = name
+            elif name.__contains__("BBU_"):
+                upper_name = name
+
+        lb = INDICATOR[lower_name]
+        cb = INDICATOR[mid_name]
+        ub = INDICATOR[upper_name]
+        return lb,cb,ub
+    
     def fisrt_gen_data(self):
         self.is_genering = True
         self.df = pd.DataFrame([])
+        
         df:pd.DataFrame = self._candles.get_df()
         
-        data = ma(self.ma_type.name.lower(),source=df[self.source],length=self.period)
-        data = data.astype('float32')
+        INDICATOR = bbands(df[self.source],length=self.length,std=self.std_dev_mult,\
+                                        mamode=self.ma_type.name.lower())
         
+                
         _index = df["index"]
-            
+        
+        lb,cb,ub = self.paire_data(INDICATOR)
+        
         self.df = pd.DataFrame({
                             'index':_index,
-                            "data":data
+                            "lb":lb,
+                            "cb":cb,
+                            "ub":ub
                             })
-        
-        self.xdata,self.ydata = _index.to_numpy(),data.to_numpy()
+                
+        self.xdata,self.lb,self.cb,self.ub = self.df["index"].to_numpy(),self.df["lb"].to_numpy(),\
+                                                self.df["cb"].to_numpy(),self.df["ub"].to_numpy()
         
         self.is_genering = False
         if self.first_gen == False:
@@ -252,36 +283,40 @@ class BBANDS(QObject):
     def add(self,new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]
         if (self.first_gen == True) and (self.is_genering == False):
-            df:pd.DataFrame = self._candles.get_df(self.period*10)
-                        
-            data = ma(self.ma_type.name.lower(),source=df[self.source],length=self.period)
-            data = data.astype('float32')
-            
-            _data = data.iloc[-1]
+            df:pd.DataFrame = self._candles.get_df(self.length*10)
+                    
+            INDICATOR = bbands(df[self.source],length=self.length,std=self.std_dev_mult,\
+                                            mamode=self.ma_type.name.lower())
+            lb,cb,ub = self.paire_data(INDICATOR)
             
             new_frame = pd.DataFrame({
-                                'index':[new_candle.index],
-                                "data":[_data]
-                                })
+                                    'index':[new_candle.index],
+                                    "lb":[lb.iloc[-1]],
+                                    "cb":[cb.iloc[-1]],
+                                    "ub":[ub.iloc[-1]]
+                                    })
             
             self.df = pd.concat([self.df,new_frame],ignore_index=True)
+                                
+            self.xdata,self.lb,self.cb,self.ub = self.df["index"].to_numpy(),self.df["lb"].to_numpy(),\
+                                                self.df["cb"].to_numpy(),self.df["ub"].to_numpy()
             
-            self.xdata,self.ydata = self.xdata,self.ydata = self.df["index"].to_numpy(),self.df["data"].to_numpy()
-            
+           
             self.sig_add_candle.emit()
         
     def update(self, new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]
         if (self.first_gen == True) and (self.is_genering == False):
-            df:pd.DataFrame = self._candles.get_df(self.period*10)
-                        
-            data = ma(self.ma_type.name.lower(),source=df[self.source],length=self.period)
-            data = data.astype('float32')
-            
-            self.df.iloc[-1] = [new_candle.index,data.iloc[-1]]
-            
-            self.xdata,self.ydata = self.df["index"].to_numpy(),self.df["data"].to_numpy()
+            df:pd.DataFrame = self._candles.get_df(self.length*10)
+                    
+            INDICATOR = bbands(df[self.source],length=self.length,std=self.std_dev_mult,\
+                                            mamode=self.ma_type.name.lower())
+            lb,cb,ub = self.paire_data(INDICATOR)
+                    
+            self.df.iloc[-1] = [new_candle.index,lb.iloc[-1],cb.iloc[-1],ub.iloc[-1]]
+                    
+            self.xdata,self.lb,self.cb,self.ub = self.df["index"].to_numpy(),self.df["lb"].to_numpy(),\
+                                                self.df["cb"].to_numpy(),self.df["ub"].to_numpy()
             
             self.sig_update_candle.emit()
             
-        return False

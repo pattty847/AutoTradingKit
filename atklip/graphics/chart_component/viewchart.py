@@ -306,7 +306,7 @@ class Chart(ViewPlotWidget):
         # print("view chart", _group_indicator,_indicator_type)
         
         if _group_indicator == "Basic Indicator":
-            indicator = BasicMA(self,indicator_type=_indicator_type,period=30,_type="close",pen="#ffaa00")
+            indicator = BasicMA(self,indicator_type=_indicator_type,length=30,_type="close",pen="#ffaa00")
             panel = IndicatorPanel(mainwindow,self, indicator)
             self.container_indicator_wg.add_indicator_panel(panel)
             self.add_item(indicator)
@@ -320,22 +320,25 @@ class Chart(ViewPlotWidget):
             #self.sig_add_item.emit(candle)
             self.add_item(candle)
             candle.first_setup_candle()
-            self.auto_xrange()
+            if isinstance(candle.source,JAPAN_CANDLE): 
+                self.auto_xrange()
             candle.source.sig_add_candle.emit(candle.source.candles[-2:])
 
         elif _group_indicator == "Advance Indicator":
+            
             if _indicator_type==IndicatorType.BB:
                 indicator = BasicBB(self)
                 panel = IndicatorPanel(mainwindow,self, indicator)
                 self.container_indicator_wg.add_indicator_panel(panel)
                 self.add_item(indicator)
-                indicator.threadpool_asyncworker()
+                indicator.fisrt_gen_data()
+                
             elif _indicator_type==IndicatorType.DonchianChannels:
                 indicator = BasicDonchianChannels(self)
                 panel = IndicatorPanel(mainwindow,self, indicator)
                 self.container_indicator_wg.add_indicator_panel(panel)
                 self.add_item(indicator)
-                indicator.threadpool_asyncworker()
+                indicator.fisrt_gen_data()
                 
 
     def set_data_dataconnect(self):
