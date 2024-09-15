@@ -111,7 +111,9 @@ class  CryptoExchange(QObject):
            'secret': self.secretkey})
         else:
             print(f"_____________Exchange {self.name} not found___________")
+            self.exchange = None
             return None
+        self.sig_delete.connect(lambda: asyncio.run(self.exchange.close()))
         return self.exchange
         
     async def load_markets_helper(self, reload=False, params={}):

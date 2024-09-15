@@ -1,0 +1,1 @@
+from .entries import ENTRY

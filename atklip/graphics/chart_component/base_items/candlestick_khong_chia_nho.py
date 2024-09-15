@@ -391,8 +391,8 @@ class CandleStick(GraphicsObject):
         [self.draw_candle(_open,_max,_min,close,w,x_data,index) for index, (_open, _max, _min, close) in enumerate(y_data)]
         # p.end()
         self._to_update = True
-        # self.prepareGeometryChange()
-        # self.informViewBoundsChanged()
+        self.prepareGeometryChange()
+        self.informViewBoundsChanged()
         
     def update_last_data(self, setdata) -> None:
         x_data, y_data = self.source.get_index_data(stop=-1)

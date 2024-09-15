@@ -210,7 +210,52 @@ class JAPAN_CANDLE(QObject):
         self.sig_reset_all.emit()
         #QCoreApplication.processEvents()
         return self.candles
+    
+    def load_historic_data(self,ohlcv,_precision):
+        ohlcv = ohlcv[::-1]
+        self.first_gen = False
+        self.df = pd.DataFrame([])
+        [self.update_historic(OHLCV(ohlcv[i][1],ohlcv[i][2],ohlcv[i][3],ohlcv[i][4],round((ohlcv[i][2]+ohlcv[i][3])/2,_precision), round((ohlcv[i][2]+ohlcv[i][3]+ohlcv[i][4])/3,_precision), round((ohlcv[i][1]+ohlcv[i][2]+ohlcv[i][3]+ohlcv[i][4])/4,_precision),ohlcv[i][5],ohlcv[i][0]/1000,i)) for i in range(len(ohlcv))]
+        self.df = pd.DataFrame([data.__dict__ for data in self.candles])
+        self.first_gen = True
+        # self.sig_reset_all.emit()
+        self.sig_add_candle.emit(self.candles[-2:])
+        return self.candles
 
+    def update_historic(self,new_candle:OHLCV):
+        if len(self.candles) == 0:
+            "lấy mốc thời gian 2018 thời điểm data bắt đầu"
+            new_candle.index = 1514754000
+            self.candles.append(new_candle)
+            self.dict_index_ohlcv[new_candle.index] = new_candle
+            self.dict_time_ohlcv[new_candle.time] = new_candle
+            return
+        last_candle = self.candles[0]
+        _time = last_candle.time
+        if _time == new_candle.time:
+            last_candle.open = new_candle.open
+            last_candle.high = new_candle.high
+            last_candle.low = new_candle.low
+            last_candle.close = new_candle.close
+            
+            last_candle.hl2 = new_candle.hl2
+            last_candle.hlc3 = new_candle.hlc3
+            last_candle.ohlc4 = new_candle.ohlc4
+            
+            last_candle.volume = new_candle.volume
+            last_candle.time = new_candle.time
+            
+            self.dict_index_ohlcv[new_candle.index] = new_candle
+            self.dict_time_ohlcv[new_candle.time] = new_candle
+ 
+        else:
+            _index = last_candle.index - 1
+            _new_candle = OHLCV(new_candle.open,new_candle.high,new_candle.low,new_candle.close,new_candle.hl2,new_candle.hlc3,new_candle.ohlc4,new_candle.volume,new_candle.time,_index)
+            self.candles.insert(0,_new_candle)
+            self.dict_index_ohlcv[_new_candle.index] = _new_candle
+            self.dict_time_ohlcv[_new_candle.time] = _new_candle
+    
+    
     def gen_update(self,new_candle:OHLCV):
         if len(self.candles) == 0:
             "lấy mốc thời gian 2018 thời điểm data bắt đầu"
@@ -218,25 +263,27 @@ class JAPAN_CANDLE(QObject):
             self.candles.append(new_candle)
             self.dict_index_ohlcv[new_candle.index] = new_candle
             self.dict_time_ohlcv[new_candle.time] = new_candle
-        _time = self.candles[-1].time
+            return
+        last_candle = self.candles[-1]
+        _time = last_candle.time
         if _time == new_candle.time:
-            self.candles[-1].open = new_candle.open
-            self.candles[-1].high = new_candle.high
-            self.candles[-1].low = new_candle.low
-            self.candles[-1].close = new_candle.close
+            last_candle.open = new_candle.open
+            last_candle.high = new_candle.high
+            last_candle.low = new_candle.low
+            last_candle.close = new_candle.close
             
-            self.candles[-1].hl2 = new_candle.hl2
-            self.candles[-1].hlc3 = new_candle.hlc3
-            self.candles[-1].ohlc4 = new_candle.ohlc4
+            last_candle.hl2 = new_candle.hl2
+            last_candle.hlc3 = new_candle.hlc3
+            last_candle.ohlc4 = new_candle.ohlc4
             
-            self.candles[-1].volume = new_candle.volume
-            self.candles[-1].time = new_candle.time
+            last_candle.volume = new_candle.volume
+            last_candle.time = new_candle.time
             
             self.dict_index_ohlcv[new_candle.index] = new_candle
             self.dict_time_ohlcv[new_candle.time] = new_candle
  
         else:
-            _index = self.candles[-1].index + 1
+            _index = last_candle.index + 1
             _new_candle = OHLCV(new_candle.open,new_candle.high,new_candle.low,new_candle.close,new_candle.hl2,new_candle.hlc3,new_candle.ohlc4,new_candle.volume,new_candle.time,_index)
             self.candles.append(_new_candle)
             self.dict_index_ohlcv[_new_candle.index] = _new_candle
@@ -253,36 +300,37 @@ class JAPAN_CANDLE(QObject):
                 self.dict_index_ohlcv[new_candle.index] = new_candle
                 self.dict_time_ohlcv[new_candle.time] = new_candle
                 return False
-            _time = self.candles[-1].time
+            last_candle = self.candles[-1]
+            _time = last_candle.time
             if _time == new_candle.time:
-                if new_candle.close != self.candles[-1].close or\
-                new_candle.high != self.candles[-1].high or\
-                new_candle.low != self.candles[-1].low or\
-                new_candle.open != self.candles[-1].open:
-                    self.candles[-1].open = new_candle.open
-                    self.candles[-1].high = new_candle.high
-                    self.candles[-1].low = new_candle.low
-                    self.candles[-1].close = new_candle.close
+                if new_candle.close != last_candle.close or\
+                new_candle.high != last_candle.high or\
+                new_candle.low != last_candle.low or\
+                new_candle.open != last_candle.open:
+                    last_candle.open = new_candle.open
+                    last_candle.high = new_candle.high
+                    last_candle.low = new_candle.low
+                    last_candle.close = new_candle.close
                     
-                    self.candles[-1].hl2 = new_candle.hl2
-                    self.candles[-1].hlc3 = new_candle.hlc3
-                    self.candles[-1].ohlc4 = new_candle.ohlc4
+                    last_candle.hl2 = new_candle.hl2
+                    last_candle.hlc3 = new_candle.hlc3
+                    last_candle.ohlc4 = new_candle.ohlc4
                     
-                    self.candles[-1].volume = new_candle.volume
-                    self.candles[-1].time = new_candle.time
-                    self.dict_index_ohlcv[self.candles[-1].index] = self.candles[-1]
-                    self.dict_time_ohlcv[self.candles[-1].time] = self.candles[-1]
+                    last_candle.volume = new_candle.volume
+                    last_candle.time = new_candle.time
+                    self.dict_index_ohlcv[last_candle.index] = last_candle
+                    self.dict_time_ohlcv[last_candle.time] = last_candle
                     
-                    self.df.iloc[-1] = [self.candles[-1].open,
-                                        self.candles[-1].high,
-                                        self.candles[-1].low,
-                                        self.candles[-1].close,
-                                        self.candles[-1].hl2,
-                                        self.candles[-1].hlc3,
-                                        self.candles[-1].ohlc4,
-                                        self.candles[-1].volume,
-                                        self.candles[-1].time,
-                                        self.candles[-1].index
+                    self.df.iloc[-1] = [last_candle.open,
+                                        last_candle.high,
+                                        last_candle.low,
+                                        last_candle.close,
+                                        last_candle.hl2,
+                                        last_candle.hlc3,
+                                        last_candle.ohlc4,
+                                        last_candle.volume,
+                                        last_candle.time,
+                                        last_candle.index
                                         ]
 
                     self.sig_update_candle.emit(self.candles[-2:])
@@ -290,18 +338,18 @@ class JAPAN_CANDLE(QObject):
             else:
                 pre_candle:OHLCV = new_candles[-2]
                 
-                self.candles[-1].open = pre_candle.open
-                self.candles[-1].high = pre_candle.high
-                self.candles[-1].low = pre_candle.low
-                self.candles[-1].close = pre_candle.close
+                last_candle.open = pre_candle.open
+                last_candle.high = pre_candle.high
+                last_candle.low = pre_candle.low
+                last_candle.close = pre_candle.close
                 
-                self.candles[-1].hl2 = pre_candle.hl2
-                self.candles[-1].hlc3 = pre_candle.hlc3
-                self.candles[-1].ohlc4 = pre_candle.ohlc4
+                last_candle.hl2 = pre_candle.hl2
+                last_candle.hlc3 = pre_candle.hlc3
+                last_candle.ohlc4 = pre_candle.ohlc4
                 
-                self.candles[-1].volume = pre_candle.volume
-                self.candles[-1].time = pre_candle.time
-                _index = self.candles[-1].index + 1
+                last_candle.volume = pre_candle.volume
+                last_candle.time = pre_candle.time
+                _index = last_candle.index + 1
                 _new_candle = OHLCV(new_candle.open,new_candle.high,new_candle.low,new_candle.close,new_candle.hl2,new_candle.hlc3,new_candle.ohlc4,new_candle.volume,new_candle.time,_index)
                 self.candles.append(_new_candle)
                 self.dict_index_ohlcv[_new_candle.index] = _new_candle

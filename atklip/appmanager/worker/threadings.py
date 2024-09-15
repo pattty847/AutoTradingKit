@@ -11,7 +11,7 @@ from .threadpool import ThreadPoolExecutor_global
 
 class FastStartThread(QObject):
     "Worker này dùng để update  data trong một cho graph object khi có data mới"
-    def __init__(self,crypto_ex,fn=None, *args, **kwargs):
+    def __init__(self,fn=None, *args, **kwargs):
         super(FastStartThread, self).__init__()
         self.fn = fn
         self.args = args
@@ -20,9 +20,7 @@ class FastStartThread(QObject):
         
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop)
-        
-        crypto_ex.sig_delete.connect(self.deleteLater)
-        
+                
     def start_thread(self):
         try:
             funture = self.threadpool.submit(self.run)

@@ -71,12 +71,9 @@ class ReplayButton(_PushButton):
         _icon = QIcon(icon.path())
         super().__init__(_icon, text, parent)
         self.setIconSize(QSize(30, 30))
-        #self._symbol = args[0]
-        #print(args)
+
         self.clicked.connect(self.on_clicked)
     
-    def __str__(self) -> str:
-        return self._symbol
         
     def set_text(self, text:Union[None,str])->None:
         if isinstance(text, str):

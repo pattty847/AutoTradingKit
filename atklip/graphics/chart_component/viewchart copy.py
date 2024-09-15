@@ -1,7 +1,7 @@
 import traceback,asyncio,time
 from typing import Dict
 from PySide6 import QtCore
-from PySide6.QtCore import Qt, Signal, QCoreApplication, QKeyCombination, QThreadPool,QObject
+from PySide6.QtCore import Qt, Signal, QKeyCombination, QThreadPool,QObject,Slot
 from PySide6.QtGui import QKeyEvent
 
 from atklip.graphics.chart_component.base_items import CandleStick
@@ -13,13 +13,10 @@ from ccxt.base.errors import *
 from atklip.controls import IndicatorType,OHLCV
 from atklip.controls.candle import HEIKINASHI, SMOOTH_CANDLE,JAPAN_CANDLE, N_SMOOTH_CANDLE
 
-from .proxy_signal import Signal_Proxy
 
 from atklip.app_utils import *
 
 from atklip.appmanager import FastStartThread,AppLogger,ThreadPoolExecutor_global,ThreadingAsyncWorker
-
-from atklip.graphics.chart_component.proxy_signal import Signal_Proxy
 
 from atklip.graphics.chart_component.indicator_panel import IndicatorPanel
 
@@ -43,15 +40,20 @@ class Chart(ViewPlotWidget):
 
         self.vb.symbol, self.vb.interval = self.symbol, self.interval
         
+        self.crypto_ex = CryptoExchange(self)
+        
         self.sources: Dict[str:QObject] = {}
         self.exchanges = {}
+        
         self.is_load_historic = False
 
         self.sig_add_indicator_panel.connect(self.setup_indicator,Qt.ConnectionType.AutoConnection)
 
         self.first_run.connect(self.set_data_dataconnect,Qt.ConnectionType.AutoConnection)
         self.fast_reset_worker(apikey=self.apikey,secretkey=self.secretkey,exchange_name=self.exchange_name,symbol=self.symbol,interval=self.interval)
-    
+        
+
+
     def auto_load_old_data(self):
         worker_auto_load_old_data_ = ThreadingAsyncWorker(fn=self.check_signal_load_old_data)
         worker_auto_load_old_data_.start_thread()
@@ -71,13 +73,12 @@ class Chart(ViewPlotWidget):
     async def load_old_data(self):
         if self.jp_candle.candles != []:
             _cr_time = self.jp_candle.candles[0].time
-            crypto_ex = CryptoExchange()
-            exchange = crypto_ex.setupEchange(apikey=self.apikey, secretkey=self.secretkey,exchange_name=self.exchange_name)
-            # self.exchanges[f"load_historic _ {self.symbol}_{self.interval}"] = exchange
+            
+            exchange = self.crypto_ex.setupEchange(apikey=self.apikey, secretkey=self.secretkey,exchange_name=self.exchange_name)
+            self.exchanges[f"load_historic _ {self.symbol}_{self.interval}"] = exchange
             data = await exchange.fetch_ohlcv(self.symbol,self.interval,limit=1500, params={"until":_cr_time*1000})
             self.jp_candle.load_historic_data(data,self._precision)
             await exchange.close()
-            crypto_ex.deleteLater()
             # exchange = self.exchanges.get(f"load_historic _ {self.symbol}_{self.interval}")
             # print(_cr_time,exchange, type(exchange))
             # if exchange != None:
@@ -86,30 +87,29 @@ class Chart(ViewPlotWidget):
             #     print("vao day", exchange)
             #     self.jp_candle.load_historic_data(data,self._precision)
             # else:
-            #     exchange = crypto_ex.setupEchange(apikey=self.apikey, secretkey=self.secretkey,exchange_name=self.exchange_name)
+            #     exchange = self.crypto_ex.setupEchange(apikey=self.apikey, secretkey=self.secretkey,exchange_name=self.exchange_name)
             #     self.exchanges[f"load_historic _ {self.symbol}_{self.interval}"] = exchange
             #     data = await exchange.fetch_ohlcv(self.symbol,self.interval, params={"until":_cr_time*1000})
             #     self.jp_candle.load_historic_data(data,self._precision)
                 # await exchange.close()
         self.is_load_historic = False
-    
 
-    def add_to_exchanges(self,new_echange):
+    async def add_to_exchanges(self,new_echange):
         """new_echange = {"id":"symbol_interval","exchange":Exchange,}"""
         if self.exchanges != {}:
-            _list_values = list(self.exchanges.items())
-            for key,echange in _list_values:
-                if key == new_echange["id"]:
-                    self.exchanges[new_echange["id"]] = new_echange["exchange"]
-                    return
+            if new_echange["id"] in list(self.exchanges.keys()):
+                old_ex =  self.exchanges[new_echange["id"]]
+                del self.exchanges[new_echange["id"]]
+                await old_ex.close()
+            self.exchanges[new_echange["id"]] = new_echange["exchange"]
+            return
         self.exchanges[new_echange["id"]] = new_echange["exchange"]
     
     async def remove_from_exchanges(self,_id,exchange):
-        print(_id,exchange)
         del self.exchanges[_id]
-        if exchange.exchange != None:
-            await exchange.exchange.close()
-        exchange.sig_delete.emit()
+        if exchange != None:
+            await exchange.close()
+        # exchange.sig_delete.emit()
         exchange = None
     
     def get_exchange(self):
@@ -186,26 +186,24 @@ class Chart(ViewPlotWidget):
     
     
     def fast_reset_worker(self,apikey:str="",secretkey:str="",exchange_name:str="binanceusdm",symbol:str="",interval:str=""):
-        crypto_ex = CryptoExchange(self)
-        new_echange = {"id":f"{symbol}_{interval}","exchange":crypto_ex,}
-        self.add_to_exchanges(new_echange)
         if self.worker != None:
             if isinstance(self.worker,FastStartThread):
                 self.worker.stop_thread()
         self.worker = None
-        self.worker = FastStartThread(self.reset_exchange, apikey,secretkey,crypto_ex,exchange_name,symbol,interval)
+        self.worker = FastStartThread(self.reset_exchange, apikey,secretkey,exchange_name,symbol,interval)
         self.worker.start_thread()
         # self.threadpool.start(self.worker)
 
-    async def reset_exchange(self,apikey:str="",secretkey:str="",crypto_ex: CryptoExchange=None,exchange_name:str="binanceusdm",symbol:str="",interval:str=""):
+    async def reset_exchange(self,apikey:str="",secretkey:str="",exchange_name:str="binanceusdm",symbol:str="",interval:str=""):
         if apikey != "":
             self.apikey = apikey
         if secretkey != "":
             self.secretkey = secretkey
         
-        exchange = crypto_ex.setupEchange(apikey=self.apikey, secretkey=self.secretkey,exchange_name=exchange_name)
-        # exchange.streaming['keepAlive'] = 10000 
-        # exchange.streaming['maxPingPongMisses'] = 1
+        exchange = self.crypto_ex.setupEchange(apikey=self.apikey, secretkey=self.secretkey,exchange_name=exchange_name)
+        
+        new_echange = {"id":f"{symbol}_{interval}","exchange":exchange}
+        await self.add_to_exchanges(new_echange)
         
         data = []
         if exchange != None:
@@ -224,12 +222,12 @@ class Chart(ViewPlotWidget):
         
         self.heikinashi.fisrt_gen_data()
         
-        await self.loop_watch_ohlcv(crypto_ex,exchange,symbol,interval)
+        await self.loop_watch_ohlcv(exchange,symbol,interval)
         
-    async def loop_watch_ohlcv(self,crypto_ex,exchange,symbol,interval):
+    async def loop_watch_ohlcv(self,exchange,symbol,interval):
         firt_run = False
         _ohlcv = []
-        while crypto_ex in list(self.exchanges.values()):
+        while True:
             if self.exchanges == {}:
                 break
             if not (self.symbol == symbol and self.interval == interval and exchange.id == self.exchange_name):
@@ -294,10 +292,11 @@ class Chart(ViewPlotWidget):
         while list(self.exchanges.keys()) != []:
             for key,value in list(self.exchanges.items()):
                 del self.exchanges[key]
-                if value.exchange != None:
-                    await value.exchange.close()
-                value.exchange = None
-                value.deleteLater()
+                if value != None:
+                    await value.close()
+                value = None
+                
+        self.crypto_ex.sig_delete.emit()
         self.exchanges.clear()
         if self.worker != None:
             if isinstance(self.worker,FastStartThread):
@@ -357,11 +356,9 @@ class Chart(ViewPlotWidget):
         elif _group_indicator == "Candle Indicator":
             candle:CandleStick = self.get_candle(_indicator_type)
             panel = IndicatorPanel(mainwindow,self, candle)
-            # self.container_indicator_wg.sig_add_panel.emit(panel)
             self.container_indicator_wg.add_indicator_panel(panel)
-            #self.sig_add_item.emit(candle)
-            self.add_item(candle)
             candle.first_setup_candle()
+            self.add_item(candle)
             if isinstance(candle.source,JAPAN_CANDLE): 
                 self.auto_xrange()
             candle.source.sig_add_candle.emit(candle.source.candles[-2:])
@@ -442,7 +439,6 @@ class Chart(ViewPlotWidget):
     def keyPressEvent(self, ev: QKeyEvent):
         if ev.key() == Qt.Key.Key_Delete:
             pass
-
         elif ev.modifiers() == Qt.KeyboardModifier.AltModifier:
             #print("Enter Ctrl V",ev.keyCombination(), ev.keyCombination() == QKeyCombination(Qt.KeyboardModifier.AltModifier, Qt.Key.Key_V))
             if ev.keyCombination() == QKeyCombination(Qt.KeyboardModifier.AltModifier, Qt.Key.Key_T):
@@ -457,7 +453,6 @@ class Chart(ViewPlotWidget):
                 self.draw_object =  "draw_verticallines"
             # elif ev.keyCombination() == QKeyCombination(Qt.KeyboardModifier.AltModifier, Qt.Key.Key_J):
             #     self.draw_object ==  "draw_horizontal_ray"
-
         return super().keyPressEvent(ev)       
     
 

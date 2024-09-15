@@ -111,6 +111,10 @@ class ThreadingAsyncWorker(QObject):
         self.kwargs = kwargs
         self.signals = FastStartSignal() 
         self.qtheadpool = ThreadPoolExecutor_global
+        
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
+        
         self.signals.finished.connect(self.stop_thread)
         self.signals.error.connect(self.stop_thread)
 
@@ -122,11 +126,14 @@ class ThreadingAsyncWorker(QObject):
             self.signals.deleteLater()
         except Exception as e:
             self.signals.deleteLater()
+        self.loop.stop()
+        self.loop.close()
         self.deleteLater()
     @Slot()
     def run(self):
         try:
-            asyncio.run(self.fn(*self.args, **self.kwargs))
+            self.loop.run_until_complete(self.fn(*self.args, **self.kwargs))
+            # asyncio.run(self.fn(*self.args, **self.kwargs))
         except Exception as e:
             self.signals.error.emit()
         finally:
