@@ -35,13 +35,13 @@ from .smi import smi
 from .squeeze import squeeze
 from .squeeze_pro import squeeze_pro
 from .stc import stc, STC
-from .stoch import stoch
+from .stoch import stoch, STOCH
 from .stochf import stochf
-from .stochrsi import stochrsi
+from .stochrsi import stochrsi, STOCHRSI
 from .tmo import tmo
-from .trix import trix
-from .tsi import tsi
-from .uo import uo
+from .trix import trix, TRIX
+from .tsi import tsi, TSI
+from .uo import uo, UO
 from .willr import willr
 
 

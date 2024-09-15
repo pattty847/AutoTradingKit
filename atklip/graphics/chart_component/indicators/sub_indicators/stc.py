@@ -1,18 +1,13 @@
 from typing import Tuple, List,TYPE_CHECKING
 import numpy as np
-import time
-
-import pandas as pd
-from atklip.graphics.pyqtgraph import GraphicsObject, GraphicsItem, PlotDataItem
-from atklip.graphics.pyqtgraph import functions as fn
-from atklip.graphics.chart_component.base_items import PriceLine,PlotLineItem
-from PySide6.QtCore import Signal, QObject, QThreadPool,Qt,QRectF,QCoreApplication
+from atklip.graphics.pyqtgraph import GraphicsObject, PlotDataItem
+from atklip.graphics.chart_component.base_items import PriceLine
+from PySide6.QtCore import Signal, QObject,Qt,QRectF
 from PySide6.QtGui import QColor,QPicture,QPainter
 from PySide6.QtWidgets import QGraphicsItem
 
 from atklip.controls import PD_MAType,IndicatorType,STC
 
-from atklip.controls.candle import JAPAN_CANDLE,HEIKINASHI
 from atklip.appmanager import FastWorker
 from atklip.app_utils import *
 if TYPE_CHECKING:
@@ -124,7 +119,7 @@ class BasicSTC(GraphicsObject):
     
     def fisrt_gen_data(self):
         self.connect_signals()
-        self.INDICATOR.fisrt_gen_data()
+        self.INDICATOR.started_worker()
        
     def delete(self):
         self.INDICATOR.deleteLater()

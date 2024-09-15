@@ -219,20 +219,11 @@ class ViewSubPanel(PlotWidget):
         self.worker.start()
     def get_last_pos_of_indicator(self,setdata):
         if self.indicator != None:
-            if self.indicator.has["inputs"]["indicator_type"] != IndicatorType.VOLUME:
-                _min, _max = self.indicator.get_min_max()
-                if _min != None:
-                    setdata.emit((_min, _max))
-                    return 
-                else:
-                    time.sleep(0.5)
-                    self.get_last_pos_of_indicator(setdata)
-            else:
-                _min, _max = self.indicator.get_min_max()
-                if _min != None:
-                    setdata.emit((_min, _max))
-                    return
-            time.sleep(0.5)
+            _min, _max = self.indicator.get_min_max()
+            if _min != None:
+                setdata.emit((_min, _max))
+                return
+            time.sleep(0.1)
             self.get_last_pos_of_indicator(setdata)
             
     def auto_xrange(self,lastpoint):

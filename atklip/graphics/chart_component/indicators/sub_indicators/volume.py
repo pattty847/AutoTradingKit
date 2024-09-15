@@ -1,19 +1,14 @@
 from typing import Dict, Tuple, List,TYPE_CHECKING
 import numpy as np
-import pandas as pd
-from atklip.controls import pandas_ta as ta
-
-from PySide6.QtCore import Signal, QRect, QRectF, QPointF,QThreadPool,Qt,QLineF,QCoreApplication
-from PySide6.QtGui import QPainter, QPicture,QPainterPath
+from PySide6.QtCore import Signal, QRect, QRectF, QPointF,Qt,QLineF
+from PySide6.QtGui import QPainter, QPicture
 from PySide6.QtWidgets import QGraphicsItem,QStyleOptionGraphicsItem,QWidget
 
 from atklip.graphics.pyqtgraph import mkPen, GraphicsObject, mkBrush
 
-from atklip.graphics.pyqtgraph.graphicsItems.PlotDataItem import PlotDataItem
 from atklip.controls import OHLCV,IndicatorType
-from atklip.controls.candle import JAPAN_CANDLE,HEIKINASHI,SMOOTH_CANDLE
+from atklip.controls.candle import JAPAN_CANDLE
 
-from atklip.graphics.chart_component.proxy_signal import Signal_Proxy
 from atklip.appmanager import FastWorker
 
 if TYPE_CHECKING:

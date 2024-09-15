@@ -1,7 +1,7 @@
 from typing import Tuple, List
 import numpy as np
 
-from PySide6.QtCore import Signal, QRect, QRectF, QPointF,QThreadPool,Qt,QLineF
+from PySide6.QtCore import Signal, QRect, QRectF, QPointF,Qt,QLineF
 from PySide6.QtGui import QPainter, QPicture
 from PySide6.QtWidgets import QGraphicsItem
 

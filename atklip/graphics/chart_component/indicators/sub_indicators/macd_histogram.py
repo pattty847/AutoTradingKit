@@ -1,12 +1,11 @@
 from typing import Dict, Tuple, List,TYPE_CHECKING
 import numpy as np
 
-from PySide6.QtCore import Signal, QRect, QRectF, QPointF,QThreadPool,Qt,QLineF,QCoreApplication
-from PySide6.QtGui import QPainter, QPicture,QPainterPath
+from PySide6.QtCore import Signal, QRect, QRectF, QPointF,QThreadPool,Qt,QLineF
+from PySide6.QtGui import QPainter, QPicture
 from PySide6.QtWidgets import QGraphicsItem,QStyleOptionGraphicsItem,QWidget
 from atklip.graphics.pyqtgraph import mkPen, GraphicsObject, mkBrush
 
-from atklip.graphics.chart_component.proxy_signal import Signal_Proxy
 from atklip.appmanager import FastWorker
 
 if TYPE_CHECKING:

@@ -1,12 +1,9 @@
 from typing import Tuple, List, TYPE_CHECKING
 import numpy as np
-import pandas as pd
 from atklip.graphics.pyqtgraph import PlotDataItem
-from atklip.graphics.pyqtgraph import functions as fn
-from atklip.graphics.chart_component.base_items import PriceLine,PlotLineItem
+from atklip.graphics.chart_component.base_items import PriceLine
 
-from PySide6.QtCore import Signal, QObject, QThreadPool,Qt,QRectF,QCoreApplication
-from PySide6.QtGui import QColor
+from PySide6.QtCore import Signal, QObject,Qt
 from PySide6.QtWidgets import QGraphicsItem
 
 from atklip.controls import PD_MAType,IndicatorType,RSI
@@ -108,7 +105,7 @@ class BasicRSI(PlotDataItem):
     
     def fisrt_gen_data(self):
         self.connect_signals()
-        self.INDICATOR.fisrt_gen_data()
+        self.INDICATOR.started_worker()
        
     def delete(self):
         self.INDICATOR.deleteLater()
@@ -125,7 +122,7 @@ class BasicRSI(PlotDataItem):
         xdata,y_data= self.INDICATOR.get_data()
         setdata.emit((xdata,y_data))
         self.sig_change_yaxis_range.emit()
-        self.has["name"] = f"ROC {self.has["inputs"]["period"]} {self.has["inputs"]["type"]}"
+        self.has["name"] = f"RSI {self.has["inputs"]["period"]} {self.has["inputs"]["type"]}"
         self.sig_change_indicator_name.emit(self.has["name"])
         
         

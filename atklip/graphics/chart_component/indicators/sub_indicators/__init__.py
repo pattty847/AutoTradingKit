@@ -4,7 +4,7 @@ from .volume import Volume
 from .histogram import Histogram
 from .roc import BasicROC
 from .tsi import BasicTSI
-from .vtx import BasicVTX
+from .vortex import BasicVTX
 from .stochrsi import BasicSTOCHRSI
 from .trix import BasicTRIX
 from .stc import BasicSTC

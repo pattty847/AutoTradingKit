@@ -1,15 +1,12 @@
 from typing import Tuple, List, TYPE_CHECKING
 import numpy as np
-import pandas as pd
 from atklip.graphics.pyqtgraph import PlotDataItem
-from atklip.graphics.pyqtgraph import functions as fn
-from atklip.graphics.chart_component.base_items import PriceLine,PlotLineItem
+from atklip.graphics.chart_component.base_items import PriceLine
 
-from PySide6.QtCore import Signal, QObject, QThreadPool,Qt,QRectF,QCoreApplication
-from PySide6.QtGui import QColor
+from PySide6.QtCore import Signal, QObject,Qt
 from PySide6.QtWidgets import QGraphicsItem
 
-from atklip.controls import PD_MAType,IndicatorType,ROC
+from atklip.controls import IndicatorType,ROC
 
 from atklip.appmanager import FastWorker
 from atklip.app_utils import *
@@ -108,7 +105,7 @@ class BasicROC(PlotDataItem):
     
     def fisrt_gen_data(self):
         self.connect_signals()
-        self.INDICATOR.fisrt_gen_data()
+        self.INDICATOR.started_worker()
        
     def delete(self):
         self.INDICATOR.deleteLater()

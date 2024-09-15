@@ -2,21 +2,10 @@ import time
 from typing import Tuple, List,TYPE_CHECKING
 
 import numpy as np
-import pandas as pd
-
-from atklip.graphics.pyqtgraph import PlotDataItem,GraphicsObject
 from atklip.graphics.pyqtgraph import functions as fn
-
-
-from PySide6.QtCore import Signal, QObject, QThreadPool,Qt,QRectF,QCoreApplication
-from PySide6.QtGui import QColor
-from PySide6.QtWidgets import QGraphicsItem
-
+from PySide6.QtCore import Signal, QObject,Qt
 from atklip.controls import PD_MAType
-from atklip.controls import pandas_ta as ta
-from atklip.controls import OHLCV
 
-from atklip.controls.candle import JAPAN_CANDLE,HEIKINASHI,SMOOTH_CANDLE
 from atklip.controls.ma import MA
 from atklip.graphics.chart_component.base_items import PlotLineItem
 from atklip.appmanager import FastWorker
@@ -84,7 +73,7 @@ class BasicMA(PlotLineItem):
     
     def fisrt_gen_data(self):
         self.connect_signals()
-        self.INDICATOR.fisrt_gen_data()
+        self.INDICATOR.started_worker()
        
     def delete(self):
         self.INDICATOR.deleteLater()
@@ -113,10 +102,6 @@ class BasicMA(PlotLineItem):
         if self.has["inputs"]["source_name"] == source.source_name:
             self.update_inputs("source",source.source_name)
       
-    # def get_source(self,_type,ma_type:PD_MAType=PD_MAType.EMA, length:int=3):
-    #     if _type.value == "japan":
-    #         return self.chart.jp_candle, None,None
-
     def get_inputs(self):
         inputs =  {"source":self.has["inputs"]["source"],
                     "type":self.has["inputs"]["type"],

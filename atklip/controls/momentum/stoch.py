@@ -127,3 +127,205 @@ def stoch(
     df.category = stoch_k.category
 
     return df
+
+import numpy as np
+import pandas as pd
+from typing import List
+from PySide6.QtCore import Qt, Signal,QObject
+
+from atklip.controls.ma_type import PD_MAType
+from atklip.controls.ohlcv import   OHLCV
+from atklip.controls.candle import JAPAN_CANDLE,HEIKINASHI,SMOOTH_CANDLE,N_SMOOTH_CANDLE
+from atklip.appmanager import CandleWorker
+
+class STOCH(QObject):
+    sig_update_candle = Signal()
+    sig_add_candle = Signal()
+    sig_reset_all = Signal()
+    signal_delete = Signal()    
+    def __init__(self,parent,_candles,smooth_k_period,k_period,d_period,ma_type) -> None:
+        super().__init__(parent=parent)
+        
+        self._candles: JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE =_candles
+                 
+        self.smooth_k_period:int = smooth_k_period
+        self.k_period:int = k_period
+        self.d_period:int = d_period
+    
+        self.ma_type:PD_MAType = ma_type
+
+        # self.signal_delete.connect(self.deleteLater)
+        self.first_gen = False
+        self.is_genering = True
+        
+        self.name = f"STOCH {self.smooth_k_period} {self.k_period} {self.d_period} {self.ma_type.name.lower()}"
+
+        self.df = pd.DataFrame([])
+        
+        self.xdata,self.stoch_,self.signalma = np.array([]),np.array([]),np.array([])
+
+        self.connect_signals()
+        
+    def disconnect_signals(self):
+        try:
+            self._candles.sig_reset_all.disconnect(self.started_worker)
+            self._candles.sig_update_candle.disconnect(self.update_worker)
+            self._candles.sig_add_candle.disconnect(self.add_worker)
+            self._candles.signal_delete.disconnect(self.signal_delete)
+        except RuntimeError:
+                    pass
+    
+    def connect_signals(self):
+        self._candles.sig_reset_all.connect(self.started_worker,Qt.ConnectionType.AutoConnection)
+        self._candles.sig_update_candle.connect(self.update_worker,Qt.ConnectionType.QueuedConnection)
+        self._candles.sig_add_candle.connect(self.add_worker,Qt.ConnectionType.QueuedConnection)
+        self._candles.signal_delete.connect(self.signal_delete)
+    
+    
+    def change_source(self,_candles:JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE):
+        self.disconnect_signals()
+        self._candles =_candles
+        self.connect_signals()
+        self.started_worker()
+    
+    def change_inputs(self,_input:str,_source:str|int|JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE|PD_MAType):
+        is_update = False
+        print(_input,_source)
+        if _input == "source":
+            self.change_source(_source)
+            return
+        elif _input == "smooth_k_period":
+            self.smooth_k_period = _source
+            is_update = True
+        elif _input == "k_period":
+            self.k_period = _source
+            is_update = True
+        elif _input == "d_period":
+            self.d_period = _source
+            is_update = True
+        elif _input == "type":
+            self.source = _source
+            is_update = True
+        elif _input == "ma_type":
+            self.ma_type = _source
+            is_update = True
+        if is_update:
+            self.started_worker()
+    
+    @property
+    def indicator_name(self):
+        return self.name
+    @indicator_name.setter
+    def indicator_name(self,_name):
+        self.name = _name
+    
+    def get_df(self,n:int=None):
+        if not n:
+            return self.df
+        return self.df.tail(n)
+    
+    def get_data(self):
+        return self.xdata,self.stoch_,self.signalma
+    
+    def get_last_row_df(self):
+        return self.df.iloc[-1] 
+
+    def update_worker(self,candle):
+        self.worker_ = None
+        self.worker_ = CandleWorker(self.update,candle)
+        self.worker_.start()
+    
+    def add_worker(self,candle):
+        self.worker_ = None
+        self.worker_ = CandleWorker(self.add,candle)
+        self.worker_.start()
+    
+    def started_worker(self):
+        self.worker = None
+        self.worker = CandleWorker(self.fisrt_gen_data)
+        self.worker.start()
+    
+    def paire_data(self,INDICATOR:pd.DataFrame|pd.Series):
+        column_names = INDICATOR.columns.tolist()
+        stoch_name = ''
+        signalma_name = ''
+        for name in column_names:
+            if name.__contains__("STOCHk"):
+                stoch_name = name
+            elif name.__contains__("STOCHd"):
+                signalma_name = name
+
+        stoch_ = INDICATOR[stoch_name]
+        signalma = INDICATOR[signalma_name]
+        return stoch_,signalma
+    
+    def caculate(self,df: pd.DataFrame):
+        INDICATOR = stoch(high=df["high"],
+                        low=df["low"],
+                        close=df["close"],
+                        smooth_k=self.smooth_k_period,
+                        k = self.k_period,
+                        d = self.d_period,
+                        mamode=self.ma_type.name.lower())
+        return self.paire_data(INDICATOR)
+    
+    def fisrt_gen_data(self):
+        self.is_genering = True
+        self.df = pd.DataFrame([])
+        
+        df:pd.DataFrame = self._candles.get_df()
+        
+        stoch_, signalma = self.caculate(df)
+        
+        _index = df["index"]
+
+        self.df = pd.DataFrame({
+                            'index':_index,
+                            "stoch":stoch_,
+                            "signalma":signalma
+                            })
+                
+        self.xdata,self.stoch_,self.signalma = self.df["index"].to_numpy(),\
+                                                stoch_.to_numpy(),\
+                                                signalma.to_numpy()
+        
+        self.is_genering = False
+        if self.first_gen == False:
+            self.first_gen = True
+            self.is_genering = False
+        self.sig_reset_all.emit()
+    
+    def add(self,new_candles:List[OHLCV]):
+        new_candle:OHLCV = new_candles[-1]
+        if (self.first_gen == True) and (self.is_genering == False):
+            df:pd.DataFrame = self._candles.get_df(self.k_period*5)
+                    
+            stoch_, signalma = self.caculate(df)
+            
+            new_frame = pd.DataFrame({
+                                    'index':[new_candle.index],
+                                    "stoch":[stoch_.iloc[-1]],
+                                    "signalma":[signalma.iloc[-1]]
+                                    })
+            
+            self.df = pd.concat([self.df,new_frame],ignore_index=True)
+            
+            self.xdata,self.stoch_,self.signalma  = self.df["index"].to_numpy(),\
+                                                    self.df["stoch"].to_numpy(),\
+                                                    self.df["signalma"].to_numpy()
+                                            
+            self.sig_add_candle.emit()
+        
+    def update(self, new_candles:List[OHLCV]):
+        new_candle:OHLCV = new_candles[-1]
+        if (self.first_gen == True) and (self.is_genering == False):
+            df:pd.DataFrame = self._candles.get_df(self.k_period*5)
+                    
+            stoch_, signalma = self.caculate(df)
+                    
+            self.df.iloc[-1] = [new_candle.index,stoch_.iloc[-1],signalma.iloc[-1]]
+                    
+            self.xdata,self.stoch_,self.signalma  = self.df["index"].to_numpy(),\
+                                                    self.df["stoch"].to_numpy(),\
+                                                    self.df["signalma"].to_numpy()
+            self.sig_update_candle.emit()

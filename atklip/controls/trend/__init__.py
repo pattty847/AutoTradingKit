@@ -18,7 +18,7 @@ from .short_run import short_run
 from .trendflex import trendflex
 from .tsignals import tsignals
 from .vhf import vhf
-from .vortex import vortex
+from .vortex import vortex, VORTEX
 from .xsignals import xsignals
 from .zigzag import zigzag
 

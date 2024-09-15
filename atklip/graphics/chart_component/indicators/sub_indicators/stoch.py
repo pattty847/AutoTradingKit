@@ -1,20 +1,13 @@
 from typing import Tuple, List,TYPE_CHECKING
 import numpy as np
-import time
-
-import pandas as pd
-from atklip.graphics.pyqtgraph import GraphicsObject, GraphicsItem, PlotDataItem
-from atklip.graphics.pyqtgraph import functions as fn
-from atklip.graphics.chart_component.base_items import PriceLine,PlotLineItem
-from PySide6.QtCore import Signal, QObject, QThreadPool,Qt,QRectF,QCoreApplication
+from atklip.graphics.pyqtgraph import GraphicsObject, PlotDataItem
+from atklip.graphics.chart_component.base_items import PriceLine
+from PySide6.QtCore import Signal, QObject,Qt,QRectF
 from PySide6.QtGui import QColor,QPicture,QPainter
 from PySide6.QtWidgets import QGraphicsItem
 
-from atklip.controls import PD_MAType,IndicatorType
-from atklip.controls import pandas_ta as ta
-from atklip.controls import OHLCV
+from atklip.controls import PD_MAType,IndicatorType,STOCH
 
-from atklip.controls.candle import JAPAN_CANDLE,HEIKINASHI
 from atklip.appmanager import FastWorker
 from atklip.app_utils import *
 if TYPE_CHECKING:
@@ -81,8 +74,6 @@ class BasicSTOCH(GraphicsObject):
         self.signal = PlotDataItem(pen="orange")
         self.signal.setParentItem(self)
         
-        self._INDICATOR : pd.DataFrame = pd.DataFrame([])
-
         self.price_line = PriceLine()  # for z value
         self.price_line.setParentItem(self)
         
@@ -96,93 +87,80 @@ class BasicSTOCH(GraphicsObject):
         
         self.picture: QPicture = QPicture()
         
-        self.destroyed.connect(self.price_line.deleteLater)
         self.last_pos.connect(self.price_line.update_price_line_indicator,Qt.ConnectionType.AutoConnection)
 
         self.worker = None
         
         self.sig_change_yaxis_range.connect(get_last_pos_worker, Qt.ConnectionType.AutoConnection)
         
-        self.chart.sig_update_source.connect(self.change_source,Qt.ConnectionType.AutoConnection)
-        self.chart.sig_remove_source.connect(self.replace_source,Qt.ConnectionType.AutoConnection)
+        self.INDICATOR  = STOCH(parent=self,
+                                _candles=self.has["inputs"]["source"],
+                                smooth_k_period=self.has["inputs"]["smooth_k_period"],
+                                k_period=self.has["inputs"]["k_period"],
+                                d_period=self.has["inputs"]["d_period"],
+                                ma_type=self.has["inputs"]["ma_type"])
         
-
-        self.has["inputs"]["source"].sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
-        self.has["inputs"]["source"].sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
-        self.has["inputs"]["source"].sig_add_candle.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
-        
-    def delete(self):
-        self.chart.sig_remove_item.emit(self)
+        self.chart.sig_update_source.connect(self.change_source,Qt.ConnectionType.AutoConnection)   
+        self.signal_delete.connect(self.delete)
     
-    def disconnect_connection(self):
+    
+    def disconnect_signals(self):
         try:
-            self.has["inputs"]["source"].sig_reset_all.disconnect(self.reset_threadpool_asyncworker)
-            self.has["inputs"]["source"].sig_update_candle.disconnect(self.setdata_worker)
-            self.has["inputs"]["source"].sig_add_candle.disconnect(self.threadpool_asyncworker)
-        except Exception as e:
+            self.INDICATOR.sig_reset_all.disconnect(self.reset_threadpool_asyncworker)
+            self.INDICATOR.sig_update_candle.disconnect(self.setdata_worker)
+            self.INDICATOR.sig_add_candle.disconnect(self.setdata_worker)
+            self.INDICATOR.signal_delete.disconnect(self.replace_source)
+        except RuntimeError:
                     pass
+    
+    def connect_signals(self):
+        self.INDICATOR.sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
+        self.INDICATOR.sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
+        self.INDICATOR.sig_add_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
+        self.INDICATOR.signal_delete.connect(self.replace_source,Qt.ConnectionType.AutoConnection)
+    
+    def fisrt_gen_data(self):
+        self.connect_signals()
+        self.INDICATOR.started_worker()
+       
+    def delete(self):
+        self.INDICATOR.deleteLater()
+        self.chart.sig_remove_item.emit(self)
     
     def reset_indicator(self):
         self.worker = None
         self.worker = FastWorker(self.regen_indicator)
         self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
         self.worker.start()
+    
 
     def regen_indicator(self,setdata):
-        df:pd.DataFrame = self.has["inputs"]["source"].get_df()
-        self._INDICATOR = ta.stoch(high=df["high"],
-                                  low=df["low"],
-                                  close=df["close"],
-                                  smooth_k=self.has["inputs"]["smooth_k_period"],
-                                  k = self.has["inputs"]["k_period"],
-                                  d = self.has["inputs"]["d_period"],
-                                  mamode=f"{self.has["inputs"]["ma_type"].name}".lower())
-
-        column_names = self._INDICATOR.columns.tolist()
-        
-        stoch_name = ''
-        signalma_name = ''
-        for name in column_names:
-            if name.__contains__("STOCHk"):
-                stoch_name = name
-            elif name.__contains__("STOCHd"):
-                signalma_name = name
-
-        stoch = self._INDICATOR[stoch_name].to_numpy()
-        signalma = self._INDICATOR[signalma_name].to_numpy()
-        xdata = df["index"].to_numpy()[-len(stoch):]
-        
+        xdata,stoch,signalma= self.INDICATOR.get_data()  
         self.has["name"] = f"STOCH {self.has["inputs"]["ma_type"].name} {self.has["inputs"]["smooth_k_period"]} {self.has["inputs"]["k_period"]} {self.has["inputs"]["d_period"]}"
         self.sig_change_indicator_name.emit(self.has["name"])
-        
-        # self.set_Data((xdata,stoch,signalma))
         setdata.emit((xdata,stoch,signalma))
-        
         self.sig_change_yaxis_range.emit()
-        #QCoreApplication.processEvents()
+         
+    def replace_source(self):
+        self.update_inputs( "source",self.chart.jp_candle.source_name)
         
-        self.has["inputs"]["source"].sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
-        self.has["inputs"]["source"].sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
-        self.has["inputs"]["source"].sig_add_candle.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
-        
-    def replace_source(self,source_name):
-        if self.has["inputs"]["source_name"] == source_name:
-            self.disconnect_connection()
-            self.has["inputs"]["source"] = self.chart.jp_candle
-            self.has["inputs"]["source_name"] = self.chart.jp_candle.source_name
-            self.reset_indicator()
-            
     def reset_threadpool_asyncworker(self):
-        self.disconnect_connection()
-        source_name = self.has["inputs"]["source_name"].split(" ")[0]
-        self.has["inputs"]["source"].source_name = f"{source_name} {self.chart.symbol} {self.chart.interval}"
-        self.chart.update_sources(self.has["inputs"]["source"])
         self.reset_indicator()
-
+        
     def change_source(self,source):   
         if self.has["inputs"]["source_name"] == source.source_name:
             self.update_inputs("source",source.source_name)
-            
+    
+    def get_inputs(self):
+        inputs =  {"source":self.has["inputs"]["source"],
+                    "smooth_k_period":self.has["inputs"]["smooth_k_period"],
+                    "k_period":self.has["inputs"]["k_period"],
+                    "d_period":self.has["inputs"]["d_period"],
+                    "ma_type":self.has["inputs"]["ma_type"],
+                    "price_high":self.has["inputs"]["price_high"],
+                    "price_low":self.has["inputs"]["price_low"]}
+        return inputs
+    
     def update_inputs(self,_input,_source):
         """"source":self.has["inputs"]["source"],
                 "ma_type":self.has["inputs"]["ma_type"],
@@ -190,11 +168,9 @@ class BasicSTOCH(GraphicsObject):
         update = False
         if _input == "source":
             if self.chart.sources[_source] != self.has["inputs"][_input]:
-                self.disconnect_connection()
                 self.has["inputs"]["source"] = self.chart.sources[_source]
                 self.has["inputs"]["source_name"] = self.chart.sources[_source].source_name
-                self.chart.update_sources(self.has["inputs"]["source"])
-                self.reset_indicator()
+                self.INDICATOR.change_inputs(_input,self.has["inputs"]["source"])
         elif _input == "price_high":
             if _source != self.has["inputs"]["price_high"]:
                 self.has["inputs"]["price_high"] = _source
@@ -209,16 +185,8 @@ class BasicSTOCH(GraphicsObject):
         if update:
             self.has["name"] = f"STOCH {self.has["inputs"]["ma_type"].name} {self.has["inputs"]["smooth_k_period"]} {self.has["inputs"]["k_period"]} {self.has["inputs"]["d_period"]}"
             self.sig_change_indicator_name.emit(self.has["name"])
-            self.threadpool_asyncworker()
-    def get_inputs(self):
-        inputs =  {"source":self.has["inputs"]["source"],
-                    "smooth_k_period":self.has["inputs"]["smooth_k_period"],
-                    "k_period":self.has["inputs"]["k_period"],
-                    "d_period":self.has["inputs"]["d_period"],
-                    "ma_type":self.has["inputs"]["ma_type"],
-                    "price_high":self.has["inputs"]["price_high"],
-                    "price_low":self.has["inputs"]["price_low"]}
-        return inputs
+            self.INDICATOR.change_inputs(_input,_source)
+    
     
     def get_styles(self):
         styles =  {"pen_stoch_line":self.has["styles"]["pen_stoch_line"],
@@ -236,53 +204,49 @@ class BasicSTOCH(GraphicsObject):
             self.stoch_line.setPen(color=self.has["styles"]["pen_stoch_line"], width=self.has["styles"]["width_stoch_line"],style=self.has["styles"]["style_stoch_line"])
         elif _input == "pen_signal_line" or _input == "width_signal_line" or _input == "style_signal_line":
             self.signal.setPen(color=self.has["styles"]["pen_signal_line"], width=self.has["styles"]["width_signal_line"],style=self.has["styles"]["style_signal_line"])
-        
-    def threadpool_asyncworker(self,candle=None):
-        self.worker = None
-        if candle == None:
-            self.worker = FastWorker(self.first_load_data)
+
+
+    def setVisible(self, visible):
+        if visible:
+            self.show()
         else:
-            self.worker = FastWorker(self.update_data,candle)
+            self.hide()
+
+    def setdata_worker(self):
+        self.worker = None
+        self.worker = FastWorker(self.update_data)
         self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
-        self.worker.start()
-        #self.threadpool.start(self.worker)
+        self.worker.start()    
     
-    def first_load_data(self,setdata):
-        self.disconnect_connection()
+    def set_Data(self,data):
         
-        df:pd.DataFrame = self.has["inputs"]["source"].get_df()
-        self._INDICATOR = ta.stoch(high=df["high"],
-                                  low=df["low"],
-                                  close=df["close"],
-                                  smooth_k=self.has["inputs"]["smooth_k_period"],
-                                  k = self.has["inputs"]["k_period"],
-                                  d = self.has["inputs"]["d_period"],
-                                  mamode=f"{self.has["inputs"]["ma_type"].name}".lower())
-
-        column_names = self._INDICATOR.columns.tolist()
+        xData = data[0]
+        lb = data[1]
+        cb = data[2]
+        self.stoch_line.setData(xData,lb)
+        self.signal.setData(xData,cb)
         
-        stoch_name = ''
-        signalma_name = ''
-        for name in column_names:
-            if name.__contains__("STOCHk"):
-                stoch_name = name
-            elif name.__contains__("STOCHd"):
-                signalma_name = name
+        self.prepareGeometryChange()
+        self.informViewBoundsChanged()
 
-        stoch = self._INDICATOR[stoch_name].to_numpy()
-        signalma = self._INDICATOR[signalma_name].to_numpy()
-        xdata = df["index"].to_numpy()[-len(stoch):]
-
-        self.has["name"] = f"STOCH {self.has["inputs"]["ma_type"].name} {self.has["inputs"]["smooth_k_period"]} {self.has["inputs"]["k_period"]} {self.has["inputs"]["d_period"]}"
-        self.sig_change_indicator_name.emit(self.has["name"])
-        
+    def update_data(self,setdata):
+        xdata,stoch,signalma = self.INDICATOR.get_data()
         setdata.emit((xdata,stoch,signalma))
-        #QCoreApplication.processEvents()
-        
-        self.has["inputs"]["source"].sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
-        self.has["inputs"]["source"].sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
-        self.has["inputs"]["source"].sig_add_candle.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
-        
+        self.last_pos.emit((self.has["inputs"]["indicator_type"],signalma[-1]))
+        self.panel.sig_update_y_axis.emit()
+
+    def mousePressEvent(self, ev):
+        if ev.button() == Qt.MouseButton.LeftButton:
+            self.on_click.emit(self)
+        super().mousePressEvent(ev)
+
+    def setObjectName(self, name):
+        self.indicator_name = name
+
+    def objectName(self):
+        return self.indicator_name
+    
+    
     def get_yaxis_param(self):
         _value = None
         try:
@@ -295,38 +259,21 @@ class BasicSTOCH(GraphicsObject):
             else:
                 _value = round(_value,3)
         return _value,"#363a45"
+    
     def get_xaxis_param(self):
         return None,"#363a45"
 
-    def setVisible(self, visible):
-        if visible:
-            self.show()
-        else:
-            self.hide()
-
-    def setdata_worker(self,sig_update_candle):
-        self.worker = None
-        self.worker = FastWorker(self.update_data,sig_update_candle)
-        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
-        self.worker.start()
-        #self.threadpool.start(self.worker)
-    
     def paint(self, p:QPainter, *args):
         self.picture.play(p)
     
     def boundingRect(self) -> QRectF:
         return self.signal.boundingRect()
     
-    def set_Data(self,data):
-        
-        xData = data[0]
-        lb = data[1]
-        cb = data[2]
-        self.stoch_line.setData(xData,lb)
-        self.signal.setData(xData,cb)
-        
-        self.prepareGeometryChange()
-        self.informViewBoundsChanged()
+
+    def on_click_event(self):
+        print("zooo day__________________")
+        pass
+
         
     def get_last_point(self):
         _time = self.signal.xData[-1]
@@ -348,65 +295,5 @@ class BasicSTOCH(GraphicsObject):
             print(e)
         return _min,_max
 
-    def update_data(self,last_candle:List[OHLCV],setdata):
-        df:pd.DataFrame = self.has["inputs"]["source"].get_df()
-        self._INDICATOR = ta.stoch(high=df["high"],
-                                  low=df["low"],
-                                  close=df["close"],
-                                  smooth_k=self.has["inputs"]["smooth_k_period"],
-                                  k = self.has["inputs"]["k_period"],
-                                  d = self.has["inputs"]["d_period"],
-                                  mamode=f"{self.has["inputs"]["ma_type"].name}".lower())
-
-        column_names = self._INDICATOR.columns.tolist()
-        
-        stoch_name = ''
-        signalma_name = ''
-        for name in column_names:
-            if name.__contains__("STOCHk"):
-                stoch_name = name
-            elif name.__contains__("STOCHd"):
-                signalma_name = name
-
-        stoch = self._INDICATOR[stoch_name].to_numpy()
-        signalma = self._INDICATOR[signalma_name].to_numpy()
-        xdata = df["index"].to_numpy()[-len(stoch):]
-        
-        setdata.emit((xdata,stoch,signalma))
-        self.last_pos.emit((self.has["inputs"]["indicator_type"],signalma[-1]))
-        self.panel.sig_update_y_axis.emit()
-
-    def on_click_event(self):
-        print("zooo day__________________")
-        pass
-
-    def mouseClickEvent(self, ev):
-        if ev.button() == Qt.MouseButton.LeftButton:
-            self.on_click.emit(self)
-        super().mouseClickEvent(ev)
 
 
-    def setObjectName(self, name):
-        self.indicator_name = name
-
-    def objectName(self):
-        return self.indicator_name
-    
-    def setPen(self, *args, **kargs):
-        """
-        Sets the pen used to draw lines between points.
-        The argument can be a :class:`QtGui.QPen` or any combination of arguments accepted by 
-        :func:`pyqtgraph.mkPen() <pyqtgraph.mkPen>`.
-        """
-        pen = fn.mkPen(*args, **kargs)
-        self.opts['pen'] = pen
-        self.currentPen = pen
-        self.updateItems(styleUpdate=True)
-
-    def data_bounds(self, ax=0, offset=0) -> Tuple:
-        x, y = self.getData()
-        if ax == 0:
-            sub_range = x[-offset:]
-        else:
-            sub_range = y[-offset:]
-        return np.nanmin(sub_range), np.nanmax(sub_range)

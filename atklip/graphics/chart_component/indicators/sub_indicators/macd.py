@@ -1,18 +1,13 @@
 from typing import Tuple, List,TYPE_CHECKING
 import numpy as np
-import time
-
-import pandas as pd
-from atklip.graphics.pyqtgraph import GraphicsObject, GraphicsItem, PlotDataItem
-from atklip.graphics.pyqtgraph import functions as fn
-from atklip.graphics.chart_component.base_items import PriceLine,PlotLineItem
-from PySide6.QtCore import Signal, QObject, QThreadPool,Qt,QRectF,QCoreApplication
+from atklip.graphics.pyqtgraph import GraphicsObject, PlotDataItem
+from atklip.graphics.chart_component.base_items import PriceLine
+from PySide6.QtCore import Signal, QObject,Qt,QRectF
 from PySide6.QtGui import QColor,QPicture,QPainter
 from PySide6.QtWidgets import QGraphicsItem
 
 from atklip.controls import PD_MAType,IndicatorType, MACD
 
-from atklip.controls.candle import JAPAN_CANDLE,HEIKINASHI
 from .macd_histogram import MACDHistogram
 from atklip.appmanager import FastWorker
 from atklip.app_utils import *
@@ -127,7 +122,7 @@ class BasicMACD(GraphicsObject):
         try:
             self.INDICATOR.sig_reset_all.disconnect(self.reset_threadpool_asyncworker)
             self.INDICATOR.sig_update_candle.disconnect(self.setdata_worker)
-            self.INDICATOR.sig_add_candle.disconnect(self.setdata_worker)
+            self.INDICATOR.sig_add_candle.disconnect(self.add_worker)
             self.INDICATOR.signal_delete.disconnect(self.replace_source)
         except RuntimeError:
                     pass
@@ -135,12 +130,12 @@ class BasicMACD(GraphicsObject):
     def connect_signals(self):
         self.INDICATOR.sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
         self.INDICATOR.sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
-        self.INDICATOR.sig_add_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
+        self.INDICATOR.sig_add_candle.connect(self.add_worker,Qt.ConnectionType.AutoConnection)
         self.INDICATOR.signal_delete.connect(self.replace_source,Qt.ConnectionType.AutoConnection)
     
     def fisrt_gen_data(self):
         self.connect_signals()
-        self.INDICATOR.fisrt_gen_data()
+        self.INDICATOR.started_worker()
        
     def delete(self):
         self.INDICATOR.deleteLater()
@@ -251,6 +246,13 @@ class BasicMACD(GraphicsObject):
         self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
         self.worker.start()    
     
+    def add_worker(self):
+        self.worker = None
+        self.worker = FastWorker(self.update_data)
+        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.signals.setdata.connect(self.update_histogram,Qt.ConnectionType.QueuedConnection)
+        self.worker.start()    
+        
     def set_Data(self,data):
         xData = data[0]
         lb = data[1]

@@ -13,8 +13,6 @@ from atklip.controls.pandas_ta.utils import (
     v_series
 )
 
-
-
 def tsi(
     close: Series, fast: Int = None, slow: Int = None,
     signal: Int = None, scalar: IntFloat = None,
@@ -69,16 +67,21 @@ def tsi(
 
     # Calculate
     diff = close.diff(drift)
-    slow_ema = ema(close=diff, length=slow, **kwargs)
+    # slow_ema = ema(close=diff, length=slow, **kwargs)
+    slow_ema = ma(mamode, source=diff, length=slow, **kwargs)
+
     if all(isnan(slow_ema)):
         return  # Emergency Break
-    fast_slow_ema = ema(close=slow_ema, length=fast, **kwargs)
+    # fast_slow_ema = ema(close=slow_ema, length=fast, **kwargs)
+    fast_slow_ema = ma(mamode, source=slow_ema, length=slow, **kwargs) 
 
     abs_diff = diff.abs()
-    abs_slow_ema = ema(close=abs_diff, length=slow, **kwargs)
+    abs_slow_ema = ma(mamode, source=abs_diff, length=slow, **kwargs)
+    # abs_slow_ema = ema(close=abs_diff, length=slow, **kwargs)
     if all(isnan(abs_slow_ema)):
         return  # Emergency Break
-    abs_fast_slow_ema = ema(close=abs_slow_ema, length=fast, **kwargs)
+    # abs_fast_slow_ema = ema(close=abs_slow_ema, length=fast, **kwargs)
+    abs_fast_slow_ema = ma(mamode, source=abs_slow_ema, length=slow, **kwargs) 
 
     tsi = scalar * fast_slow_ema / abs_fast_slow_ema
     if all(isnan(tsi)):
@@ -106,3 +109,207 @@ def tsi(
     df.category = "momentum"
 
     return df
+
+import numpy as np
+import pandas as pd
+from typing import List
+from PySide6.QtCore import Qt, Signal,QObject
+
+from atklip.controls.ma_type import PD_MAType
+from atklip.controls.ohlcv import   OHLCV
+from atklip.controls.candle import JAPAN_CANDLE,HEIKINASHI,SMOOTH_CANDLE,N_SMOOTH_CANDLE
+from atklip.appmanager import CandleWorker
+
+class TSI(QObject):
+    sig_update_candle = Signal()
+    sig_add_candle = Signal()
+    sig_reset_all = Signal()
+    signal_delete = Signal()    
+    def __init__(self,parent,_candles,source,fast_period,slow_period,signal_period,ma_type) -> None:
+        super().__init__(parent=parent)
+        
+        self._candles: JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE =_candles
+        
+        self.fast_period :int = fast_period
+        self.slow_period :int = slow_period
+        self.signal_period:int = signal_period
+        self.source:str = source
+        self.ma_type:PD_MAType = ma_type
+
+        # self.signal_delete.connect(self.deleteLater)
+        self.first_gen = False
+        self.is_genering = True
+        
+        self.name = f"TSI {self.source} {self.fast_period} {self.slow_period} {self.signal_period} {self.ma_type.name.lower()}"
+
+        self.df = pd.DataFrame([])
+        
+        self.xdata,self.tsi_ , self.signalma = np.array([]),np.array([]),np.array([])
+
+        self.connect_signals()
+        
+    def disconnect_signals(self):
+        try:
+            self._candles.sig_reset_all.disconnect(self.started_worker)
+            self._candles.sig_update_candle.disconnect(self.update_worker)
+            self._candles.sig_add_candle.disconnect(self.add_worker)
+            self._candles.signal_delete.disconnect(self.signal_delete)
+        except RuntimeError:
+                    pass
+    
+    def connect_signals(self):
+        self._candles.sig_reset_all.connect(self.started_worker,Qt.ConnectionType.AutoConnection)
+        self._candles.sig_update_candle.connect(self.update_worker,Qt.ConnectionType.QueuedConnection)
+        self._candles.sig_add_candle.connect(self.add_worker,Qt.ConnectionType.QueuedConnection)
+        self._candles.signal_delete.connect(self.signal_delete)
+    
+    
+    def change_source(self,_candles:JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE):
+        self.disconnect_signals()
+        self._candles =_candles
+        self.connect_signals()
+        self.started_worker()
+    
+    def change_inputs(self,_input:str,_source:str|int|JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE|PD_MAType):
+        is_update = False
+        print(_input,_source)
+        if _input == "source":
+            self.change_source(_source)
+            return
+        elif _input == "signal_period":
+            self.signal_period = _source
+            is_update = True
+        elif _input == "length_period":
+            self.length_period = _source
+            is_update = True
+        elif _input == "fast_period":
+            self.fast_period = _source
+            is_update = True
+        elif _input == "slow_period":
+            self.slow_period = _source
+            is_update = True
+        elif _input == "type":
+            self.source = _source
+            is_update = True
+        elif _input == "ma_type":
+            self.ma_type = _source
+            is_update = True
+        if is_update:
+            self.started_worker()
+    
+    @property
+    def indicator_name(self):
+        return self.name
+    @indicator_name.setter
+    def indicator_name(self,_name):
+        self.name = _name
+    
+    def get_df(self,n:int=None):
+        if not n:
+            return self.df
+        return self.df.tail(n)
+    
+    def get_data(self):
+        return self.xdata,self.tsi_ ,self.signalma
+    
+    def get_last_row_df(self):
+        return self.df.iloc[-1] 
+
+    def update_worker(self,candle):
+        self.worker_ = None
+        self.worker_ = CandleWorker(self.update,candle)
+        self.worker_.start()
+    
+    def add_worker(self,candle):
+        self.worker_ = None
+        self.worker_ = CandleWorker(self.add,candle)
+        self.worker_.start()
+    
+    def started_worker(self):
+        self.worker = None
+        self.worker = CandleWorker(self.fisrt_gen_data)
+        self.worker.start()
+    
+    def paire_data(self,INDICATOR:pd.DataFrame|pd.Series):
+        column_names = INDICATOR.columns.tolist()
+        tsi_name = ''
+        signalma_name = ''
+        for name in column_names:
+            if name.__contains__("TSI_"):
+                tsi_name = name
+            elif name.__contains__("TSIs_"):
+                signalma_name = name
+
+        tsi_ = INDICATOR[tsi_name]
+        signalma = INDICATOR[signalma_name]
+        return tsi_,signalma
+    
+    def caculate(self,df: pd.DataFrame):
+        INDICATOR = tsi(close=df[self.source],
+                        fast=self.fast_period,
+                        slow=self.slow_period,
+                        signal = self.signal_period,
+                        mamode=self.ma_type.name.lower()
+                            )
+        return self.paire_data(INDICATOR)
+    
+    def fisrt_gen_data(self):
+        self.is_genering = True
+        self.df = pd.DataFrame([])
+        
+        df:pd.DataFrame = self._candles.get_df()
+        
+        tsi_, signalma = self.caculate(df)
+        
+        _index = df["index"]
+
+        self.df = pd.DataFrame({
+                            'index':_index,
+                            "tsi":tsi_,
+                            "signalma":signalma
+                            })
+                
+        self.xdata,self.tsi_ , self.signalma = self.df["index"].to_numpy(),\
+                                                tsi_.to_numpy(),\
+                                                signalma.to_numpy()
+        
+        self.is_genering = False
+        if self.first_gen == False:
+            self.first_gen = True
+            self.is_genering = False
+        self.sig_reset_all.emit()
+    
+    def add(self,new_candles:List[OHLCV]):
+        new_candle:OHLCV = new_candles[-1]
+        if (self.first_gen == True) and (self.is_genering == False):
+            df:pd.DataFrame = self._candles.get_df(self.slow_period*5)
+                    
+            tsi_, signalma = self.caculate(df)
+            
+            new_frame = pd.DataFrame({
+                                    'index':[new_candle.index],
+                                    "tsi":[tsi_.iloc[-1]],
+                                    "signalma":[signalma.iloc[-1]]
+                                    })
+            
+            self.df = pd.concat([self.df,new_frame],ignore_index=True)
+            
+            self.xdata,self.tsi_ , self.signalma  = self.df["index"].to_numpy(),\
+                                                    self.df["tsi"].to_numpy(),\
+                                                    self.df["signalma"].to_numpy()
+                                            
+            self.sig_add_candle.emit()
+        
+    def update(self, new_candles:List[OHLCV]):
+        new_candle:OHLCV = new_candles[-1]
+        if (self.first_gen == True) and (self.is_genering == False):
+            df:pd.DataFrame = self._candles.get_df(self.slow_period*5)
+                    
+            tsi_, signalma = self.caculate(df)
+                    
+            self.df.iloc[-1] = [new_candle.index,tsi_.iloc[-1],signalma.iloc[-1]]
+                    
+            self.xdata,self.tsi_ , self.signalma  = self.df["index"].to_numpy(),\
+                                                    self.df["tsi"].to_numpy(),\
+                                                    self.df["signalma"].to_numpy()
+            self.sig_update_candle.emit()

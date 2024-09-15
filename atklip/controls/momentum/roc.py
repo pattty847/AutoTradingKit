@@ -204,17 +204,18 @@ class ROC(QObject):
                     roc_name = name
             y_data = INDICATOR[roc_name]
         return y_data
-    
+    def caculate(self,df: pd.DataFrame):
+        INDICATOR = roc(close=df[self.source],length=self.length)
+        return self.paire_data(INDICATOR)
     def fisrt_gen_data(self):
         self.is_genering = True
         self.df = pd.DataFrame([])
         
         df:pd.DataFrame = self._candles.get_df()
         
-        INDICATOR = roc(close=df[self.source],length=self.length)
+        data = self.caculate(df)
         
         _index = df["index"]
-        data = self.paire_data(INDICATOR)
 
         self.df = pd.DataFrame({
                             'index':_index,
@@ -234,9 +235,7 @@ class ROC(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.length*5)
                     
-            INDICATOR = roc(close=df[self.source],length=self.length)
-            
-            data = self.paire_data(INDICATOR)
+            data = self.caculate(df)
             
             new_frame = pd.DataFrame({
                                     'index':[new_candle.index],
@@ -254,9 +253,7 @@ class ROC(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.length*5)
                     
-            INDICATOR = roc(close=df[self.source],length=self.length)
-            
-            data = self.paire_data(INDICATOR)
+            data = self.caculate(df)
                     
             self.df.iloc[-1] = [new_candle.index,data.iloc[-1]]
                     

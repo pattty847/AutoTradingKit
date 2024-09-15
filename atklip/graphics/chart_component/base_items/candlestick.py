@@ -259,7 +259,7 @@ class CandleStick(GraphicsObject):
         if isinstance(self.source, JAPAN_CANDLE):
             self.chart.auto_xrange()
         self.setData((x_data, y_data))
-        self.chart.first_run.emit()
+        # self.chart.first_run.emit()
         
     def threadpool_asyncworker(self,candle=None):
         self.worker = None

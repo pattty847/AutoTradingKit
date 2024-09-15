@@ -335,22 +335,25 @@ class STC(QObject):
         stoch = INDICATOR[stoch_name]
         return stc_,macd,stoch
     
-    def fisrt_gen_data(self):
-        self.is_genering = True
-        self.df = pd.DataFrame([])
-        
-        df:pd.DataFrame = self._candles.get_df()
-        
+    def caculate(self,df: pd.DataFrame):
         INDICATOR = stc(close= df[self.source],
                         tclength= self.tclength,
                         fast = self.fast,
                         slow = self.slow,
                         mamode= self.ma_type.name.lower()
                         )
+        return self.paire_data(INDICATOR)
+    
+    def fisrt_gen_data(self):
+        self.is_genering = True
+        self.df = pd.DataFrame([])
+        
+        df:pd.DataFrame = self._candles.get_df()
+        
+        stc_,macd,stoch = self.caculate(df)
         
         _index = df["index"]
-        stc_,macd,stoch = self.paire_data(INDICATOR)
-
+        
         self.df = pd.DataFrame({
                             'index':_index,
                             "stc":stc_,
@@ -371,14 +374,7 @@ class STC(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.slow*5)
                     
-            INDICATOR = stc(close= df[self.source],
-                        tclength= self.tclength,
-                        fast = self.fast,
-                        slow = self.slow,
-                        mamode= self.ma_type.name.lower()
-                        )
-            
-            stc_,macd,stoch = self.paire_data(INDICATOR)
+            stc_,macd,stoch = self.caculate(df)
             
             new_frame = pd.DataFrame({
                                     'index':[new_candle.index],
@@ -398,14 +394,7 @@ class STC(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.slow*5)
                     
-            INDICATOR = stc(close= df[self.source],
-                        tclength= self.tclength,
-                        fast = self.fast,
-                        slow = self.slow,
-                        mamode= self.ma_type.name.lower()
-                        )
-            
-            stc_,macd,stoch = self.paire_data(INDICATOR)
+            stc_,macd,stoch = self.caculate(df)
                     
             self.df.iloc[-1] = [new_candle.index,stc_.iloc[-1],macd.iloc[-1],stoch.iloc[-1]]
                     

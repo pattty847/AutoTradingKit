@@ -4,7 +4,6 @@ from typing import List,TYPE_CHECKING
 from PySide6.QtCore import Signal, QObject,Qt,QRectF
 from PySide6.QtWidgets import QGraphicsItem
 from PySide6.QtGui import QPainter,QPicture
-import pandas as pd
 
 from atklip.graphics.pyqtgraph import FillBetweenItem,GraphicsObject,PlotDataItem
 
@@ -95,7 +94,7 @@ class BasicDonchianChannels(GraphicsObject):
     
     def fisrt_gen_data(self):
         self.connect_signals()
-        self.INDICATOR.fisrt_gen_data()
+        self.INDICATOR.started_worker()
        
     def delete(self):
         self.INDICATOR.deleteLater()

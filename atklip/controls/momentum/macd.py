@@ -281,6 +281,13 @@ class MACD(QObject):
         histogram = INDICATOR[histogram_name]
         signalma = INDICATOR[signalma_name]
         return macd,histogram,signalma
+    def caculate(self,df: pd.DataFrame):
+        INDICATOR = macd(close=df[self.source],
+                        fast=self.fast_period,
+                        slow=self.slow_period,
+                        signal = self.signal_period,
+                        mamode=self.ma_type.name.lower())
+        return self.paire_data(INDICATOR)
     
     def fisrt_gen_data(self):
         self.is_genering = True
@@ -288,14 +295,8 @@ class MACD(QObject):
         
         df:pd.DataFrame = self._candles.get_df()
         
-        INDICATOR = macd(close=df[self.source],
-                        fast=self.fast_period,
-                        slow=self.slow_period,
-                        signal = self.signal_period,
-                        mamode=self.ma_type.name.lower())
-        
         _index = df["index"]
-        macd_data,histogram,signalma = self.paire_data(INDICATOR)
+        macd_data,histogram,signalma = self.caculate(df)
 
         self.df = pd.DataFrame({
                             'index':_index,
@@ -318,13 +319,7 @@ class MACD(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.slow_period*5)
                     
-            INDICATOR = macd(close=df[self.source],
-                        fast=self.fast_period,
-                        slow=self.slow_period,
-                        signal = self.signal_period,
-                        mamode=self.ma_type.name.lower())
-            
-            macd_data,histogram,signalma = self.paire_data(INDICATOR)
+            macd_data,histogram,signalma = self.caculate(df)
             
             new_frame = pd.DataFrame({
                                     'index':[new_candle.index],
@@ -345,13 +340,7 @@ class MACD(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.slow_period*5)
                     
-            INDICATOR = macd(close=df[self.source],
-                        fast=self.fast_period,
-                        slow=self.slow_period,
-                        signal = self.signal_period,
-                        mamode=self.ma_type.name.lower())
-            
-            macd_data,histogram,signalma = self.paire_data(INDICATOR)
+            macd_data,histogram,signalma = self.caculate(df)
                     
             self.df.iloc[-1] = [new_candle.index,macd_data.iloc[-1],histogram.iloc[-1],signalma.iloc[-1]]
                     

@@ -199,15 +199,19 @@ class DONCHIAN(QObject):
         cb = INDICATOR[mid_name]
         ub = INDICATOR[upper_name]
         return lb,cb,ub
-    
+    def caculate(self,df: pd.DataFrame):
+        INDICATOR = donchian(high=df["high"],
+                             low=df["low"],
+                             lower_length=self.lower_length,
+                             upper_length=self.upper_length)
+        return self.paire_data(INDICATOR)
     def fisrt_gen_data(self):
         self.is_genering = True
         self.df = pd.DataFrame([])
         
         df:pd.DataFrame = self._candles.get_df()
-        INDICATOR = donchian(high=df["high"],low=df["low"],lower_length=self.lower_length,upper_length=self.upper_length)
         _index = df["index"]
-        lb,cb,ub = self.paire_data(INDICATOR)
+        lb,cb,ub = self.caculate(df)
 
         self.df = pd.DataFrame({
                             'index':_index,
@@ -229,9 +233,7 @@ class DONCHIAN(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.upper_length*5)
                     
-            INDICATOR = donchian(high=df["high"],low=df["low"],lower_length=self.lower_length,upper_length=self.upper_length)
-            
-            lb,cb,ub = self.paire_data(INDICATOR)
+            lb,cb,ub = self.caculate(df)
             
             new_frame = pd.DataFrame({
                                     'index':[new_candle.index],
@@ -253,9 +255,7 @@ class DONCHIAN(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.upper_length*5)
                     
-            INDICATOR = donchian(high=df["high"],low=df["low"],lower_length=self.lower_length,upper_length=self.upper_length)
-            
-            lb,cb,ub = self.paire_data(INDICATOR)
+            lb,cb,ub = self.caculate(df)
                     
             self.df.iloc[-1] = [new_candle.index,lb.iloc[-1],cb.iloc[-1],ub.iloc[-1]]
                     

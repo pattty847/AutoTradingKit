@@ -18,7 +18,7 @@ from atklip.controls.pandas_ta.utils import (
 
 def rsi(
     close: Series, length: Int = None, scalar: IntFloat = None,
-    mamode: str = None, talib: bool = True,
+    mamode: str = None, talib: bool = False,
     drift: Int = None, offset: Int = None,
     **kwargs: DictLike
 ) -> Series:
@@ -233,17 +233,20 @@ class RSI(QObject):
                     roc_name = name
             y_data = INDICATOR[roc_name]
         return y_data
-    
+    def caculate(self,df: pd.DataFrame):
+        INDICATOR = rsi(close=df[self.source],
+                                    length=self.length,
+                                    mamode=self.ma_type.name.lower())
+        return self.paire_data(INDICATOR)
     def fisrt_gen_data(self):
         self.is_genering = True
         self.df = pd.DataFrame([])
         
         df:pd.DataFrame = self._candles.get_df()
         
-        INDICATOR = rsi(close=df[self.source],length=self.length,mamode=self.ma_type.name.lower())
+        data = self.caculate(df)
         
         _index = df["index"]
-        data = self.paire_data(INDICATOR)
 
         self.df = pd.DataFrame({
                             'index':_index,
@@ -263,9 +266,7 @@ class RSI(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.length*5)
                     
-            INDICATOR = rsi(close=df[self.source],length=self.length,mamode=self.ma_type.name.lower())
-            
-            data = self.paire_data(INDICATOR)
+            data = self.caculate(df)
             
             new_frame = pd.DataFrame({
                                     'index':[new_candle.index],
@@ -283,9 +284,7 @@ class RSI(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.length*5)
                     
-            INDICATOR = rsi(close=df[self.source],length=self.length,mamode=self.ma_type.name.lower())
-            
-            data = self.paire_data(INDICATOR)
+            data = self.caculate(df)
                     
             self.df.iloc[-1] = [new_candle.index,data.iloc[-1]]
                     

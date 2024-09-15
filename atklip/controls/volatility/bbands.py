@@ -249,20 +249,21 @@ class BBANDS(QObject):
         cb = INDICATOR[mid_name]
         ub = INDICATOR[upper_name]
         return lb,cb,ub
-    
+    def caculate(self,df: pd.DataFrame):
+        INDICATOR = bbands(df[self.source],
+                           length=self.length,
+                           std=self.std_dev_mult,
+                           mamode=self.ma_type.name.lower())
+        return self.paire_data(INDICATOR)
     def fisrt_gen_data(self):
         self.is_genering = True
         self.df = pd.DataFrame([])
         
         df:pd.DataFrame = self._candles.get_df()
-        
-        INDICATOR = bbands(df[self.source],length=self.length,std=self.std_dev_mult,\
-                                        mamode=self.ma_type.name.lower())
-        
-                
+             
         _index = df["index"]
         
-        lb,cb,ub = self.paire_data(INDICATOR)
+        lb,cb,ub = self.caculate(df)
         
         self.df = pd.DataFrame({
                             'index':_index,
@@ -285,9 +286,7 @@ class BBANDS(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.length*10)
                     
-            INDICATOR = bbands(df[self.source],length=self.length,std=self.std_dev_mult,\
-                                            mamode=self.ma_type.name.lower())
-            lb,cb,ub = self.paire_data(INDICATOR)
+            lb,cb,ub = self.caculate(df)
             
             new_frame = pd.DataFrame({
                                     'index':[new_candle.index],
@@ -309,9 +308,7 @@ class BBANDS(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.length*10)
                     
-            INDICATOR = bbands(df[self.source],length=self.length,std=self.std_dev_mult,\
-                                            mamode=self.ma_type.name.lower())
-            lb,cb,ub = self.paire_data(INDICATOR)
+            lb,cb,ub = self.caculate(df)
                     
             self.df.iloc[-1] = [new_candle.index,lb.iloc[-1],cb.iloc[-1],ub.iloc[-1]]
                     
