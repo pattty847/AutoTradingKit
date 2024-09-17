@@ -7,7 +7,7 @@ from PySide6.QtGui import QKeyEvent
 from atklip.graphics.chart_component.base_items import CandleStick
 from atklip.graphics.chart_component.indicators import BasicMA,BasicBB,BasicDonchianChannels
 from atklip.graphics.chart_component import ViewPlotWidget
-from atklip.exchanges import CryptoExchange
+from atklip.exchanges import CryptoExchange,CryptoExchange_WS
 from ccxt.base.errors import *
 # from ccxt.base.errors import BadSymbol
 from atklip.controls import IndicatorType,OHLCV
@@ -45,15 +45,15 @@ class Chart(ViewPlotWidget):
 
         self.vb.symbol, self.vb.interval = self.symbol, self.interval
         
+        self.vb.load_old_data.connect(self.auto_load_old_data)
+        
         self.sources: Dict[str:QObject] = {}
         self.exchanges = {}
-        self.is_load_historic = True
-        self._runing_load_historic = {f"{self.symbol}-{self.interval}":True}
-        
-        self.loop = self._init_async_loop()
-        
+        self.is_load_historic = False
+                
         self.crypto_ex = CryptoExchange().setupEchange(apikey=self.apikey, secretkey=self.secretkey,exchange_name=self.exchange_name)
-
+        self.crypto_ex_ws = CryptoExchange_WS().setupEchange(apikey=self.apikey, secretkey=self.secretkey,exchange_name=self.exchange_name)
+        
         self.sig_add_indicator_panel.connect(self.setup_indicator,Qt.ConnectionType.AutoConnection)
 
         self.first_run.connect(self.set_data_dataconnect,Qt.ConnectionType.AutoConnection)
@@ -65,44 +65,36 @@ class Chart(ViewPlotWidget):
         return loop
 
     def auto_load_old_data(self):
-        # if isinstance(self.worker_auto_load_old_data,ThreadingAsyncWorker):
-        #     self.worker_auto_load_old_data.stop_thread()
-        self.worker_auto_load_old_data = ThreadingAsyncWorker(fn=self.check_signal_load_old_data)
-        self.worker_auto_load_old_data.start_thread()
+        "load historic data when wheel or drag viewbox"
+        if isinstance(self.worker_auto_load_old_data,ThreadingAsyncWorker):
+            if not self.is_load_historic:
+                self.worker_auto_load_old_data.stop_thread()
+        if not self.is_load_historic:
+            self.is_load_historic = True
+            self.worker_auto_load_old_data = ThreadingAsyncWorker(fn=self.check_signal_load_old_data)
+            self.worker_auto_load_old_data.start_thread()
         
     async def check_signal_load_old_data(self):
-        self.is_load_historic = True
         x_range = self.getAxis('bottom').range
         left_xrange = x_range[0]
         right_xrange = x_range[1]
-        first_candlestick_index = self.jp_candle.candles[0].index
-        # print(first_candlestick_index,left_xrange,left_xrange < first_candlestick_index + 3000)
-        _cr_time = self.jp_candle.candles[0].time
-        
-        exchange = CryptoExchange().setupEchange(apikey=self.apikey, secretkey=self.secretkey,exchange_name=self.exchange_name)
-        
-        data = await exchange.fetch_ohlcv(self.symbol,self.interval,limit=1500, params={"until":_cr_time*1000})
-        
-        self.jp_candle.load_historic_data(data,self._precision)
-            
-            # if left_xrange < first_candlestick_index + 3000:
-            #     if self.jp_candle.candles != []:
-            #         _cr_time = self.jp_candle.candles[0].time
-            #         exchange = CryptoExchange().setupEchange(apikey=self.apikey, secretkey=self.secretkey,exchange_name=self.exchange_name)
-            #         data = await exchange.fetch_ohlcv(self.symbol,self.interval,limit=1500, params={"until":_cr_time*1000})
-            #         self.jp_candle.load_historic_data(data,self._precision)
-            #         await exchange.close()
+        first_candlestick_index = self.jp_candle.candles[0].index        
+        if left_xrange < first_candlestick_index + 3000:
+            if self.jp_candle.candles != []:
+                _cr_time = self.jp_candle.candles[0].time
+                data = self.crypto_ex.fetch_ohlcv(self.symbol,self.interval,limit=1500, params={"until":_cr_time*1000})
+                self.jp_candle.load_historic_data(data,self._precision)
+                self.heikinashi.load_historic_data(len(data))
+        self.is_load_historic = False
 
-    
-
-    def add_to_exchanges(self,new_echange):
+    def add_to_exchanges(self,new_echange:dict):
         """new_echange = {"id":"symbol_interval","exchange":Exchange,}"""
         if self.exchanges != {}:
             if new_echange["id"] in list(self.exchanges.keys()):
                 old_ex =  self.exchanges[new_echange["id"]]
                 if new_echange["exchange"] == old_ex:
                     return
-                # del self.exchanges[new_echange["id"]]
+                del self.exchanges[new_echange["id"]]
             self.exchanges[new_echange["id"]] = new_echange["exchange"]
             return
         self.exchanges[new_echange["id"]] = new_echange["exchange"]
@@ -111,9 +103,7 @@ class Chart(ViewPlotWidget):
         if _id in list(self.exchanges.keys()):
                 old_ex =  self.exchanges[_id]
                 del self.exchanges[_id]
-                # await old_ex.close()
-        # exchange.sig_delete.emit()
-        exchange = None
+                print("old_Ex", old_ex)
     
     
     def update_sources(self,source:HEIKINASHI|SMOOTH_CANDLE|JAPAN_CANDLE|N_SMOOTH_CANDLE):
@@ -152,17 +142,24 @@ class Chart(ViewPlotWidget):
 
         cr_id = f"{self.symbol}_{self.interval}"
         asyncio.run(self.remove_from_exchanges(cr_id)) 
-        
         _type, symbol, exchange_name = args[0],args[1],args[2]
-        if exchange_name == self.exchange_name:
-            print("same exchange")
+        
+        if exchange_name != self.exchange_name:
+            self.exchange_name = exchange_name
+            self.crypto_ex = CryptoExchange().setupEchange(apikey=self.apikey, secretkey=self.secretkey,exchange_name=self.exchange_name)
+
+        try:
+            asyncio.run(self.crypto_ex_ws.close()) 
+            self.crypto_ex_ws = None
+            self.crypto_ex = None
+        except:
+            pass
+        self.crypto_ex_ws = CryptoExchange_WS().setupEchange(apikey=self.apikey, secretkey=self.secretkey,exchange_name=self.exchange_name)
+        
         self.symbol = symbol
-        self.exchange_name = exchange_name
         self.is_reseting =  False
         self.sig_change_tab_infor.emit((self.symbol,self.interval))
-        
-        self.crypto_ex = CryptoExchange().setupEchange(apikey=self.apikey, secretkey=self.secretkey,exchange_name=self.exchange_name)
-        
+
         self.fast_reset_worker(exchange_name=exchange_name,symbol=symbol,interval=self.interval)
     
     def on_change_inteval(self,args):
@@ -179,7 +176,14 @@ class Chart(ViewPlotWidget):
         self.interval = interval
         self.is_reseting =  False
         
-        self.crypto_ex = CryptoExchange().setupEchange(apikey=self.apikey, secretkey=self.secretkey,exchange_name=self.exchange_name)
+        try:
+            asyncio.run(self.crypto_ex_ws.close()) 
+            self.crypto_ex_ws = None
+            self.crypto_ex = None
+        except:
+            pass
+        
+        self.crypto_ex_ws = CryptoExchange_WS().setupEchange(apikey=self.apikey, secretkey=self.secretkey,exchange_name=self.exchange_name)
 
         self.sig_change_tab_infor.emit((self.symbol,self.interval))
 
@@ -200,13 +204,16 @@ class Chart(ViewPlotWidget):
         if secretkey != "":
             self.secretkey = secretkey
         
-        new_echange = {"id":f"{symbol}_{interval}","exchange":self.crypto_ex}
+        new_echange = {"id":f"{symbol}_{interval}","exchange":self.crypto_ex_ws}
         self.add_to_exchanges(new_echange)
         # exchange.streaming['keepAlive'] = 10000 
         # exchange.streaming['maxPingPongMisses'] = 1
-        data = []       
-        await self.crypto_ex.load_markets(reload=True) 
-        data = await self.crypto_ex.fetch_ohlcv(symbol,interval,limit=1500) 
+        data = [] 
+        if not self.crypto_ex:
+            self.crypto_ex = CryptoExchange().setupEchange(apikey=self.apikey, secretkey=self.secretkey,exchange_name=self.exchange_name)      
+        self.crypto_ex.load_markets()
+        await self.crypto_ex_ws.load_markets()
+        data = await self.crypto_ex_ws.fetch_ohlcv(symbol,interval,limit=1500) 
         if len(data) == 0:
             raise BadSymbol(f"{self.exchange_name} data not received")
         self.set_market_by_symbol(self.crypto_ex)
@@ -216,17 +223,15 @@ class Chart(ViewPlotWidget):
         
         self.heikinashi.source_name = f"heikin {self.symbol} {self.interval}"
         self.update_sources(self.heikinashi)
-        
         self.heikinashi.fisrt_gen_data()
-        self.first_run.emit()
+        
         await self.loop_watch_ohlcv(symbol,interval)
         
     async def loop_watch_ohlcv(self,symbol,interval):
         print("start loop__________")
         firt_run = False
         _ohlcv = []
-        while self.crypto_ex in list(self.exchanges.values()):
-            
+        while self.crypto_ex_ws in list(self.exchanges.values()):
             if self.exchanges == {}:
                 break
             if not (self.symbol == symbol and self.interval == interval and self.crypto_ex.id == self.exchange_name):
@@ -235,18 +240,18 @@ class Chart(ViewPlotWidget):
             if self.crypto_ex != None:
                 if (self.symbol == symbol and self.interval == interval and self.crypto_ex.id == self.exchange_name):
                     try:
-                        if "watchOHLCV" in list(self.crypto_ex.has.keys()):
+                        if "watchOHLCV" in list(self.crypto_ex_ws.has.keys()):
                             if _ohlcv == []:
-                                _ohlcv = await self.crypto_ex.fetch_ohlcv(symbol,interval,limit=2)
+                                _ohlcv = self.crypto_ex.fetch_ohlcv(symbol,interval,limit=2)
                             else:
-                                ohlcv = await self.crypto_ex.watch_ohlcv(symbol,interval,limit=2)
+                                ohlcv = await self.crypto_ex_ws.watch_ohlcv(symbol,interval,limit=2)
                                 if _ohlcv[-1][0]/1000 == ohlcv[-1][0]/1000:
                                     _ohlcv[-1] = ohlcv[-1]
                                 else:
                                     _ohlcv.append(ohlcv[-1])
                                     _ohlcv = _ohlcv[-2:]
                         elif "fetchOHLCV" in list(self.crypto_ex.has.keys()):
-                            _ohlcv = await self.crypto_ex.fetch_ohlcv(symbol,interval,limit=2)
+                            _ohlcv = self.crypto_ex.fetch_ohlcv(symbol,interval,limit=2)
                         else:
                             await asyncio.sleep(0.3)
                             continue
@@ -286,15 +291,8 @@ class Chart(ViewPlotWidget):
         
  
     async def close(self):
-        while list(self.exchanges.keys()) != []:
-            for key,value in list(self.exchanges.items()):
-                del self.exchanges[key]
-                if value != None:
-                    await value.close()
-                value = None
-                # value.deleteLater()
-        if self.crypto_ex != None:
-            await self.crypto_ex.close()
+        if self.crypto_ex_ws != None:
+            await self.crypto_ex_ws.close()
         self.exchanges.clear()
         if self.worker != None:
             if isinstance(self.worker,FastStartThread):

@@ -264,23 +264,26 @@ class MACD(QObject):
         self.worker.start()
     
     def paire_data(self,INDICATOR:DataFrame):
-        column_names = INDICATOR.columns.tolist()
-        
-        macd_name = ''
-        histogram_name = ''
-        signalma_name = ''
-        for name in column_names:
-            if name.__contains__("MACD"):
-                macd_name = name
-            elif name.__contains__("HISTOGRAM"):
-                histogram_name = name
-            elif name.__contains__("SIGNAL"):
-                signalma_name = name
+        try:
+            column_names = INDICATOR.columns.tolist()
+            
+            macd_name = ''
+            histogram_name = ''
+            signalma_name = ''
+            for name in column_names:
+                if name.__contains__("MACD"):
+                    macd_name = name
+                elif name.__contains__("HISTOGRAM"):
+                    histogram_name = name
+                elif name.__contains__("SIGNAL"):
+                    signalma_name = name
 
-        macd = INDICATOR[macd_name]
-        histogram = INDICATOR[histogram_name]
-        signalma = INDICATOR[signalma_name]
-        return macd,histogram,signalma
+            macd = INDICATOR[macd_name]
+            histogram = INDICATOR[histogram_name]
+            signalma = INDICATOR[signalma_name]
+            return macd,histogram,signalma
+        except:
+            return Series([]),Series([]),Series([])
     def caculate(self,df: pd.DataFrame):
         INDICATOR = macd(close=df[self.source],
                         fast=self.fast_period,

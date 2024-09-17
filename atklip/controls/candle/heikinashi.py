@@ -46,12 +46,8 @@ class HEIKINASHI(QObject):
         self.first_gen = False
         self._source_name = "HEIKINASHI"
         self.precicion = precicion
-        
         self.df = pd.DataFrame([])
         
-        # self._candles.sig_reset_all.connect(self.fisrt_gen_data,Qt.ConnectionType.AutoConnection)
-        # self._candles.sig_update_candle.connect(self.update,Qt.ConnectionType.AutoConnection)
-        # self._candles.sig_add_candle.connect(self.update,Qt.ConnectionType.AutoConnection)
         
     @property
     def source_name(self):
@@ -298,7 +294,46 @@ class HEIKINASHI(QObject):
         self.first_gen = True
         self.sig_reset_all.emit()
         return self.candles
-
+    
+    def load_historic_data(self,n):
+        self.first_gen = False
+        # self.df = pd.DataFrame([])
+        candles = self._candles.candles[:n+3]
+        [self.update_historic(candles[i],i) for i in range(len(candles))]
+        self.df = pd.DataFrame([data.__dict__ for data in self.candles])
+        self.first_gen = True
+        self.sig_reset_all.emit()
+        return self.candles
+    
+    def update_historic(self, candle:OHLCV,i:int):
+        if i == 0:
+            ha_open = candle.open
+            ha_close = round((candle.open+candle.high+candle.low+candle.close)/4,self.precicion)
+            # ha_close = (candle.open+candle.high+candle.low+candle.close)/4
+            ha_high = candle.high
+            ha_low = candle.low
+            
+            hl2 = round((ha_high+ha_low)/2,self.precicion)
+            hlc3 = round((ha_high+ha_low+ha_close)/3,self.precicion)
+            ohlc4 = round((ha_open+ha_high+ha_low+ha_close)/4,self.precicion)
+            
+        else:
+            ha_open = round((self.candles[i-1].open+self.candles[i-1].close)/2,self.precicion)
+            ha_close = round((candle.open+candle.high+candle.low+candle.close)/4,self.precicion)
+            ha_high = max(ha_open, ha_close, candle.high)
+            ha_low = min(ha_open, ha_close, candle.low)
+            hl2 = round((ha_high+ha_low)/2,self.precicion)
+            hlc3 = round((ha_high+ha_low+ha_close)/3,self.precicion)
+            ohlc4 = round((ha_open+ha_high+ha_low+ha_close)/4,self.precicion)
+        
+        ha_candle = OHLCV(ha_open,ha_high,ha_low,ha_close,hl2,hlc3,ohlc4,candle.volume,candle.time,candle.index)
+        
+        self.dict_index_ohlcv[ha_candle.index] = ha_candle
+        self.dict_time_ohlcv[ha_candle.time] = ha_candle
+        if self.candles[i].time == ha_candle.time:
+            self.candles[i] = ha_candle
+        else:
+            self.candles.insert(i,ha_candle)
     def update(self, _candles:List[OHLCV],_is_add_candle):
         if self.first_gen:
             new_candle = _candles[-1] #    _candle[-1]

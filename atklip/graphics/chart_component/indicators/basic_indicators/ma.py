@@ -3,7 +3,7 @@ from typing import Tuple, List,TYPE_CHECKING
 
 import numpy as np
 from atklip.graphics.pyqtgraph import functions as fn
-from PySide6.QtCore import Signal, QObject,Qt
+from PySide6.QtCore import Signal, QObject,Qt,QRectF
 from atklip.controls import PD_MAType
 
 from atklip.controls.ma import MA
@@ -181,6 +181,27 @@ class BasicMA(PlotLineItem):
         _index,_data = self.INDICATOR.get_data()
         setdata.emit((_index,_data))        
 
+    def boundingRect(self) -> QRectF:
+        x_left,x_right = int(self.chart.xAxis.range[0]),int(self.chart.xAxis.range[1])
+        start_index = self.chart.jp_candle.candles[0].index
+        stop_index = self.chart.jp_candle.candles[-1].index
+        if x_left > start_index:
+            self._start = x_left+2
+        else:
+            self._start = start_index+2
+            
+        if x_right < stop_index:
+            self._stop = x_right
+        else:
+            self._stop = stop_index
+        if self.yData.size != 0:
+            h_low,h_high = np.nanmin(self.yData), np.nanmax(self.yData) 
+        else:
+            h_low,h_high = self.chart.yAxis.range[0],self.chart.yAxis.range[1]
+        
+        rect = QRectF(self._start,h_low,self._stop-self._start,h_high-h_low)
+        return rect#     
+    
     def mouseClickEvent(self, ev):
         if ev.button() == Qt.MouseButton.LeftButton:
             self.on_click.emit(self)

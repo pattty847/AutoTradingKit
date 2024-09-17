@@ -218,13 +218,14 @@ class ViewSubPanel(PlotWidget):
         self.worker.signals.setdata.connect(self.auto_xrange,Qt.ConnectionType.QueuedConnection)
         self.worker.start()
     def get_last_pos_of_indicator(self,setdata):
-        if self.indicator != None:
-            _min, _max = self.indicator.get_min_max()
-            if _min != None:
-                setdata.emit((_min, _max))
-                return
-            time.sleep(0.1)
-            self.get_last_pos_of_indicator(setdata)
+        # if self.indicator != None:
+        _min, _max = self.indicator.get_min_max()
+        print(_min, _max)
+        if _min != None:
+            setdata.emit((_min, _max))
+            return
+        # time.sleep(0.1)
+        self.get_last_pos_of_indicator(setdata)
             
     def auto_xrange(self,lastpoint):
         _min,_max = lastpoint[0], lastpoint[1]

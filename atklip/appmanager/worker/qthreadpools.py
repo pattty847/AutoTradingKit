@@ -69,6 +69,7 @@ class FastWorker(QObject):
         except Exception as e:
             traceback.print_exception(e)
         finally:
+            self.signals.finished.emit()
             self.signals.deleteLater()
             self.deleteLater()
 

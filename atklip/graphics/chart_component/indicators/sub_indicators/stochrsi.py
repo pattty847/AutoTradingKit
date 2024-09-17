@@ -33,7 +33,7 @@ class BasicSTOCHRSI(GraphicsObject):
         #super().__init__(clickable=clickable)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
         self.chart:Chart = chart
-        self.panel:ViewSubPanel = panel
+        self._panel:ViewSubPanel = panel
 
         self._precision = self.chart._precision
         
@@ -192,7 +192,7 @@ class BasicSTOCHRSI(GraphicsObject):
         xdata,stochrsi,signalma = self.INDICATOR.get_data()
         setdata.emit((xdata,stochrsi,signalma))
         self.last_pos.emit((self.has["inputs"]["indicator_type"],signalma[-1]))
-        self.panel.sig_update_y_axis.emit()
+        self._panel.sig_update_y_axis.emit()
         
     def mousePressEvent(self, ev):
         if ev.button() == Qt.MouseButton.LeftButton:
@@ -260,8 +260,30 @@ class BasicSTOCHRSI(GraphicsObject):
     def paint(self, p:QPainter, *args):
         self.picture.play(p)
     
+    # def boundingRect(self) -> QRectF:
+    #     return self.signal.boundingRect()
+    
     def boundingRect(self) -> QRectF:
-        return self.signal.boundingRect()
+        x_left,x_right = int(self.chart.xAxis.range[0]),int(self.chart.xAxis.range[1])
+        start_index = self.chart.jp_candle.candles[0].index
+        stop_index = self.chart.jp_candle.candles[-1].index
+        if x_left > start_index:
+            self._start = x_left+2
+        else:
+            self._start = start_index+2
+        if x_right < stop_index:
+            self._stop = x_right
+        else:
+            self._stop = stop_index
+        
+        if self.signal.yData is None:
+            h_low,h_high = self._panel.yAxis.range[0],self._panel.yAxis.range[1]
+        elif self.signal.yData.size != 0:
+            h_low,h_high = np.nanmin(self.signal.yData), np.nanmax(self.signal.yData) 
+        else:
+            h_low,h_high = self._panel.yAxis.range[0],self._panel.yAxis.range[1]
+        rect = QRectF(self._start,h_low,self._stop-self._start,h_high-h_low)
+        return rect   
     
     def set_Data(self,data):
         xData = data[0]

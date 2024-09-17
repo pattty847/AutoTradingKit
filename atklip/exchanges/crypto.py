@@ -1,10 +1,10 @@
 import asyncio
-#from ccxt.async_support.base.exchange import Exchange
 from ccxt.base.types import *
-import ccxt.pro as Exchange
+import ccxt.pro as Exchange_ws
+import ccxt as Exchange
 
 # These exchanges will be used for testing the performance of the exchange connector.
-class  CryptoExchange():
+class CryptoExchange():
     def __init__(self):
         self.exchange = None
         self.name = ""
@@ -103,6 +103,114 @@ class  CryptoExchange():
            'secret': self.secretkey})
         elif self.name == "okx":
             self.exchange = Exchange.okx({
+                'apiKey': self.apikey,
+           'secret': self.secretkey})
+        else:
+            print(f"_____________Exchange {self.name} not found___________")
+            self.exchange = None
+            return None
+        return self.exchange
+
+
+class  CryptoExchange_WS():
+    def __init__(self):
+        self.exchange = None
+        self.name = ""
+    def setupEchange(self,apikey:str="", secretkey:str="",exchange_name:str="binanceusdm"):
+        self.apikey = apikey
+        self.secretkey = secretkey
+        self.verbose = True
+        self.exchange = None
+        # Add your own exchanges here if needed
+        self.name = exchange_name.lower()
+
+        if self.name == "binance":
+            self.exchange = Exchange_ws.binance({
+                'apiKey': self.apikey,
+              'secret': self.secretkey,
+            })
+        elif self.name == "binancecoinm":
+            self.exchange = Exchange_ws.binancecoinm({
+                'apiKey': self.apikey,
+              'secret': self.secretkey,
+            })
+        elif self.name == "binanceusdm":
+            self.exchange = Exchange_ws.binanceusdm({
+                'apiKey': self.apikey,
+            'secret': self.secretkey,
+            })
+        elif self.name == "bitmex":
+            self.exchange = Exchange_ws.bitmex({
+                'apiKey': self.apikey,
+             'secret': self.secretkey,
+            })
+        elif self.name == "bybit":
+            self.exchange = Exchange_ws.bybit({
+                'apiKey': self.apikey,
+           'secret': self.secretkey,
+            })
+        elif self.name == "huobi":
+            self.exchange = Exchange_ws.huobi({
+                'apiKey': self.apikey,
+               'secret': self.secretkey})
+        elif self.name == "kraken":
+            self.exchange = Exchange_ws.kraken({
+                'apiKey': self.apikey,
+             'secret': self.secretkey})
+        elif self.name == "krakenfutures":
+            self.exchange = Exchange_ws.krakenfutures({
+                'apiKey': self.apikey,
+            'secret': self.secretkey})
+        elif self.name == "kucoin":
+            self.exchange = Exchange_ws.kucoin({
+                'apiKey': self.apikey,
+             'secret': self.secretkey})
+        elif self.name == "kucoinfutures":
+            self.exchange = Exchange_ws.kucoinfutures({
+                'apiKey': self.apikey,
+           'secret': self.secretkey})
+        elif self.name == "bingx":
+            self.exchange = Exchange_ws.bingx({
+                'apiKey': self.apikey,
+           'secret': self.secretkey})
+        elif self.name == "bitfinex2":
+            self.exchange = Exchange_ws.bitfinex2({
+                'apiKey': self.apikey,
+           'secret': self.secretkey})
+        elif self.name == "bitget":
+            self.exchange = Exchange_ws.bitget({
+                'apiKey': self.apikey,
+           'secret': self.secretkey})
+        elif self.name == "bitmart":
+            self.exchange = Exchange_ws.bitmart({
+                'apiKey': self.apikey,
+           'secret': self.secretkey})
+        elif self.name == "coinex":
+            self.exchange = Exchange_ws.coinex({
+                'apiKey': self.apikey,
+           'secret': self.secretkey})
+        elif self.name == "deribit":
+            self.exchange = Exchange_ws.deribit({
+                'apiKey': self.apikey,
+           'secret': self.secretkey})
+        elif self.name == "coinbaseexchange":
+            self.exchange = Exchange_ws.coinbaseexchange({
+                'apiKey': self.apikey,
+           'secret': self.secretkey})
+        elif self.name == "coinbase":
+            self.exchange = Exchange_ws.coinbase({
+                'apiKey': self.apikey,
+           'secret': self.secretkey})
+        elif self.name == "hitbtc":
+            self.exchange = Exchange_ws.hitbtc({
+                'apiKey': self.apikey,
+           'secret': self.secretkey})
+        elif self.name == "mexc":
+            self.exchange = Exchange_ws.mexc({
+                'apiKey': self.apikey,
+           'secret': self.secretkey})
+        elif self.name == "okx":
+            self.exchange = Exchange_ws.okx({
                 'apiKey': self.apikey,
            'secret': self.secretkey})
         else:

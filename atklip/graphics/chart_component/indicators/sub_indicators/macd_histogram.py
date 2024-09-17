@@ -103,7 +103,7 @@ class MACDHistogram(GraphicsObject):
 
         This function is called by external QGraphicsView.
         """
-        if self._start is None or self._start is None:
+        if self._start is None or self._stop is None:
             x_left,x_right = int(self._panel.xAxis.range[0]),int(self._panel.xAxis.range[1])
             start_index = self.chart.jp_candle.candles[0].index
             stop_index = self.chart.jp_candle.candles[-1].index
@@ -145,27 +145,19 @@ class MACDHistogram(GraphicsObject):
         x_left,x_right = int(self._panel.xAxis.range[0]),int(self._panel.xAxis.range[1])
         start_index = self.chart.jp_candle.candles[0].index
         stop_index = self.chart.jp_candle.candles[-1].index
-
         if x_left > start_index:
             self._start = x_left+2
-            x_range_left = x_left - start_index
         else:
             self._start = start_index+2
-            x_range_left = 0
-            
         if x_right < stop_index:
-            _width = x_right-start_index
             self._stop = x_right
         else:
-            _width = len(self.chart.jp_candle.candles)
             self._stop = stop_index
-            
         if self.y_data.size != 0:
-            h_low,h_high = self.y_data.min(), self.y_data.max()
+            h_low,h_high = np.nanmin(self.y_data), np.nanmax(self.y_data)
         else:
             h_low,h_high = self.chart.yAxis.range[0],self.chart.yAxis.range[1]
-        
-        rect = QRectF(self._start,h_low,_width,h_high-h_low)
+        rect = QRectF(self._start,h_low,self._stop-self._start,h_high-h_low)
         return rect# 
     
     def draw_volume(self,value,w,x_data,index):
@@ -202,7 +194,7 @@ class MACDHistogram(GraphicsObject):
         [self.draw_volume(value,w,x_data,index) for index, value in enumerate(y_data)]
         self._to_update = True
         # 
-        # self.prepareGeometryChange()
+        self.prepareGeometryChange()
         self.informViewBoundsChanged()
         # self._panel.informViewBoundsChanged()
 

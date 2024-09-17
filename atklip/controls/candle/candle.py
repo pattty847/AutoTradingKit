@@ -216,12 +216,11 @@ class JAPAN_CANDLE(QObject):
     def load_historic_data(self,ohlcv,_precision):
         ohlcv = ohlcv[::-1]
         self.first_gen = False
-        self.df = pd.DataFrame([])
+        # self.df = pd.DataFrame([])
         [self.update_historic(OHLCV(ohlcv[i][1],ohlcv[i][2],ohlcv[i][3],ohlcv[i][4],round((ohlcv[i][2]+ohlcv[i][3])/2,_precision), round((ohlcv[i][2]+ohlcv[i][3]+ohlcv[i][4])/3,_precision), round((ohlcv[i][1]+ohlcv[i][2]+ohlcv[i][3]+ohlcv[i][4])/4,_precision),ohlcv[i][5],ohlcv[i][0]/1000,i)) for i in range(len(ohlcv))]
         self.df = pd.DataFrame([data.__dict__ for data in self.candles])
         self.first_gen = True
-        # self.sig_reset_all.emit()
-        self.sig_add_candle.emit(self.candles[-2:])
+        self.sig_reset_all.emit()
         return self.candles
 
     def update_historic(self,new_candle:OHLCV):

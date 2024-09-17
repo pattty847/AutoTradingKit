@@ -37,7 +37,7 @@ class BasicMACD(GraphicsObject):
         GraphicsObject.__init__(self)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
         self.chart:Chart = chart
-        self.panel:ViewSubPanel = panel
+        self._panel:ViewSubPanel = panel
 
         self._precision = self.chart._precision
         
@@ -98,7 +98,7 @@ class BasicMACD(GraphicsObject):
         self.price_low.setParentItem(self)
         self.price_low.setPos(self.has["inputs"]["price_low"])
         
-        self.histogram = MACDHistogram(self.chart,self.panel,self.sig_reset_histogram,self.sig_update_histogram,self.has)
+        self.histogram = MACDHistogram(self.chart,self._panel,self.sig_reset_histogram,self.sig_update_histogram,self.has)
         self.histogram.setParentItem(self)
 
         self.picture: QPicture = QPicture()
@@ -272,7 +272,7 @@ class BasicMACD(GraphicsObject):
         xdata,macd,signalma,histogram= self.INDICATOR.get_data()
         setdata.emit((xdata,macd,signalma,histogram))
         self.last_pos.emit((self.has["inputs"]["indicator_type"],signalma[-1]))
-        self.panel.sig_update_y_axis.emit()  
+        self._panel.sig_update_y_axis.emit()  
 
     def boundingRect(self) -> QRectF:
         return self.histogram.boundingRect()

@@ -220,13 +220,13 @@ class BasicDonchianChannels(GraphicsObject):
             _start = start_index+2
             x_range_left = 0
         if x_right < stop_index:
-            _width = x_right-start_index
+            _width = x_right-_start
         else:
-            _width = len(self.chart.jp_candle.candles)
+            _width = stop_index-_start
         if self.lowline.yData is not None:
             if self.lowline.yData.size != 0:
                 try:
-                    h_low,h_high = self.lowline.yData[x_range_left:_width].min(), self.highline.yData[x_range_left:_width].max()
+                    h_low,h_high = np.nanmin(self.lowline.yData), np.nanmax(self.highline.yData)
                 except ValueError:
                     h_low,h_high = self.chart.yAxis.range[0],self.chart.yAxis.range[1]  
             else:

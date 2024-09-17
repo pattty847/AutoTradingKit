@@ -40,6 +40,7 @@ async def main():
         except Exception as e:
             print('fetch_OHLCV() failed')
             print(e)
+            break
         time.sleep(1)
     await exchange.close()
 

@@ -280,7 +280,7 @@ class CandleStick(GraphicsObject):
 
         This function is called by external QGraphicsView.
         """
-        if self._start is None or self._start is None:
+        if self._start is None or self._stop is None:
             x_left,x_right = int(self.chart.xAxis.range[0]),int(self.chart.xAxis.range[1])
             start_index = self.chart.jp_candle.candles[0].index
             stop_index = self.chart.jp_candle.candles[-1].index
@@ -319,34 +319,23 @@ class CandleStick(GraphicsObject):
             bar_picture.play(painter)    
             
     def boundingRect(self) -> QRectF:
-        x_left,x_right = int(self.chart.xAxis.range[0]),int(self.chart.xAxis.range[1])
+        x_left,x_right = int(self.chart.xAxis.range[0]),int(self.chart.xAxis.range[1])   
         start_index = self.chart.jp_candle.candles[0].index
         stop_index = self.chart.jp_candle.candles[-1].index
         if x_left > start_index:
             self._start = x_left+2
-            x_range_left = x_left - start_index
         elif x_left > stop_index:
             self._start = start_index+2
-            x_range_left = 0
         else:
             self._start = start_index+2
-            x_range_left = 0
             
         if x_right < stop_index:
-            _width = x_right-start_index
             self._stop = x_right
         else:
-            _width = len(self.chart.jp_candle.candles)
             self._stop = stop_index
-
-        if self.y_data.size != 0:
-            try:
-                h_low,h_high = np.min(self.y_data[:, 2][x_range_left:_width]), np.max(self.y_data[:, 1][x_range_left:_width]) 
-            except ValueError:
-                h_low,h_high = self.chart.yAxis.range[0],self.chart.yAxis.range[1]
-        else:
-            h_low,h_high = self.chart.yAxis.range[0],self.chart.yAxis.range[1]
-        rect = QRectF(self._start,h_low,_width,h_high-h_low)
+        h_high =  self.chart.jp_candle.get_df()["high"].iloc[self._start:self._stop].max()
+        h_low = self.chart.jp_candle.get_df()["low"].iloc[self._start:self._stop].min()
+        rect = QRectF(x_left,h_low,self._stop-self._start,h_high-h_low)
         return rect
 
     def draw_candle(self,_open,_max,_min,close,w,x_data,index):
@@ -493,7 +482,6 @@ class SingleCandleStick(GraphicsObject):
             raise Exception("Len of x_data must be the same as y_data")
         self.picture = QPicture()
         p = QPainter(self.picture)
-        
         w = 1 / 5
         index = -1
         t = x_data[index]

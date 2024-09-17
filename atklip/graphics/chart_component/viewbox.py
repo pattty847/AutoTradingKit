@@ -36,27 +36,15 @@ class PlotViewBox(ViewBox):
         self.plotwidget:ViewPlotWidget = plotwidget
 
         self.main = main
-
-
-        # self.price_line = InfiniteLine(angle=0,labelOpts={'position': 0.98},
-        #                                   pen=mkPen("#eaeaea",style= Qt.PenStyle.DashLine),movable=False)
-        # self.price_line.setName("line_last_price")
-        # self.price_line_color = "green"
-        # self.price_line.pen.setColor(mkColor(self.price_line_color))
-        # self.price_line.setPos(-10000)
-        # self.price_line.hide()
         
         cursor = QtGui.QCursor(Qt.CrossCursor)
         self.setCursor(cursor)
         
-
-        #print(26, "view_box", type_chart, args, kwds)
         self.type_chart = type_chart
         self._isMouseLeftDrag = False
         self.drawing = False
         self.draw_line = None
         self.rois = []
-        # self.addItem(self.price_line)
         self.red_box = 'background-color: #363a45;color:#363a45; border:6px solid black; margin:0px 6px;'
         self.green_box = 'background-color: #22c55e;color:#22c55e; border:6px solid black; margin:0px 6px;'
         self.state.update({
@@ -186,12 +174,23 @@ class PlotViewBox(ViewBox):
     
     def wheelEvent(self, ev, axis=None):
         self.load_old_data.emit()
-        self.LivePlotWidget_PlotItem = self.parentItem()
+        # self.LivePlotWidget_PlotItem = self.parentItem()
 
-        #y_range = self.LivePlotWidget_PlotItem.getAxis('right').range[1]/2
-        y_range = (self.LivePlotWidget_PlotItem.getAxis('right').range[1] + self.LivePlotWidget_PlotItem.getAxis('right').range[0])/2
+        y_range = (self.plotwidget.yAxis.range[1] + self.plotwidget.yAxis.range[0])/2
         
-        x_range = self.LivePlotWidget_PlotItem.getAxis('bottom').range[1]
+        x_range = self.plotwidget.xAxis.range[1]
+        
+        # x_left,x_right = int(self.plotwidget.xAxis.range[0]),int(self.plotwidget.xAxis.range[1])
+        # start_index = self.plotwidget.jp_candle.candles[0].index
+        # stop_index = self.plotwidget.jp_candle.candles[-1].index
+        # if x_left > start_index:
+        #     self.plotwidget._start = x_left+2
+        # else:
+        #     self.plotwidget._start = start_index+2
+        # if x_right < stop_index:
+        #     self.plotwidget._stop = x_right
+        # else:
+        #     self.plotwidget._stop = stop_index
         
         # MODIFIED ZOOM   GET mouseEnabled để set enable cho X hay Y, chính là cái set state
         if axis is None:
@@ -221,8 +220,19 @@ class PlotViewBox(ViewBox):
     
     def mouseDragEvent(self, ev, axis=None):
         self.load_old_data.emit()
-        self.update_basement_feature_signal.emit()
-        self.LivePlotWidget_PlotItem = self.parentItem()
+        
+        # x_left,x_right = int(self.plotwidget.xAxis.range[0]),int(self.plotwidget.xAxis.range[1])
+        # start_index = self.plotwidget.jp_candle.candles[0].index
+        # stop_index = self.plotwidget.jp_candle.candles[-1].index
+        # if x_left > start_index:
+        #     self.plotwidget._start = x_left+2
+        # else:
+        #     self.plotwidget._start = start_index+2
+        # if x_right < stop_index:
+        #     self.plotwidget._stop = x_right
+        # else:
+        #     self.plotwidget._stop = stop_index
+        
         pos = ev.pos()
         lastPos = ev.lastPos()
         dif = pos - lastPos
@@ -304,7 +314,6 @@ class PlotViewBox(ViewBox):
             self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
         if ev.isFinish():
             self.drawing = False
-            # self.load_old_data.emit()
         ev.accept()
     
     def mouseLeftDrag(self, ev, axis, mouseEnabled, mask):
@@ -328,9 +337,9 @@ class PlotViewBox(ViewBox):
             x = s[0] if mouseEnabled[0] == 1 else None
             y = s[1] if mouseEnabled[1] == 1 else None
             
-            y_range = (self.LivePlotWidget_PlotItem.getAxis('right').range[1] + self.LivePlotWidget_PlotItem.getAxis('right').range[0])/2
+            y_range = (self.plotwidget.getAxis('right').range[1] + self.plotwidget.getAxis('right').range[0])/2
         
-            x_range = self.LivePlotWidget_PlotItem.getAxis('bottom').range[1]
+            x_range = self.plotwidget.getAxis('bottom').range[1]
 
             #center = Point(tr.map(ev.buttonDownPos(QtCore.Qt.MouseButton.LeftButton)))
             
@@ -344,7 +353,6 @@ class PlotViewBox(ViewBox):
             super().mouseDragEvent(ev, axis)
             if ev.isFinish():
                 self._isMouseLeftDrag = False
-                # self.load_old_data.emit() 
             else:
                 self._isMouseLeftDrag = True
             # if ev.isFinish() or self.drawing:
@@ -354,7 +362,6 @@ class PlotViewBox(ViewBox):
                 return
      
         ev.accept() 
-        # self.load_old_data.emit()
 
     def mouseClickEvent(self, ev):
         #print(460, "press vbox")

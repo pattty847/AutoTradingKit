@@ -92,6 +92,7 @@ class Volume(GraphicsObject):
             self.has["styles"]["brush_lowcolor"] = mkBrush(_style,width=0.7)
         self.historic_volume.fisrt_gen_data()
         self.threadpool_asyncworker()
+    
     def get_min_max(self):
         volumes_fr = self.chart.jp_candle.get_df()
         sr = volumes_fr["volume"]
@@ -134,7 +135,7 @@ class Volume(GraphicsObject):
 
         This function is called by external QGraphicsView.
         """
-        if self._start is None or self._start is None:
+        if self._start is None or self._stop is None:
             x_left,x_right = int(self._panel.xAxis.range[0]),int(self._panel.xAxis.range[1])
             
             start_index = self.chart.jp_candle.candles[0].index
@@ -176,30 +177,23 @@ class Volume(GraphicsObject):
             bar_picture.play(painter)    
     
     def boundingRect(self) -> QRectF:
-        x_left,x_right = int(self._panel.xAxis.range[0]),int(self._panel.xAxis.range[1])
+        x_left,x_right = int(self.chart.xAxis.range[0]),int(self.chart.xAxis.range[1])  
         start_index = self.chart.jp_candle.candles[0].index
         stop_index = self.chart.jp_candle.candles[-1].index
-
         if x_left > start_index:
             self._start = x_left+2
-            x_range_left = x_left - start_index
+        elif x_left > stop_index:
+            self._start = start_index+2
         else:
             self._start = start_index+2
-            x_range_left = 0
             
         if x_right < stop_index:
-            _width = x_right-start_index
             self._stop = x_right
         else:
-            _width = len(self.chart.jp_candle.candles)
             self._stop = stop_index
-
-        if self.y_data.size != 0:
-            h_low,h_high = self.y_data[x_range_left:_width].min(), self.y_data[x_range_left:_width].max()
-        else:
-            h_low,h_high = self._panel.yAxis.range[0],self._panel.yAxis.range[1]
-            
-        rect = QRectF(self._start,0,_width,h_high-h_low)
+        h_high =  self.chart.jp_candle.get_df()["volume"].iloc[self._start:self._stop].max()
+        h_low = self.chart.jp_candle.get_df()["volume"].iloc[self._start:self._stop].min()
+        rect = QRectF(self._start,h_low,self._stop-self._start,h_high-h_low)
         return rect
 
     def draw_volume(self,_open,close,volume,w,x_data,index):
@@ -220,9 +214,7 @@ class Volume(GraphicsObject):
                 _line = QLineF(QPointF(t - w, 0), QPointF(t + w, 0))
                 p.drawLine(_line)
             else:
-                #path = QPainterPath()
                 rect = QRectF(t - w, 0, w * 2, volume)  
-                #path.addRect(rect)  
                 p.drawRect(rect)
             self._bar_picutures[t] = candle_picture
 
