@@ -22,7 +22,10 @@ pyarrow
 setuptools
 streamlit
 polars[all]
+cryptofeed[all]
 polars-lts-cpu
+python-rapidjson
+humanize
 #polars-ta
 # pip install 'polars[all]'
 # TA-Lib==0.4.28

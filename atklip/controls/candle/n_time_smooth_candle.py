@@ -390,6 +390,8 @@ class N_SMOOTH_CANDLE(QObject):
         self.is_genering = True
         self.df = pd.DataFrame([])
         self.candles:List[OHLCV] = []
+        self.dict_index_ohlcv: Dict[int, OHLCV] = {}
+        self.dict_time_ohlcv: Dict[int, OHLCV] = {}
         self.dict_n_ohlcv.clear()
         self.dict_n_ma.clear()
         self._gen_data()

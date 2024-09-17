@@ -203,6 +203,8 @@ class JAPAN_CANDLE(QObject):
     def fisrt_gen_data(self,ohlcv,_precision):
         self.first_gen = False
         self.df = pd.DataFrame([])
+        self.dict_index_ohlcv: Dict[int, OHLCV] = {}
+        self.dict_time_ohlcv: Dict[int, OHLCV] = {}
         self.candles = []
         [self.gen_update(OHLCV(ohlcv[i][1],ohlcv[i][2],ohlcv[i][3],ohlcv[i][4],round((ohlcv[i][2]+ohlcv[i][3])/2,_precision), round((ohlcv[i][2]+ohlcv[i][3]+ohlcv[i][4])/3,_precision), round((ohlcv[i][1]+ohlcv[i][2]+ohlcv[i][3]+ohlcv[i][4])/4,_precision),ohlcv[i][5],ohlcv[i][0]/1000,i)) for i in range(len(ohlcv))]
         self.first_gen = True

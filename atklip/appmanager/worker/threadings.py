@@ -28,7 +28,10 @@ class FastStartThread(QObject):
             pass
         
     def stop_thread(self):
-        self.deleteLater()
+        try:
+            self.deleteLater()
+        except:
+            pass
 
     @Slot()
     def run(self):

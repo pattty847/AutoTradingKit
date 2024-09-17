@@ -325,6 +325,8 @@ class SMOOTH_CANDLE(QObject):
         self.is_genering = True
         self.df = pd.DataFrame([])
         self.candles:List[OHLCV] = []
+        self.dict_index_ohlcv: Dict[int, OHLCV] = {}
+        self.dict_time_ohlcv: Dict[int, OHLCV] = {}
         
         df:pd.DataFrame = self._candles.get_df()
         self.highs = ta.ma(f"{self.ma_type.name}".lower(), df["high"],length=self.period)

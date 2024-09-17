@@ -2,16 +2,12 @@ import asyncio
 #from ccxt.async_support.base.exchange import Exchange
 from ccxt.base.types import *
 import ccxt.pro as Exchange
-from PySide6.QtCore import QObject,Signal
 
 # These exchanges will be used for testing the performance of the exchange connector.
-class  CryptoExchange(QObject):
-    sig_delete = Signal()
-    def __init__(self,parent: QObject | None = ...):
-        super().__init__(parent)
+class  CryptoExchange():
+    def __init__(self):
         self.exchange = None
         self.name = ""
-        self.sig_delete.connect(self.deleteLater)
     def setupEchange(self,apikey:str="", secretkey:str="",exchange_name:str="binanceusdm"):
         self.apikey = apikey
         self.secretkey = secretkey
@@ -113,14 +109,13 @@ class  CryptoExchange(QObject):
             print(f"_____________Exchange {self.name} not found___________")
             self.exchange = None
             return None
-        self.sig_delete.connect(lambda: asyncio.run(self.exchange.close()))
         return self.exchange
         
     async def load_markets_helper(self, reload=False, params={}):
         return await self.exchange.load_markets_helper(reload=False, params={})  # don't return cached markets if we can help it
 
     async def load_markets(self, reload=False, params={}):
-        return await self.exchange.load_markets(reload=False, params={})
+        return await self.exchange.load_markets(reload=reload, params=params)
 
     def fetch_fees(self):
          return self.exchange.fetch_fees()

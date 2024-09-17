@@ -31,89 +31,90 @@ class Chart(ViewPlotWidget):
         self.sig_reload_indicator_panel.connect(self._parent.reload_pre_indicator,Qt.ConnectionType.AutoConnection)
         self.apikey = apikey
         self.secretkey = secretkey
+        
+        self.apikey = "zhBF9X2mhD7rY6fpFU243biBtE4ySGpXTBPdYYOExyx27G5CrU6cCEditBhO7ek4"
+        self.secretkey = "6rIYDN1xBaxxGyuLslYGMxlHFtjgzhVh6nV4zO8IKaspdF1H3tC5MKXMgxA1rHDA"
 
         self.exchange_name,self.symbol, self.interval =exchange_name, symbol,interval
         
         self.sig_reset_exchange = False
         self.is_reseting =  False
         self.worker = None
+        self.worker_auto_load_old_data = None
         
-        self.threadpool = QThreadPool(self)
-        self.threadpool.setMaxThreadCount(4)
 
         self.vb.symbol, self.vb.interval = self.symbol, self.interval
         
         self.sources: Dict[str:QObject] = {}
         self.exchanges = {}
-        self.is_load_historic = False
+        self.is_load_historic = True
+        self._runing_load_historic = {f"{self.symbol}-{self.interval}":True}
+        
+        self.loop = self._init_async_loop()
+        
+        self.crypto_ex = CryptoExchange().setupEchange(apikey=self.apikey, secretkey=self.secretkey,exchange_name=self.exchange_name)
 
         self.sig_add_indicator_panel.connect(self.setup_indicator,Qt.ConnectionType.AutoConnection)
 
         self.first_run.connect(self.set_data_dataconnect,Qt.ConnectionType.AutoConnection)
         self.fast_reset_worker(apikey=self.apikey,secretkey=self.secretkey,exchange_name=self.exchange_name,symbol=self.symbol,interval=self.interval)
     
+    def _init_async_loop(self) -> asyncio.AbstractEventLoop:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        return loop
+
     def auto_load_old_data(self):
-        worker_auto_load_old_data_ = ThreadingAsyncWorker(fn=self.check_signal_load_old_data)
-        worker_auto_load_old_data_.start_thread()
+        # if isinstance(self.worker_auto_load_old_data,ThreadingAsyncWorker):
+        #     self.worker_auto_load_old_data.stop_thread()
+        self.worker_auto_load_old_data = ThreadingAsyncWorker(fn=self.check_signal_load_old_data)
+        self.worker_auto_load_old_data.start_thread()
         
-
     async def check_signal_load_old_data(self):
-        if not self.is_load_historic:
-            self.is_load_historic = True
-            x_range = self.getAxis('bottom').range
-            left_xrange = x_range[0]
-            right_xrange = x_range[1]
-            first_candlestick_index = self.jp_candle.candles[0].index
-            print(first_candlestick_index,left_xrange,left_xrange < first_candlestick_index + 3000)
-            if left_xrange < first_candlestick_index + 3000:
-                await self.load_old_data()
+        self.is_load_historic = True
+        x_range = self.getAxis('bottom').range
+        left_xrange = x_range[0]
+        right_xrange = x_range[1]
+        first_candlestick_index = self.jp_candle.candles[0].index
+        # print(first_candlestick_index,left_xrange,left_xrange < first_candlestick_index + 3000)
+        _cr_time = self.jp_candle.candles[0].time
+        
+        exchange = CryptoExchange().setupEchange(apikey=self.apikey, secretkey=self.secretkey,exchange_name=self.exchange_name)
+        
+        data = await exchange.fetch_ohlcv(self.symbol,self.interval,limit=1500, params={"until":_cr_time*1000})
+        
+        self.jp_candle.load_historic_data(data,self._precision)
+            
+            # if left_xrange < first_candlestick_index + 3000:
+            #     if self.jp_candle.candles != []:
+            #         _cr_time = self.jp_candle.candles[0].time
+            #         exchange = CryptoExchange().setupEchange(apikey=self.apikey, secretkey=self.secretkey,exchange_name=self.exchange_name)
+            #         data = await exchange.fetch_ohlcv(self.symbol,self.interval,limit=1500, params={"until":_cr_time*1000})
+            #         self.jp_candle.load_historic_data(data,self._precision)
+            #         await exchange.close()
 
-    async def load_old_data(self):
-        if self.jp_candle.candles != []:
-            _cr_time = self.jp_candle.candles[0].time
-            crypto_ex = CryptoExchange()
-            exchange = crypto_ex.setupEchange(apikey=self.apikey, secretkey=self.secretkey,exchange_name=self.exchange_name)
-            # self.exchanges[f"load_historic _ {self.symbol}_{self.interval}"] = exchange
-            data = await exchange.fetch_ohlcv(self.symbol,self.interval,limit=1500, params={"until":_cr_time*1000})
-            self.jp_candle.load_historic_data(data,self._precision)
-            await exchange.close()
-            crypto_ex.deleteLater()
-            # exchange = self.exchanges.get(f"load_historic _ {self.symbol}_{self.interval}")
-            # print(_cr_time,exchange, type(exchange))
-            # if exchange != None:
-            #     print(exchange)
-            #     data = await exchange.fetch_ohlcv(self.symbol,self.interval, params={"until":_cr_time*1000})
-            #     print("vao day", exchange)
-            #     self.jp_candle.load_historic_data(data,self._precision)
-            # else:
-            #     exchange = crypto_ex.setupEchange(apikey=self.apikey, secretkey=self.secretkey,exchange_name=self.exchange_name)
-            #     self.exchanges[f"load_historic _ {self.symbol}_{self.interval}"] = exchange
-            #     data = await exchange.fetch_ohlcv(self.symbol,self.interval, params={"until":_cr_time*1000})
-            #     self.jp_candle.load_historic_data(data,self._precision)
-                # await exchange.close()
-        self.is_load_historic = False
     
 
     def add_to_exchanges(self,new_echange):
         """new_echange = {"id":"symbol_interval","exchange":Exchange,}"""
         if self.exchanges != {}:
-            _list_values = list(self.exchanges.items())
-            for key,echange in _list_values:
-                if key == new_echange["id"]:
-                    self.exchanges[new_echange["id"]] = new_echange["exchange"]
+            if new_echange["id"] in list(self.exchanges.keys()):
+                old_ex =  self.exchanges[new_echange["id"]]
+                if new_echange["exchange"] == old_ex:
                     return
+                # del self.exchanges[new_echange["id"]]
+            self.exchanges[new_echange["id"]] = new_echange["exchange"]
+            return
         self.exchanges[new_echange["id"]] = new_echange["exchange"]
-    
-    async def remove_from_exchanges(self,_id,exchange):
-        print(_id,exchange)
-        del self.exchanges[_id]
-        if exchange.exchange != None:
-            await exchange.exchange.close()
-        exchange.sig_delete.emit()
+        
+    async def remove_from_exchanges(self,_id):
+        if _id in list(self.exchanges.keys()):
+                old_ex =  self.exchanges[_id]
+                del self.exchanges[_id]
+                # await old_ex.close()
+        # exchange.sig_delete.emit()
         exchange = None
     
-    def get_exchange(self):
-        return f"{self.symbol}_{self.interval}",self.exchanges.get(f"{self.symbol}_{self.interval}")
     
     def update_sources(self,source:HEIKINASHI|SMOOTH_CANDLE|JAPAN_CANDLE|N_SMOOTH_CANDLE):
         _key = f"{self.symbol} {self.interval}"
@@ -148,12 +149,9 @@ class Chart(ViewPlotWidget):
         self.sig_show_process.emit(True)
         self.sig_reset_exchange = True
         """("change_symbol",symbol,self.exchange_id,exchange_name,symbol_icon_path,echange_icon_path)"""
-        #print("viwchart",args)
 
-        _id,exchange = self.get_exchange()
-        if exchange != None:
-            print(exchange)
-            asyncio.run(self.remove_from_exchanges(_id,exchange)) 
+        cr_id = f"{self.symbol}_{self.interval}"
+        asyncio.run(self.remove_from_exchanges(cr_id)) 
         
         _type, symbol, exchange_name = args[0],args[1],args[2]
         if exchange_name == self.exchange_name:
@@ -162,6 +160,9 @@ class Chart(ViewPlotWidget):
         self.exchange_name = exchange_name
         self.is_reseting =  False
         self.sig_change_tab_infor.emit((self.symbol,self.interval))
+        
+        self.crypto_ex = CryptoExchange().setupEchange(apikey=self.apikey, secretkey=self.secretkey,exchange_name=self.exchange_name)
+        
         self.fast_reset_worker(exchange_name=exchange_name,symbol=symbol,interval=self.interval)
     
     def on_change_inteval(self,args):
@@ -170,15 +171,15 @@ class Chart(ViewPlotWidget):
         """
         self.sig_show_process.emit(True)
         
-        _id,exchange = self.get_exchange()
-        if exchange != None:
-            # print(exchange)
-            asyncio.run(self.remove_from_exchanges(_id,exchange)) 
+        cr_id = f"{self.symbol}_{self.interval}"
+        asyncio.run(self.remove_from_exchanges(cr_id)) 
         
         self.sig_reset_exchange = True
         _type, interval = args[0],args[1]
         self.interval = interval
         self.is_reseting =  False
+        
+        self.crypto_ex = CryptoExchange().setupEchange(apikey=self.apikey, secretkey=self.secretkey,exchange_name=self.exchange_name)
 
         self.sig_change_tab_infor.emit((self.symbol,self.interval))
 
@@ -186,35 +187,29 @@ class Chart(ViewPlotWidget):
     
     
     def fast_reset_worker(self,apikey:str="",secretkey:str="",exchange_name:str="binanceusdm",symbol:str="",interval:str=""):
-        crypto_ex = CryptoExchange(self)
-        new_echange = {"id":f"{symbol}_{interval}","exchange":crypto_ex,}
-        self.add_to_exchanges(new_echange)
         if self.worker != None:
             if isinstance(self.worker,FastStartThread):
                 self.worker.stop_thread()
         self.worker = None
-        self.worker = FastStartThread(self.reset_exchange, apikey,secretkey,crypto_ex,exchange_name,symbol,interval)
+        self.worker = FastStartThread(self.reset_exchange, apikey,secretkey,exchange_name,symbol,interval)
         self.worker.start_thread()
-        # self.threadpool.start(self.worker)
 
-    async def reset_exchange(self,apikey:str="",secretkey:str="",crypto_ex: CryptoExchange=None,exchange_name:str="binanceusdm",symbol:str="",interval:str=""):
+    async def reset_exchange(self,apikey:str="",secretkey:str="",exchange_name:str="binanceusdm",symbol:str="",interval:str=""):
         if apikey != "":
             self.apikey = apikey
         if secretkey != "":
             self.secretkey = secretkey
         
-        exchange = crypto_ex.setupEchange(apikey=self.apikey, secretkey=self.secretkey,exchange_name=exchange_name)
+        new_echange = {"id":f"{symbol}_{interval}","exchange":self.crypto_ex}
+        self.add_to_exchanges(new_echange)
         # exchange.streaming['keepAlive'] = 10000 
         # exchange.streaming['maxPingPongMisses'] = 1
-        
-        data = []
-        if exchange != None:
-            data = await exchange.fetch_ohlcv(symbol,interval,limit=1500) 
-        else:
-             raise BadSymbol(f"{self.exchange_name} {symbol}/{interval} does not support fetch_ohlcv")
+        data = []       
+        await self.crypto_ex.load_markets(reload=True) 
+        data = await self.crypto_ex.fetch_ohlcv(symbol,interval,limit=1500) 
         if len(data) == 0:
             raise BadSymbol(f"{self.exchange_name} data not received")
-        self.set_market_by_symbol(exchange)
+        self.set_market_by_symbol(self.crypto_ex)
         self.jp_candle.fisrt_gen_data(data,self._precision)
         self.jp_candle.source_name = f"jp {self.symbol} {self.interval}"
         self.update_sources(self.jp_candle)
@@ -223,44 +218,44 @@ class Chart(ViewPlotWidget):
         self.update_sources(self.heikinashi)
         
         self.heikinashi.fisrt_gen_data()
+        self.first_run.emit()
+        await self.loop_watch_ohlcv(symbol,interval)
         
-        await self.loop_watch_ohlcv(crypto_ex,exchange,symbol,interval)
-        
-    async def loop_watch_ohlcv(self,crypto_ex,exchange,symbol,interval):
+    async def loop_watch_ohlcv(self,symbol,interval):
+        print("start loop__________")
         firt_run = False
         _ohlcv = []
-        while crypto_ex in list(self.exchanges.values()):
+        while self.crypto_ex in list(self.exchanges.values()):
+            
             if self.exchanges == {}:
                 break
-            if not (self.symbol == symbol and self.interval == interval and exchange.id == self.exchange_name):
-                AppLogger.writer("INFO",f"{__name__} - {exchange.id}-{symbol}-{interval} have changed to {self.exchange_name}-{self.symbol}-{self.interval}")
+            if not (self.symbol == symbol and self.interval == interval and self.crypto_ex.id == self.exchange_name):
+                AppLogger.writer("INFO",f"{__name__} - {self.crypto_ex.id}-{symbol}-{interval} have changed to {self.exchange_name}-{self.symbol}-{self.interval}")
                 break
-            if exchange != None:
-                if (self.symbol == symbol and self.interval == interval and exchange.id == self.exchange_name):
+            if self.crypto_ex != None:
+                if (self.symbol == symbol and self.interval == interval and self.crypto_ex.id == self.exchange_name):
                     try:
-                        if "watchOHLCV" in list(exchange.has.keys()):
+                        if "watchOHLCV" in list(self.crypto_ex.has.keys()):
                             if _ohlcv == []:
-                                _ohlcv = await exchange.fetch_ohlcv(symbol,interval,limit=2)
-                                # _ohlcv[-1] = ohlcv[-1]
+                                _ohlcv = await self.crypto_ex.fetch_ohlcv(symbol,interval,limit=2)
                             else:
-                                ohlcv = await exchange.watch_ohlcv(symbol,interval,limit=2)
+                                ohlcv = await self.crypto_ex.watch_ohlcv(symbol,interval,limit=2)
                                 if _ohlcv[-1][0]/1000 == ohlcv[-1][0]/1000:
                                     _ohlcv[-1] = ohlcv[-1]
                                 else:
                                     _ohlcv.append(ohlcv[-1])
                                     _ohlcv = _ohlcv[-2:]
-                                    #_ohlcv = await exchange.fetch_ohlcv(symbol,interval,limit=2)    
-                        elif "fetchOHLCV" in list(exchange.has.keys()):
-                            _ohlcv = await exchange.fetch_ohlcv(symbol,interval,limit=2)
+                        elif "fetchOHLCV" in list(self.crypto_ex.has.keys()):
+                            _ohlcv = await self.crypto_ex.fetch_ohlcv(symbol,interval,limit=2)
                         else:
                             await asyncio.sleep(0.3)
                             continue
                     except Exception as ex:
+                        print(ex)
                         await asyncio.sleep(0.3)
                         continue
-                    # print(_ohlcv)
-                    if len(_ohlcv) >= 2 and (self.symbol == symbol and self.interval == interval and exchange.id == self.exchange_name):
-                        #print("update candle")
+                    
+                    if len(_ohlcv) >= 2 and (self.symbol == symbol and self.interval == interval and self.crypto_ex.id == self.exchange_name):
                         pre_ohlcv = OHLCV(_ohlcv[-2][1],_ohlcv[-2][2],_ohlcv[-2][3],_ohlcv[-2][4], round((_ohlcv[-2][2]+_ohlcv[-2][3])/2,self._precision) , round((_ohlcv[-2][2]+_ohlcv[-2][3]+_ohlcv[-2][4])/3,self._precision), round((_ohlcv[-2][1]+_ohlcv[-2][2]+_ohlcv[-2][3]+_ohlcv[-2][4])/4,self._precision),_ohlcv[-2][5],_ohlcv[-2][0]/1000,0)
                         last_ohlcv = OHLCV(_ohlcv[-1][1],_ohlcv[-1][2],_ohlcv[-1][3],_ohlcv[-1][4], round((_ohlcv[-1][2]+_ohlcv[-1][3])/2,self._precision) , round((_ohlcv[-1][2]+_ohlcv[-1][3]+_ohlcv[-1][4])/3,self._precision), round((_ohlcv[-1][1]+_ohlcv[-1][2]+_ohlcv[-1][3]+_ohlcv[-1][4])/4,self._precision),_ohlcv[-1][5],_ohlcv[-1][0]/1000,0)
                         _is_add_candle = self.jp_candle.update([pre_ohlcv,last_ohlcv])
@@ -269,35 +264,37 @@ class Chart(ViewPlotWidget):
       
                         if firt_run == False:
                             self.first_run.emit()
-                            #QCoreApplication.processEvents()
                             firt_run = True
                 else:
-                    if exchange != None:
-                        AppLogger.writer("warning",f"{__name__} - {exchange.id}-{symbol}-{interval} have changed to {self.exchange_name}-{self.symbol}-{self.interval}")
+                    if self.crypto_ex != None:
+                        AppLogger.writer("warning",f"{__name__} - {self.crypto_ex.id}-{symbol}-{interval} have changed to {self.exchange_name}-{self.symbol}-{self.interval}")
                     break
             else:
                 break
-            # try:
-            #     await asyncio.sleep(0.3)
-            # except:
-            #     pass
-        if exchange != None:
+            try:
+                await asyncio.sleep(0.3)
+            except:
+                pass
+        if self.crypto_ex != None:
             AppLogger.writer("INFO",f"{__name__} - {symbol}-{interval} have closed")
         try:
-            await exchange.close()
-            AppLogger.writer("INFO",f"{__name__} - {exchange.id}-{symbol}-{interval} have closed")
+            # await exchange.close()
+            AppLogger.writer("INFO",f"{__name__} - {self.crypto_ex.id}-{symbol}-{interval} have closed")
+            print(f"turn-off {self.crypto_ex.id}-{symbol}-{interval}")
         except Exception as e:
-            pass
-        print("turn-off")
+            print("turn-off with error!!!")
+        
  
     async def close(self):
         while list(self.exchanges.keys()) != []:
             for key,value in list(self.exchanges.items()):
                 del self.exchanges[key]
-                if value.exchange != None:
-                    await value.exchange.close()
-                value.exchange = None
-                value.deleteLater()
+                if value != None:
+                    await value.close()
+                value = None
+                # value.deleteLater()
+        if self.crypto_ex != None:
+            await self.crypto_ex.close()
         self.exchanges.clear()
         if self.worker != None:
             if isinstance(self.worker,FastStartThread):
@@ -390,6 +387,7 @@ class Chart(ViewPlotWidget):
         else:  
             "change interval/symbol data when starting app"
             self.jp_candle.sig_add_candle.emit(self.jp_candle.candles[-2:])
+            self.auto_xrange()
         self.sig_show_process.emit(False)
         self.is_reseting =  False
         self.sig_reset_exchange = False

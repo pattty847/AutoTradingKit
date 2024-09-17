@@ -289,6 +289,8 @@ class HEIKINASHI(QObject):
     def fisrt_gen_data(self):
         self.first_gen = False
         self.candles = []
+        self.dict_index_ohlcv: Dict[int, OHLCV] = {}
+        self.dict_time_ohlcv: Dict[int, OHLCV] = {}
         self.df = pd.DataFrame([])
         [self.compute(candle) for candle in self._candles.candles]
         
