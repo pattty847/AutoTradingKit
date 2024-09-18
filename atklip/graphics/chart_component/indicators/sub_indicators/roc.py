@@ -192,27 +192,27 @@ class BasicROC(PlotDataItem):
         else:
             self.hide()
             
-    def boundingRect(self) -> QRectF:
-        x_left,x_right = int(self.chart.xAxis.range[0]),int(self.chart.xAxis.range[1])
-        start_index = self.chart.jp_candle.candles[0].index
-        stop_index = self.chart.jp_candle.candles[-1].index
-        if x_left > start_index:
-            self._start = x_left+2
-        else:
-            self._start = start_index+2
-        if x_right < stop_index:
-            self._stop = x_right
-        else:
-            self._stop = stop_index
+    # def boundingRect(self) -> QRectF:
+    #     x_left,x_right = int(self.chart.xAxis.range[0]),int(self.chart.xAxis.range[1])
+    #     start_index = self.chart.jp_candle.candles[0].index
+    #     stop_index = self.chart.jp_candle.candles[-1].index
+    #     if x_left > start_index:
+    #         self._start = x_left+2
+    #     else:
+    #         self._start = start_index+2
+    #     if x_right < stop_index:
+    #         self._stop = x_right
+    #     else:
+    #         self._stop = stop_index
         
-        if self.yData is None:
-            h_low,h_high = self._panel.yAxis.range[0],self._panel.yAxis.range[1]
-        elif self.yData.size != 0:
-            h_low,h_high = np.nanmin(self.yData), np.nanmax(self.yData) 
-        else:
-            h_low,h_high = self._panel.yAxis.range[0],self._panel.yAxis.range[1]
-        rect = QRectF(self._start,h_low,self._stop-self._start,h_high-h_low)
-        return rect  
+    #     if self.yData is None:
+    #         h_low,h_high = self._panel.yAxis.range[0],self._panel.yAxis.range[1]
+    #     elif self.yData.size != 0:
+    #         h_low,h_high = np.nanmin(self.yData), np.nanmax(self.yData) 
+    #     else:
+    #         h_low,h_high = self._panel.yAxis.range[0],self._panel.yAxis.range[1]
+    #     rect = QRectF(self._start,h_low,self._stop-self._start,h_high-h_low)
+    #     return rect  
     def setdata_worker(self):
         self.worker = None
         self.worker = FastWorker(self.update_data)

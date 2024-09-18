@@ -70,21 +70,22 @@ class Chart(ViewPlotWidget):
             if not self.is_load_historic:
                 self.worker_auto_load_old_data.stop_thread()
         if not self.is_load_historic:
-            self.is_load_historic = True
-            self.worker_auto_load_old_data = ThreadingAsyncWorker(fn=self.check_signal_load_old_data)
-            self.worker_auto_load_old_data.start_thread()
+            x_range = self.getAxis('bottom').range
+            left_xrange = x_range[0]
+            right_xrange = x_range[1]
+            first_candlestick_index = self.jp_candle.candles[0].index        
+            if left_xrange < first_candlestick_index + 3000:
+                self.is_load_historic = True
+                self.worker_auto_load_old_data = ThreadingAsyncWorker(fn=self.check_signal_load_old_data)
+                self.worker_auto_load_old_data.start_thread()
         
     async def check_signal_load_old_data(self):
-        x_range = self.getAxis('bottom').range
-        left_xrange = x_range[0]
-        right_xrange = x_range[1]
-        first_candlestick_index = self.jp_candle.candles[0].index        
-        if left_xrange < first_candlestick_index + 3000:
-            if self.jp_candle.candles != []:
-                _cr_time = self.jp_candle.candles[0].time
-                data = self.crypto_ex.fetch_ohlcv(self.symbol,self.interval,limit=1500, params={"until":_cr_time*1000})
-                self.jp_candle.load_historic_data(data,self._precision)
-                self.heikinashi.load_historic_data(len(data))
+        
+        if self.jp_candle.candles != []:
+            _cr_time = self.jp_candle.candles[0].time
+            data = self.crypto_ex.fetch_ohlcv(self.symbol,self.interval,limit=1500, params={"until":_cr_time*1000})
+            self.jp_candle.load_historic_data(data,self._precision)
+            self.heikinashi.load_historic_data(len(data))
         self.is_load_historic = False
 
     def add_to_exchanges(self,new_echange:dict):
