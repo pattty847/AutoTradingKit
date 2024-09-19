@@ -12,7 +12,7 @@ class ViewPlotItem(PlotItem):
         super().__init__(parent=parent,viewBox=self.view_box, axisItems={"right":CustomPriceAxisItem(context=self._context,vb=self.view_box, parent=parent ,
                                                                         showValues=True,orientation="right", axisPen="#5b626f", textPen="#5b626f"),
                                                                          "bottom":CustomDateAxisItem(orientation='bottom',context=self._context,vb=self.view_box,
-                                                                        showValues=True, axisPen="#5b626f", textPen="#5b626f",**{Axis.TICK_FORMAT: Axis.DATETIME})})
+                                                                       showValues=True, axisPen="#5b626f", textPen="#5b626f",**{Axis.TICK_FORMAT: Axis.DATETIME})})
         self.setClipToView(True) 
         self.setDownsampling(auto=True, mode='subsample') #
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemClipsChildrenToShape, True)

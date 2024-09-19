@@ -388,20 +388,22 @@ class CandleStick(GraphicsObject):
         # self.informViewBoundsChanged()
         
     def update_last_data(self,candles, setdata) -> None:
-        if candles is None or isinstance(candles,list):
-            x_data, y_data = self.source.get_index_data(start=-3,stop=-1)
-        elif candles == True:
-            x_data, y_data = self.source.get_index_data(stop=-1)
-        else:
-            x_data, y_data = self.source.get_index_data(stop=candles+1)
-        try:
-            if len(x_data) != len(y_data[0]):
-                raise Exception("Len of x_data must be the same as y_data")
-            # setdata.emit((x_data, y_data))
-            self.setData((x_data, y_data))
-            # QCoreApplication.processEvents()
-        except Exception as e:
-            print(f"loi update {e}")
+        from atklip.graphics.pyqtgraph.widgets.BusyCursor import BusyCursor
+        with BusyCursor():
+            if candles is None or isinstance(candles,list):
+                x_data, y_data = self.source.get_index_data(start=-3,stop=-1)
+            elif candles == True:
+                x_data, y_data = self.source.get_index_data(stop=-1)
+            else:
+                x_data, y_data = self.source.get_index_data(stop=candles+1)
+            try:
+                if len(x_data) != len(y_data[0]):
+                    raise Exception("Len of x_data must be the same as y_data")
+                # setdata.emit((x_data, y_data))
+                self.setData((x_data, y_data))
+                # QCoreApplication.processEvents()
+            except Exception as e:
+                print(f"loi update {e}")
     
 class SingleCandleStick(GraphicsObject):
     """Live candlestick plot, plotting data [[open, close, min, max], ...]"""

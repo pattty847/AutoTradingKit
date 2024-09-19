@@ -129,8 +129,8 @@ class ThreadingAsyncWorker(QObject):
             self.signals.deleteLater()
         except Exception as e:
             pass
-        self.loop.stop()
-        self.loop.close()
+        asyncio.set_event_loop(None)
+        self.loop.call_soon_threadsafe(self.loop.stop)
         try:
             self.deleteLater()
         except Exception as e:

@@ -23,14 +23,16 @@ class PlotLineItem(GraphicsObject):
         self._line = PlotDataItem(*args, **kargs)
         self._line.setFlag(QGraphicsItem.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
         self._line.setCacheMode(QGraphicsItem.CacheMode.DeviceCoordinateCache)
+        self._line.setClipToView(True)
+        self._line.setDownsampling('subsample')
         self._line.setParentItem(self)
         self.opts = self._line.opts
     def setPen(self, *args, **kargs):
         self._line.setPen(self, *args, **kargs)
     def setData(self, *args, **kargs):
         self._line.setData(*args, **kargs)
-        self.prepareGeometryChange()
-        self.informViewBoundsChanged()
+        # self.prepareGeometryChange()
+        # self.informViewBoundsChanged()
     def boundingRect(self) -> QRectF:
         return self._line.boundingRect()
     def paint(self,p:QPainter,*args):
