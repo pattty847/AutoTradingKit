@@ -8,7 +8,7 @@ from atklip.graphics.pyqtgraph import mkPen, GraphicsObject, mkBrush
 
 from atklip.controls.candle import JAPAN_CANDLE,HEIKINASHI,SMOOTH_CANDLE,N_SMOOTH_CANDLE
 
-from atklip.appmanager import FastWorker
+from atklip.appmanager import FastWorker,CandleWorker
 from .price_lines import PriceLine
 
 from atklip.controls.ma_type import  PD_MAType,IndicatorType
@@ -99,7 +99,9 @@ class CandleStick(GraphicsObject):
         self.sig_deleted_source.connect(self.chart.remove_source)
         
         self.source.sig_reset_all.connect(self.update_source,Qt.ConnectionType.QueuedConnection)
+        
         self.source.sig_add_candle.connect(self.threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
+        self.source.sig_add_historic.connect(self.threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
   
     def delete_source(self):
         self.sig_deleted_source.emit(self.source)
@@ -244,19 +246,21 @@ class CandleStick(GraphicsObject):
         elif _input == "brush_lowcolor":
             self.has["styles"]["brush_lowcolor"] = mkBrush(_style,width=0.7)
         self.historic_candle.reset_threadpool_asyncworker()
-        self.threadpool_asyncworker()
+        self.threadpool_asyncworker(True)
         
     def set_price_line(self):
         self.historic_candle.price_line.update_data(self.source.candles[-2:])
         self.historic_candle.threadpool_asyncworker(self.source.candles[-2:])
     
+    
     def first_setup_candle(self):
-        x_data, y_data = self.source.get_index_data(stop=-1)
-        self.setData((x_data, y_data))
-      
-    def threadpool_asyncworker(self,candle=None):
+        self.threadpool_asyncworker(True)
+        # x_data, y_data = self.source.get_index_data(stop=-1)
+        # self.setData((x_data, y_data))
+  
+    def threadpool_asyncworker(self,candles=None):
         self.worker = None
-        self.worker = FastWorker(self.update_last_data)
+        self.worker = FastWorker(self.update_last_data,candles)
         self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.QueuedConnection)
         self.worker.signals.finished.connect(self.set_price_line,Qt.ConnectionType.QueuedConnection)
         self.worker.start()
@@ -338,8 +342,8 @@ class CandleStick(GraphicsObject):
         rect = QRectF(x_left,h_low,self._stop-self._start,h_high-h_low)
         return rect
 
-    def draw_candle(self,_open,_max,_min,close,w,x_data,index):
-        t = x_data[index]
+    def draw_candle(self,_open,_max,_min,close,w,t):
+        # t = x_data[index]
         "dieu kien de han che viec ve lai khi add new candle"
         if not self._bar_picutures.get(t):
             candle_picture:QPicture =QPicture()
@@ -369,28 +373,33 @@ class CandleStick(GraphicsObject):
 
     def setData(self, data) -> None:
         """y_data must be in format [[open, close, min, max], ...]"""
-        
         self._to_update = False
         w = 1 / 5
         x_data, y_data = data[0],data[1]
+        _open,_max,_min,close = y_data[0],y_data[1],y_data[2],y_data[3]
         if self._is_change_source:
             self._bar_picutures.clear()
             self._is_change_source = False
-        self.x_data, self.y_data = x_data, y_data
-        [self.draw_candle(_open,_max,_min,close,w,x_data,index) for index, (_open, _max, _min, close) in enumerate(y_data)]
+        [self.draw_candle(_open[index],_max[index],_min[index],close[index],w,x_data[index]) for index in range(len(x_data))]
         # p.end()
         self._to_update = True
-        self.prepareGeometryChange()
-        self.informViewBoundsChanged()
+        # self.chart.sig_update_y_axis.emit()
+        # self.prepareGeometryChange()
+        # self.informViewBoundsChanged()
         
-    def update_last_data(self, setdata) -> None:
-        x_data, y_data = self.source.get_index_data(stop=-1)
+    def update_last_data(self,candles, setdata) -> None:
+        if candles is None or isinstance(candles,list):
+            x_data, y_data = self.source.get_index_data(start=-3,stop=-1)
+        elif candles == True:
+            x_data, y_data = self.source.get_index_data(stop=-1)
+        else:
+            x_data, y_data = self.source.get_index_data(stop=candles+1)
         try:
-            if len(x_data) != len(y_data):
+            if len(x_data) != len(y_data[0]):
                 raise Exception("Len of x_data must be the same as y_data")
-            setdata.emit((x_data, y_data))
-            # self.setData((x_data, y_data))
-            #QCoreApplication.processEvents()
+            # setdata.emit((x_data, y_data))
+            self.setData((x_data, y_data))
+            # QCoreApplication.processEvents()
         except Exception as e:
             print(f"loi update {e}")
     
@@ -439,7 +448,7 @@ class SingleCandleStick(GraphicsObject):
         self.worker = None
         self.worker = FastWorker(self.update_last_data)
         self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.QueuedConnection)
-        self.price_line.update_data(last_candle)
+        self.worker.signals.finished.connect(self.set_price_line,Qt.ConnectionType.QueuedConnection)
         self.worker.start()
 
     def paint(self, p: QPainter, *args) -> None:
@@ -489,7 +498,6 @@ class SingleCandleStick(GraphicsObject):
         self.draw_candle(p,_open,_max,_min,close,w,t)
         p.end()
         self.chart.sig_update_y_axis.emit()
-        
         self.prepareGeometryChange()
         self.informViewBoundsChanged()
 
@@ -503,9 +511,4 @@ class SingleCandleStick(GraphicsObject):
                     self.yaxis_lastprice.emit()
                 except Exception as e:
                     pass
-    def getData(self) -> Tuple[List[float], List[Tuple[float, ...]]]:
-        return self.x_data, self.y_data
-
-
-
 

@@ -69,13 +69,13 @@ class ViewPlotWidget(PlotWidget):
 
         super().__init__(parent=parent,background=background, plotItem= self.PlotItem,**kwargs)
         self.crosshair_enabled = kwargs.get(Crosshair.ENABLED, False)
-        
-        #self.setRenderHints(QPainter.RenderHint.Antialiasing|QPainter.RenderHint.TextAntialiasing) #|QPainter.RenderHint.SmoothPixmapTransform
-        
-        self.setViewportUpdateMode(QGraphicsView.ViewportUpdateMode.SmartViewportUpdate)
+                
+        self.setViewportUpdateMode(QGraphicsView.ViewportUpdateMode.BoundingRectViewportUpdate)
         self.setRenderHint(QPainter.RenderHint.Antialiasing, False)
         self.setCacheMode(QGraphicsView.CacheModeFlag.CacheBackground)
-        
+        # self.setOptimizationFlag(QGraphicsView.OptimizationFlag.IndirectPainting, True)
+        self.setOptimizationFlag(QGraphicsView.OptimizationFlag.DontAdjustForAntialiasing, True)
+
         self._parent = parent
 
         self.list_candle_indicators = []
@@ -217,15 +217,15 @@ class ViewPlotWidget(PlotWidget):
             x2 = np.float64(timedata[-800])
             self.setXRange(x1, x2, padding=0.2)
             
-            _min = min([item[2] for item in data[-800:]])
-            _max = max([item[1] for item in data[-800:]])
+            _min = data[2][-800:].min()
+            _max = data[1][-800:].max()
             self.setYRange(_max, _min, padding=0.2)
         else:
             x1 = np.float64(timedata[-1])
             x2 = np.float64(timedata[-1*len(timedata)])
             self.setXRange(x1, x2, padding=0.2)
-            _min = min([item[2] for item in data])
-            _max = max([item[1] for item in data])
+            _min = data[2][-800:].min()
+            _max = data[1][-800:].max()
             self.setYRange(_max, _min, padding=0.2)
     def removeItem(self, *args):
         return self.plotItem.removeItem(*args)

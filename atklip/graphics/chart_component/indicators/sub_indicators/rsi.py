@@ -218,27 +218,27 @@ class BasicRSI(PlotDataItem):
         self.last_pos.emit((IndicatorType.RSI,y_data[-1]))
         self._panel.sig_update_y_axis.emit()
 
-    # def boundingRect(self) -> QRectF:
-    #     x_left,x_right = int(self.chart.xAxis.range[0]),int(self.chart.xAxis.range[1])
-    #     start_index = self.chart.jp_candle.candles[0].index
-    #     stop_index = self.chart.jp_candle.candles[-1].index
-    #     if x_left > start_index:
-    #         self._start = x_left+2
-    #     else:
-    #         self._start = start_index+2
-    #     if x_right < stop_index:
-    #         self._stop = x_right
-    #     else:
-    #         self._stop = stop_index
+    def boundingRect(self) -> QRectF:
+        x_left,x_right = int(self.chart.xAxis.range[0]),int(self.chart.xAxis.range[1])
+        start_index = self.chart.jp_candle.candles[0].index
+        stop_index = self.chart.jp_candle.candles[-1].index
+        if x_left > start_index:
+            self._start = x_left+2
+        else:
+            self._start = start_index+2
+        if x_right < stop_index:
+            self._stop = x_right
+        else:
+            self._stop = stop_index
         
-    #     if self.yData is None:
-    #         h_low,h_high = self._panel.yAxis.range[0],self._panel.yAxis.range[1]
-    #     elif self.yData.size != 0:
-    #         h_low,h_high = np.nanmin(self.yData), np.nanmax(self.yData) 
-    #     else:
-    #         h_low,h_high = self._panel.yAxis.range[0],self._panel.yAxis.range[1]
-    #     rect = QRectF(self._start,h_low,self._stop-self._start,h_high-h_low)
-    #     return rect  
+        if self.yData is None:
+            h_low,h_high = self._panel.yAxis.range[0],self._panel.yAxis.range[1]
+        elif self.yData.size != 0:
+            h_low,h_high = np.nanmin(self.yData), np.nanmax(self.yData) 
+        else:
+            h_low,h_high = self._panel.yAxis.range[0],self._panel.yAxis.range[1]
+        rect = QRectF(self._start,h_low,self._stop-self._start,h_high-h_low)
+        return rect  
     def get_last_point(self):
         _time = self.xData[-1]
         _value = self.yData[-1]
@@ -249,14 +249,14 @@ class BasicRSI(PlotDataItem):
         _max = None
         try:
             if len(self.yData) > 0:
-                new_data = self.yData[np.isfinite(self.yData)]
-                _min = new_data.min()
-                _max = new_data.max()
+                _min, _max = np.nanmin(self.yData), np.nanmax(self.yData)
                 if _min == np.nan or _max == np.nan:
                     return None, None
                 return _min,_max
         except Exception as e:
-            print(e)
+            pass
+        time.sleep(0.1)
+        self.get_min_max()
         return _min,_max
 
     def on_click_event(self):

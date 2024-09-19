@@ -264,7 +264,6 @@ class BasicBB(GraphicsObject):
                 _min = y_data.min()
                 _max = y_data.max()
         except Exception as e:
-            time.sleep(0.2)
             self.get_min_max()
         return _min,_max
 

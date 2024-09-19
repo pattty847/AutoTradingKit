@@ -77,6 +77,7 @@ class FastWorker(QObject):
 
 class CandleWorker(QObject):
     "Worker này dùng để update  data trong một cho graph object khi có data mới"
+    finished = Signal()
     def __init__(self,fn:Callable=None, *args, **kwargs):
         super(CandleWorker, self).__init__()
         self.fn = fn
@@ -97,6 +98,7 @@ class CandleWorker(QObject):
         except Exception as e:
             traceback.print_exception(e)
         finally:
+            self.finished.emit()
             self.deleteLater()
 
 class FastStartSignal(QObject):

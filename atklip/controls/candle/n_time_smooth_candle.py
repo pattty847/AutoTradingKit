@@ -24,6 +24,7 @@ class N_SMOOTH_CANDLE(QObject):
     """
     sig_update_candle = Signal(list)
     sig_add_candle = Signal(list)
+    sig_add_historic = Signal(int)
     sig_reset_all = Signal()
     candles : List[OHLCV] = []
     dict_index_time = {}
@@ -236,11 +237,33 @@ class N_SMOOTH_CANDLE(QObject):
     
     #@lru_cache(maxsize=128)
     def get_index_data(self,start:int=0,stop:int=0):
-        all_index = self.get_indexs(start,stop)
-        all_data = self.get_values(start,stop)
-        all_index_np = np.array(all_index)
-        all_data_np = np.array(all_data)
-        return all_index_np,all_data_np
+        if start == 0 and stop == 0:
+            all_index = self.df["index"].to_numpy()
+            all_open = self.df["open"].to_numpy()
+            all_high = self.df["high"].to_numpy()
+            all_low = self.df["low"].to_numpy()
+            all_close = self.df["close"].to_numpy()
+        elif start == 0 and stop != 0:
+            all_index = self.df["index"].iloc[:stop].to_numpy()
+            all_open = self.df["open"].iloc[:stop].to_numpy()
+            all_high = self.df["high"].iloc[:stop].to_numpy()
+            all_low = self.df["low"].iloc[:stop].to_numpy()
+            all_close = self.df["close"].iloc[:stop].to_numpy()
+            
+        elif start != 0 and stop == 0:
+            all_index = self.df["index"].iloc[start:].to_numpy()
+            all_open = self.df["open"].iloc[start:].to_numpy()
+            all_high = self.df["high"].iloc[start:].to_numpy()
+            all_low = self.df["low"].iloc[start:].to_numpy()
+            all_close = self.df["close"].iloc[start:].to_numpy()
+        else:
+            all_index = self.df["index"].iloc[start:stop].to_numpy()
+            all_open = self.df["open"].iloc[start:stop].to_numpy()
+            all_high = self.df["high"].iloc[start:stop].to_numpy()
+            all_low = self.df["low"].iloc[start:stop].to_numpy()
+            all_close = self.df["close"].iloc[start:stop].to_numpy()
+        
+        return all_index,[all_open,all_high,all_low,all_close]
     #@lru_cache(maxsize=128)
     def get_index_volumes(self,start:int=0,stop:int=0):
         all_index = self.get_indexs(start,stop)
@@ -272,19 +295,19 @@ class N_SMOOTH_CANDLE(QObject):
         
         for i in range(self.n):
             df = self.dict_n_ohlcv[f"{i}-candles"].tail(self.period*self.n*5) #
-            highs = ta.ma(f"{self.ma_type.name}".lower(), df["high"],length=self.period)
+            highs = ta.ma(f"{self.ma_type.name}".lower(), df["high"],length=self.period).dropna()
             highs = highs.astype('float32')
-            lows = ta.ma(f"{self.ma_type.name}".lower(), df["low"],length=self.period)
+            lows = ta.ma(f"{self.ma_type.name}".lower(), df["low"],length=self.period).dropna()
             lows = lows.astype('float32')
-            closes = ta.ma(f"{self.ma_type.name}".lower(), df["close"],length=self.period)
+            closes = ta.ma(f"{self.ma_type.name}".lower(), df["close"],length=self.period).dropna()
             closes = closes.astype('float32')
-            opens = ta.ma(f"{self.ma_type.name}".lower(), df["open"],length=self.period)
+            opens = ta.ma(f"{self.ma_type.name}".lower(), df["open"],length=self.period).dropna()
             opens = opens.astype('float32')
-            hl2s = ta.ma(f"{self.ma_type.name}".lower(), df["hl2"],length=self.period)
+            hl2s = ta.ma(f"{self.ma_type.name}".lower(), df["hl2"],length=self.period).dropna()
             hl2s = hl2s.astype('float32')
-            hlc3s = ta.ma(f"{self.ma_type.name}".lower(), df["hlc3"],length=self.period)
+            hlc3s = ta.ma(f"{self.ma_type.name}".lower(), df["hlc3"],length=self.period).dropna()
             hlc3s = hlc3s.astype('float32')
-            ohlc4s = ta.ma(f"{self.ma_type.name}".lower(), df["ohlc4"],length=self.period)
+            ohlc4s = ta.ma(f"{self.ma_type.name}".lower(), df["ohlc4"],length=self.period).dropna()
             ohlc4s = ohlc4s.astype('float32')
             
             if _is_update:
@@ -345,25 +368,25 @@ class N_SMOOTH_CANDLE(QObject):
     def _gen_data(self):
         self.dict_n_ohlcv[f"0-candles"] = self._candles.get_df()
         for i in range(self.n):
-            self.dict_n_ma[f"{i+1}-highs"] = ta.ma(f"{self.ma_type.name}".lower(), self.dict_n_ohlcv[f"{i}-candles"]["high"],length=self.period)
+            self.dict_n_ma[f"{i+1}-highs"] = ta.ma(f"{self.ma_type.name}".lower(), self.dict_n_ohlcv[f"{i}-candles"]["high"],length=self.period).dropna()
             self.dict_n_ma[f"{i+1}-highs"] = self.dict_n_ma[f"{i+1}-highs"].astype('float32')
 
-            self.dict_n_ma[f"{i+1}-lows"] = ta.ma(f"{self.ma_type.name}".lower(), self.dict_n_ohlcv[f"{i}-candles"]["low"],length=self.period)
+            self.dict_n_ma[f"{i+1}-lows"] = ta.ma(f"{self.ma_type.name}".lower(), self.dict_n_ohlcv[f"{i}-candles"]["low"],length=self.period).dropna()
             self.dict_n_ma[f"{i+1}-lows"] = self.dict_n_ma[f"{i+1}-lows"].astype('float32')
 
-            self.dict_n_ma[f"{i+1}-closes"] = ta.ma(f"{self.ma_type.name}".lower(), self.dict_n_ohlcv[f"{i}-candles"]["close"],length=self.period)
+            self.dict_n_ma[f"{i+1}-closes"] = ta.ma(f"{self.ma_type.name}".lower(), self.dict_n_ohlcv[f"{i}-candles"]["close"],length=self.period).dropna()
             self.dict_n_ma[f"{i+1}-closes"] = self.dict_n_ma[f"{i+1}-closes"].astype('float32')
 
-            self.dict_n_ma[f"{i+1}-opens"] = ta.ma(f"{self.ma_type.name}".lower(), self.dict_n_ohlcv[f"{i}-candles"]["open"],length=self.period)
+            self.dict_n_ma[f"{i+1}-opens"] = ta.ma(f"{self.ma_type.name}".lower(), self.dict_n_ohlcv[f"{i}-candles"]["open"],length=self.period).dropna()
             self.dict_n_ma[f"{i+1}-opens"] = self.dict_n_ma[f"{i+1}-opens"].astype('float32')
 
-            self.dict_n_ma[f"{i+1}-hl2s"] = ta.ma(f"{self.ma_type.name}".lower(), self.dict_n_ohlcv[f"{i}-candles"]["hl2"],length=self.period)
+            self.dict_n_ma[f"{i+1}-hl2s"] = ta.ma(f"{self.ma_type.name}".lower(), self.dict_n_ohlcv[f"{i}-candles"]["hl2"],length=self.period).dropna()
             self.dict_n_ma[f"{i+1}-hl2s"] = self.dict_n_ma[f"{i+1}-hl2s"].astype('float32')
 
-            self.dict_n_ma[f"{i+1}-hlc3s"] = ta.ma(f"{self.ma_type.name}".lower(), self.dict_n_ohlcv[f"{i}-candles"]["hlc3"],length=self.period)
+            self.dict_n_ma[f"{i+1}-hlc3s"] = ta.ma(f"{self.ma_type.name}".lower(), self.dict_n_ohlcv[f"{i}-candles"]["hlc3"],length=self.period).dropna()
             self.dict_n_ma[f"{i+1}-hlc3s"] = self.dict_n_ma[f"{i+1}-hlc3s"].astype('float32')
 
-            self.dict_n_ma[f"{i+1}-ohlc4s"] = ta.ma(f"{self.ma_type.name}".lower(), self.dict_n_ohlcv[f"{i}-candles"]["ohlc4"],length=self.period)
+            self.dict_n_ma[f"{i+1}-ohlc4s"] = ta.ma(f"{self.ma_type.name}".lower(), self.dict_n_ohlcv[f"{i}-candles"]["ohlc4"],length=self.period).dropna()
             self.dict_n_ma[f"{i+1}-ohlc4s"] = self.dict_n_ma[f"{i+1}-ohlc4s"].astype('float32')
 
             self.dict_n_ohlcv[f"{i+1}-candles"] = self.compute(self.dict_n_ohlcv[f"{i}-candles"],\

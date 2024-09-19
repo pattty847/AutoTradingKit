@@ -62,8 +62,6 @@ class Volume(GraphicsObject):
         self._start:int = None
         self._stop:int = None
         
-        self.x_data, self.y_data = np.array([]),np.array([])
-
         self._bar_picutures: Dict[int, QPicture] = {}
         self.picture: QPicture = None
         self._rect_area: Tuple[float, float] = None
@@ -72,7 +70,11 @@ class Volume(GraphicsObject):
         
         self.chart.jp_candle.sig_reset_all.connect(self.fisrt_gen_data,Qt.ConnectionType.AutoConnection)
         self.chart.jp_candle.sig_add_candle.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
+        self.chart.jp_candle.sig_add_historic.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
+        
         self.sig_change_yaxis_range.connect(get_last_pos_worker, Qt.ConnectionType.AutoConnection)
+        
+        
     def get_inputs(self):
         inputs =  {}
         return inputs
@@ -85,13 +87,14 @@ class Volume(GraphicsObject):
         return styles
 
     def update_styles(self, _input):
+        self._is_change_source = True
         _style = self.has["styles"][_input]
         if _input == "brush_highcolor":
             self.has["styles"]["brush_highcolor"] = mkBrush(_style,width=0.7)
         elif _input == "brush_lowcolor":
             self.has["styles"]["brush_lowcolor"] = mkBrush(_style,width=0.7)
         self.historic_volume.fisrt_gen_data()
-        self.threadpool_asyncworker()
+        self.threadpool_asyncworker(True)
     
     def get_min_max(self):
         volumes_fr = self.chart.jp_candle.get_df()
@@ -102,15 +105,14 @@ class Volume(GraphicsObject):
     def fisrt_gen_data(self):
         self.worker = None
         self._is_change_source = True
-        self.worker = FastWorker(self.update_last_data)
+        self.worker = FastWorker(self.update_last_data,True)
         self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.QueuedConnection)
         self.worker.signals.finished.connect(self.sig_change_yaxis_range,Qt.ConnectionType.QueuedConnection)
         self.worker.start()
 
-    def threadpool_asyncworker(self,candle=[]):
+    def threadpool_asyncworker(self,candle):
         self.worker = None
-        self._is_change_source = True
-        self.worker = FastWorker(self.update_last_data)
+        self.worker = FastWorker(self.update_last_data,candle)
         self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.QueuedConnection)
         self.worker.start()
         #self.threadpool.start(self.worker)
@@ -196,8 +198,7 @@ class Volume(GraphicsObject):
         rect = QRectF(self._start,h_low,self._stop-self._start,h_high-h_low)
         return rect
 
-    def draw_volume(self,_open,close,volume,w,x_data,index):
-        t = x_data[index]
+    def draw_volume(self,_open,close,volume,w,t):
         if self._bar_picutures.get(t) == None:
             candle_picture:QPicture =QPicture()
             p:QPainter =QPainter(candle_picture)
@@ -222,47 +223,36 @@ class Volume(GraphicsObject):
         """y_data must be in format [[open, close, min, max], ...]"""
         
         x_data, y_data = data[0], data[1]
-        if not isinstance(x_data, np.ndarray):
-            x_data = np.array(x_data)
-            y_data = np.array(y_data)
-        if len(x_data) != len(y_data):
-            raise Exception("Len of x_data must be the same as y_data")
         # self.picture = QPicture()
         # p = QPainter(self.picture)
-        self.x_data, self.y_data = x_data, y_data
+        _open,_close, _volume = y_data[0],y_data[1],y_data[2]
         self._to_update = False
         w = 1 / 5
         if self._is_change_source:
             self._bar_picutures.clear()
             self._is_change_source = False
-        [self.draw_volume(_open,close,volume,w,x_data,index) for index, (_open, close,volume) in enumerate(y_data)]
+        [self.draw_volume(_open[index],_close[index],_volume[index],w,x_data[index]) for index in range(len(x_data))]
         # p.end()
         self._to_update = True
         
-        self.prepareGeometryChange()
-        self.informViewBoundsChanged()
-
-    def update_last_data(self, setdata) -> None:
-        try:
-            x_data, y_data = self.chart.jp_candle.get_index_volumes(stop=len(self.chart.jp_candle.candles)-1)
-            #self.setData((x_data, y_data))
-            setdata.emit((x_data, y_data))
-            #QCoreApplication.processEvents()
-        except Exception as e:
-            print(e)
+        # self.prepareGeometryChange()
+        # self.informViewBoundsChanged()
     
-    def reset_indicator(self) -> None:
+    def update_last_data(self, candles,setdata) -> None:
+        if candles is None or isinstance(candles,list):
+            x_data, y_data = self.chart.jp_candle.get_index_volumes(start=-3,stop=-1)
+        elif candles == True:
+            x_data, y_data = self.chart.jp_candle.get_index_volumes(stop=-1)
+        else:
+            x_data, y_data = self.chart.jp_candle.get_index_volumes(stop=candles+1)
         try:
-            x_data, y_data = self.chart.jp_candle.get_index_volumes(stop=len(self.chart.jp_candle.candles))
+            if len(x_data) != len(y_data[0]):
+                raise Exception("Len of x_data must be the same as y_data")
+            # setdata.emit((x_data, y_data))
             self.setData((x_data, y_data))
         except Exception as e:
             print(e)
-        self.sig_change_yaxis_range.emit()
-    
-    def getData(self) -> Tuple[List[float], List[Tuple[float, ...]]]:
-        return self.x_data, self.y_data
-    
-
+      
 class SingleVolume(GraphicsObject):
     """Live candlestick plot, plotting data [[open, close, min, max], ...]"""
     sigPlotChanged = Signal(object)
@@ -270,12 +260,11 @@ class SingleVolume(GraphicsObject):
         """Choose colors of candle"""
         GraphicsObject.__init__(self)
         
-        self.chart = chart
-        sig_reset_all,sig_update_candle,_candles= self.chart.jp_candle.sig_reset_all,self.chart.jp_candle.sig_update_candle,self.chart.jp_candle
+        self.chart:Chart  = chart
+        sig_reset_all,sig_update_candle,self._canldes= self.chart.jp_candle.sig_reset_all,self.chart.jp_candle.sig_update_candle,self.chart.jp_candle
         self.has = has
         precision = 1
         
-        self._canldes = _candles
         self.output_y_data: List[float] = []
 
         self.type_picture = "candlestick"
@@ -363,5 +352,3 @@ class SingleVolume(GraphicsObject):
                     #QCoreApplication.processEvents()
                 except Exception as e:
                     pass
-    def getData(self) -> Tuple[List[float], List[Tuple[float, ...]]]:
-        return self.x_data, self.y_data

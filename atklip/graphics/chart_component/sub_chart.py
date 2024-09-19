@@ -5,6 +5,8 @@ import time
 from PySide6 import QtGui
 from PySide6.QtCore import Signal,QPointF,Qt,QEvent,QThreadPool,QCoreApplication
 from PySide6.QtWidgets import QGraphicsView
+from PySide6.QtGui import QPainter
+
 import numpy as np
 from atklip.app_utils.calculate import convert_precicion, round_
 from atklip.graphics.pyqtgraph import mkPen, PlotWidget
@@ -67,7 +69,9 @@ class SubChart(PlotWidget):
         self.crosshair_enabled = kwargs.get(Crosshair.ENABLED, False)
         
         self.setViewportUpdateMode(QGraphicsView.ViewportUpdateMode.BoundingRectViewportUpdate)
-        
+        self.setRenderHint(QPainter.RenderHint.Antialiasing, False)
+        self.setCacheMode(QGraphicsView.CacheModeFlag.CacheBackground)
+        self.setOptimizationFlag(QGraphicsView.OptimizationFlag.DontAdjustForAntialiasing, True)
         self._parent = parent
         self._parent.destroyed.connect(lambda :asyncio.run(self.close()))
         self.indicator_name,self.mainwindow = indicator_name,mainwindow

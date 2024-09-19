@@ -9,7 +9,7 @@ from atklip.controls.ohlcv import OHLCV
 from .candle import JAPAN_CANDLE
 # if TYPE_CHECKING:
 #     from .smooth_candle import SMOOTH_CANDLE
-from atklip.appmanager import FastWorker,CandleWorker
+from atklip.appmanager import CandleWorker
 
 @njit(cache=True)
 def caculate(pre_open, pre_close,_open,_high,_low,_close,precicion):
@@ -28,6 +28,7 @@ class HEIKINASHI(QObject):
     dict_time_ohlcv: Dict[int, OHLCV] = {}
     sig_update_candle = Signal(list)
     sig_add_candle = Signal(list)
+    sig_add_historic = Signal(int)
     sig_reset_all = Signal()
     candles : List[OHLCV] = []
     dict_index_time = {}
@@ -168,12 +169,42 @@ class HEIKINASHI(QObject):
         else:
             return [[candle.open, candle.close, candle.volume] for candle in self.candles[start:stop]]
     #@lru_cache(maxsize=128)
+    
     def get_index_data(self,start:int=0,stop:int=0):
-        all_index = self.get_indexs(start,stop)
-        all_data = self.get_values(start,stop)
-        all_index_np = np.array(all_index)
-        all_data_np = np.array(all_data)
-        return all_index_np,all_data_np
+        if start == 0 and stop == 0:
+            all_index = self.df["index"].to_numpy()
+            all_open = self.df["open"].to_numpy()
+            all_high = self.df["high"].to_numpy()
+            all_low = self.df["low"].to_numpy()
+            all_close = self.df["close"].to_numpy()
+        elif start == 0 and stop != 0:
+            all_index = self.df["index"].iloc[:stop].to_numpy()
+            all_open = self.df["open"].iloc[:stop].to_numpy()
+            all_high = self.df["high"].iloc[:stop].to_numpy()
+            all_low = self.df["low"].iloc[:stop].to_numpy()
+            all_close = self.df["close"].iloc[:stop].to_numpy()
+            
+        elif start != 0 and stop == 0:
+            all_index = self.df["index"].iloc[start:].to_numpy()
+            all_open = self.df["open"].iloc[start:].to_numpy()
+            all_high = self.df["high"].iloc[start:].to_numpy()
+            all_low = self.df["low"].iloc[start:].to_numpy()
+            all_close = self.df["close"].iloc[start:].to_numpy()
+        else:
+            all_index = self.df["index"].iloc[start:stop].to_numpy()
+            all_open = self.df["open"].iloc[start:stop].to_numpy()
+            all_high = self.df["high"].iloc[start:stop].to_numpy()
+            all_low = self.df["low"].iloc[start:stop].to_numpy()
+            all_close = self.df["close"].iloc[start:stop].to_numpy()
+        
+        return all_index,[all_open,all_high,all_low,all_close]
+    
+    # def get_index_data(self,start:int=0,stop:int=0):
+    #     all_index = self.get_indexs(start,stop)
+    #     all_data = self.get_values(start,stop)
+    #     all_index_np = np.array(all_index)
+    #     all_data_np = np.array(all_data)
+    #     return all_index_np,all_data_np
     #@lru_cache(maxsize=128)
     def get_index_volumes(self,start:int=0,stop:int=0):
         all_index = self.get_indexs(start,stop)
@@ -282,6 +313,13 @@ class HEIKINASHI(QObject):
     def reset(self):
         self.candles = []
     
+    
+    # def fisrt_gen_data(self):
+    #     worker = None
+    #     worker = CandleWorker(self.stard_gen_data)
+    #     worker.start()
+    
+    
     def fisrt_gen_data(self):
         self.first_gen = False
         self.candles = []
@@ -298,14 +336,21 @@ class HEIKINASHI(QObject):
     def load_historic_data(self,n):
         self.first_gen = False
         # self.df = pd.DataFrame([])
-        candles = self._candles.candles[:n+3]
-        [self.update_historic(candles[i],i) for i in range(len(candles))]
-        self.df = pd.DataFrame([data.__dict__ for data in self.candles])
+        update_candles = self._candles.candles[:n+3]
+        
+        new_candle:List[OHLCV] = []
+        
+        [self.update_historic(new_candle,update_candles[i],i) for i in range(len(update_candles))]
+        
+        if new_candle != []:
+            df = pd.DataFrame([data.__dict__ for data in new_candle])
+            self.df = pd.concat([df, self.df], ignore_index=True)
+
         self.first_gen = True
-        self.sig_reset_all.emit()
+        self.sig_add_historic.emit(n)
         return self.candles
     
-    def update_historic(self, candle:OHLCV,i:int):
+    def update_historic(self,new_candle:List[OHLCV], candle:OHLCV,i:int):
         if i == 0:
             ha_open = candle.open
             ha_close = round((candle.open+candle.high+candle.low+candle.close)/4,self.precicion)
@@ -334,6 +379,8 @@ class HEIKINASHI(QObject):
             self.candles[i] = ha_candle
         else:
             self.candles.insert(i,ha_candle)
+            new_candle.insert(i,ha_candle)
+            
     def update(self, _candles:List[OHLCV],_is_add_candle):
         if self.first_gen:
             new_candle = _candles[-1] #    _candle[-1]

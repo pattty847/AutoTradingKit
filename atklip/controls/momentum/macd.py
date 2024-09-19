@@ -161,6 +161,7 @@ class MACD(QObject):
     sig_add_candle = Signal()
     sig_reset_all = Signal()
     signal_delete = Signal()    
+    sig_add_historic = Signal()
     def __init__(self,parent,_candles,source,fast_period,slow_period,signal_period,ma_type) -> None:
         super().__init__(parent=parent)
         
@@ -197,6 +198,7 @@ class MACD(QObject):
         self._candles.sig_reset_all.connect(self.started_worker,Qt.ConnectionType.AutoConnection)
         self._candles.sig_update_candle.connect(self.update_worker,Qt.ConnectionType.QueuedConnection)
         self._candles.sig_add_candle.connect(self.add_worker,Qt.ConnectionType.QueuedConnection)
+        self._candles.sig_add_historic.connect(self.add_historic_worker,Qt.ConnectionType.QueuedConnection)
         self._candles.signal_delete.connect(self.signal_delete)
     
     
@@ -253,6 +255,11 @@ class MACD(QObject):
         self.worker_ = CandleWorker(self.update,candle)
         self.worker_.start()
     
+    def add_historic_worker(self,n):
+        self.worker_ = None
+        self.worker_ = CandleWorker(self.add_historic,n)
+        self.worker_.start()
+    
     def add_worker(self,candle):
         self.worker_ = None
         self.worker_ = CandleWorker(self.add,candle)
@@ -266,7 +273,6 @@ class MACD(QObject):
     def paire_data(self,INDICATOR:DataFrame):
         try:
             column_names = INDICATOR.columns.tolist()
-            
             macd_name = ''
             histogram_name = ''
             signalma_name = ''
@@ -278,9 +284,9 @@ class MACD(QObject):
                 elif name.__contains__("SIGNAL"):
                     signalma_name = name
 
-            macd = INDICATOR[macd_name]
-            histogram = INDICATOR[histogram_name]
-            signalma = INDICATOR[signalma_name]
+            macd = INDICATOR[macd_name].dropna()
+            histogram = INDICATOR[histogram_name].dropna()
+            signalma = INDICATOR[signalma_name].dropna()
             return macd,histogram,signalma
         except:
             return Series([]),Series([]),Series([])
@@ -298,16 +304,16 @@ class MACD(QObject):
         
         df:pd.DataFrame = self._candles.get_df()
         
-        _index = df["index"]
         macd_data,histogram,signalma = self.caculate(df)
-
+        _len = min([len(histogram),len(macd_data),len(signalma)])
+        _index = df["index"]
         self.df = pd.DataFrame({
-                            'index':_index,
-                            "macd":macd_data,
-                            "histogram":histogram,
-                            "signalma":signalma
+                            'index':_index.tail(_len),
+                            "macd":macd_data.tail(_len),
+                            "histogram":histogram.tail(_len),
+                            "signalma":signalma.tail(_len)
                             })
-                
+        
         self.xdata,self.macd_data,self.histogram,self.signalma = self.df["index"].to_numpy(),macd_data.to_numpy(),\
                                                 histogram.to_numpy(),signalma.to_numpy()
         
@@ -316,6 +322,38 @@ class MACD(QObject):
             self.first_gen = True
             self.is_genering = False
         self.sig_reset_all.emit()
+    
+    def add_historic(self,n:int):
+        self.is_genering = True
+        
+        _pre_len = len(self.df)
+        df:pd.DataFrame = self._candles.get_df().iloc[:-1*_pre_len]
+        
+        macd_data,histogram,signalma = self.caculate(df)
+
+        _len = min([len(histogram),len(macd_data),len(signalma)])
+        
+        _index = df["index"]
+        _df = pd.DataFrame({
+                            'index':_index.tail(_len),
+                            "macd":macd_data.tail(_len),
+                            "histogram":histogram.tail(_len),
+                            "signalma":signalma.tail(_len)
+                            })
+        
+        print(self.df["index"].iloc[0],df["index"].iloc[-1])
+        
+        self.df = pd.concat([_df,self.df],ignore_index=True)
+        
+        self.xdata,self.macd_data,self.histogram,self.signalma = self.df["index"].to_numpy(),self.df["macd"].to_numpy(),\
+                                                self.df["histogram"].to_numpy(),self.df["signalma"].to_numpy()
+        
+        self.is_genering = False
+        if self.first_gen == False:
+            self.first_gen = True
+            self.is_genering = False
+        self.sig_add_historic.emit()
+    
     
     def add(self,new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]

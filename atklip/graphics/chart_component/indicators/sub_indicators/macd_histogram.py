@@ -11,18 +11,24 @@ from atklip.appmanager import FastWorker
 if TYPE_CHECKING:
     from atklip.graphics.chart_component.viewchart import Chart
     from atklip.graphics.chart_component.sub_panel_indicator import ViewSubPanel
+    from atklip.graphics.chart_component.indicators.sub_indicators.macd import BasicMACD
 
 class MACDHistogram(GraphicsObject):
     """Live candlestick plot, plotting data [[open, close, min, max], ...]"""
     sigPlotChanged = Signal(object)
     sig_change_yaxis_range = Signal()
-    def __init__(self,chart,panel,sig_reset_histogram,sig_update_histogram,has) -> None:
+    
+    sig_update_histogram = Signal(tuple)
+    sig_reset_histogram = Signal(tuple,str)
+    sig_add_histogram = Signal(tuple,str)
+    sig_load_historic_histogram = Signal(tuple,str)
+    
+    def __init__(self,chart,panel,has) -> None:
         """Choose colors of candle"""
         GraphicsObject.__init__(self)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
         self.chart:Chart = chart
         self._panel:ViewSubPanel = panel
-        self.sig_reset_histogram, self.sig_update_histogram = sig_reset_histogram, sig_update_histogram
 
         precision = 1
         
@@ -43,10 +49,9 @@ class MACDHistogram(GraphicsObject):
         self._start:int = None
         self._stop:int = None
         
-        self.setAcceptHoverEvents(True)
-        self.threadpool = QThreadPool(self)
-
         self.sig_reset_histogram.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
+        self.sig_add_histogram.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
+        self.sig_load_historic_histogram.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
 
     def get_inputs(self):
         inputs =  {}
@@ -60,12 +65,13 @@ class MACDHistogram(GraphicsObject):
         return styles
 
     def update_styles(self, _input,data):
+        self._is_change_source = True
         _style = self.has["styles"][_input]
         if _input == "brush_high_historgram":
             self.has["styles"]["brush_high_historgram"] = mkBrush(_style,width=0.7)
         elif _input == "brush_low_historgram":
             self.has["styles"]["brush_low_historgram"] = mkBrush(_style,width=0.7)
-        self.threadpool_asyncworker(data)
+        self.threadpool_asyncworker(data,"reset")
         
     def get_min_max(self):
         x_data, y_data = self.has["inputs"]["source"].get_index_volumes(stop=len(self.has["inputs"]["source"].candles))
@@ -75,13 +81,13 @@ class MACDHistogram(GraphicsObject):
             _min,_max = min(values), max(values)
         return _min,_max
     
-    def threadpool_asyncworker(self,data):
-        self._is_change_source = True
+    def threadpool_asyncworker(self,data,_type):
         self.worker = None
-        self.worker = FastWorker(self.update_last_data,data)
+        self.worker = FastWorker(self.update_last_data,data,_type)
         self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.QueuedConnection)
         self.worker.start()
-        #self.threadpool.start(self.worker)
+    
+    
     def get_yaxis_param(self):
         if len(self.has["inputs"]["source"].candles) > 0:
             last_candle = self.has["inputs"]["source"].last_data()
@@ -187,6 +193,7 @@ class MACDHistogram(GraphicsObject):
         x_data, y_data = data[0], data[1]
         self.x_data, self.y_data = x_data, y_data
         self._to_update = False
+        
         if self._is_change_source:
             self._bar_picutures.clear()
             self._is_change_source = False
@@ -194,14 +201,23 @@ class MACDHistogram(GraphicsObject):
         [self.draw_volume(value,w,x_data,index) for index, value in enumerate(y_data)]
         self._to_update = True
         # 
-        self.prepareGeometryChange()
-        self.informViewBoundsChanged()
-        # self._panel.informViewBoundsChanged()
+        # self.prepareGeometryChange()
+        # self.informViewBoundsChanged()
 
-    def update_last_data(self,data, setdata) -> None:
+    def update_last_data(self,data,_type, setdata) -> None:
         x_data, y_data = data[0],data[1]
         try:
-            setdata.emit((x_data[:-1], y_data[:-1]))
+            if _type == "reset":
+                self._is_change_source = True
+                # setdata.emit((x_data[:-1], y_data[:-1]))
+                self.setData((x_data[:-1], y_data[:-1]))
+            if _type == "load_historic":
+                _len = len(self._bar_picutures)
+                # setdata.emit((x_data[:-1], y_data[:-1]))
+                self.setData((x_data[:-1*_len], y_data[:-1*_len]))
+            if _type == "add":
+                # setdata.emit((x_data[:-1], y_data[:-1]))
+                self.setData((x_data[-2:], y_data[-2:]))
             #QCoreApplication.processEvents()
         except Exception as e:
             pass
@@ -235,7 +251,6 @@ class SingleMACDHistogram(GraphicsObject):
         self.worker = FastWorker(self.update_last_data,last_candle)
         self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.QueuedConnection)
         self.worker.start()
-        #self.threadpool.start(self.worker)
 
     def paint(self, p: QPainter, *args) -> None:
         p.drawPicture(0, 0, self.picture)

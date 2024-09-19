@@ -58,9 +58,10 @@ class ViewSubPanel(PlotWidget):
 
         super().__init__(parent=parent,background=background, plotItem= self.PlotItem,**kwargs)
         
-        self.setViewportUpdateMode(QGraphicsView.ViewportUpdateMode.SmartViewportUpdate)
+        self.setViewportUpdateMode(QGraphicsView.ViewportUpdateMode.BoundingRectViewportUpdate)
         self.setRenderHint(QPainter.RenderHint.Antialiasing, False)
         self.setCacheMode(QGraphicsView.CacheModeFlag.CacheBackground)
+        self.setOptimizationFlag(QGraphicsView.OptimizationFlag.DontAdjustForAntialiasing, True)
 
         self.crosshair_enabled = kwargs.get(Crosshair.ENABLED, False)
         self._parent = parent
@@ -224,7 +225,7 @@ class ViewSubPanel(PlotWidget):
         if _min != None:
             setdata.emit((_min, _max))
             return
-        # time.sleep(0.1)
+        time.sleep(0.1)
         self.get_last_pos_of_indicator(setdata)
             
     def auto_xrange(self,lastpoint):

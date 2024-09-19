@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np,array
 
 from PySide6.QtCore import Qt, Signal,QObject,QCoreApplication
+from atklip.appmanager import CandleWorker
 
 #@dataclass
 class JAPAN_CANDLE(QObject):
@@ -17,6 +18,7 @@ class JAPAN_CANDLE(QObject):
     dict_time_ohlcv: Dict[int, OHLCV] = {}
     sig_update_candle = Signal(list)
     sig_add_candle = Signal(list)
+    sig_add_historic = Signal(int)
     sig_reset_all = Signal()
     signal_delete = Signal()
     sig_update_source = Signal()
@@ -124,18 +126,58 @@ class JAPAN_CANDLE(QObject):
 
     #@lru_cache(maxsize=128)
     def get_index_data(self,start:int=0,stop:int=0):
-        all_index = self.get_indexs(start,stop)
-        all_data = self.get_values(start,stop)
-        all_index_np = np.array(all_index)
-        all_data_np = np.array(all_data)
-        return all_index_np,all_data_np
-    #@lru_cache(maxsize=128)
+        if start == 0 and stop == 0:
+            all_index = self.df["index"].to_numpy()
+            all_open = self.df["open"].to_numpy()
+            all_high = self.df["high"].to_numpy()
+            all_low = self.df["low"].to_numpy()
+            all_close = self.df["close"].to_numpy()
+        elif start == 0 and stop != 0:
+            all_index = self.df["index"].iloc[:stop].to_numpy()
+            all_open = self.df["open"].iloc[:stop].to_numpy()
+            all_high = self.df["high"].iloc[:stop].to_numpy()
+            all_low = self.df["low"].iloc[:stop].to_numpy()
+            all_close = self.df["close"].iloc[:stop].to_numpy()
+            
+        elif start != 0 and stop == 0:
+            all_index = self.df["index"].iloc[start:].to_numpy()
+            all_open = self.df["open"].iloc[start:].to_numpy()
+            all_high = self.df["high"].iloc[start:].to_numpy()
+            all_low = self.df["low"].iloc[start:].to_numpy()
+            all_close = self.df["close"].iloc[start:].to_numpy()
+        else:
+            all_index = self.df["index"].iloc[start:stop].to_numpy()
+            all_open = self.df["open"].iloc[start:stop].to_numpy()
+            all_high = self.df["high"].iloc[start:stop].to_numpy()
+            all_low = self.df["low"].iloc[start:stop].to_numpy()
+            all_close = self.df["close"].iloc[start:stop].to_numpy()
+        
+        return all_index,[all_open,all_high,all_low,all_close]
+    
     def get_index_volumes(self,start:int=0,stop:int=0):
-        all_index = self.get_indexs(start,stop)
-        all_data = self.get_volumes(start,stop)
-        all_index_np = np.array(all_index)
-        all_data_np = np.array(all_data)
-        return all_index_np,all_data_np
+        if start == 0 and stop == 0:
+            all_index = self.df["index"].to_numpy()
+            all_open = self.df["open"].to_numpy()            
+            all_close = self.df["close"].to_numpy()
+            all_volume = self.df["volume"].to_numpy()
+        elif start == 0 and stop != 0:
+            all_index = self.df["index"].iloc[:stop].to_numpy()
+            all_open = self.df["open"].iloc[:stop].to_numpy()
+            all_volume = self.df["volume"].iloc[:stop].to_numpy()
+            all_close = self.df["close"].iloc[:stop].to_numpy()
+            
+        elif start != 0 and stop == 0:
+            all_index = self.df["index"].iloc[start:].to_numpy()
+            all_open = self.df["open"].iloc[start:].to_numpy()
+            all_volume = self.df["volume"].iloc[start:].to_numpy()
+            all_close = self.df["close"].iloc[start:].to_numpy()
+        else:
+            all_index = self.df["index"].iloc[start:stop].to_numpy()
+            all_open = self.df["open"].iloc[start:stop].to_numpy()
+            all_volume = self.df["volume"].iloc[start:stop].to_numpy()
+            all_close = self.df["close"].iloc[start:stop].to_numpy()
+        
+        return all_index,[all_open,all_close,all_volume]
     
     #@lru_cache(maxsize=128)
     def get_list_index_data(self,start:int=0,stop:int=0):
@@ -200,6 +242,12 @@ class JAPAN_CANDLE(QObject):
         all_data_np = np.array(all_data)
         return all_index_np,all_data_np
 
+    
+    # def fisrt_gen_data(self):
+    #     worker = None
+    #     worker = CandleWorker(self.stard_gen_data)
+    #     worker.start()
+    
     def fisrt_gen_data(self,ohlcv,_precision):
         self.first_gen = False
         self.df = pd.DataFrame([])
@@ -217,13 +265,18 @@ class JAPAN_CANDLE(QObject):
         ohlcv = ohlcv[::-1]
         self.first_gen = False
         # self.df = pd.DataFrame([])
-        [self.update_historic(OHLCV(ohlcv[i][1],ohlcv[i][2],ohlcv[i][3],ohlcv[i][4],round((ohlcv[i][2]+ohlcv[i][3])/2,_precision), round((ohlcv[i][2]+ohlcv[i][3]+ohlcv[i][4])/3,_precision), round((ohlcv[i][1]+ohlcv[i][2]+ohlcv[i][3]+ohlcv[i][4])/4,_precision),ohlcv[i][5],ohlcv[i][0]/1000,i)) for i in range(len(ohlcv))]
-        self.df = pd.DataFrame([data.__dict__ for data in self.candles])
+        candles:List[OHLCV] = []
+        [self.update_historic(candles,OHLCV(ohlcv[i][1],ohlcv[i][2],ohlcv[i][3],ohlcv[i][4],round((ohlcv[i][2]+ohlcv[i][3])/2,_precision), round((ohlcv[i][2]+ohlcv[i][3]+ohlcv[i][4])/3,_precision), round((ohlcv[i][1]+ohlcv[i][2]+ohlcv[i][3]+ohlcv[i][4])/4,_precision),ohlcv[i][5],ohlcv[i][0]/1000,i)) for i in range(len(ohlcv))]
+        
+        if candles != []:
+            df = pd.DataFrame([data.__dict__ for data in candles])
+            self.df = pd.concat([df, self.df], ignore_index=True)
+            
         self.first_gen = True
-        self.sig_reset_all.emit()
+        self.sig_add_historic.emit(len(ohlcv))
         return self.candles
 
-    def update_historic(self,new_candle:OHLCV):
+    def update_historic(self,candles:List[OHLCV],new_candle:OHLCV):
         if len(self.candles) == 0:
             "lấy mốc thời gian 2018 thời điểm data bắt đầu"
             new_candle.index = 1514754000
@@ -248,11 +301,11 @@ class JAPAN_CANDLE(QObject):
             
             self.dict_index_ohlcv[new_candle.index] = new_candle
             self.dict_time_ohlcv[new_candle.time] = new_candle
- 
         else:
             _index = last_candle.index - 1
             _new_candle = OHLCV(new_candle.open,new_candle.high,new_candle.low,new_candle.close,new_candle.hl2,new_candle.hlc3,new_candle.ohlc4,new_candle.volume,new_candle.time,_index)
             self.candles.insert(0,_new_candle)
+            candles.insert(0,_new_candle)
             self.dict_index_ohlcv[_new_candle.index] = _new_candle
             self.dict_time_ohlcv[_new_candle.time] = _new_candle
     

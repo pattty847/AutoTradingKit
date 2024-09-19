@@ -32,17 +32,20 @@ class Chart(ViewPlotWidget):
         self.apikey = apikey
         self.secretkey = secretkey
         
-        self.apikey = "zhBF9X2mhD7rY6fpFU243biBtE4ySGpXTBPdYYOExyx27G5CrU6cCEditBhO7ek4"
-        self.secretkey = "6rIYDN1xBaxxGyuLslYGMxlHFtjgzhVh6nV4zO8IKaspdF1H3tC5MKXMgxA1rHDA"
-
         self.exchange_name,self.symbol, self.interval =exchange_name, symbol,interval
+        
+        if "binance" in self.exchange_name:
+            self.apikey = "zhBF9X2mhD7rY6fpFU243biBtE4ySGpXTBPdYYOExyx27G5CrU6cCEditBhO7ek4"
+            self.secretkey = "6rIYDN1xBaxxGyuLslYGMxlHFtjgzhVh6nV4zO8IKaspdF1H3tC5MKXMgxA1rHDA"
+        else:
+            self.apikey = ""
+            self.secretkey = ""
         
         self.sig_reset_exchange = False
         self.is_reseting =  False
         self.worker = None
         self.worker_auto_load_old_data = None
         
-
         self.vb.symbol, self.vb.interval = self.symbol, self.interval
         
         self.vb.load_old_data.connect(self.auto_load_old_data)
@@ -80,7 +83,6 @@ class Chart(ViewPlotWidget):
                 self.worker_auto_load_old_data.start_thread()
         
     async def check_signal_load_old_data(self):
-        
         if self.jp_candle.candles != []:
             _cr_time = self.jp_candle.candles[0].time
             data = self.crypto_ex.fetch_ohlcv(self.symbol,self.interval,limit=1500, params={"until":_cr_time*1000})
@@ -386,7 +388,7 @@ class Chart(ViewPlotWidget):
         else:  
             "change interval/symbol data when starting app"
             self.jp_candle.sig_add_candle.emit(self.jp_candle.candles[-2:])
-            self.auto_xrange()
+            # self.auto_xrange()
         self.sig_show_process.emit(False)
         self.is_reseting =  False
         self.sig_reset_exchange = False

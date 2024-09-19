@@ -1,3 +1,4 @@
+import time
 from typing import Tuple, List,TYPE_CHECKING
 import numpy as np
 from atklip.graphics.pyqtgraph import GraphicsObject, PlotDataItem
@@ -20,10 +21,6 @@ class BasicMACD(GraphicsObject):
     on_click = Signal(QObject)
 
     last_pos = Signal(tuple)
-    
-    sig_update_histogram = Signal(tuple)
-    
-    sig_reset_histogram = Signal(tuple)
 
     signal_visible = Signal(bool)
     signal_delete = Signal()
@@ -72,7 +69,7 @@ class BasicMACD(GraphicsObject):
                     }
      
         self.id = id
-        
+        self.fisrt_setup = False
 
         self.on_click.connect(self.on_click_event)
         self.signal_visible.connect(self.setVisible)
@@ -98,7 +95,7 @@ class BasicMACD(GraphicsObject):
         self.price_low.setParentItem(self)
         self.price_low.setPos(self.has["inputs"]["price_low"])
         
-        self.histogram = MACDHistogram(self.chart,self._panel,self.sig_reset_histogram,self.sig_update_histogram,self.has)
+        self.histogram = MACDHistogram(self.chart,self._panel,self.has)
         self.histogram.setParentItem(self)
 
         self.picture: QPicture = QPicture()
@@ -131,6 +128,7 @@ class BasicMACD(GraphicsObject):
         self.INDICATOR.sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
         self.INDICATOR.sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
         self.INDICATOR.sig_add_candle.connect(self.add_worker,Qt.ConnectionType.AutoConnection)
+        self.INDICATOR.sig_add_historic.connect(self.add_historic_worker,Qt.ConnectionType.AutoConnection)
         self.INDICATOR.signal_delete.connect(self.replace_source,Qt.ConnectionType.AutoConnection)
     
     def fisrt_gen_data(self):
@@ -142,20 +140,32 @@ class BasicMACD(GraphicsObject):
         self.chart.sig_remove_item.emit(self)
     
     def update_histogram(self,data):
+        self.histogram.sig_update_histogram.emit(data)
+    
+    def reset_histogram(self,data):
         xdata,histogram = data[0], data[3]
-        self.sig_reset_histogram.emit((xdata,histogram))
+        self.histogram.sig_reset_histogram.emit((xdata,histogram),"reset")
+        
+    
+    def add_historic_histogram(self,data):
+        xdata,histogram = data[0], data[1]
+        self.histogram.sig_load_historic_histogram.emit((xdata,histogram),"load_historic")
+    
+    def add_histogram(self,data):
+        xdata,histogram = data[0][-3:-1], data[3][-3:-1]
+        self.histogram.sig_add_histogram.emit((xdata,histogram),"add")
     
     def reset_indicator(self):
+        self.fisrt_setup = True
         self.worker = None
         self.worker = FastWorker(self.regen_indicator)
         self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
-        self.worker.signals.setdata.connect(self.update_histogram,Qt.ConnectionType.QueuedConnection)
+        self.worker.signals.setdata.connect(self.reset_histogram,Qt.ConnectionType.QueuedConnection)
         self.worker.start()
 
     def regen_indicator(self,setdata):
         xdata,lb,cb,ub= self.INDICATOR.get_data()
         setdata.emit((xdata,lb,cb,ub))
-        self.sig_change_yaxis_range.emit()
         self.has["name"] = f"MACD {self.has["inputs"]["ma_type"].name} {self.has["inputs"]["fast_period"]} {self.has["inputs"]["slow_period"]} {self.has["inputs"]["signal_period"]} {self.has["inputs"]["type"]}"
         self.sig_change_indicator_name.emit(self.has["name"])
         
@@ -246,11 +256,17 @@ class BasicMACD(GraphicsObject):
         self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
         self.worker.start()    
     
+    def add_historic_worker(self):
+        self.worker = None
+        self.worker = FastWorker(self.load_historic_data)
+        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.start() 
+    
     def add_worker(self):
         self.worker = None
         self.worker = FastWorker(self.update_data)
         self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
-        self.worker.signals.setdata.connect(self.update_histogram,Qt.ConnectionType.QueuedConnection)
+        self.worker.signals.setdata.connect(self.add_histogram,Qt.ConnectionType.QueuedConnection)
         self.worker.start()    
         
     def set_Data(self,data):
@@ -258,16 +274,27 @@ class BasicMACD(GraphicsObject):
         lb = data[1]
         cb = data[2]
         histogram = data[3]
-        self.sig_update_histogram.emit((xData[-2:],histogram[-2:]))
+        self.update_histogram((xData[-2:],histogram[-2:]))
         try:
             self.macd_line.setData(xData,lb)
             self.signal.setData(xData,cb)
+            if self.fisrt_setup:
+                self.fisrt_setup = False
+                self.sig_change_yaxis_range.emit()
         except Exception as e:
             pass
         
         self.prepareGeometryChange()
         self.informViewBoundsChanged()
 
+    
+    def load_historic_data(self,setdata):
+        xdata,macd,signalma,histogram= self.INDICATOR.get_data()
+        setdata.emit((xdata,macd,signalma,histogram))
+        self.add_historic_histogram((xdata,histogram))
+        self.last_pos.emit((self.has["inputs"]["indicator_type"],signalma[-1]))
+        self._panel.sig_update_y_axis.emit() 
+    
     def update_data(self,setdata):
         xdata,macd,signalma,histogram= self.INDICATOR.get_data()
         setdata.emit((xdata,macd,signalma,histogram))
@@ -303,14 +330,12 @@ class BasicMACD(GraphicsObject):
         _max = None
         try:
             if len(self.signal.yData) > 0:
-                new_data = self.signal.yData[np.isfinite(self.signal.yData)]
-                _min = new_data.min()
-                _max = new_data.max()
-                if _min == np.nan or _max == np.nan:
-                    return None, None
+                _min, _max = np.nanmin(self.signal.yData), np.nanmax(self.signal.yData)
                 return _min,_max
         except Exception as e:
-            print(e)
+            pass
+        time.sleep(0.1)
+        self.get_min_max()
         return _min,_max
 
     def on_click_event(self):
