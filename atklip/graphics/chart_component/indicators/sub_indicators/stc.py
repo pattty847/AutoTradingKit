@@ -1,3 +1,4 @@
+import time
 from typing import Tuple, List,TYPE_CHECKING
 import numpy as np
 from atklip.graphics.pyqtgraph import GraphicsObject, PlotDataItem
