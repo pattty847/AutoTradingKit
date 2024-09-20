@@ -148,7 +148,7 @@ class BasicMACD(GraphicsObject):
         
     
     def add_historic_histogram(self,data):
-        xdata,histogram = data[0], data[1]
+        xdata,histogram = data[0], data[3]
         self.histogram.sig_load_historic_histogram.emit((xdata,histogram),"load_historic")
     
     def add_histogram(self,data):
@@ -160,11 +160,11 @@ class BasicMACD(GraphicsObject):
         self.worker = None
         self.worker = FastWorker(self.regen_indicator)
         self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
-        self.worker.signals.setdata.connect(self.reset_histogram,Qt.ConnectionType.QueuedConnection)
         self.worker.start()
 
     def regen_indicator(self,setdata):
         xdata,lb,cb,ub= self.INDICATOR.get_data()
+        self.reset_histogram((xdata,lb,cb,ub))
         setdata.emit((xdata,lb,cb,ub))
         self.has["name"] = f"MACD {self.has["inputs"]["ma_type"].name} {self.has["inputs"]["fast_period"]} {self.has["inputs"]["slow_period"]} {self.has["inputs"]["signal_period"]} {self.has["inputs"]["type"]}"
         self.sig_change_indicator_name.emit(self.has["name"])
@@ -260,15 +260,35 @@ class BasicMACD(GraphicsObject):
         self.worker = None
         self.worker = FastWorker(self.load_historic_data)
         self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.signals.setdata.connect(self.add_historic_histogram,Qt.ConnectionType.QueuedConnection)
         self.worker.start() 
     
     def add_worker(self):
         self.worker = None
-        self.worker = FastWorker(self.update_data)
+        self.worker = FastWorker(self.add_data)
         self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
         self.worker.signals.setdata.connect(self.add_histogram,Qt.ConnectionType.QueuedConnection)
         self.worker.start()    
-        
+    
+    def load_historic_data(self,setdata):
+        xdata,macd,signalma,histogram= self.INDICATOR.get_data()
+        setdata.emit((xdata,macd,signalma,histogram))
+        self.last_pos.emit((self.has["inputs"]["indicator_type"],signalma[-1]))
+        self._panel.sig_update_y_axis.emit() 
+    
+    def update_data(self,setdata):
+        xdata,macd,signalma,histogram= self.INDICATOR.get_data()
+        setdata.emit((xdata,macd,signalma,histogram))
+        self.last_pos.emit((self.has["inputs"]["indicator_type"],signalma[-1]))
+        self._panel.sig_update_y_axis.emit() 
+    
+    def add_data(self,setdata):
+        xdata,macd,signalma,histogram= self.INDICATOR.get_data()
+        setdata.emit((xdata,macd,signalma,histogram))
+        self.last_pos.emit((self.has["inputs"]["indicator_type"],signalma[-1]))
+        self._panel.sig_update_y_axis.emit()  
+    
+    
     def set_Data(self,data):
         xData = data[0]
         lb = data[1]
@@ -286,20 +306,6 @@ class BasicMACD(GraphicsObject):
         
         self.prepareGeometryChange()
         self.informViewBoundsChanged()
-
-    
-    def load_historic_data(self,setdata):
-        xdata,macd,signalma,histogram= self.INDICATOR.get_data()
-        setdata.emit((xdata,macd,signalma,histogram))
-        self.add_historic_histogram((xdata,histogram))
-        self.last_pos.emit((self.has["inputs"]["indicator_type"],signalma[-1]))
-        self._panel.sig_update_y_axis.emit() 
-    
-    def update_data(self,setdata):
-        xdata,macd,signalma,histogram= self.INDICATOR.get_data()
-        setdata.emit((xdata,macd,signalma,histogram))
-        self.last_pos.emit((self.has["inputs"]["indicator_type"],signalma[-1]))
-        self._panel.sig_update_y_axis.emit()  
 
     def boundingRect(self) -> QRectF:
         return self.histogram.boundingRect()
@@ -321,8 +327,9 @@ class BasicMACD(GraphicsObject):
         return _value,"#363a45"
     
     def get_last_point(self):
-        _time = self.signal.xData[-1]
-        _value = self.signal.yData[-1]
+        df = self.INDICATOR.get_df(2)
+        _time = df["index"].iloc[-1]
+        _value = df["macd"].iloc[-1]
         return _time,_value
     
     def get_min_max(self):

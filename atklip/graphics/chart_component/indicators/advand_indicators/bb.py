@@ -5,8 +5,8 @@ from PySide6.QtCore import Signal, QObject,Qt,QRectF
 from PySide6.QtWidgets import QGraphicsItem
 from PySide6.QtGui import QPainter,QPicture
 
-from atklip.graphics.pyqtgraph import FillBetweenItem,GraphicsObject,PlotDataItem
-
+from atklip.graphics.pyqtgraph import GraphicsObject,PlotDataItem
+from .fillbetweenitem import FillBetweenItem
 from atklip.controls import PD_MAType,IndicatorType,BBANDS
 
 from atklip.appmanager import FastWorker
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from atklip.graphics.chart_component.viewchart import Chart
 
 
-class BasicBB(GraphicsObject):
+class BasicBB(PlotDataItem):
     on_click = Signal(QObject)
     signal_visible = Signal(bool)
     signal_delete = Signal()
@@ -55,20 +55,20 @@ class BasicBB(GraphicsObject):
                     'width_low_line': 1,
                     'style_low_line': Qt.PenStyle.SolidLine,
                     
-                    "brush_color": mkBrush('blue',width=0.7),
+                    "brush_color": mkBrush('#3f3964',width=0.7),
                     }
                     }
-        
+        self.setPen(color=self.has["styles"]['pen_center_line'])
         self.lowline = PlotDataItem(pen=self.has["styles"]['pen_low_line'])  # for z value
         self.lowline.setParentItem(self)
-        self.centerline = PlotDataItem(pen=self.has["styles"]['pen_center_line'])
-        self.centerline.setParentItem(self)
+        # self.centerline = PlotDataItem(pen=self.has["styles"]['pen_center_line'])
+        # self.centerline.setParentItem(self)
         self.highline = PlotDataItem(pen=self.has["styles"]['pen_high_line'])
         self.highline.setParentItem(self)
         
         self.bb_bank = FillBetweenItem(self.lowline,self.highline,self.has["styles"]['brush_color'])
         self.bb_bank.setParentItem(self)
-        
+     
         self.picture: QPicture = QPicture()
                 
         self.INDICATOR  = BBANDS(self,self.has["inputs"]["source"], self.has["inputs"]["type"],
@@ -89,8 +89,11 @@ class BasicBB(GraphicsObject):
     
     def connect_signals(self):
         self.INDICATOR.sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
+        
         self.INDICATOR.sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
-        self.INDICATOR.sig_add_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
+        self.INDICATOR.sig_add_candle.connect(self.add_worker,Qt.ConnectionType.AutoConnection)
+        self.INDICATOR.sig_add_historic.connect(self.add_historic_worker,Qt.ConnectionType.AutoConnection)
+        
         self.INDICATOR.signal_delete.connect(self.replace_source,Qt.ConnectionType.AutoConnection)
     
     def fisrt_gen_data(self):
@@ -171,7 +174,8 @@ class BasicBB(GraphicsObject):
         if _input == "pen_high_line" or _input == "width_high_line" or _input == "style_high_line":
             self.highline.setPen(color=self.has["styles"]["pen_high_line"], width=self.has["styles"]["width_high_line"],style=self.has["styles"]["style_high_line"])
         elif _input == "pen_center_line" or _input == "width_center_line" or _input == "style_center_line":
-            self.centerline.setPen(color=self.has["styles"]["pen_center_line"], width=self.has["styles"]["width_center_line"],style=self.has["styles"]["style_center_line"])
+            # self.centerline.setPen(color=self.has["styles"]["pen_center_line"], width=self.has["styles"]["width_center_line"],style=self.has["styles"]["style_center_line"])
+            self.setPen(color=self.has["styles"]["pen_center_line"], width=self.has["styles"]["width_center_line"],style=self.has["styles"]["style_center_line"])
         elif _input == "pen_low_line" or _input == "width_low_line" or _input == "style_low_line":
             self.lowline.setPen(color=self.has["styles"]["pen_low_line"], width=self.has["styles"]["width_low_line"],style=self.has["styles"]["style_low_line"])
         elif _input == "brush_color":
@@ -193,24 +197,43 @@ class BasicBB(GraphicsObject):
         self.worker = FastWorker(self.update_data)
         self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
         self.worker.start()    
+        
+    def add_historic_worker(self):
+        self.worker = None
+        self.worker = FastWorker(self.load_historic_data)
+        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.start() 
+    def add_worker(self):
+        self.worker = None
+        self.worker = FastWorker(self.add_data)
+        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.start()
+    
+    def load_historic_data(self,setdata):
+        xdata,lb,cb,ub= self.INDICATOR.get_data()
+        setdata.emit((xdata,lb,cb,ub))    
+    def add_data(self,setdata):
+        xdata,lb,cb,ub= self.INDICATOR.get_data()
+        setdata.emit((xdata,lb,cb,ub))    
     
     def set_Data(self,data):
-        
         xData = data[0]
         lb = data[1]
         cb = data[2]
         ub = data[3]
-        
+        time.sleep(0.01)
         self.lowline.setData(xData,lb)
-        self.centerline.setData(xData,cb)
+        # self.centerline.setData(xData,cb)
+        time.sleep(0.01)
+        self.setData(xData,cb)
         self.highline.setData(xData,ub)
         
-        self.prepareGeometryChange()
-        self.informViewBoundsChanged()
+        # self.prepareGeometryChange()
+        # self.informViewBoundsChanged()
 
     def update_data(self,setdata):
         xdata,lb,cb,ub= self.INDICATOR.get_data()
-        setdata.emit((xdata,lb,cb,ub))        
+        setdata.emit((xdata,lb,cb,ub))   
 
        
     def boundingRect(self) -> QRectF:
@@ -251,20 +274,23 @@ class BasicBB(GraphicsObject):
     
     
     def get_last_point(self):
-        _time = self.centerline.xData[-1]
-        _value = self.centerline.yData[-1]
+        # _time = self.centerline.xData[-1]
+        # _value = self.centerline.yData[-1]
+        _time = self.xData[-1]
+        _value = self.yData[-1]
         return _time,_value
     
     def get_min_max(self):
-        y_data = self.highline.yData
-        _min = None
-        _max = None
         try:
-            if y_data.__len__() > 0:
-                _min = y_data.min()
-                _max = y_data.max()
+            _min, _max = np.nanmin(self.lowline.yData), np.nanmax(self.highline.yData)
+            # if y_data.__len__() > 0:
+            #     _min = y_data.min()
+            #     _max = y_data.max()
+            return _min,_max
         except Exception as e:
-            self.get_min_max()
+            pass
+        time.sleep(0.1)
+        self.get_min_max()
         return _min,_max
 
     def on_click_event(self):

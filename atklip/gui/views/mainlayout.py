@@ -40,7 +40,7 @@ class MainWidget(QWidget,Ui_MainWidget):
         self.chartbox_splitter.chart.sig_show_process.connect(self.progress.run_process,Qt.ConnectionType.AutoConnection)
         # self.progress.run_process(True)
         
-        self.topbar.replay.clicked.connect(self.chartbox_splitter.chart.auto_load_old_data)
+        self.topbar.replay.clicked.connect(self.chartbox_splitter.chart.change_mode)
         
         "khởi tạo indicator menu, symbol menu trước. đang test"
         self.topbar.setup_indicator_menu()

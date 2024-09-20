@@ -220,16 +220,17 @@ class BasicSTC(GraphicsObject):
         lb = data[1]
         cb = data[2]
         ub = data[3]
-
         try:
             self.stc_line.setData(xData,lb)
+            time.sleep(0.01)
             self.macd_line.setData(xData,cb)
+            time.sleep(0.01)
             self.stoch_line.setData(xData,ub)
         except Exception as e:
             pass
         
-        self.prepareGeometryChange()
-        self.informViewBoundsChanged()
+        # self.prepareGeometryChange()
+        # self.informViewBoundsChanged()
 
     def update_data(self,setdata):
         xdata,stc,macd,stoch = self.INDICATOR.get_data()

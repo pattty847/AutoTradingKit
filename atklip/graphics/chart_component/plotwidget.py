@@ -80,15 +80,13 @@ class ViewPlotWidget(PlotWidget):
 
         self.list_candle_indicators = []
         
-        self.jp_candle = JAPAN_CANDLE()
-        
+        self.is_backtest = False
         self._precision = 3
+        
+        self.jp_candle = JAPAN_CANDLE(self)
         
         self.heikinashi = HEIKINASHI(self._precision,self.jp_candle)
         
-        self.bodydata = []
-        self.timedata = []
-
         self.container_indicator_wg = IndicatorContainer(self)
         self.sig_show_candle_infor.connect(self.container_indicator_wg.get_candle_infor, Qt.ConnectionType.AutoConnection)
 

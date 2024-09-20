@@ -140,10 +140,10 @@ class BasicSTOCHRSI(GraphicsObject):
     
 
     def regen_indicator(self,setdata):
-        xdata,stoch,signalma= self.INDICATOR.get_data()  
+        xdata,stochrsi,signalma= self.INDICATOR.get_data()  
         self.has["name"] = f"STOCHRSI {self.has["inputs"]["ma_type"].name} {self.has["inputs"]["period"]} {self.has["inputs"]["k_period"]} {self.has["inputs"]["d_period"]} {self.has["inputs"]["type"]}"
         self.sig_change_indicator_name.emit(self.has["name"])
-        setdata.emit((xdata,stoch,signalma))
+        setdata.emit((xdata,stochrsi,signalma))
         self.sig_change_yaxis_range.emit()
          
     def replace_source(self):
@@ -297,8 +297,8 @@ class BasicSTOCHRSI(GraphicsObject):
         except Exception as e:
             pass
         
-        self.prepareGeometryChange()
-        self.informViewBoundsChanged()
+        # self.prepareGeometryChange()
+        # self.informViewBoundsChanged()
         
     def get_last_point(self):
         _time = self.signal.xData[-1]

@@ -340,9 +340,7 @@ class MACD(QObject):
                             "histogram":histogram.tail(_len),
                             "signalma":signalma.tail(_len)
                             })
-        
-        print(self.df["index"].iloc[0],df["index"].iloc[-1])
-        
+                
         self.df = pd.concat([_df,self.df],ignore_index=True)
         
         self.xdata,self.macd_data,self.histogram,self.signalma = self.df["index"].to_numpy(),self.df["macd"].to_numpy(),\

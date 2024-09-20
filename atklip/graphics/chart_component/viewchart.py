@@ -32,7 +32,10 @@ class Chart(ViewPlotWidget):
         self.apikey = apikey
         self.secretkey = secretkey
         
+        
         self.exchange_name,self.symbol, self.interval =exchange_name, symbol,interval
+        
+        self.vb.symbol, self.vb.interval = self.symbol, self.interval
         
         if "binance" in self.exchange_name:
             self.apikey = "zhBF9X2mhD7rY6fpFU243biBtE4ySGpXTBPdYYOExyx27G5CrU6cCEditBhO7ek4"
@@ -46,7 +49,7 @@ class Chart(ViewPlotWidget):
         self.worker = None
         self.worker_auto_load_old_data = None
         
-        self.vb.symbol, self.vb.interval = self.symbol, self.interval
+        
         
         self.vb.load_old_data.connect(self.auto_load_old_data)
         
@@ -67,6 +70,12 @@ class Chart(ViewPlotWidget):
         asyncio.set_event_loop(loop)
         return loop
 
+    def change_mode(self):
+        if self.is_backtest:
+            self.is_backtest = False
+        else:
+            self.is_backtest = True
+    
     def auto_load_old_data(self):
         "load historic data when wheel or drag viewbox"
         if isinstance(self.worker_auto_load_old_data,ThreadingAsyncWorker):
@@ -268,7 +277,7 @@ class Chart(ViewPlotWidget):
                         last_ohlcv = OHLCV(_ohlcv[-1][1],_ohlcv[-1][2],_ohlcv[-1][3],_ohlcv[-1][4], round((_ohlcv[-1][2]+_ohlcv[-1][3])/2,self._precision) , round((_ohlcv[-1][2]+_ohlcv[-1][3]+_ohlcv[-1][4])/3,self._precision), round((_ohlcv[-1][1]+_ohlcv[-1][2]+_ohlcv[-1][3]+_ohlcv[-1][4])/4,self._precision),_ohlcv[-1][5],_ohlcv[-1][0]/1000,0)
                         _is_add_candle = self.jp_candle.update([pre_ohlcv,last_ohlcv])
                         
-                        self.heikinashi.update( self.jp_candle.candles[-2:],_is_add_candle)
+                        self.heikinashi.update(self.jp_candle.candles[-2:],_is_add_candle)
       
                         if firt_run == False:
                             self.first_run.emit()
@@ -280,7 +289,7 @@ class Chart(ViewPlotWidget):
             else:
                 break
             try:
-                await asyncio.sleep(0.3)
+                await asyncio.sleep(0.5)
             except:
                 pass
         if self.crypto_ex != None:

@@ -133,6 +133,7 @@ class BBANDS(QObject):
     sig_add_candle = Signal()
     sig_reset_all = Signal()
     signal_delete = Signal()    
+    sig_add_historic = Signal()    
     def __init__(self,parent,_candles,source,ma_type,length,std_dev_mult) -> None:
         super().__init__(parent=parent)
         
@@ -169,6 +170,7 @@ class BBANDS(QObject):
         self._candles.sig_update_candle.connect(self.update_worker,Qt.ConnectionType.QueuedConnection)
         self._candles.sig_add_candle.connect(self.add_worker,Qt.ConnectionType.QueuedConnection)
         self._candles.signal_delete.connect(self.signal_delete)
+        self._candles.sig_add_historic.connect(self.add_historic_worker,Qt.ConnectionType.QueuedConnection)
     
     
     def change_source(self,_candles:JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE):
@@ -215,6 +217,12 @@ class BBANDS(QObject):
     def get_last_row_df(self):
         return self.df.iloc[-1] 
 
+
+    def add_historic_worker(self,n):
+        self.worker_ = None
+        self.worker_ = CandleWorker(self.add_historic,n)
+        self.worker_.start()
+    
     def update_worker(self,candle):
         self.worker_ = None
         self.worker_ = CandleWorker(self.update,candle)
@@ -245,9 +253,9 @@ class BBANDS(QObject):
             elif name.__contains__("BBU_"):
                 upper_name = name
 
-        lb = INDICATOR[lower_name]
-        cb = INDICATOR[mid_name]
-        ub = INDICATOR[upper_name]
+        lb = INDICATOR[lower_name].dropna()
+        cb = INDICATOR[mid_name].dropna()
+        ub = INDICATOR[upper_name].dropna()
         return lb,cb,ub
     def caculate(self,df: pd.DataFrame):
         INDICATOR = bbands(df[self.source],
@@ -260,26 +268,55 @@ class BBANDS(QObject):
         self.df = pd.DataFrame([])
         
         df:pd.DataFrame = self._candles.get_df()
-             
-        _index = df["index"]
-        
+                     
         lb,cb,ub = self.caculate(df)
+        
+        _len = min([len(lb),len(cb),len(ub)])
+        _index = df["index"].tail(_len)
         
         self.df = pd.DataFrame({
                             'index':_index,
-                            "lb":lb,
-                            "cb":cb,
-                            "ub":ub
+                            "lb":lb.tail(_len),
+                            "cb":cb.tail(_len),
+                            "ub":ub.tail(_len)
                             })
                 
-        self.xdata,self.lb,self.cb,self.ub = self.df["index"].to_numpy(),lb.to_numpy(),\
-                                                cb.to_numpy(),ub.to_numpy()
+        self.xdata,self.lb,self.cb,self.ub = self.df["index"].to_numpy(),self.df["lb"].to_numpy(),self.df["cb"].to_numpy(),self.df["ub"].to_numpy()
         
         self.is_genering = False
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
         self.sig_reset_all.emit()
+    
+    def add_historic(self,n:int):
+        self.is_genering = True
+        
+        _pre_len = len(self.df)
+        df:pd.DataFrame = self._candles.get_df().iloc[:-1*_pre_len]
+        
+        lb,cb,ub = self.caculate(df)
+
+        _len = min([len(lb),len(cb),len(ub)])
+        _index = df["index"].tail(_len)
+        
+        _df = pd.DataFrame({
+                            'index':_index,
+                            "lb":lb.tail(_len),
+                            "cb":cb.tail(_len),
+                            "ub":ub.tail(_len)
+                            })
+        
+        self.df = pd.concat([_df,self.df],ignore_index=True)
+        
+        self.xdata,self.lb,self.cb,self.ub = self.df["index"].to_numpy(),self.df["lb"].to_numpy(),self.df["cb"].to_numpy(),self.df["ub"].to_numpy()
+        
+        self.is_genering = False
+        if self.first_gen == False:
+            self.first_gen = True
+            self.is_genering = False 
+        
+        self.sig_add_historic.emit()
     
     def add(self,new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]

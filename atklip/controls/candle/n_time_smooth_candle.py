@@ -28,11 +28,8 @@ class N_SMOOTH_CANDLE(QObject):
     sig_reset_all = Signal()
     candles : List[OHLCV] = []
     dict_index_time = {}
-    
     dict_n_ma:Dict[str,pd.Series] = {}
-    
     dict_n_ohlcv:Dict[str,pd.DataFrame] = {}
-
     signal_delete = Signal()
     sig_update_source = Signal()
     def __init__(self,precision,_candles,n,ma_type,period) -> None:

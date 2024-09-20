@@ -264,8 +264,8 @@ class BasicTRIX(GraphicsObject):
         except Exception as e:
             pass
         
-        self.prepareGeometryChange()
-        self.informViewBoundsChanged()
+        # self.prepareGeometryChange()
+        # self.informViewBoundsChanged()
         
     def get_last_point(self):
         _time = self.signal.xData[-1]

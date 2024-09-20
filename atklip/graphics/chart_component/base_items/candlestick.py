@@ -337,8 +337,11 @@ class CandleStick(GraphicsObject):
             self._stop = x_right
         else:
             self._stop = stop_index
-        h_high =  self.chart.jp_candle.get_df()["high"].iloc[self._start:self._stop].max()
-        h_low = self.chart.jp_candle.get_df()["low"].iloc[self._start:self._stop].min()
+        df = self.chart.jp_candle.get_df()
+        if len(df) == 0:
+            return QRectF(0,0,0,0)
+        h_high =  df["high"].iloc[self._start:self._stop].max()
+        h_low = df["low"].iloc[self._start:self._stop].min()
         rect = QRectF(x_left,h_low,self._stop-self._start,h_high-h_low)
         return rect
 
@@ -384,26 +387,26 @@ class CandleStick(GraphicsObject):
         # p.end()
         self._to_update = True
         # self.chart.sig_update_y_axis.emit()
-        # self.prepareGeometryChange()
-        # self.informViewBoundsChanged()
+        self.prepareGeometryChange()
+        self.informViewBoundsChanged()
         
     def update_last_data(self,candles, setdata) -> None:
-        from atklip.graphics.pyqtgraph.widgets.BusyCursor import BusyCursor
-        with BusyCursor():
-            if candles is None or isinstance(candles,list):
-                x_data, y_data = self.source.get_index_data(start=-3,stop=-1)
-            elif candles == True:
-                x_data, y_data = self.source.get_index_data(stop=-1)
-            else:
-                x_data, y_data = self.source.get_index_data(stop=candles+1)
-            try:
-                if len(x_data) != len(y_data[0]):
-                    raise Exception("Len of x_data must be the same as y_data")
-                # setdata.emit((x_data, y_data))
-                self.setData((x_data, y_data))
-                # QCoreApplication.processEvents()
-            except Exception as e:
-                print(f"loi update {e}")
+        if candles is None or isinstance(candles,list):
+            last_candles = self.source.get_candles(-2)
+            last_candle = last_candles[0]
+            x_data, y_data = [last_candle.index], [[last_candle.open],[last_candle.high],[last_candle.low],[last_candle.close]]
+        elif candles == True:
+            x_data, y_data = self.source.get_index_data(stop=-1)
+        else:
+            x_data, y_data = self.source.get_index_data(stop=candles+1)
+        try:
+            if len(x_data) != len(y_data[0]):
+                raise Exception("Len of x_data must be the same as y_data")
+            # setdata.emit((x_data, y_data))
+            self.setData((x_data, y_data))
+            # QCoreApplication.processEvents()
+        except Exception as e:
+            print(f"loi update {e}")
     
 class SingleCandleStick(GraphicsObject):
     """Live candlestick plot, plotting data [[open, close, min, max], ...]"""

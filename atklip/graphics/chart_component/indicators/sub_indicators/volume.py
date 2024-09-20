@@ -235,8 +235,8 @@ class Volume(GraphicsObject):
         # p.end()
         self._to_update = True
         
-        # self.prepareGeometryChange()
-        # self.informViewBoundsChanged()
+        self.prepareGeometryChange()
+        self.informViewBoundsChanged()
     
     def update_last_data(self, candles,setdata) -> None:
         if candles is None or isinstance(candles,list):

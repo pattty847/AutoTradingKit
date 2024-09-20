@@ -227,8 +227,8 @@ class BasicSTOCH(GraphicsObject):
         self.stoch_line.setData(xData,lb)
         self.signal.setData(xData,cb)
         
-        self.prepareGeometryChange()
-        self.informViewBoundsChanged()
+        # self.prepareGeometryChange()
+        # self.informViewBoundsChanged()
 
     def update_data(self,setdata):
         xdata,stoch,signalma = self.INDICATOR.get_data()

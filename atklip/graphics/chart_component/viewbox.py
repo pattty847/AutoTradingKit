@@ -26,10 +26,10 @@ class PlotViewBox(ViewBox):
     def __init__(self, type_chart="trading",plotwidget=None, main=None,*args, **kwds):
         kwds['enableMenu'] = False
         ViewBox.__init__(self, *args, **kwds)
-        self.setFlag(self.GraphicsItemFlag.ItemClipsChildrenToShape, True)
-        self.setFlag(self.GraphicsItemFlag.ItemClipsToShape, True)
-        self.setFlag(self.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
-        self.setFlag(self.GraphicsItemFlag.ItemContainsChildrenInShape,True)
+        # self.setFlag(self.GraphicsItemFlag.ItemClipsChildrenToShape, True)
+        # self.setFlag(self.GraphicsItemFlag.ItemClipsToShape, True)
+        # self.setFlag(self.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
+        # self.setFlag(self.GraphicsItemFlag.ItemContainsChildrenInShape,True)
   
         self.symbol,self.interval = None,None
         
@@ -174,41 +174,23 @@ class PlotViewBox(ViewBox):
     
     def wheelEvent(self, ev, axis=None):
         self.load_old_data.emit()
-        # self.LivePlotWidget_PlotItem = self.parentItem()
-
         y_range = (self.plotwidget.yAxis.range[1] + self.plotwidget.yAxis.range[0])/2
-        
         x_range = self.plotwidget.xAxis.range[1]
+        tr = self.targetRect()
+        if tr.right() - tr.left() >=1440 and ev.delta() < 0:
+            "giới hạn 1440 candle trên viewchart"
+            if axis == None or axis == 0:
+                return True
         
-        # x_left,x_right = int(self.plotwidget.xAxis.range[0]),int(self.plotwidget.xAxis.range[1])
-        # start_index = self.plotwidget.jp_candle.candles[0].index
-        # stop_index = self.plotwidget.jp_candle.candles[-1].index
-        # if x_left > start_index:
-        #     self.plotwidget._start = x_left+2
-        # else:
-        #     self.plotwidget._start = start_index+2
-        # if x_right < stop_index:
-        #     self.plotwidget._stop = x_right
-        # else:
-        #     self.plotwidget._stop = stop_index
-        
-        # MODIFIED ZOOM   GET mouseEnabled để set enable cho X hay Y, chính là cái set state
         if axis is None:
                 mask = [True, False]   # Zom theo trục x
         elif axis == 1:
                 mask = [False, True]
         elif axis == 0:
                 mask = [True, False]
-        # gioi han nen trong khung hinh
-        tr = self.targetRect()
-        x0 = tr.left()
-        x1 = tr.right()
-        # print(159, x1-x0)
-        if self.interval is not None:
-            if x1 - x0 > 2000 * covert_time_to_sec(self.interval) and ev.delta() < 0:
-                if axis == None or axis == 0:
-                    return True
-        
+        else:
+            mask = [True, False]
+
         s = 1.02 ** (ev.delta() * self.state['wheelScaleFactor']) # actual scaling factor
         s = [(None if m is False else s) for m in mask]
         #center = Point(fn.invertQTransform(self.LiveViewBox.childGroup.transform()).map(ev.pos()))
@@ -220,18 +202,6 @@ class PlotViewBox(ViewBox):
     
     def mouseDragEvent(self, ev, axis=None):
         self.load_old_data.emit()
-        
-        # x_left,x_right = int(self.plotwidget.xAxis.range[0]),int(self.plotwidget.xAxis.range[1])
-        # start_index = self.plotwidget.jp_candle.candles[0].index
-        # stop_index = self.plotwidget.jp_candle.candles[-1].index
-        # if x_left > start_index:
-        #     self.plotwidget._start = x_left+2
-        # else:
-        #     self.plotwidget._start = start_index+2
-        # if x_right < stop_index:
-        #     self.plotwidget._stop = x_right
-        # else:
-        #     self.plotwidget._stop = stop_index
         
         pos = ev.pos()
         lastPos = ev.lastPos()

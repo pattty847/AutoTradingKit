@@ -5,8 +5,8 @@ from PySide6.QtCore import Signal, QObject,Qt,QRectF
 from PySide6.QtWidgets import QGraphicsItem
 from PySide6.QtGui import QPainter,QPicture
 
-from atklip.graphics.pyqtgraph import FillBetweenItem,GraphicsObject,PlotDataItem
-
+from atklip.graphics.pyqtgraph import GraphicsObject,PlotDataItem
+from .fillbetweenitem import FillBetweenItem
 from atklip.controls import PD_MAType,IndicatorType,DONCHIAN
 
 
@@ -16,7 +16,7 @@ from atklip.app_utils import *
 if TYPE_CHECKING:
     from atklip.graphics.chart_component.viewchart import Chart
 
-class BasicDonchianChannels(GraphicsObject):
+class BasicDonchianChannels(PlotDataItem):
     on_click = Signal(QObject)
     signal_visible = Signal(bool)
     signal_delete = Signal()
@@ -27,7 +27,10 @@ class BasicDonchianChannels(GraphicsObject):
     sig_change_indicator_name = Signal(str)
     def __init__(self,chart) -> None:
         super().__init__()
-        self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
+        # GraphicsObject.__init__(self)
+        self.setFlag(self.GraphicsItemFlag.ItemHasNoContents)
+        self.setFlag(self.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
+        
         self.chart:Chart = chart
         self.has = {
             "name": f"DC 20 2",
@@ -54,15 +57,15 @@ class BasicDonchianChannels(GraphicsObject):
                     'width_low_line': 1,
                     'style_low_line': Qt.PenStyle.SolidLine,
                     
-                    "brush_color": mkBrush('blue',width=0.7),
+                    "brush_color": mkBrush('#133135',width=0.7),
                     }
                     }
         
+        self.setPen(color=self.has["styles"]['pen_center_line'])
         self.lowline = PlotDataItem(pen=self.has["styles"]['pen_low_line'])  # for z value
-        
         self.lowline.setParentItem(self)
-        self.centerline = PlotDataItem(pen=self.has["styles"]['pen_center_line'])
-        self.centerline.setParentItem(self)
+        # self.centerline = PlotDataItem(pen=self.has["styles"]['pen_center_line'])
+        # self.centerline.setParentItem(self)
         self.highline = PlotDataItem(pen=self.has["styles"]['pen_high_line'])
         self.highline.setParentItem(self)
         
@@ -88,8 +91,11 @@ class BasicDonchianChannels(GraphicsObject):
     
     def connect_signals(self):
         self.INDICATOR.sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
+        
         self.INDICATOR.sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
-        self.INDICATOR.sig_add_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
+        self.INDICATOR.sig_add_candle.connect(self.add_worker,Qt.ConnectionType.AutoConnection)
+        self.INDICATOR.sig_add_historic.connect(self.add_historic_worker,Qt.ConnectionType.AutoConnection)
+        
         self.INDICATOR.signal_delete.connect(self.replace_source,Qt.ConnectionType.AutoConnection)
     
     def fisrt_gen_data(self):
@@ -168,7 +174,8 @@ class BasicDonchianChannels(GraphicsObject):
         if _input == "pen_high_line" or _input == "width_high_line" or _input == "style_high_line":
             self.highline.setPen(color=self.has["styles"]["pen_high_line"], width=self.has["styles"]["width_high_line"],style=self.has["styles"]["style_high_line"])
         elif _input == "pen_center_line" or _input == "width_center_line" or _input == "style_center_line":
-            self.centerline.setPen(color=self.has["styles"]["pen_center_line"], width=self.has["styles"]["width_center_line"],style=self.has["styles"]["style_center_line"])
+            # self.centerline.setPen(color=self.has["styles"]["pen_center_line"], width=self.has["styles"]["width_center_line"],style=self.has["styles"]["style_center_line"])
+            self.setPen(color=self.has["styles"]["pen_center_line"], width=self.has["styles"]["width_center_line"],style=self.has["styles"]["style_center_line"])
         elif _input == "pen_low_line" or _input == "width_low_line" or _input == "style_low_line":
             self.lowline.setPen(color=self.has["styles"]["pen_low_line"], width=self.has["styles"]["width_low_line"],style=self.has["styles"]["style_low_line"])
         elif _input == "brush_color":
@@ -199,15 +206,37 @@ class BasicDonchianChannels(GraphicsObject):
         ub = data[3]
         
         self.lowline.setData(xData,lb)
-        self.centerline.setData(xData,cb)
+        time.sleep(0.01)
+        # self.centerline.setData(xData,cb)
+        self.setData(xData,cb)
+        time.sleep(0.01)
         self.highline.setData(xData,ub)
         
         self.prepareGeometryChange()
         self.informViewBoundsChanged()
 
+    def add_historic_worker(self):
+        self.worker = None
+        self.worker = FastWorker(self.load_historic_data)
+        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.start() 
+    
+    def add_worker(self):
+        self.worker = None
+        self.worker = FastWorker(self.add_data)
+        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.start()    
+    
+    def load_historic_data(self,setdata):
+        xdata,lb,cb,ub= self.INDICATOR.get_data()
+        setdata.emit((xdata,lb,cb,ub))    
+    def add_data(self,setdata):
+        xdata,lb,cb,ub= self.INDICATOR.get_data()
+        setdata.emit((xdata,lb,cb,ub))    
+    
     def update_data(self,setdata):
         xdata,lb,cb,ub= self.INDICATOR.get_data()
-        setdata.emit((xdata,lb,cb,ub))        
+        setdata.emit((xdata,lb,cb,ub))    
 
     def boundingRect(self) -> QRectF:
         x_left,x_right = int(self.chart.xAxis.range[0]),int(self.chart.xAxis.range[1])
@@ -249,20 +278,23 @@ class BasicDonchianChannels(GraphicsObject):
     
     
     def get_last_point(self):
-        _time = self.centerline.xData[-1]
-        _value = self.centerline.yData[-1]
+        # _time = self.centerline.xData[-1]
+        _time = self.xData[-1]
+        # _value = self.centerline.yData[-1]
+        _value = self.yData[-1]
         return _time,_value
     
     def get_min_max(self):
-        y_data = self.highline.yData
-        _min = None
-        _max = None
         try:
-            if y_data.__len__() > 0:
-                _min = y_data.min()
-                _max = y_data.max()
+            _min, _max = np.nanmin(self.lowline.yData), np.nanmax(self.highline.yData)
+            # if y_data.__len__() > 0:
+            #     _min = y_data.min()
+            #     _max = y_data.max()
+            return _min,_max
         except Exception as e:
-            self.get_min_max()
+            pass
+        time.sleep(0.1)
+        self.get_min_max()
         return _min,_max
 
     def on_click_event(self):

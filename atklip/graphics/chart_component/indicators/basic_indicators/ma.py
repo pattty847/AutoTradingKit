@@ -2,8 +2,9 @@ import time
 from typing import Tuple, List,TYPE_CHECKING
 
 import numpy as np
-from atklip.graphics.pyqtgraph import functions as fn
+from atklip.graphics.pyqtgraph import functions as fn,PlotDataItem
 from PySide6.QtCore import Signal, QObject,Qt,QRectF
+from PySide6.QtWidgets import QGraphicsItem
 from atklip.controls import PD_MAType
 
 from atklip.controls.ma import MA
@@ -12,8 +13,10 @@ from atklip.appmanager import FastWorker
 from atklip.app_utils import *
 if TYPE_CHECKING:
     from atklip.graphics.chart_component.viewchart import Chart
-    
-class BasicMA(PlotLineItem):
+
+
+
+class BasicMA(PlotDataItem):
     """DEMA EMA HMA SMA SMMA TEMA TRIX ZLEMA WMA"""
     on_click = Signal(QObject)
     signal_delete = Signal()
@@ -22,7 +25,13 @@ class BasicMA(PlotLineItem):
 
     def __init__(self,chart,indicator_type: PD_MAType,pen:str="yellow",length:int=30,_type:str="close",id = None,clickable=True) -> None:
         """Choose colors of candle"""
-        PlotLineItem.__init__(self)
+        super().__init__()
+        
+        self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
+        self.setCacheMode(QGraphicsItem.CacheMode.DeviceCoordinateCache)
+        # self.setCacheMode(QGraphicsItem.CacheMode.ItemCoordinateCache)
+        self.setZValue(999)
+        
         self.chart:Chart = chart
         
         self.has = {
@@ -47,7 +56,7 @@ class BasicMA(PlotLineItem):
         self._pen = pen
         self.id = id
         self.is_reset = False
-        self.xData, self.yData = np.array([]),np.array([])
+        # self.xData, self.yData = np.array([]),np.array([])
         
         self.INDICATOR  = MA(self,self.has["inputs"]["source"], self.has["inputs"]["type"],
                               self.has["inputs"]["ma_type"],self.has["inputs"]["length"])
@@ -67,8 +76,11 @@ class BasicMA(PlotLineItem):
     
     def connect_signals(self):
         self.INDICATOR.sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
+
         self.INDICATOR.sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
-        self.INDICATOR.sig_add_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
+        self.INDICATOR.sig_add_candle.connect(self.add_worker,Qt.ConnectionType.AutoConnection)
+        self.INDICATOR.sig_add_historic.connect(self.add_historic_worker,Qt.ConnectionType.AutoConnection)
+        
         self.INDICATOR.signal_delete.connect(self.replace_source,Qt.ConnectionType.AutoConnection)
     
     def fisrt_gen_data(self):
@@ -159,28 +171,47 @@ class BasicMA(PlotLineItem):
         if visible:
             self.show()
         else:
-            self.hide()
+            self.hide()  
+    
+    def set_Data(self,data):
+        xData = data[0]
+        yData = data[1]
+        self.setData(xData, yData)
 
+    def get_last_point(self):
+        df = self.INDICATOR.get_df(2)
+        _time = df["index"].iloc[-1]
+        _value = df["data"].iloc[-1]
+        return _time,_value
+    
+    
     def setdata_worker(self):
         self.worker = None
         self.worker = FastWorker(self.update_data)
         self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
         self.worker.start()    
     
-    def set_Data(self,data):
-        self.xData = data[0]
-        self.yData = data[1]
-        self.setData(self.xData, self.yData)
-
-    def get_last_point(self):
-        _time = self.xData[-1]
-        _value = self.yData[-1]
-        return _time,_value
+    def add_historic_worker(self):
+        self.worker = None
+        self.worker = FastWorker(self.load_historic_data)
+        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.start() 
     
+    def add_worker(self):
+        self.worker = None
+        self.worker = FastWorker(self.add_data)
+        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.start()    
+    
+    def load_historic_data(self,setdata):
+        _index,_data = self.INDICATOR.get_data()
+        setdata.emit((_index,_data))        
+    def add_data(self,setdata):
+        _index,_data = self.INDICATOR.get_data()
+        setdata.emit((_index,_data))        
     def update_data(self,setdata):
         _index,_data = self.INDICATOR.get_data()
         setdata.emit((_index,_data))        
-
     # def boundingRect(self) -> QRectF:
     #     x_left,x_right = int(self.chart.xAxis.range[0]),int(self.chart.xAxis.range[1])
     #     start_index = self.chart.jp_candle.candles[0].index
