@@ -80,7 +80,7 @@ class ViewPlotWidget(PlotWidget):
 
         self.list_candle_indicators = []
         
-        self.is_backtest = False
+        self.is_living = False
         self._precision = 3
         
         self.jp_candle = JAPAN_CANDLE(self)

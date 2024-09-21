@@ -22,9 +22,9 @@ class SettingButton(VWIDGET):
         
         self._hwidget = HWIDGET(self)
         
-        self.btn_goto = TextButton("OK",self,None)
-        self.btn_goto.setFixedSize(80,35)
-        self.btn_goto.clicked.connect(self._onGotoClicked)
+        self.btn_ok = TextButton("OK",self,None)
+        self.btn_ok.setFixedSize(80,35)
+        self.btn_ok.clicked.connect(self._onGotoClicked)
 
         self.btn_cancel = TextButton("Cancel",self,None)
         self.btn_cancel.setFixedSize(80,35)
@@ -41,7 +41,7 @@ class SettingButton(VWIDGET):
         self.addSeparator(_type = "HORIZONTAL",w=300,h=2)
         self._hwidget.addWidget(self.btn_save)
         self._hwidget.addWidget(self.btn_cancel)
-        self._hwidget.addWidget(self.btn_goto)
+        self._hwidget.addWidget(self.btn_ok)
         self._hwidget.setSpacing(5)
         self._hwidget.setContentsMargins(2,2,2,2)
         self.addWidget(self._hwidget)
@@ -151,16 +151,16 @@ class BasicMenu(ScrollInterface):
     def remove_Widget(self,widget):
         self.removeWidget(widget)
 
+
+
 class SettingWidget(PivotInterface):
     def __init__(self,parent:QWidget=None,indicator=None,chart=None):
         super(SettingWidget, self).__init__(parent)
         self.setFixedWidth(300)
         self.indicator = indicator
         self.chart:Chart|ViewSubPanel = chart
-        
         self.setup_setting_indicator()
         
-
     def setup_setting_indicator(self):
         _inputs = self.indicator.get_inputs()
         _styles = self.indicator.get_styles()

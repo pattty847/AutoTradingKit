@@ -8,6 +8,7 @@ from atklip.gui.top_bar.interval import *
 from atklip.gui.top_bar.symbol import *
 from atklip.gui.top_bar.indicator import *
 from atklip.gui.top_bar.replay import *
+from atklip.gui.top_bar.mode import *
 from atklip.gui.top_bar.layouts_saving import *
 from atklip.gui.top_bar.goto import *
 from atklip.gui.top_bar.profile import *
@@ -40,7 +41,10 @@ class TopBar(QFrame,TopFrame):
         # self.candle = CANDLES(self.sig_change_candle_type,self._parent)
         self.indicator = IndicatorButton(self.sig_add_indicator_to_chart,self._parent)
         
-        self.replay = ReplayButton(self.sig_replay,FIF.REPLAY,"Replay",self._parent)
+        self.replay = ReplayButton(self.sig_replay,FIF.REPLAY,"Backtest",self._parent)
+        
+        self.mode = ModeButton(self.sig_replay,FIF.REPLAY,"Off Live",self._parent)
+        
         self.LayoutButton = LayoutButton(self._parent)
 
         self.left_layout.addWidget(self.profile)

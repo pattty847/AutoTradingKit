@@ -56,6 +56,7 @@ class Chart(ViewPlotWidget):
         self.sources: Dict[str:QObject] = {}
         self.exchanges = {}
         self.is_load_historic = False
+        self.time_delay = 5
                 
         self.crypto_ex = CryptoExchange().setupEchange(apikey=self.apikey, secretkey=self.secretkey,exchange_name=self.exchange_name)
         self.crypto_ex_ws = CryptoExchange_WS().setupEchange(apikey=self.apikey, secretkey=self.secretkey,exchange_name=self.exchange_name)
@@ -70,11 +71,21 @@ class Chart(ViewPlotWidget):
         asyncio.set_event_loop(loop)
         return loop
 
+    @property
+    def time_delay(self):
+        return self._time_delay
+    @time_delay.setter
+    def time_delay(self,value):
+        self._time_delay = value
+    
+    
     def change_mode(self):
-        if self.is_backtest:
-            self.is_backtest = False
+        if self.is_living:
+            self.is_living = False
+            self.time_delay = 5
         else:
-            self.is_backtest = True
+            self.is_living = True
+            self.time_delay = 0.3
     
     def auto_load_old_data(self):
         "load historic data when wheel or drag viewbox"
@@ -289,7 +300,7 @@ class Chart(ViewPlotWidget):
             else:
                 break
             try:
-                await asyncio.sleep(0.5)
+                await asyncio.sleep(self.time_delay)
             except:
                 pass
         if self.crypto_ex != None:

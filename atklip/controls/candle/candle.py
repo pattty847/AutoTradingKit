@@ -387,8 +387,7 @@ class JAPAN_CANDLE(QObject):
                                         last_candle.time,
                                         last_candle.index
                                         ]
-                    if not self.chart.is_backtest:
-                        self.sig_update_candle.emit(self.candles[-2:])
+                    self.sig_update_candle.emit(self.candles[-2:])
                     #QCoreApplication.processEvents()
             else:
                 pre_candle:OHLCV = new_candles[-2]
@@ -413,8 +412,7 @@ class JAPAN_CANDLE(QObject):
                 new_row = pd.DataFrame([data.__dict__ for data in self.candles[-1:]])
                 self.df = pd.concat([self.df, new_row], ignore_index=True)
 
-                if not self.chart.is_backtest:
-                    self.sig_add_candle.emit(self.candles[-2:])
+                self.sig_add_candle.emit(self.candles[-2:])
                 #QCoreApplication.processEvents()
                 return True
             return False
