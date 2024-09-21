@@ -41,9 +41,9 @@ class TopBar(QFrame,TopFrame):
         # self.candle = CANDLES(self.sig_change_candle_type,self._parent)
         self.indicator = IndicatorButton(self.sig_add_indicator_to_chart,self._parent)
         
-        self.replay = ReplayButton(self.sig_replay,FIF.REPLAY,"Backtest",self._parent)
+        self.replay = ReplayButton(self.sig_replay,FIF.REPLAY,"Replay",self._parent)
         
-        self.mode = ModeButton(self.sig_replay,FIF.REPLAY,"Off Live",self._parent)
+        self.mode = ModeButton("Off Trading",self._parent)
         
         self.LayoutButton = LayoutButton(self._parent)
 
@@ -61,6 +61,7 @@ class TopBar(QFrame,TopFrame):
         self.left_layout.addWidget(VerticalSeparator(self))
         self.left_layout.addWidget(self.gotodate)
         self.left_layout.addWidget(self.replay)
+        self.left_layout.addWidget(self.mode)
         self.right_layout.addWidget(self.LayoutButton)
         
         self.setContentsMargins(0,0,0,0)

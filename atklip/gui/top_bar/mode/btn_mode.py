@@ -1,10 +1,45 @@
 
 from typing import Union
-from PySide6.QtCore import QSize
-from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import QPushButton
+from PySide6.QtCore import QSize,Signal
+from PySide6.QtGui import QIcon,QMovie,QColor
+from PySide6.QtWidgets import QPushButton,QLabel,QWidget,QGraphicsDropShadowEffect
 
 from atklip.gui.qfluentwidgets.common import isDarkTheme
+from atklip.gui.qfluentwidgets.components import HWIDGET
+class StreamingMode(QLabel):
+    def __init__(self,parent=None,size=35):
+        super().__init__(parent)
+        self._parent:QWidget = parent
+        self.setStyleSheet("QLabel {background-color: transparent;}")
+        # CUSTOM PROPERTIES
+        self.setFixedSize(size,size)
+        self.setContentsMargins(1,1,1,1)
+        self.moviebusy = QMovie(":/qfluentwidgets/images/gif/rainbow.gif")
+        self.moviebusy.setScaledSize(QSize(size-5,size-5))
+        self.setMovie(self.moviebusy)
+        #self.moviebusy.stop()
+        self.is_runing = False
+        self.bg_color = 0x44475a
+        self.set_shadow()
+
+    def start(self):
+        if self.is_runing:
+            self.moviebusy.stop()
+            self.is_runing = False
+            self.hide()
+        else:
+            self.moviebusy.start()
+            self.is_runing = True
+            self.show()
+    # ADD DROPSHADOW
+    def set_shadow(self):
+        self.shadow = QGraphicsDropShadowEffect(self)
+        self.shadow.setBlurRadius(15)
+        self.shadow.setXOffset(0)
+        self.shadow.setYOffset(0)
+        self.shadow.setColor(QColor(0, 0, 0, 80))
+        self.setGraphicsEffect(self.shadow)
+
 
 class _PushButton(QPushButton):
     """ Transparent push button
@@ -14,8 +49,8 @@ class _PushButton(QPushButton):
     * TransparentPushButton(`text`: str, `parent`: QWidget = None, `icon`: QIcon | str | FluentIconBase = None)
     * TransparentPushButton(`icon`: QIcon | FluentIcon, `text`: str, `parent`: QWidget = None)
     """
-    def __init__(self, icon, text, parent):
-        super().__init__(icon=icon, text=text, parent=parent)
+    def __init__(self,parent):
+        super().__init__(parent=parent)
         if self.isChecked():
             color = "#0055ff"
         else:
@@ -66,14 +101,19 @@ class _PushButton(QPushButton):
         self.set_stylesheet(color)
         super().leaveEvent(event)
 
-class ModeButton(_PushButton):
-    def __init__(self, sig_replay,icon, text, parent):
-        _icon = QIcon(icon.path())
-        super().__init__(_icon, text, parent)
-        self.setIconSize(QSize(30, 30))
+class ModeButton(HWIDGET):
+    clicked = Signal()
+    def __init__(self,name="treamingmode",parent:QWidget=None):
+        super().__init__(parent,name)
+        self.setContentsMargins(0,0,0,0)
+        self.setFixedHeight(35)
+        self.label = StreamingMode(self)
+        self.btn = _PushButton(self)
+        self.addWidget(self.btn)
+        self.addWidget(self.label)
+        self.set_text(name)
         self._is_live = False
-
-        self.clicked.connect(self.on_clicked)
+        self.btn.clicked.connect(self.on_clicked)
     
     @property
     def is_live(self):
@@ -83,16 +123,14 @@ class ModeButton(_PushButton):
         self._is_live = value
     
     def set_text(self, text:Union[None,str])->None:
-        if isinstance(text, str):
-            raise TypeError("Cannot set text for a SymbolButton")
-        super().setText(text)
-    def icon(self):
-        return super().icon()
+        self.btn.setText(text)
     
-    def set_symbol(self,symbol,icon):
-        self._symbol = symbol
-        self.setText(symbol)
-        self.setIcon(icon)
     def on_clicked(self)->None:
-        #self.clicked.emit(self._symbol)
-        print(self.sender())
+        self.clicked.emit()
+        if self.is_live:
+            self.set_text("Live Trading")
+            self.is_live = False
+        else:
+            self.set_text("Off Trading")
+            self.is_live = True
+        self.label.start()

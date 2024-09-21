@@ -80,6 +80,8 @@ class Chart(ViewPlotWidget):
     
     
     def change_mode(self):
+        sender = self.sender()
+        print(sender)
         if self.is_living:
             self.is_living = False
             self.time_delay = 5
