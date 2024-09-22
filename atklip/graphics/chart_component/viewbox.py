@@ -227,6 +227,7 @@ class PlotViewBox(ViewBox):
         ## if axis is specified, event will only affect that axis.
 
     def mouseMiddleDrag(self, ev, axis=None, dif=None, mask=None):
+        return
         return super().mouseDragEvent(ev, axis)
         # if self.state['mouseMode'] == ViewBox.RectMode and axis is None:
         #     if ev.isFinish():  ## This is the final move in the drag; change the view scale now
@@ -265,9 +266,9 @@ class PlotViewBox(ViewBox):
             x0 = tr.left()
             x1 = tr.right()
             # print(159, x1-x0)
-            if self.interval is not None:
-                if x1 - x0 > 3000 * covert_time_to_sec(self.interval) and dif[0] < 0:
-                    return True
+            if x1 - x0  >= 1440 and dif[0] < 0:
+                "giới hạn 1440 candle trên viewchart"
+                return True
                 
             dif[0] *= -1
             s = ((mask * 0.02) + 1) ** dif

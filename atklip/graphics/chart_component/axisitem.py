@@ -381,9 +381,9 @@ class CustomDateAxisItem(AxisItem):
         if self.orientation in ['left', 'right']:
             return lv.mouseDragEvent(event, axis=1)
         else:
-            if self.vb.interval is not None:
-                if x1 - x0 > 3000 * covert_time_to_sec(self.vb.interval) and dif.x() > 0:
-                    return
+            if x1 - x0 >= 1440 and dif.x() > 0:
+                "giới hạn 1440 candle trên viewchart"
+                return
             return lv.mouseDragEvent(event, axis=0)
     
 

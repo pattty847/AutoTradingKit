@@ -398,7 +398,8 @@ class CandleStick(GraphicsObject):
         elif candles == True:
             x_data, y_data = self.source.get_index_data(stop=-1)
         else:
-            x_data, y_data = self.source.get_index_data(stop=candles+1)
+            n = len(self._bar_picutures)
+            x_data, y_data = self.source.get_index_data(stop=n+1)
         try:
             if len(x_data) != len(y_data[0]):
                 raise Exception("Len of x_data must be the same as y_data")

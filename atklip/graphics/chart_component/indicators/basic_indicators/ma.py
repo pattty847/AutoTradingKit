@@ -247,10 +247,10 @@ class BasicMA(PlotDataItem):
     def setPen(self, *args, **kargs):
         pen = fn.mkPen(*args, **kargs)
         self.opts['pen'] = pen
-        self._line.updateItems(styleUpdate=True)
+        self.updateItems(styleUpdate=True)
 
     def data_bounds(self, ax=0, offset=0) -> Tuple:
-        x, y = self._line.getData()
+        x, y = self.getData()
         if ax == 0:
             sub_range = x[-offset:]
         else:
