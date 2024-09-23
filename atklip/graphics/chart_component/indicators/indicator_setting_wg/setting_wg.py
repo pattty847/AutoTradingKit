@@ -96,7 +96,10 @@ class BasicMenu(ScrollInterface):
                     length = PeriodEdit(self,self.indicator, _input)
                     length.set_name(_input)
                     self.sig_add_indicator.emit(length)
-                
+                elif "legs" in _input:
+                    length = PeriodEdit(self,self.indicator, _input)
+                    length.set_name(_input)
+                    self.sig_add_indicator.emit(length)
                 elif "value" in _input:
                     value = PriceEdit(self,self.indicator, _input)
                     value.set_name(_input)

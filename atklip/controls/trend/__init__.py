@@ -20,7 +20,7 @@ from .tsignals import tsignals
 from .vhf import vhf
 from .vortex import vortex, VORTEX
 from .xsignals import xsignals
-from .zigzag import zigzag
+from .zigzag import zigzag, ZIGZAG
 
 # __all__ = [
 #     "adx",

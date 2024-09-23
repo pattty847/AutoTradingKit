@@ -71,7 +71,7 @@ def xminmax(datasrc, x_indexed, init_steps=None, extra_margin=0):
 def find_nearest_index(lst, special_value):
         index = min(range(len(lst)), key=lambda i: abs(lst[i] - special_value))
         return index
-
+@njit(nopython=True,cache=True)
 def percent_caculator(start, stop):
     percent = float(((float(start) - float(stop)) / float(start))) * 100
     if percent > 0:

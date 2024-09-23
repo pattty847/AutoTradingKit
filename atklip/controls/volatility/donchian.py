@@ -208,10 +208,11 @@ class DONCHIAN(QObject):
         return lb,cb,ub
     def caculate(self,df: pd.DataFrame):
         INDICATOR = donchian(high=df["high"],
-                             low=df["low"],
-                             lower_length=self.lower_length,
-                             upper_length=self.upper_length)
+                            low=df["low"],
+                            lower_length=self.lower_length,
+                            upper_length=self.upper_length)
         return self.paire_data(INDICATOR)
+        return None,None,None
     def fisrt_gen_data(self):
         self.is_genering = True
         self.df = pd.DataFrame([])
@@ -272,7 +273,7 @@ class DONCHIAN(QObject):
             df:pd.DataFrame = self._candles.get_df(self.upper_length*5)
                     
             lb,cb,ub = self.caculate(df)
-            
+ 
             new_frame = pd.DataFrame({
                                     'index':[new_candle.index],
                                     "lb":[lb.iloc[-1]],
@@ -294,7 +295,7 @@ class DONCHIAN(QObject):
             df:pd.DataFrame = self._candles.get_df(self.upper_length*5)
                     
             lb,cb,ub = self.caculate(df)
-                    
+
             self.df.iloc[-1] = [new_candle.index,lb.iloc[-1],cb.iloc[-1],ub.iloc[-1]]
                     
             self.xdata,self.lb,self.cb,self.ub = self.df["index"].to_numpy(),self.df["lb"].to_numpy(),\

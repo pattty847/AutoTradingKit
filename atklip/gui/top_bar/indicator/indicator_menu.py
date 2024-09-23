@@ -231,6 +231,7 @@ class AdvanceIndicator(BasicMenu):
         self._type_indicator = "Advance Indicator"
         self.setObjectName(self._type_indicator)
         self.list_indicators = [IndicatorType.SuperTrend,
+                                IndicatorType.ZIGZAG,
                                 IndicatorType.BB,
                                 IndicatorType.StdDev,
                                 IndicatorType.ParabolicSAR,IndicatorType.PivotsHL,

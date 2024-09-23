@@ -5,7 +5,7 @@ from PySide6.QtCore import Qt, Signal, QCoreApplication, QKeyCombination, QThrea
 from PySide6.QtGui import QKeyEvent
 
 from atklip.graphics.chart_component.base_items import CandleStick
-from atklip.graphics.chart_component.indicators import BasicMA,BasicBB,BasicDonchianChannels
+from atklip.graphics.chart_component.indicators import BasicMA,BasicBB,BasicDonchianChannels,BasicZIGZAG
 from atklip.graphics.chart_component import ViewPlotWidget
 from atklip.exchanges import CryptoExchange,CryptoExchange_WS
 from ccxt.base.errors import *
@@ -401,6 +401,15 @@ class Chart(ViewPlotWidget):
                 self.container_indicator_wg.add_indicator_panel(panel)
                 self.add_item(indicator)
                 indicator.fisrt_gen_data()
+            elif _indicator_type==IndicatorType.ZIGZAG:
+                indicator = BasicZIGZAG(self)
+                panel = IndicatorPanel(mainwindow,self, indicator)
+                self.container_indicator_wg.add_indicator_panel(panel)
+                self.add_item(indicator)
+                indicator.fisrt_gen_data()
+                
+                
+                
                 
 
     def set_data_dataconnect(self):

@@ -90,6 +90,8 @@ class IndicatorType(Enum):
     Stoch = "Stochastic Oscillator"
     StochRSI = "Stochastic RSI"
     SuperTrend = "Super Trend"
+    ZIGZAG = "ZigZag"
+    
 
     TRIX = "TRIX"
     TSI = "True Strength Index (TSI)"

@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from atklip.graphics.chart_component.viewchart import Chart
     from atklip.graphics.chart_component.sub_panel_indicator import ViewSubPanel
     
-class BasicSTC(GraphicsObject):
+class BasicSTC(PlotDataItem):
     """RSI"""
     on_click = Signal(QObject)
 
@@ -30,8 +30,8 @@ class BasicSTC(GraphicsObject):
 
     def __init__(self,get_last_pos_worker,chart,panel,id = None,clickable=True) -> None:
         """Choose colors of candle"""
-        GraphicsObject.__init__(self)
-        #super().__init__(clickable=clickable)
+        # GraphicsObject.__init__(self)
+        super().__init__()
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
         self.chart:Chart = chart
         self._panel:ViewSubPanel = panel
@@ -71,8 +71,8 @@ class BasicSTC(GraphicsObject):
         self.signal_visible.connect(self.setVisible)
         self.signal_delete.connect(self.delete)
         
-        self.stc_line = PlotDataItem(pen="red")  # for z value
-        self.stc_line.setParentItem(self)
+        self.setPen(color="red")
+        
         self.stoch_line = PlotDataItem(pen="orange")
         self.stoch_line.setParentItem(self)
         self.macd_line = PlotDataItem(pen="green")
@@ -197,7 +197,7 @@ class BasicSTC(GraphicsObject):
     def update_styles(self, _input):
         _style = self.has["styles"][_input]
         if _input == "pen_stc_line" or _input == "width_stc_line" or _input == "style_stc_line":
-            self.stc_line.setPen(color=self.has["styles"]["pen_stc_line"], width=self.has["styles"]["width_stc_line"],style=self.has["styles"]["style_stc_line"])
+            self.setPen(color=self.has["styles"]["pen_stc_line"], width=self.has["styles"]["width_stc_line"],style=self.has["styles"]["style_stc_line"])
         elif _input == "pen_stoch_line" or _input == "width_stoch_line" or _input == "style_stoch_line":
             self.stoch_line.setPen(color=self.has["styles"]["pen_stoch_line"], width=self.has["styles"]["width_stoch_line"],style=self.has["styles"]["style_stoch_line"])
         elif _input == "pen_macd_line" or _input == "width_macd_line" or _input == "style_macd_line":
@@ -230,7 +230,7 @@ class BasicSTC(GraphicsObject):
         cb = data[2]
         ub = data[3]
         try:
-            self.stc_line.setData(xData,lb)
+            self.setData(xData,lb)
             self.macd_line.setData(xData,cb)
             self.stoch_line.setData(xData,ub)
         except Exception as e:
@@ -275,45 +275,45 @@ class BasicSTC(GraphicsObject):
     def get_xaxis_param(self):
         return None,"#363a45"
 
-    def paint(self, p:QPainter, *args):
-        self.picture.play(p)
+    # def paint(self, p:QPainter, *args):
+    #     self.picture.play(p)
     
-    def boundingRect(self) -> QRectF:
-        return self.stc_line.boundingRect()
+    # def boundingRect(self) -> QRectF:
+    #     return self.stc_line.boundingRect()
     
-    def boundingRect(self) -> QRectF:
-        x_left,x_right = int(self.chart.xAxis.range[0]),int(self.chart.xAxis.range[1])
-        start_index = self.chart.jp_candle.candles[0].index
-        stop_index = self.chart.jp_candle.candles[-1].index
-        if x_left > start_index:
-            self._start = x_left+2
-        else:
-            self._start = start_index+2
-        if x_right < stop_index:
-            self._stop = x_right
-        else:
-            self._stop = stop_index
+    # def boundingRect(self) -> QRectF:
+    #     x_left,x_right = int(self.chart.xAxis.range[0]),int(self.chart.xAxis.range[1])
+    #     start_index = self.chart.jp_candle.candles[0].index
+    #     stop_index = self.chart.jp_candle.candles[-1].index
+    #     if x_left > start_index:
+    #         self._start = x_left+2
+    #     else:
+    #         self._start = start_index+2
+    #     if x_right < stop_index:
+    #         self._stop = x_right
+    #     else:
+    #         self._stop = stop_index
         
-        if self.stc_line.yData is None:
-            h_low,h_high = self._panel.yAxis.range[0],self._panel.yAxis.range[1]
-        elif self.stc_line.yData.size != 0:
-            h_low,h_high = np.nanmin(self.stc_line.yData), np.nanmax(self.stc_line.yData) 
-        else:
-            h_low,h_high = self._panel.yAxis.range[0],self._panel.yAxis.range[1]
-        rect = QRectF(self._start,h_low,self._stop-self._start,h_high-h_low)
-        return rect  
+    #     if self.stc_line.yData is None:
+    #         h_low,h_high = self._panel.yAxis.range[0],self._panel.yAxis.range[1]
+    #     elif self.stc_line.yData.size != 0:
+    #         h_low,h_high = np.nanmin(self.stc_line.yData), np.nanmax(self.stc_line.yData) 
+    #     else:
+    #         h_low,h_high = self._panel.yAxis.range[0],self._panel.yAxis.range[1]
+    #     rect = QRectF(self._start,h_low,self._stop-self._start,h_high-h_low)
+    #     return rect  
     
     def get_last_point(self):
-        _time = self.stc_line.xData[-1]
-        _value = self.stc_line.yData[-1]
+        _time = self.xData[-1]
+        _value = self.yData[-1]
         return _time,_value
     
     def get_min_max(self):
         _min = None
         _max = None
         try:
-            if len(self.stc_line.yData) > 0:
-                _min, _max = np.nanmin(self.stc_line.yData), np.nanmax(self.stc_line.yData)
+            if len(self.yData) > 0:
+                _min, _max = np.nanmin(self.yData), np.nanmax(self.yData)
                 if _min == np.nan or _max == np.nan:
                     return None, None
                 return _min,_max
