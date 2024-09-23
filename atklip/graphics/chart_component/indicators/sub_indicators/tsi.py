@@ -120,6 +120,7 @@ class BasicTSI(GraphicsObject):
         self.INDICATOR.sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
         self.INDICATOR.sig_add_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
         self.INDICATOR.signal_delete.connect(self.replace_source,Qt.ConnectionType.AutoConnection)
+        self.INDICATOR.sig_add_historic.connect(self.add_historic_worker,Qt.ConnectionType.AutoConnection)
     
     def fisrt_gen_data(self):
         self.connect_signals()
@@ -185,7 +186,16 @@ class BasicTSI(GraphicsObject):
         self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
         self.worker.start()    
 
-
+    def add_historic_worker(self):
+        self.worker = None
+        self.worker = FastWorker(self.load_historic_data)
+        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.start()
+    
+    def load_historic_data(self,setdata):
+        xdata,tsi,signalma = self.INDICATOR.get_data()
+        setdata.emit((xdata,tsi,signalma))
+    
     def update_data(self,setdata):
         xdata,tsi,signalma = self.INDICATOR.get_data()
         setdata.emit((xdata,tsi,signalma))

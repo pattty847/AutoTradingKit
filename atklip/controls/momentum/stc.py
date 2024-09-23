@@ -213,6 +213,7 @@ class STC(QObject):
     sig_add_candle = Signal()
     sig_reset_all = Signal()
     signal_delete = Signal()    
+    sig_add_historic = Signal()
     def __init__(self,parent,_candles,source,tclength,fast,slow,ma_type) -> None:
         super().__init__(parent=parent)
         
@@ -251,6 +252,7 @@ class STC(QObject):
         self._candles.sig_update_candle.connect(self.update_worker,Qt.ConnectionType.QueuedConnection)
         self._candles.sig_add_candle.connect(self.add_worker,Qt.ConnectionType.QueuedConnection)
         self._candles.signal_delete.connect(self.signal_delete)
+        self._candles.sig_add_historic.connect(self.add_historic_worker,Qt.ConnectionType.QueuedConnection)
     
     
     def change_source(self,_candles:JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE):
@@ -311,6 +313,11 @@ class STC(QObject):
         self.worker_ = CandleWorker(self.add,candle)
         self.worker_.start()
     
+    def add_historic_worker(self,n):
+        self.worker_ = None
+        self.worker_ = CandleWorker(self.add_historic,n)
+        self.worker_.start()
+    
     def started_worker(self):
         self.worker = None
         self.worker = CandleWorker(self.fisrt_gen_data)
@@ -330,9 +337,9 @@ class STC(QObject):
                 stoch_name = name
             if name.__contains__("STCmacd") and macd_name == "":
                 macd_name = name
-        stc_ = INDICATOR[stc_name]
-        macd = INDICATOR[macd_name]
-        stoch = INDICATOR[stoch_name]
+        stc_ = INDICATOR[stc_name].dropna()
+        macd = INDICATOR[macd_name].dropna()
+        stoch = INDICATOR[stoch_name].dropna()
         return stc_,macd,stoch
     
     def caculate(self,df: pd.DataFrame):
@@ -341,7 +348,7 @@ class STC(QObject):
                         fast = self.fast,
                         slow = self.slow,
                         mamode= self.ma_type.name.lower()
-                        )
+                        ).dropna()
         return self.paire_data(INDICATOR)
     
     def fisrt_gen_data(self):
@@ -352,22 +359,46 @@ class STC(QObject):
         
         stc_,macd,stoch = self.caculate(df)
         
-        _index = df["index"]
+        _len = min([len(stc_),len(macd),len(stoch)])
+        _index = df["index"].tail(_len)
         
         self.df = pd.DataFrame({
                             'index':_index,
-                            "stc":stc_,
-                            "macd":macd,
-                            "stoch":stoch
+                            "stc":stc_.tail(_len),
+                            "macd":macd.tail(_len),
+                            "stoch":stoch.tail(_len)
                             })
                 
-        self.xdata,self.stc_,self.macd,self.stoch = self.df["index"].to_numpy(),stc_.to_numpy(),macd.to_numpy(),stoch.to_numpy()
-        
+        self.xdata,self.stc_,self.macd,self.stoch = self.df["index"].to_numpy(),self.df["stc"].to_numpy(),self.df["macd"].to_numpy(),self.df["stoch"].to_numpy()
         self.is_genering = False
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
         self.sig_reset_all.emit()
+    
+    def add_historic(self,n:int):
+        self.is_genering = True
+        _pre_len = len(self.df)
+        df:pd.DataFrame = self._candles.get_df().iloc[:-1*_pre_len]
+        stc_,macd,stoch = self.caculate(df)
+        
+        _len = min([len(stc_),len(macd),len(stoch)])
+        _index = df["index"].tail(_len)
+        
+        _df = pd.DataFrame({
+                            'index':_index,
+                            "stc":stc_.tail(_len),
+                            "macd":macd.tail(_len),
+                            "stoch":stoch.tail(_len)
+                            })
+        self.df = pd.concat([_df,self.df],ignore_index=True)
+        self.xdata,self.stc_,self.macd,self.stoch = self.df["index"].to_numpy(),self.df["stc"].to_numpy(),self.df["macd"].to_numpy(),self.df["stoch"].to_numpy()
+        self.is_genering = False
+        if self.first_gen == False:
+            self.first_gen = True
+            self.is_genering = False
+        
+        self.sig_add_historic.emit()
     
     def add(self,new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]

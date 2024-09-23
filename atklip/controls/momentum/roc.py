@@ -101,7 +101,8 @@ class ROC(QObject):
     sig_update_candle = Signal()
     sig_add_candle = Signal()
     sig_reset_all = Signal()
-    signal_delete = Signal()    
+    signal_delete = Signal()   
+    sig_add_historic = Signal()     
     def __init__(self,parent,_candles,source,length) -> None:
         super().__init__(parent=parent)
         
@@ -136,6 +137,7 @@ class ROC(QObject):
         self._candles.sig_update_candle.connect(self.update_worker,Qt.ConnectionType.QueuedConnection)
         self._candles.sig_add_candle.connect(self.add_worker,Qt.ConnectionType.QueuedConnection)
         self._candles.signal_delete.connect(self.signal_delete)
+        self._candles.sig_add_historic.connect(self.add_historic_worker,Qt.ConnectionType.QueuedConnection)
     
     
     def change_source(self,_candles:JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE):
@@ -187,6 +189,11 @@ class ROC(QObject):
         self.worker_ = CandleWorker(self.add,candle)
         self.worker_.start()
     
+    def add_historic_worker(self,n):
+        self.worker_ = None
+        self.worker_ = CandleWorker(self.add_historic,n)
+        self.worker_.start()
+    
     def started_worker(self):
         self.worker = None
         self.worker = CandleWorker(self.fisrt_gen_data)
@@ -205,7 +212,7 @@ class ROC(QObject):
             y_data = INDICATOR[roc_name]
         return y_data
     def caculate(self,df: pd.DataFrame):
-        INDICATOR = roc(close=df[self.source],length=self.length)
+        INDICATOR = roc(close=df[self.source],length=self.length).dropna()
         return self.paire_data(INDICATOR)
     def fisrt_gen_data(self):
         self.is_genering = True
@@ -215,20 +222,50 @@ class ROC(QObject):
         
         data = self.caculate(df)
         
-        _index = df["index"]
+        _len = len(data)
+        _index = df["index"].tail(_len)
 
         self.df = pd.DataFrame({
                             'index':_index,
                             "data":data,
                             })
                 
-        self.xdata,self.data = self.df["index"].to_numpy(),data.to_numpy()
+        self.xdata,self.data = self.df["index"].to_numpy(),self.df["data"].to_numpy()
         
         self.is_genering = False
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
         self.sig_reset_all.emit()
+    
+    
+    def add_historic(self,n:int):
+        
+        self.is_genering = True
+        _pre_len = len(self.df)
+        df:pd.DataFrame = self._candles.get_df().iloc[:-1*_pre_len]
+        
+        data = self.caculate(df)
+        
+        _len = len(data)
+        _index = df["index"].tail(_len)
+
+        _df = pd.DataFrame({
+                            'index':_index,
+                            "data":data,
+                            })
+        
+        self.df = pd.concat([_df,self.df],ignore_index=True)
+
+        self.xdata,self.data = self.df["index"].to_numpy(),self.df["data"].to_numpy()
+        
+        self.is_genering = False
+        if self.first_gen == False:
+            self.first_gen = True
+            self.is_genering = False
+
+        self.sig_add_historic.emit()
+    
     
     def add(self,new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]

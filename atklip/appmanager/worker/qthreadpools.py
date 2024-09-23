@@ -75,6 +75,34 @@ class FastWorker(QObject):
 
 
 
+class SimpleWorker(QObject):
+    "Worker này dùng để update  data trong một cho graph object khi có data mới"
+    finished = Signal()
+    def __init__(self,fn:Callable=None, *args, **kwargs):
+        super(SimpleWorker, self).__init__()
+        self.fn = fn
+        self.args = args
+        self.kwargs = kwargs.copy()
+        self.threadpool = ThreadPoolExecutor_global
+        
+    def start_thread(self):
+        try:
+            funture = self.threadpool.submit(self.run)
+        except RuntimeError:
+            pass
+    
+
+    @Slot()
+    def run(self):
+        try:
+            self.fn(*self.args, **self.kwargs)
+        except Exception as e:
+            traceback.print_exception(e)
+        finally:
+            self.finished.emit()
+            self.deleteLater()
+
+
 class CandleWorker(QObject):
     "Worker này dùng để update  data trong một cho graph object khi có data mới"
     finished = Signal()

@@ -116,6 +116,7 @@ class BasicSTC(GraphicsObject):
         self.INDICATOR.sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
         self.INDICATOR.sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
         self.INDICATOR.sig_add_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
+        self.INDICATOR.sig_add_historic.connect(self.add_historic_worker,Qt.ConnectionType.AutoConnection)
         self.INDICATOR.signal_delete.connect(self.replace_source,Qt.ConnectionType.AutoConnection)
     
     def fisrt_gen_data(self):
@@ -214,7 +215,15 @@ class BasicSTC(GraphicsObject):
         self.worker = FastWorker(self.update_data)
         self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
         self.worker.start()    
+    def add_historic_worker(self):
+        self.worker = None
+        self.worker = FastWorker(self.load_historic_data)
+        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.start()
     
+    def load_historic_data(self,setdata):
+        xdata,stc,macd,stoch = self.INDICATOR.get_data()
+        setdata.emit((xdata,stc,macd,stoch))
     def set_Data(self,data):
         xData = data[0]
         lb = data[1]
@@ -222,9 +231,7 @@ class BasicSTC(GraphicsObject):
         ub = data[3]
         try:
             self.stc_line.setData(xData,lb)
-            time.sleep(0.01)
             self.macd_line.setData(xData,cb)
-            time.sleep(0.01)
             self.stoch_line.setData(xData,ub)
         except Exception as e:
             pass

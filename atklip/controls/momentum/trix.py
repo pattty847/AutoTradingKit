@@ -112,7 +112,8 @@ class TRIX(QObject):
     sig_update_candle = Signal()
     sig_add_candle = Signal()
     sig_reset_all = Signal()
-    signal_delete = Signal()    
+    signal_delete = Signal()  
+    sig_add_historic = Signal()    
     def __init__(self,parent,_candles,source,length_period,signal_period,ma_type) -> None:
         super().__init__(parent=parent)
         
@@ -149,6 +150,7 @@ class TRIX(QObject):
         self._candles.sig_update_candle.connect(self.update_worker,Qt.ConnectionType.QueuedConnection)
         self._candles.sig_add_candle.connect(self.add_worker,Qt.ConnectionType.QueuedConnection)
         self._candles.signal_delete.connect(self.signal_delete)
+        self._candles.sig_add_historic.connect(self.add_historic_worker,Qt.ConnectionType.QueuedConnection)
     
     
     def change_source(self,_candles:JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE):
@@ -212,6 +214,11 @@ class TRIX(QObject):
         self.worker_ = CandleWorker(self.add,candle)
         self.worker_.start()
     
+    def add_historic_worker(self,n):
+        self.worker_ = None
+        self.worker_ = CandleWorker(self.add_historic,n)
+        self.worker_.start()
+    
     def started_worker(self):
         self.worker = None
         self.worker = CandleWorker(self.fisrt_gen_data)
@@ -228,8 +235,8 @@ class TRIX(QObject):
             elif name.__contains__("TRIXs_"):
                 signalma_name = name
 
-        trix_ = INDICATOR[trix_name]
-        signalma = INDICATOR[signalma_name]
+        trix_ = INDICATOR[trix_name].dropna()
+        signalma = INDICATOR[signalma_name].dropna()
         
         return trix_,signalma
     
@@ -238,7 +245,7 @@ class TRIX(QObject):
                             length=self.length_period,
                             signal = self.signal_period,
                             mamode=self.ma_type.name.lower()
-                            )
+                            ).dropna()
         return self.paire_data(INDICATOR)
     
     def fisrt_gen_data(self):
@@ -249,23 +256,51 @@ class TRIX(QObject):
         
         trix_, signalma = self.caculate(df)
         
-        _index = df["index"]
+        _len = min([len(trix_),len(signalma)])
+        _index = df["index"].tail(_len)
 
         self.df = pd.DataFrame({
                             'index':_index,
-                            "trix":trix_,
-                            "signalma":signalma
+                            "trix":trix_.tail(_len),
+                            "signalma":signalma.tail(_len)
                             })
                 
         self.xdata,self.trix_ , self.signalma = self.df["index"].to_numpy(),\
-                                                trix_.to_numpy(),\
-                                                signalma.to_numpy()
+                                                self.df["trix"].to_numpy(),\
+                                                self.df["signalma"].to_numpy()
         
         self.is_genering = False
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
         self.sig_reset_all.emit()
+    
+    def add_historic(self,n:int):
+        self.is_genering = True
+        _pre_len = len(self.df)
+        df:pd.DataFrame = self._candles.get_df().iloc[:-1*_pre_len]
+        
+        trix_, signalma = self.caculate(df)
+        
+        _len = min([len(trix_),len(signalma)])
+        _index = df["index"].tail(_len)
+
+        _df = pd.DataFrame({
+                            'index':_index,
+                            "trix":trix_.tail(_len),
+                            "signalma":signalma.tail(_len)
+                            })
+        self.df = pd.concat([_df,self.df],ignore_index=True)
+        self.xdata,self.trix_ , self.signalma = self.df["index"].to_numpy(),\
+                                                self.df["trix"].to_numpy(),\
+                                                self.df["signalma"].to_numpy()
+        
+        self.is_genering = False
+        if self.first_gen == False:
+            self.first_gen = True
+            self.is_genering = False
+        
+        self.sig_add_historic.emit()
     
     def add(self,new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]

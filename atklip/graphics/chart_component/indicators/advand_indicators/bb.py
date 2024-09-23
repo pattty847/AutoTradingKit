@@ -221,10 +221,8 @@ class BasicBB(PlotDataItem):
         lb = data[1]
         cb = data[2]
         ub = data[3]
-        time.sleep(0.01)
         self.lowline.setData(xData,lb)
         # self.centerline.setData(xData,cb)
-        time.sleep(0.01)
         self.setData(xData,cb)
         self.highline.setData(xData,ub)
         

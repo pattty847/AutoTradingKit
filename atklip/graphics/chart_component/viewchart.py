@@ -17,7 +17,7 @@ from .proxy_signal import Signal_Proxy
 
 from atklip.app_utils import *
 
-from atklip.appmanager import FastStartThread,AppLogger,ThreadPoolExecutor_global,ThreadingAsyncWorker
+from atklip.appmanager import FastStartThread,AppLogger,ThreadPoolExecutor_global,SimpleWorker
 
 from atklip.graphics.chart_component.proxy_signal import Signal_Proxy
 
@@ -91,20 +91,20 @@ class Chart(ViewPlotWidget):
     
     def auto_load_old_data(self):
         "load historic data when wheel or drag viewbox"
-        if isinstance(self.worker_auto_load_old_data,ThreadingAsyncWorker):
+        if isinstance(self.worker_auto_load_old_data,SimpleWorker):
             if not self.is_load_historic:
-                self.worker_auto_load_old_data.stop_thread()
+                self.worker_auto_load_old_data = None
         if not self.is_load_historic:
             x_range = self.getAxis('bottom').range
             left_xrange = x_range[0]
             right_xrange = x_range[1]
             first_candlestick_index = self.jp_candle.candles[0].index        
-            if left_xrange < first_candlestick_index + 3000:
+            if left_xrange < first_candlestick_index + 1500:
                 self.is_load_historic = True
-                self.worker_auto_load_old_data = ThreadingAsyncWorker(fn=self.check_signal_load_old_data)
+                self.worker_auto_load_old_data = SimpleWorker(fn=self.check_signal_load_old_data)
                 self.worker_auto_load_old_data.start_thread()
         
-    async def check_signal_load_old_data(self):
+    def check_signal_load_old_data(self):
         if self.jp_candle.candles != []:
             _cr_time = self.jp_candle.candles[0].time
             data = self.crypto_ex.fetch_ohlcv(self.symbol,self.interval,limit=1500, params={"until":_cr_time*1000})
@@ -410,7 +410,7 @@ class Chart(ViewPlotWidget):
         else:  
             "change interval/symbol data when starting app"
             self.jp_candle.sig_add_candle.emit(self.jp_candle.candles[-2:])
-            # self.auto_xrange()
+            self.auto_xrange()
         self.sig_show_process.emit(False)
         self.is_reseting =  False
         self.sig_reset_exchange = False

@@ -120,7 +120,8 @@ class UO(QObject):
     sig_update_candle = Signal()
     sig_add_candle = Signal()
     sig_reset_all = Signal()
-    signal_delete = Signal()    
+    signal_delete = Signal()  
+    sig_add_historic = Signal()  
     def __init__(self,parent,_candles,fast_period,medium_period,slow_period,fast_w_value,medium_w_value,slow_w_value) -> None:
         super().__init__(parent=parent)
         
@@ -159,6 +160,7 @@ class UO(QObject):
         self._candles.sig_update_candle.connect(self.update_worker,Qt.ConnectionType.QueuedConnection)
         self._candles.sig_add_candle.connect(self.add_worker,Qt.ConnectionType.QueuedConnection)
         self._candles.signal_delete.connect(self.signal_delete)
+        self._candles.sig_add_historic.connect(self.add_historic_worker,Qt.ConnectionType.QueuedConnection)
     
     
     def change_source(self,_candles:JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE):
@@ -223,6 +225,11 @@ class UO(QObject):
         self.worker_ = CandleWorker(self.add,candle)
         self.worker_.start()
     
+    def add_historic_worker(self,n):
+        self.worker_ = None
+        self.worker_ = CandleWorker(self.add_historic,n)
+        self.worker_.start()
+    
     def started_worker(self):
         self.worker = None
         self.worker = CandleWorker(self.fisrt_gen_data)
@@ -230,14 +237,14 @@ class UO(QObject):
     
     def paire_data(self,INDICATOR:pd.DataFrame|pd.Series):
         if isinstance(INDICATOR,pd.Series):
-            data = INDICATOR
+            data = INDICATOR.dropna()
         else:
             column_names = INDICATOR.columns.tolist()
             uo_name = ''
             for name in column_names:
                 if name.__contains__("UO_"):
                     uo_name = name
-            data = INDICATOR[uo_name]
+            data = INDICATOR[uo_name].dropna()
         return data
     
     def caculate(self,df: pd.DataFrame):
@@ -249,7 +256,7 @@ class UO(QObject):
                     slow=self.slow_period,
                     fast_w=self.fast_w_value,
                     medium_w=self.medium_w_value,
-                    slow_w=self.slow_w_value)
+                    slow_w=self.slow_w_value).dropna()
         return self.paire_data(INDICATOR)
     
     def fisrt_gen_data(self):
@@ -257,18 +264,44 @@ class UO(QObject):
         self.df = pd.DataFrame([])
         df:pd.DataFrame = self._candles.get_df()
         data = self.caculate(df)
-        _index = df["index"]
+        
+        _len = len(data)
+        _index = df["index"].tail(_len)
+        
         self.df = pd.DataFrame({
                             'index':_index,
                             "data":data
                             })
-        self.xdata,self.data = self.df["index"].to_numpy(),\
-                                                data.to_numpy()
+        self.xdata,self.data = self.df["index"].to_numpy(),self.df["data"].to_numpy()
         self.is_genering = False
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
         self.sig_reset_all.emit()
+    
+    def add_historic(self,n:int):
+        self.is_genering = True
+        _pre_len = len(self.df)
+        df:pd.DataFrame = self._candles.get_df().iloc[:-1*_pre_len]
+        
+        data = self.caculate(df)
+        
+        _len = len(data)
+        _index = df["index"].tail(_len)
+        
+        _df = pd.DataFrame({
+                            'index':_index,
+                            "data":data
+                            })
+        self.df = pd.concat([_df,self.df],ignore_index=True)
+        self.xdata,self.data = self.df["index"].to_numpy(),self.df["data"].to_numpy()
+        
+        self.is_genering = False
+        if self.first_gen == False:
+            self.first_gen = True
+            self.is_genering = False
+        
+        self.sig_add_historic.emit()
     
     def add(self,new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]

@@ -135,23 +135,12 @@ class ComboBoxBase:
 
         self._currentIndex = index
         self.setText(self.items[index].text)
-        
-        _icon = self.itemIcon(index)
-        
-        self.setIcon(_icon)
-        
+
         if oldText != self.currentText():
             self.currentTextChanged.emit(self.currentText())
 
         self.currentIndexChanged.emit(index)
 
-    def setIcon(self,_icon):
-        if isinstance(_icon,QIcon):
-            super().setIcon(_icon)
-            # super().setIconSize(_icon)
-        else:
-            super().setIcon(QIcon(_icon))
-            # super().setIconSize(_icon)
     def setText(self, text: str):
         super().setText(text)
         self.adjustSize()
@@ -290,7 +279,12 @@ class ComboBoxBase:
         if not self.dropMenu:
             return
 
-        self.dropMenu.close()
+        # drop menu could be deleted before this method
+        try:
+            self.dropMenu.close()
+        except:
+            pass
+
         self.dropMenu = None
 
     def _onDropMenuClosed(self):
@@ -330,11 +324,11 @@ class ComboBoxBase:
 
         # determine the animation type by choosing the maximum height of view
         x = -menu.width()//2 + menu.layout().contentsMargins().left() + self.width()//2
-        pd = self.mapToGlobal(QPoint(x, self.height()+5))
-        hd = menu.view.heightForAnimation(pd, MenuAnimationType.DROP_DOWN)
+        pd = self.mapToGlobal(QPoint(x, self.height()))
+        hd = menu.view.heightForAnimation(pd, MenuAnimationType.NONE)
 
         pu = self.mapToGlobal(QPoint(x, 0))
-        hu = menu.view.heightForAnimation(pu, MenuAnimationType.PULL_UP)
+        hu = menu.view.heightForAnimation(pu, MenuAnimationType.NONE)
 
         if hd >= hu:
             menu.view.adjustSize(pd, MenuAnimationType.NONE)
@@ -528,15 +522,14 @@ class ComboBoxMenu(RoundMenu):
     def __init__(self, parent=None):
         super().__init__(title="", parent=parent)
 
-        self.view.setViewportMargins(2, 2, 2, 6)
-        self.view.setContentsMargins(10,2,2,2)
+        self.view.setViewportMargins(0, 2, 0, 6)
         self.view.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.view.setItemDelegate(IndicatorMenuItemDelegate())
         self.view.setObjectName('comboListWidget')
 
         self.setItemHeight(33)
 
-    def exec(self, pos, ani=True, aniType=MenuAnimationType.DROP_DOWN):
+    def exec(self, pos, ani=True, aniType=MenuAnimationType.NONE):
         self.view.adjustSize(pos, aniType)
         self.adjustSize()
         return super().exec(pos, ani, aniType)

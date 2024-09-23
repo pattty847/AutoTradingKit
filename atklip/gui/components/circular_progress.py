@@ -43,6 +43,41 @@ class LoadingProgress(QLabel):
         self.shadow.setColor(QColor(0, 0, 0, 80))
         self.setGraphicsEffect(self.shadow)
 
+class StreamingMode(QLabel):
+    def __init__(self,parent=None,size=35):
+        super().__init__(parent)
+        self._parent:QWidget = parent
+        self.setStyleSheet("QLabel {background-color: transparent;}")
+        # CUSTOM PROPERTIES
+        self.setFixedSize(size,size)
+        self.setContentsMargins(1,1,1,1)
+        self.moviebusy = QMovie(":/qfluentwidgets/images/gif/streaming.gif")
+        self.moviebusy.setScaledSize(QSize(size-5,size-5))
+        self.setMovie(self.moviebusy)
+        #self.moviebusy.stop()
+        self.is_runing = False
+        self.bg_color = 0x44475a
+        self.set_shadow()
+
+    def start(self):
+        if self.is_runing:
+            self.moviebusy.stop()
+            self.is_runing = False
+            self.hide()
+        else:
+            self.moviebusy.start()
+            self.is_runing = True
+            self.show()
+    # ADD DROPSHADOW
+    def set_shadow(self):
+        self.shadow = QGraphicsDropShadowEffect(self)
+        self.shadow.setBlurRadius(15)
+        self.shadow.setXOffset(0)
+        self.shadow.setYOffset(0)
+        self.shadow.setColor(QColor(0, 0, 0, 80))
+        self.setGraphicsEffect(self.shadow)
+
+
 class CircularProgress(QWidget):
     def __init__(self,parent=None):
         super().__init__(parent)

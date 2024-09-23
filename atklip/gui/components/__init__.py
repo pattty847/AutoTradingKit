@@ -9,5 +9,5 @@ from .color_button import ColorButton
 from .exchange_icon import ExchangeICon
 from .scroll_interface import ScrollInterface
 from .navigation_view_interface import PivotInterface
-from .circular_progress import CircularProgress,LoadingProgress
+from .circular_progress import CircularProgress,LoadingProgress,StreamingMode
 from .setting_element import IntEdit,FloatEdit,TextEdit,ComboboxEdit,ColorEdit,StyleEdit,WidthEdit

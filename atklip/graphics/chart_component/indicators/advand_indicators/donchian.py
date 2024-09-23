@@ -206,10 +206,8 @@ class BasicDonchianChannels(PlotDataItem):
         ub = data[3]
         
         self.lowline.setData(xData,lb)
-        time.sleep(0.01)
         # self.centerline.setData(xData,cb)
         self.setData(xData,cb)
-        time.sleep(0.01)
         self.highline.setData(xData,ub)
         
         self.prepareGeometryChange()
