@@ -11,15 +11,17 @@ from atklip.controls import IndicatorType,PD_MAType
 if TYPE_CHECKING:  # pragma
     from atklip.gui.top_bar import IntervalButton
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt,Signal
 from PySide6.QtWidgets import QHBoxLayout
 
 class Card_Item(CardWidget):
     """ App card """
+    signal_infor = Signal(tuple)
     def __init__(self, icon, title, _type:str="", parent=None):
         super().__init__(parent)
         self.parent = parent
         self.icon = icon
+        self.title = title
         self.setContentsMargins(0,0,0,0)
         self.setClickEnabled(True)
         self.iconWidget = IconWidget(self.icon,self)
@@ -42,7 +44,11 @@ class Card_Item(CardWidget):
         self.btn_fovarite.setFixedSize(20, 20)
         self.btn_fovarite.clicked.connect(self.onbtn_fovariteClicked)
         self.clicked.connect(self.on_clicked)
+        
         self.setObjectName(f"{_type}_{title}")
+        
+        self.signal_infor.connect(self.parent.set_current_tool)
+        
         if self.btn_fovarite.isChecked():
             self.btn_fovarite.show()
         else:
@@ -57,7 +63,7 @@ class Card_Item(CardWidget):
         pass
         #self.parent.splitToolButton.add_remove_to_favorites(self.icon)
     def on_clicked(self):
-        self.parent.splitToolButton.change_item(self.icon)
+        self.signal_infor.emit((self,self.icon))
     
     def enterEvent(self, event):
         self.btn_fovarite.show()

@@ -2,9 +2,12 @@ from PySide6 import QtCore, QtGui
 from PySide6.QtCore import Signal, QObject, Qt
 from PySide6.QtGui import QColor
 
-from .custom_roi import SpecialROI, MyHandle
+from .roi import SpecialROI, MyHandle
 
-
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from atklip.graphics.chart_component.draw_tools.drawtools import DrawTool
+    
 class RectangleROI(SpecialROI):
     on_click = Signal(QObject)
     draw_rec = Signal()
@@ -16,14 +19,19 @@ class RectangleROI(SpecialROI):
     signal_change_type = Signal(str)
 
 
-    def __init__(self, pos, size=..., angle=0,id=None, invertible=False, maxBounds=None, snapSize=1, scaleSnap=False, translateSnap=False, rotateSnap=False, parent=None, pen=None, hoverPen=None, handlePen=None, handleHoverPen=None, movable=True, rotatable=True, resizable=True, removable=False, aspectLocked=False,main=None):
+    def __init__(self, pos, size=..., angle=0,id=None, invertible=False, maxBounds=None, snapSize=1, scaleSnap=False, translateSnap=False, rotateSnap=False, parent=None, pen=None, hoverPen=None, handlePen=None, handleHoverPen=None, movable=True, rotatable=True, resizable=True, removable=False, aspectLocked=False,drawtool=None):
         super().__init__(pos, size, angle, invertible, maxBounds, snapSize, scaleSnap, translateSnap, rotateSnap, parent, pen, hoverPen, handlePen, handleHoverPen, movable, rotatable, resizable, removable, aspectLocked)
         #ROI.__init__(self, pos, **args)
-        self.uid = None
-        self.parent, self.chart=parent, main
+        self.drawtool:DrawTool= drawtool
         self.indicator_name = None
         self.isSelected = False
         self.id = id
+        
+        self.has = {
+            "name": "rectangle",
+            "type": "drawtool",
+            "id": id
+        }
 
         self.addScaleHandle([1, 0.5], [0, 0.5])
         self.addScaleHandle([0, 0.5], [1, 0.5])
@@ -45,8 +53,7 @@ class RectangleROI(SpecialROI):
 
         self.lastMousePos = pos
         self.finished = False
-        self.chart.mousepossiton_signal.connect(self.setPoint)
-        self.on_click.connect(self.chart.main.show_popup_setting_tool)
+        # self.on_click.connect(self.drawtool.show_popup_setting_tool)
         # self.on_click.connect(self.get_pos_point)
 
     def selectedHandler(self, is_selected):
@@ -67,7 +74,6 @@ class RectangleROI(SpecialROI):
             hover = False
                 
         if not self.isSelected:
-            if self.chart.draw_object: return
             if hover:
                 self.setSelected(True)
                 ev.acceptClicks(QtCore.Qt.MouseButton.LeftButton)  ## If the ROI is hilighted, we should accept all clicks to avoid confusion.
@@ -106,7 +112,6 @@ class RectangleROI(SpecialROI):
 
     def mousePressEvent(self, ev):
         if ev.button() == Qt.MouseButton.LeftButton:
-            self.chart.draw_object =None
             self.finished = True
             self.on_click.emit(self)
             # print(82, "mouse press rectangle")
@@ -115,10 +120,10 @@ class RectangleROI(SpecialROI):
     def setPoint(self,data):
         #print(318, "lastmouse_position", data, self.finished)
         if not self.finished and data[0]=="drawed_rectangle":
-            if self.chart.magnet_on:
-                pos_x, pos_y = self.chart.get_position_crosshair()
+            if self.drawtool.chart.magnet_on:
+                pos_x, pos_y = self.drawtool.get_position_crosshair()
             else:
-                pos_x, pos_y = self.chart.get_position_crosshair()
+                pos_x, pos_y = self.drawtool.get_position_crosshair()
                 pos_y = data[2]
             self.state['size'] = [pos_x-self.state['pos'][0], pos_y-self.state['pos'][1]]
             self.stateChanged()
@@ -224,7 +229,7 @@ class RectangleROI(SpecialROI):
     def mouseDragEvent(self, ev, axis=None, line=None):
         self.setSelected(True)
         if ev.button == Qt.KeyboardModifier.ShiftModifier:
-            return self.chart.vb.mouseDragEvent(ev, axis)
+            return self.drawtool.vb.mouseDragEvent(ev, axis)
         if not self.locked:
             # r_out = self.boundingRect().adjusted(-4,-4,4,4)
             # r_in = self.boundingRect().adjusted(4,4,-4,-4)

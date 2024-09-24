@@ -57,7 +57,7 @@ class CustomDateAxisItem(AxisItem):
         self.context:Chart = context
         self.vb = vb
         self.last_color,self.last_price = "#eaeaea", 00000
-        self.list_objects = []
+        self.dict_objects = {}
         
         # Fixing pyqtgraph bug, not setting textPen properly
         if textPen is None:
@@ -159,6 +159,15 @@ class CustomDateAxisItem(AxisItem):
         # self.drawvalue(p ,axisSpec, tickSpecs, textSpecs,color="#363a45",value=self.last_value)
         profiler('draw text')
         self.draw_xcross_hair(p, color="#363a45",price=self.last_value)
+        
+        if self.dict_objects != {}:
+            for item in list(self.dict_objects.keys()):
+                if self.dict_objects[item] == True:
+                    if hasattr(item, 'get_xaxis_param'):
+                        price,color = item.get_xaxis_param()
+                        if price != None:
+                            self.draw_object_value(p,price,color=color)
+        
         #self.draw_vertical_line(p)
 
     def draw_value(self,painter, rect,color, text):
@@ -824,9 +833,10 @@ class CustomPriceAxisItem(AxisItem):
         if self.dict_objects != {}:
             for item in list(self.dict_objects.keys()):
                 if self.dict_objects[item] == True:
-                    price,color = item.get_yaxis_param()
-                    if price != None:
-                        self.draw_object_value(p,price,color=color)
+                    if hasattr(item, 'get_yaxis_param'):
+                        price,color = item.get_yaxis_param()
+                        if price != None:
+                            self.draw_object_value(p,price,color=color)
     def paint_crosshair(self,p):
         """draw cross hair"""
         color = self.cross_color

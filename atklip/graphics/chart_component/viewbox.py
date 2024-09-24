@@ -35,7 +35,7 @@ class PlotViewBox(ViewBox):
         
         self.plotwidget:ViewPlotWidget = plotwidget
 
-        self.main = main
+        self.chart = main
         
         cursor = QtGui.QCursor(Qt.CrossCursor)
         self.setCursor(cursor)

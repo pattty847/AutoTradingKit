@@ -28,6 +28,10 @@ class MainWidget(QWidget,Ui_MainWidget):
 
         self.chartbox_splitter.chart.sig_change_tab_infor.connect(self.change_tab_infor,Qt.ConnectionType.AutoConnection)
 
+        "signal from drawbar"
+        self.drawbar.sig_draw_object_name.connect(self.draw_tool)
+        
+        
         "signal from TopBar"
         self.topbar.sig_change_symbol.connect(self.chartbox_splitter.chart.on_reset_exchange,Qt.ConnectionType.AutoConnection)
         self.topbar.sig_change_inteval.connect(self.chartbox_splitter.chart.on_change_inteval,Qt.ConnectionType.AutoConnection)
@@ -46,6 +50,11 @@ class MainWidget(QWidget,Ui_MainWidget):
         self.topbar.setup_indicator_menu()
         self.topbar.setup_symbol_menu()
         FluentStyleSheet.SPLITTER.apply(self.chartbox_splitter)
+    
+    def draw_tool(self,tool_infor):
+        current_tool,is_enabled,tool_name = tool_infor[0],tool_infor[1],tool_infor[2]# "draw_trenlines"
+        print(current_tool,is_enabled,tool_name)
+        self.chartbox_splitter.chart.drawtool.draw_object_name = tool_name
     
     def resizeEvent(self, e):
         super().resizeEvent(e)

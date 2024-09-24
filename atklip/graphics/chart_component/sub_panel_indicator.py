@@ -111,7 +111,6 @@ class ViewSubPanel(PlotWidget):
         self.lastMousePositon = None
         #self.ObjectManager = UniqueObjectManager()
 
-        self.draw_object = None
         self.is_mouse_click = False
         self.indicator = None
         self.first_run = False
@@ -383,11 +382,10 @@ class ViewSubPanel(PlotWidget):
             elif not self.sceneBoundingRect().contains(self.ev_pos):
                 self.mouse_on_vb = False
             
-            self.emit_mouse_position(self.lastMousePositon)
         super().mouseMoveEvent(ev)
 
     def emit_mouse_position(self, lastpos):
-        self.mousepossiton_signal.emit((self.draw_object,lastpos.x(),lastpos.y()))
+        pass
 
     def hide_crosshair(self) -> None:
         """Hide crosshair items"""

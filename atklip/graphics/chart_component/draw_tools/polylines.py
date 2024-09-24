@@ -1,12 +1,12 @@
 from PySide6.QtCore import Qt, QRectF, QPointF, Signal
 from PySide6.QtGui import QPainter, QColor, QPainterPath
-from atklip.graphics.pyqtgraph import PolyLineROI, TextItem, Point, ArrowItem, mkPen
+from pyqtgraph import PolyLineROI, TextItem, Point, ArrowItem, mkPen
 
 draw_line_color = '#fca326'
 epoch_period = 1e30
 
 
-from ..draw_tools.roi import SpecialROI, _FiboLineSegment
+from .roi import SpecialROI, _FiboLineSegment
 
 class MyPolyLine(SpecialROI):
     r"""
@@ -185,8 +185,13 @@ class RangePolyLine(MyPolyLine):     # for date price range
     signal_visible = Signal(bool)
     signal_delete = Signal()
     def __init__(self, vb, chart, *args, **kwargs):
-        self.vb = vb # init before parent constructor
+        self.vb = self.chart.vb # init before parent constructor
         self.chart = chart
+        self.has = {
+            "name": "rectangle",
+            "type": "drawtool",
+            "id": id
+        }
         self.texts = []
         self.arrows = []
         self.finished = False
@@ -199,7 +204,7 @@ class RangePolyLine(MyPolyLine):     # for date price range
             self.finished = True
         ev.ignore()
 
-    def setPoint(self, data):
+    def setLastPoint(self, data):
         if not self.finished and data[0]=="drawed_date_price_range":
             pos = self.mapSceneToParent(QPointF(data[1], data[2]))
             print("setLastPoint", pos, data, )

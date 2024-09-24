@@ -2,7 +2,6 @@
 from typing import Union, Optional, Any, List, TYPE_CHECKING 
 from functools import lru_cache
 from .plotitem import ViewPlotItem
-from .custom_replay_cut import CustomReplayObject
 from atklip.controls import *
 
 from PySide6 import QtGui
@@ -19,10 +18,11 @@ from .proxy_signal import Signal_Proxy
 from atklip.graphics.chart_component.base_items import CandleStick, PriceLine
 from atklip.graphics.chart_component.indicator_panel import IndicatorContainer
 from atklip.app_utils import *
-
+from atklip.graphics.chart_component.draw_tools import DrawTool
 if TYPE_CHECKING:
     from .viewbox import PlotViewBox
     from .axisitem import CustomDateAxisItem, CustomPriceAxisItem
+    
 
 class Crosshair:
     """Keyword arguments related to Crosshair used in LivePlotWidget"""
@@ -35,7 +35,7 @@ class Crosshair:
 
 
 class ViewPlotWidget(PlotWidget):
-    mouse_clicked_signal = Signal(object)
+    mouse_clicked_signal = Signal(Any)
     sig_show_process = Signal(bool)
     sig_change_tab_infor = Signal(tuple)
     sig_goto_date = Signal(tuple)
@@ -134,17 +134,11 @@ class ViewPlotWidget(PlotWidget):
         self.is_cutting_replay = False
         self.is_get_old_zigzag_base = False
 
-        self.replay_object = CustomReplayObject()
-        self.vLine_replay = InfiniteLine(angle=90, movable=False, pen=mkPen(color=QColor(0,35,255), width=2.5,style=Qt.SolidLine))
-
-        
-        
-        self.draw_object = None
+        self.drawtool = DrawTool(self)
         
         Signal_Proxy(signal=self.sig_add_item,slot=self.add_item,connect_type=Qt.ConnectionType.QueuedConnection)
         Signal_Proxy(signal=self.sig_remove_item,slot=self.remove_item,connect_type=Qt.ConnectionType.QueuedConnection)
 
-        
         global_signal.sig_show_hide_cross.connect(self.show_hide_cross,Qt.ConnectionType.AutoConnection)
 
     def set_precision(self,precision):
@@ -177,8 +171,11 @@ class ViewPlotWidget(PlotWidget):
             item = args
         self.list_candle_indicators.append(item)
         self.addItem(item) 
-        self.yAxis.dict_objects.update({item:item.has["y_axis_show"]})
-        
+        if "y_axis_show" in list(item.has.keys()):
+            self.yAxis.dict_objects.update({item:item.has["y_axis_show"]})
+        if "x_axis_show" in list(item.has.keys()):
+            self.xAxis.dict_objects.update({item:item.has["x_axis_show"]})
+                
     def remove_item(self,args):
         if isinstance(args,tuple):
             item = args[0]
@@ -236,10 +233,10 @@ class ViewPlotWidget(PlotWidget):
         new_size = QSize(25, 25)  # Set the desired width and height
         cursor_pixmap = cursor_pixmap.scaled(new_size)
         cursor = QtGui.QCursor(cursor_pixmap)
-        self.vLine_replay.setPos(data[0])
         # Set the cursor on the view
         self.vb.setCursor(cursor)
-        self.replay_object.set_data(data[0],data[1],data[2],data[3])
+        # self.vLine_replay.setPos(data[0])
+        # self.replay_object.set_data(data[0],data[1],data[2],data[3])
 
     def _update_crosshair_position(self, pos) -> None:
         """Update position of crosshair based on mouse position"""
@@ -314,16 +311,21 @@ class ViewPlotWidget(PlotWidget):
         return ohlcv #index_of_closest_value, closest_value
     
     def mousePressEvent(self, ev):
-        super().mousePressEvent(ev)
         self.is_mouse_click =  True
+        self.mouse_clicked_signal.emit(None)
+        super().mousePressEvent(ev)
+        
 
     def mouseReleaseEvent(self, ev):
-        super().mouseReleaseEvent(ev)
         self.is_mouse_click = False
+        self.drawtool.drawing_object = None
+        self.drawtool.draw_object_name = None
+        super().mouseReleaseEvent(ev)
+        
 
     def mouseMoveEvent(self, ev: QEvent) -> None:
         """Mouse moved in PlotWidget"""
-        if not self.is_mouse_click:
+        if not self.is_mouse_click and not self.drawtool.drawing_object:
             try:
                 self.ev_pos = ev.position()
             except:
@@ -358,7 +360,9 @@ class ViewPlotWidget(PlotWidget):
         super().mouseMoveEvent(ev)
 
     def emit_mouse_position(self, lastpos):
-        self.mousepossiton_signal.emit((self.draw_object,lastpos.x(),lastpos.y()))
+        if not self.drawtool.drawing_object:
+            if hasattr(self.drawtool.drawing_object,"setPoint"): 
+                self.drawtool.drawing_object.setPoint(lastpos.x(),lastpos.y())
 
     def hide_crosshair(self) -> None:
         """Hide crosshair items"""

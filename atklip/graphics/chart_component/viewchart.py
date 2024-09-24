@@ -13,13 +13,14 @@ from ccxt.base.errors import *
 from atklip.controls import IndicatorType,OHLCV
 from atklip.controls.candle import HEIKINASHI, SMOOTH_CANDLE,JAPAN_CANDLE, N_SMOOTH_CANDLE
 
-from .proxy_signal import Signal_Proxy
+from atklip.graphics.chart_component.draw_tools import *
+
+from .unique_object_id import ObjManager
 
 from atklip.app_utils import *
 
 from atklip.appmanager import FastStartThread,AppLogger,ThreadPoolExecutor_global,SimpleWorker
 
-from atklip.graphics.chart_component.proxy_signal import Signal_Proxy
 
 from atklip.graphics.chart_component.indicator_panel import IndicatorPanel
 
@@ -49,11 +50,12 @@ class Chart(ViewPlotWidget):
         self.worker = None
         self.worker_auto_load_old_data = None
         
-        
-        
         self.vb.load_old_data.connect(self.auto_load_old_data)
         
         self.sources: Dict[str:QObject] = {}
+        self.indicators:Dict[str:QObject] = {}
+        self.drawtools:Dict[str:QObject] = {}
+        self.objmanager:ObjManager = ObjManager()
         self.exchanges = {}
         self.is_load_historic = False
         self.time_delay = 5
@@ -77,7 +79,6 @@ class Chart(ViewPlotWidget):
     @time_delay.setter
     def time_delay(self,value):
         self._time_delay = value
-    
     
     def change_mode(self):
         sender = self.sender()
@@ -129,7 +130,6 @@ class Chart(ViewPlotWidget):
                 old_ex =  self.exchanges[_id]
                 del self.exchanges[_id]
                 print("old_Ex", old_ex)
-    
     
     def update_sources(self,source:HEIKINASHI|SMOOTH_CANDLE|JAPAN_CANDLE|N_SMOOTH_CANDLE):
         _key = f"{self.symbol} {self.interval}"
@@ -425,38 +425,40 @@ class Chart(ViewPlotWidget):
         self.sig_reset_exchange = False
 
     def mousePressEvent(self, ev):
-        # #print(491, "press mapchart", self.fibo_reverse)
+        print(self.drawtool.draw_object_name)
         if self.mouse_on_vb and ev.button() & Qt.MouseButton.LeftButton:
-            self.mouse_clicked_signal.emit(ev)
-            if self.draw_object ==  "draw_trenlines":
-                self.draw_trenlines(ev)
-            elif self.draw_object ==  "draw_horizontal_line":
-                self.draw_horizontal_line(ev)
-            elif self.draw_object ==  "draw_horizontal_ray":
-                self.draw_horizontal_ray(ev)
-            elif self.draw_object ==  "draw_fibo_retracement":
-                self.draw_fibo(ev)
-            elif self.draw_object ==  "draw_fibo_2":
-                self.draw_fibo_2(ev)
-            elif self.draw_object ==  "draw_rectangle":
-                self.draw_rectangle(ev)
-            elif self.draw_object ==  "draw_text":
-                self.draw_text(ev)
-            elif self.draw_object ==  "draw_path":
-                self.draw_path(ev)
-            elif self.draw_object == "draw_date_price_range":
-                self.draw_date_price_range(ev)
-            elif self.draw_object ==  "draw_verticallines":
-                self.draw_verticallines(ev)
+            if self.drawtool.draw_object_name ==  "draw_trenlines":
+                self.drawtool.draw_trenlines(ev)
+            elif self.drawtool.draw_object_name ==  "draw_horizontal_line":
+                self.drawtool.draw_horizontal_line(ev)
+            elif self.drawtool.draw_object_name ==  "draw_horizontal_ray":
+                self.drawtool.draw_horizontal_ray(ev)
+            elif self.drawtool.draw_object_name ==  "draw_fibo_retracement":
+                self.drawtool.draw_fibo(ev)
+            elif self.drawtool.draw_object_name ==  "draw_fibo_2":
+                self.drawtool.draw_fibo_2(ev)
+            elif self.drawtool.draw_object_name ==  "draw_rectangle":
+                self.drawtool.draw_rectangle(ev)
+            elif self.drawtool.draw_object_name ==  "draw_text":
+                self.drawtool.draw_text(ev)
+            elif self.drawtool.draw_object_name ==  "draw_path":
+                self.drawtool.draw_path(ev)
+            elif self.drawtool.draw_object_name == "draw_date_price_range":
+                self.drawtool.draw_date_price_range(ev)
+            elif self.drawtool.draw_object_name ==  "draw_verticallines":
+                self.drawtool.draw_verticallines(ev)
             else:
-                if self.draw_object in ["drawed_trenlines", "drawed_fibo_retracement", "drawed_fibo_retracement_2", "drawed_rectangle", "drawed_date_price_range"]:
-                    self.draw_object =None
-                    self.drawing_object.finished = True
-                    self.drawing_object.on_click.emit(self.drawing_object)
-                    self.drawing_object = None
+                if self.drawtool.draw_object_name in ["drawed_trenlines", "drawed_fibo_retracement", "drawed_fibo_retracement_2", "drawed_rectangle", "drawed_date_price_range"]:
+                    self.drawtool.draw_object_name =None
+                    self.drawtool.drawing_object.finished = True
+                    self.drawtool.drawing_object.on_click.emit(self.drawtool.drawing_object)
+                    self.drawtool.drawing_object = None
                 
         super().mousePressEvent(ev)
 
+    def get_position_crosshair(self):
+        return self.vLine.getXPos(), self.hLine.getYPos()
+    
     def roll_till_now(self,):
         vr = self.viewRect()
         height = vr.height()
@@ -476,17 +478,17 @@ class Chart(ViewPlotWidget):
         elif ev.modifiers() == Qt.KeyboardModifier.AltModifier:
             #print("Enter Ctrl V",ev.keyCombination(), ev.keyCombination() == QKeyCombination(Qt.KeyboardModifier.AltModifier, Qt.Key.Key_V))
             if ev.keyCombination() == QKeyCombination(Qt.KeyboardModifier.AltModifier, Qt.Key.Key_T):
-                self.draw_object = "draw_trenlines"
+                self.drawtool.draw_object_name = "draw_trenlines"
             elif ev.keyCombination() == QKeyCombination(Qt.KeyboardModifier.AltModifier, Qt.Key.Key_H):
-                self.draw_object =  "draw_horizontal_line"
+                self.drawtool.draw_object_name =  "draw_horizontal_line"
             elif ev.keyCombination() == QKeyCombination(Qt.KeyboardModifier.AltModifier, Qt.Key.Key_J):
-                self.draw_object =  "draw_horizontal_ray"
+                self.drawtool.draw_object_name =  "draw_horizontal_ray"
             elif ev.keyCombination() == QKeyCombination(Qt.KeyboardModifier.AltModifier, Qt.Key.Key_F):
-                self.draw_object =  "draw_fibo_retracement"
+                self.drawtool.draw_object_name =  "draw_fibo_retracement"
             elif ev.keyCombination() == QKeyCombination(Qt.KeyboardModifier.AltModifier, Qt.Key.Key_V):
-                self.draw_object =  "draw_verticallines"
+                self.drawtool.draw_object_name =  "draw_verticallines"
             # elif ev.keyCombination() == QKeyCombination(Qt.KeyboardModifier.AltModifier, Qt.Key.Key_J):
-            #     self.draw_object ==  "draw_horizontal_ray"
+            #     self.drawtool.draw_object_name ==  "draw_horizontal_ray"
 
         return super().keyPressEvent(ev)       
     

@@ -5,7 +5,7 @@ from atklip.graphics.pyqtgraph import LineSegmentROI
 from atklip.graphics.pyqtgraph.Point import Point
 import math
 
-from .custom_roi import MyHandle, SpecialROI
+from .roi import MyHandle, SpecialROI
 
 translate = QtCore.QCoreApplication.translate
 
@@ -243,12 +243,18 @@ class PathROI(MyPolyLineROI):
     signal_change_width = Signal(int)
     signal_change_type = Signal(str)
 
-    def __init__(self, positions, closed=False,id=None, pos=None,chart=None,main=None, **args):
+    def __init__(self, positions, closed=False,id=None, pos=None,drawtool=None, **args):
         super().__init__(positions, closed, pos, **args)
 
+        self.has = {
+            "name": "rectangle",
+            "type": "drawtool",
+            "id": id
+        }
+        
         self.uid = None
         self.id = id
-        self.chart, self.main=chart, main
+        self.drawtool=drawtool
         self.isSelected = False
         self.last_point = None
         self.finished = False
@@ -256,8 +262,8 @@ class PathROI(MyPolyLineROI):
         self.yoff = False
         self.xoff =False
         self.locked = False
-        self.chart.mousepossiton_signal.connect(self.setPoint)
-        self.on_click.connect(self.chart.main.show_popup_setting_tool)
+
+        # self.on_click.connect(self.drawtool.show_popup_setting_tool)
         # self.on_click.connect(self.get_pos_point)
         
         self._arrow_height = 5
@@ -287,7 +293,6 @@ class PathROI(MyPolyLineROI):
             hover = True
                 
         if not self.isSelected:
-            if self.chart.draw_object: return
             if hover:
                 self.setSelected(True)
                 ev.acceptClicks(QtCore.Qt.MouseButton.LeftButton)  ## If the ROI is hilighted, we should accept all clicks to avoid confusion.
@@ -395,14 +400,13 @@ class PathROI(MyPolyLineROI):
     
     def delete(self):
         "xoa hien thi gia truc y"
-        self.price_axis.kwargs["horizontal_ray"].remove(self.id)
         self.deleteLater()
 
 
     def mouseDoubleClickEvent(self, event) -> None:
         #print(325, "mouseDoubleClickEvent", event)
         #ev.ignore()
-        self.chart.draw_object =None
+        self.drawtool.draw_object =None
         self.finished = True
         self.dounbleclick = True
         lasthandle = self.handles[-1]['item']
@@ -439,8 +443,8 @@ class PathROI(MyPolyLineROI):
 
     def setPoint(self, data):
         if not self.finished and data[0]=="drawed_path":
-            if self.chart.magnet_on:
-                pos_x, pos_y = self.chart.get_position_crosshair()
+            if self.drawtool.chart.magnet_on:
+                pos_x, pos_y = self.drawtool.get_position_crosshair()
             else:
                 pos_x, pos_y = data[1], data[2]
             point = Point(pos_x, pos_y)

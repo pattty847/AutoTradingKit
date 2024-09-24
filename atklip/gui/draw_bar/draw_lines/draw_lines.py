@@ -9,10 +9,11 @@ from atklip.gui import FluentIcon as FIF
 from atklip.gui.qfluentwidgets.common import *
 
 class LINES(QFrame):
-    def __init__(self,parent:QWidget=None):
+    def __init__(self,parent:QWidget=None,sig_draw_object_name=None):
         super().__init__(parent)
         #self.setClickEnabled(False)
         self.parent = parent
+        self.sig_draw_object_name = sig_draw_object_name
         self.setContentsMargins(0,0,0,0)
         self.setFixedSize(50,40)
         self._QLayout = QHBoxLayout(self)
@@ -21,6 +22,9 @@ class LINES(QFrame):
         self._QLayout.setAlignment(Qt.AlignLeft)
 
         self.splitToolButton = ShowmenuButton(FIF.TRENDLINE,self.parent)
+        
+        self.current_tool = None
+        self.is_enabled = False
 
         #create menu
         self.menu = RoundMenu(parent=self)
@@ -36,26 +40,26 @@ class LINES(QFrame):
         headerLayout.setContentsMargins(5,0,0,0)
         self.menu.addWidget(line_header_wg)
         self.trend_line = Card_Item(FIF.TRENDLINE,"Trend Line", 'LINE',self)
-        self.ray = Card_Item(FIF.RAY,"Ray", 'LINE',self)
-        self.infor_line = Card_Item(FIF.INFOR_LINE,"Infor Line", 'LINE',self)
-        self.extended_line = Card_Item(FIF.EXTENTED_LINE,"Extended Line", 'LINE',self)
-        self.trend_angle = Card_Item(FIF.TREND_ANGLE,"Trend Angle", 'LINE',self)
+        # self.ray = Card_Item(FIF.RAY,"Ray", 'LINE',self)
+        # self.infor_line = Card_Item(FIF.INFOR_LINE,"Infor Line", 'LINE',self)
+        # self.extended_line = Card_Item(FIF.EXTENTED_LINE,"Extended Line", 'LINE',self)
+        # self.trend_angle = Card_Item(FIF.TREND_ANGLE,"Trend Angle", 'LINE',self)
         self.horizon_line = Card_Item(FIF.HORIZONTAL_LINE, "Horizontal Line", 'LINE',self)
         self.horizon_ray = Card_Item(FIF.HORIZONTAL_RAY,"Horizontal Ray", 'LINE',self)
         self.vertical_line = Card_Item(FIF.VERTICAL_LINE,"Vertical Line", 'LINE',self)
-        self.cross_line = Card_Item(FIF.CROSS_LINE,"Cross Line", 'LINE',self)
+        # self.cross_line = Card_Item(FIF.CROSS_LINE,"Cross Line", 'LINE',self)
         # add item to card
         self.trend_line.resize(250, 40)
         
         self.menu.addWidget(self.trend_line)
-        self.menu.addWidget(self.ray)
-        self.menu.addWidget(self.infor_line)
-        self.menu.addWidget(self.extended_line)
-        self.menu.addWidget(self.trend_angle)
+        # self.menu.addWidget(self.ray)
+        # self.menu.addWidget(self.infor_line)
+        # self.menu.addWidget(self.extended_line)
+        # self.menu.addWidget(self.trend_angle)
         self.menu.addWidget(self.horizon_line)
         self.menu.addWidget(self.horizon_ray)
         self.menu.addWidget(self.vertical_line)
-        self.menu.addWidget(self.cross_line)
+        # self.menu.addWidget(self.cross_line)
         # split tool button
         self.menu.addSeparator()
 
@@ -69,17 +73,17 @@ class LINES(QFrame):
         chanel_headerLayout.setContentsMargins(5,0,0,0)
         self.menu.addWidget(chanel_header_wg)
 
-        self.parallel_chanel = Card_Item(FIF.PARALLEL_CHANEL,"Parallel Chanel", 'LINE',self)
-        self.regression_trend = Card_Item(FIF.REGRESSION_TREND,"Regression Trend", 'LINE',self)
-        self.flat_top_bottom = Card_Item(FIF.FLAT_TOP_BOTTOM,"Flat Top/Bottom", 'LINE',self)
-        self.disjoint_chanel = Card_Item(FIF.DISJOINT_CHANEL,"Disjoint Chanel", 'LINE',self)
+        # self.parallel_chanel = Card_Item(FIF.PARALLEL_CHANEL,"Parallel Chanel", 'LINE',self)
+        # self.regression_trend = Card_Item(FIF.REGRESSION_TREND,"Regression Trend", 'LINE',self)
+        # self.flat_top_bottom = Card_Item(FIF.FLAT_TOP_BOTTOM,"Flat Top/Bottom", 'LINE',self)
+        # self.disjoint_chanel = Card_Item(FIF.DISJOINT_CHANEL,"Disjoint Chanel", 'LINE',self)
         # add item to card
         # split tool button
-        self.menu.addWidget(self.parallel_chanel)
-        self.menu.addWidget(self.regression_trend)
-        self.menu.addWidget(self.flat_top_bottom)
-        self.menu.addWidget(self.disjoint_chanel)
-        self.menu.addSeparator()
+        # self.menu.addWidget(self.parallel_chanel)
+        # self.menu.addWidget(self.regression_trend)
+        # self.menu.addWidget(self.flat_top_bottom)
+        # self.menu.addWidget(self.disjoint_chanel)
+        # self.menu.addSeparator()
 
         pitchfork_header_wg = QWidget(self.menu)
         pitchfork_headerLayout = QHBoxLayout(pitchfork_header_wg)
@@ -91,21 +95,43 @@ class LINES(QFrame):
         pitchfork_headerLayout.setContentsMargins(5,0,0,0)
         self.menu.addWidget(pitchfork_header_wg)
 
-        self.pitchfork = Card_Item(FIF.PITCHFORK,"Pitchfork", 'LINE',self)
-        self.schiff_pitchfork = Card_Item(FIF.SCHIFF_PITCHFORK,"Schiff Pitchfork", 'LINE',self)
-        self.modify_schiff_pitchfork = Card_Item(FIF.MODIFY_SCHIFF_PITCHFORK,"Modified Schiff Pitchfork", 'LINE',self)
-        self.inside_pitchfork = Card_Item(FIF.INSIDE_PITCHFORK,"Inside Pitchfork", 'LINE',self)
+        # self.pitchfork = Card_Item(FIF.PITCHFORK,"Pitchfork", 'LINE',self)
+        # self.schiff_pitchfork = Card_Item(FIF.SCHIFF_PITCHFORK,"Schiff Pitchfork", 'LINE',self)
+        # self.modify_schiff_pitchfork = Card_Item(FIF.MODIFY_SCHIFF_PITCHFORK,"Modified Schiff Pitchfork", 'LINE',self)
+        # self.inside_pitchfork = Card_Item(FIF.INSIDE_PITCHFORK,"Inside Pitchfork", 'LINE',self)
 
-        self.menu.addWidget(self.pitchfork)
-        self.menu.addWidget(self.schiff_pitchfork)
-        self.menu.addWidget(self.modify_schiff_pitchfork)
-        self.menu.addWidget(self.inside_pitchfork)
+        # self.menu.addWidget(self.pitchfork)
+        # self.menu.addWidget(self.schiff_pitchfork)
+        # self.menu.addWidget(self.modify_schiff_pitchfork)
+        # self.menu.addWidget(self.inside_pitchfork)
 
         
         self.splitToolButton.setFlyout(self.menu)
         
         self._QLayout.addWidget(self.splitToolButton)
         #self.splitToolButton.dropButton.hide()
+    
+    def set_current_tool(self,tool_infor):
+        tool,icon = tool_infor[0],tool_infor[1]
+        self.current_tool = tool
+        self.splitToolButton.change_item(icon)
+        self.set_enable()
+        if self.trend_line == tool:
+            self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,"draw_trenlines"))
+        elif self.horizon_line == tool:
+            self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,"draw_horizontal_line"))
+        elif self.horizon_ray == tool:
+            self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,"draw_horizontal_ray"))
+        elif self.vertical_line == tool:
+            self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,"draw_verticallines"))
+    
+    
+    def set_enable(self):
+        if self.splitToolButton.button.isChecked():
+            self.is_enabled = True
+        else:
+            self.is_enabled = False
+    
     def enterEvent(self, event):
         #self.splitToolButton.dropButton.show()
         super().enterEvent(event)

@@ -30,7 +30,7 @@ class Volume(GraphicsObject):
         precision = 1
         self.has = {
             "name": f"Volume",
-            "y_axis_show":False,
+            "y_axis_show":True,
             "inputs":{
                     "source":self.chart.jp_candle,
                     "type":IndicatorType.VOLUME,

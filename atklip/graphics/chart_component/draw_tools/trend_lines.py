@@ -2,13 +2,13 @@
 from PySide6 import QtCore
 from PySide6.QtCore import Signal, QObject, Qt
 from PySide6.QtGui import QPainter, QPainterPath, QColor
-from atklip.graphics.pyqtgraph import functions as fn, ROI
+from atklip.graphics.pyqtgraph import functions as fn, ROI, LineSegmentROI
 from atklip.graphics.pyqtgraph.Point import Point
 
-from .custom_roi import CustomLineSegmentROI, MyHandle
+from .roi import CustomLineSegmentROI, MyHandle
 
 
-class TrendlinesROI(CustomLineSegmentROI):
+class TrendlinesROI(LineSegmentROI):
     """ Draw a trend line """
     on_click = Signal(QObject)
 
@@ -18,14 +18,21 @@ class TrendlinesROI(CustomLineSegmentROI):
     signal_change_width = Signal(int)
     signal_change_type = Signal(str)
     
-    def __init__(self, positions=None, pen=("#eaeaea"), chart=None):
+    def __init__(self, positions=None, pen=("#eaeaea"), drawtool=None):
         super().__init__(positions=positions,pen=pen, resizable=False)  # resizable Shift modifiers
-        self.chart = chart
+        
+        self.drawtool = drawtool
+        self.chart = drawtool.chart
+        self.chart.mouse_clicked_signal.connect(self.set_selected)
         self.popup_setting_tool = None
-        self.on_click.connect(self.chart.change_line_color_on_click)
-        self.on_click.connect(self.chart.main.show_popup_setting_tool)
+        self.has = {
+            "name": "rectangle",
+            "type": "drawtool",
+            "id": id
+        }
+        # self.on_click.connect(self.chart.show_popup_setting_tool)
         self.id = None
-
+        self.handleSize = 2
         self.isSelected = False
         self.drawing = True
         self.extend_left = False
@@ -37,20 +44,28 @@ class TrendlinesROI(CustomLineSegmentROI):
         self.signal_change_color.connect(self.change_color)
         self.signal_change_width.connect(self.change_width)
         self.signal_change_type.connect(self.change_type)
-        self.chart.mousepossiton_signal.connect(self.setPoint)
 
 
-    def selectedHandler(self, is_selected):
-        if is_selected:
+    def selectedHandler(self):
+        # print(self.isSelected)
+        if not self.isSelected:
             self.isSelected = True
             self.setSelected(True)
-            self.change_size_handle(3)
+            self.setMouseHover(True)
         else:
             self.isSelected = False
             self.setSelected(False)
-            self.change_size_handle(4)
-           
-    def hoverEvent(self, ev: QtCore.QEvent):
+            self.setMouseHover(False)
+    
+    def set_selected(self,obj=None):
+        # print(self.isSelected)
+        if obj == None or obj != self:
+            if self.isSelected:
+                self.isSelected = False
+                self.setSelected(False)
+                self.setMouseHover(False)
+    
+    def hoverEvent(self, ev):
         hover = False
         if not ev.isExit():
             if self.translatable and ev.acceptDrags(QtCore.Qt.MouseButton.LeftButton):
@@ -61,19 +76,22 @@ class TrendlinesROI(CustomLineSegmentROI):
                     hover=True
             if self.contextMenuEnabled():
                 ev.acceptClicks(QtCore.Qt.MouseButton.RightButton)
-        
-        if not self.isSelected:
-            if self.chart.draw_object: return
-            if hover:
-                self.setSelected(True)
-                ev.acceptClicks(QtCore.Qt.MouseButton.LeftButton)  ## If the ROI is hilighted, we should accept all clicks to avoid confusion.
-                ev.acceptClicks(QtCore.Qt.MouseButton.RightButton)
-                ev.acceptClicks(QtCore.Qt.MouseButton.MiddleButton)
                 
-                self.sigHoverEvent.emit(self)
-            else:
-                self.setSelected(False)
-
+        if hover:
+            self.isSelected = True
+            self.setSelected(True)
+            self.setMouseHover(True)
+            self.chart.mouse_clicked_signal.emit(self)
+            ev.acceptClicks(QtCore.Qt.MouseButton.LeftButton)  ## If the ROI is hilighted, we should accept all clicks to avoid confusion.
+            ev.acceptClicks(QtCore.Qt.MouseButton.RightButton)
+            ev.acceptClicks(QtCore.Qt.MouseButton.MiddleButton)
+            self.sigHoverEvent.emit(self)
+        else:
+            pass
+            # if not self.isSelected:
+            # self.setMouseHover(False)
+            # self.setSelected(False)
+    
     # def setMouseHover(self, hover):
     #     if hover:
     #         self.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -86,26 +104,21 @@ class TrendlinesROI(CustomLineSegmentROI):
         self.stateChanged(finish=True)
         self.update()
 
-    # def clicked_chart(self, ev):
-    #     pos_x, pos_y = self.chart.get_position_mouse_on_chart(ev)
-    #     if self.drawing:
-    #         self.setPoint([self.chart.draw_object, pos_x, pos_y])
-    #         self.chart.draw_object =None
-    #         self.finished = True
-    
 
-    def setPoint(self, data):
-        if not self.finished and data[0]=="drawed_trenlines":
+    def setPoint(self, pos_x,pos_y):
+        print(pos_x,pos_y)
+        if not self.finished:
             if self.chart.magnet_on:
-                pos_x, pos_y = self.chart.get_position_crosshair()
-            else:
-                pos_x, pos_y = self.chart.get_position_crosshair()
-                pos_y = data[2]
+                pos_x, pos_y = self.drawtool.get_position_crosshair()
+            
             point = Point(pos_x, pos_y)
             self.last_point = point
             lasthandle = self.handles[-1]['item']
-            self.removeHandle(lasthandle)
-            self.addPoint(self.last_point)
+            lasthandle.setPos(point* self.state['size'])
+            self.stateChanged(finish=True)
+            self.update()
+            # self.removeHandle(lasthandle)
+            # self.addPoint(self.last_point)
 
     def setObjectName(self, name):
         self.indicator_name = name
@@ -142,7 +155,6 @@ class TrendlinesROI(CustomLineSegmentROI):
     
     def delete(self):
         "xoa hien thi gia truc y"
-        self.price_axis.kwargs["horizontal_ray"].remove(self.id)
         self.deleteLater()
 
     def addHandle(self, info, index=None):
@@ -173,13 +185,15 @@ class TrendlinesROI(CustomLineSegmentROI):
         # h.
         return h
     
-    def mousePressEvent(self, ev):
-        print("mousePressEvent")
-        if ev.button() == Qt.MouseButton.LeftButton:
-            self.chart.draw_object =None
-            self.finished = True
-            self.on_click.emit(self)
-        ev.ignore()
+    # def mousePressEvent(self, ev):
+    #     print("mousePressEvent")
+    #     if ev.button() == Qt.MouseButton.LeftButton:
+    #         self.drawtool.drawing_object = None
+    #         self.drawtool.draw_object_name = None
+    #         self.finished = True
+    #         self.on_click.emit(self)
+    #     ev.accept()
+        # super().mousePressEvent()
 
     def update_trend_line(self, mapchart_trading, setting_tool_menu=None):
         if setting_tool_menu is None:
@@ -226,14 +240,17 @@ class TrendlinesROI(CustomLineSegmentROI):
         self.setPen(self.currentPen)
         self.update()
 
-    def mouseDragEvent(self, ev, axis=None, line=None):
-        if ev.button == Qt.KeyboardModifier.ShiftModifier:
-            return self.main.vb.mouseDragEvent(ev, axis)
-        if not self.locked:
-            return super().mouseDragEvent(ev)
-        elif self.locked:
-            ev.ignore()
-        ev.ignore()
+    # def mouseDragEvent(self, ev, axis=None, line=None):
+    #     print(self.isSelected,self.locked)
+    #     if ev.button == Qt.KeyboardModifier.ShiftModifier:
+    #         return self.chart.vb.mouseDragEvent(ev, axis)
+    #     if not self.locked:
+    #         self.isSelected = True
+    #         return super().mouseDragEvent(ev)
+    #     elif self.locked:
+    #         self.isSelected = False
+    #         ev.ignore()
+    #     ev.ignore()
 
     def mouseClickEvent(self, ev):
         if ev.button() == Qt.MouseButton.RightButton and self.isMoving:
@@ -247,15 +264,16 @@ class TrendlinesROI(CustomLineSegmentROI):
             self.sigClicked.emit(self, ev)
         elif ev.button() == Qt.MouseButton.LeftButton:
             # ev.ignore()
+            self.selectedHandler()
             self.on_click.emit(self)
         else:
             ev.ignore()
             
-    def mouseHandleReleaseEvent(self, ev):
-        print("zooo day___release___",ev)
-        if ev.button() == Qt.MouseButton.LeftButton:
-            self.parentItem().on_click.emit(self)
-        ev.accept()
+    # def mouseHandleReleaseEvent(self, ev):
+    #     print("zooo day___release___",ev)
+    #     if ev.button() == Qt.MouseButton.LeftButton:
+    #         self.parentItem().on_click.emit(self)
+    #     ev.accept()
 
     @property
     def endpoints(self):

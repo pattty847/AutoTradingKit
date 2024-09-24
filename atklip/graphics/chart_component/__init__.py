@@ -4,7 +4,6 @@ from .axisitem import *
 from .plotwidget import ViewPlotWidget
 from .viewbox import *
 from .plotitem import ViewPlotItem
-from .custom_replay_cut import CustomReplayObject
 from .proxy_signal import Signal_Proxy, SafeSignalUpdateGraph
 from .graph_spliter import GraphSplitter
 from .viewchart import Chart

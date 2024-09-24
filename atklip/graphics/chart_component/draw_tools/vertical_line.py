@@ -4,6 +4,9 @@ from PySide6 import QtCore
 from PySide6.QtGui import QColor
 from PySide6.QtCore import Signal,QObject,Qt,QPointF
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from atklip.graphics.chart_component.viewchart import Chart
 
 class Vertical_line(InfiniteLine):
     
@@ -16,19 +19,21 @@ class Vertical_line(InfiniteLine):
     signal_change_width = Signal(int)
     signal_change_type = Signal(str)
     
-    def __init__(self, parent=None, chart=None, id=None, pos=None, angle=90, pen=None, movable=False, bounds=None,
+    def __init__(self, chart=None, id=None, pos=None, angle=90, pen=None, movable=False, bounds=None,
                  hoverPen=None, label=None, labelOpts=None, span=(0, 1), markers=None, 
                  name=None):
         super(Vertical_line,self).__init__(pos, angle, pen, movable, bounds, hoverPen, label, labelOpts, span, markers, name)
-        self.chart = chart
+        self.chart:Chart = chart
         self.id = id
-        self.main = parent      # mapchart
         self.popup_setting_tool = None
         self.isSelected = False
-
-        self.on_click.connect(self.chart.change_line_color_on_click)
-        self.on_click.connect(self.main.main.show_popup_setting_tool)
-        self.change_pen_signal.connect(self.main.xAxis.change_value)
+        self.has = {
+            "x_axis_show":True,
+            "name": "rectangle",
+            "type": "drawtool",
+            "id": id
+        }
+        self.change_pen_signal.connect(self.chart.xAxis.change_value)
         self.locked = False
         self.color = "#2962ff"
         self.width = 1
@@ -137,8 +142,8 @@ class Vertical_line(InfiniteLine):
 
             if not self.moving:
                 return
-            if self.main.magnet_on:
-                pos_y = self.main.hLine.getYPos()
+            if self.chart.magnet_on:
+                pos_y = self.chart.vLine.getYPos()
                 self.setPos(QPointF((self.cursorOffset + self.mapToParent(ev.pos())).x(), pos_y))
             else:
                 self.setPos(self.cursorOffset + self.mapToParent(ev.pos()))
@@ -150,7 +155,6 @@ class Vertical_line(InfiniteLine):
 
     def hoverEvent(self, ev):
         if not self.isSelected:
-            if self.chart.draw_object: return
             if (not ev.isExit()) and self.movable and ev.acceptDrags(QtCore.Qt.MouseButton.LeftButton):
                 self.setMouseHover(True)
                 self.addMarker('o', size=6)

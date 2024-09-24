@@ -1,5 +1,6 @@
 # type: ignore
 from PySide6.QtWidgets import QWidget, QFrame 
+from PySide6.QtCore import Signal
 from atklip.gui.draw_bar.draw_lines import *
 from atklip.gui.draw_bar.draw_projection import *
 from atklip.gui.draw_bar.draw_fibonaci import *
@@ -20,31 +21,37 @@ from atklip.gui.qfluentwidgets.common import isDarkTheme, Theme
 
 from .draw_bar_ui import Ui_draw_bar
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from views.mainlayout import MainWidget
+
 class DRAW_BAR(QFrame,Ui_draw_bar):
+    sig_draw_object_name = Signal(tuple)
+    sig_reject_tool = Signal()
     def __init__(self,parent:QWidget=None):
         super().__init__(parent)
+        self.parent:MainWidget = self.parent()
         self.setupUi(self)
-        self.parent = parent
         self.items = []
         self._cursor = CURSOR(self)
         self.current_btn = self._cursor.splitToolButton
         #self.current_btn.setChecked(True)
         self.current_btn.set_icon_color()
         self.add_item(self._cursor)
-        self.add_item(LINES(self))
-        self.add_item(FIBONACCI(self))
-        self.add_item(PROJECTS(self))
-        self.add_item(BRUSHS(self))
-        self.add_item(TEXTS(self))
-        self.addSeparator()
-        self.add_item(MEASURE(self))
+        self.add_item(LINES(self,self.sig_draw_object_name))
+        # self.add_item(FIBONACCI(self))
+        # self.add_item(PROJECTS(self))
+        # self.add_item(BRUSHS(self))
+        # self.add_item(TEXTS(self))
+        # self.addSeparator()
+        # self.add_item(MEASURE(self))
         #self.addSeparator()
-        self.add_item(ZOOM(self))
-        self.add_item(MAGNET(self))
-        self.add_item(EYES(self))
-        self.addSeparator()
-        self.add_item(RECIRCLEBIN(self))
-        self._setting_layout.addWidget(FAVORITE(self))
+        # self.add_item(ZOOM(self))
+        # self.add_item(MAGNET(self))
+        # self.add_item(EYES(self))
+        # self.addSeparator()
+        # self.add_item(RECIRCLEBIN(self))
+        # self._setting_layout.addWidget(FAVORITE(self))
     
     def get_current_btn(self):
         if isinstance(self.current_btn, ShowmenuButton):

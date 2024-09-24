@@ -22,13 +22,17 @@ class Horizontal_line(InfiniteLine):
         super(Horizontal_line,self).__init__(pos, angle, pen, movable, bounds, hoverPen, label, labelOpts, span, markers, name)
         self.chart = chart
         self.id = id
-        self.main = parent      # mapchart
+        self.chart = parent      # mapchart
         self.popup_setting_tool = None
         self.isSelected = False
-
-        self.on_click.connect(self.chart.change_line_color_on_click)
-        self.on_click.connect(self.main.main.show_popup_setting_tool)
-        self.change_pen_signal.connect(self.main.yAxis.change_value)
+        self.has = {
+            "y_axis_show":True,
+            "name": "rectangle",
+            "type": "drawtool",
+            "id": id
+        }
+        # self.on_click.connect(self.chart.main.show_popup_setting_tool)
+        self.change_pen_signal.connect(self.chart.yAxis.change_value)
         self.locked = False
         self.color = "#2962ff"
         self.width = 1
@@ -138,8 +142,8 @@ class Horizontal_line(InfiniteLine):
 
             if not self.moving:
                 return
-            if self.main.magnet_on:
-                pos_y = self.main.hLine.getYPos()
+            if self.chart.magnet_on:
+                pos_y = self.chart.hLine.getYPos()
                 self.setPos(QPointF((self.cursorOffset + self.mapToParent(ev.pos())).x(), pos_y))
             else:
                 self.setPos(self.cursorOffset + self.mapToParent(ev.pos()))
@@ -151,7 +155,6 @@ class Horizontal_line(InfiniteLine):
 
     def hoverEvent(self, ev):
         if not self.isSelected:
-            if self.chart.draw_object: return
             if (not ev.isExit()) and self.movable and ev.acceptDrags(QtCore.Qt.MouseButton.LeftButton):
                 self.setMouseHover(True)
                 self.addMarker('o', size=6)

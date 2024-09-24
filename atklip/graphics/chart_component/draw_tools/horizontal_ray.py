@@ -4,7 +4,7 @@ from PySide6.QtCore import QObject, Signal, Qt, QPointF
 from PySide6.QtGui import QPainter, QPainterPath, QColor
 from atklip.graphics.pyqtgraph import functions as fn, Point, ROI
 
-from .custom_roi import MyLineNoHandleROI, CustomLineSegmentROI
+from .roi import MyLineNoHandleROI, CustomLineSegmentROI
 
 #from components.chart import TradingChart
 
@@ -22,9 +22,8 @@ class HorizontalRayNoHandle(MyLineNoHandleROI):
     
     def __init__(self, positions=None, pen=("#eaeaea"), parent=None):
         super().__init__(positions=positions,pen=pen, movable=False, resizable=False)
-        self.main = parent  # plot mapchart
-        self.on_click.connect(self.main.change_line_color_on_click)
-        self.on_click.connect(self.main.main.show_popup_setting_tool)
+        self.chart = parent  # plot mapchart
+        # self.on_click.connect(self.chart.main.show_popup_setting_tool)
         self.id = None
         self.isSelected = False
         
@@ -245,7 +244,7 @@ class HorizontalRayNoHandle(MyLineNoHandleROI):
     
     def paint(self, p, *args):
         
-        x_range = self.main.getAxis('bottom').range
+        x_range = self.chart.getAxis('bottom').range
         left_xrange = x_range[1]
         
         
@@ -266,7 +265,7 @@ class HorizontalRayNoHandle(MyLineNoHandleROI):
     
     def shape(self):
         
-        x_range = self.main.getAxis('bottom').range
+        x_range = self.chart.getAxis('bottom').range
         left_xrange = x_range[1]
         
         p = QPainterPath()
@@ -324,19 +323,23 @@ class Horizontal_ray(CustomLineSegmentROI):
     signal_change_width = Signal(int)
     signal_change_type = Signal(str)
     
-    def __init__(self, positions=None, pen=("#eaeaea"), parent=None):
+    def __init__(self, positions=None, pen=("#eaeaea"), chart=None):
         super().__init__(positions=positions,pen=pen, movable=False, resizable=False)
-        self.chart = parent  # plot mapchart
+        self.chart = chart  # plot mapchart
         self.vb = self.chart.vb
         self.price_axis = self.chart.getAxis('right')
         self.bottom_axis = self.chart.getAxis('bottom')
         self.isSelected = False
-
-        self.on_click.connect(self.chart.change_line_color_on_click)
-        try:
-            self.on_click.connect(self.chart.main.show_popup_setting_tool)
-        except:
-            pass
+        self.has = {
+            "y_axis_show":True,
+            "name": "rectangle",
+            "type": "drawtool",
+            "id": id
+        }
+        # try:  
+            # self.on_click.connect(self.chart.show_popup_setting_tool)
+        # except:
+        #     pass
         self.id = None
         
         self.dragMode = None
@@ -374,7 +377,6 @@ class Horizontal_ray(CustomLineSegmentROI):
             hover = True
                 
         if not self.isSelected:
-            if self.chart.draw_object: return
             if hover:
                 self.setSelected(True)
                 ev.acceptClicks(QtCore.Qt.MouseButton.LeftButton)  ## If the ROI is hilighted, we should accept all clicks to avoid confusion.

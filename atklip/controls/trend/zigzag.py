@@ -219,9 +219,6 @@ def zigzag(
 
     return df
 
-
-
-
 import numpy as np
 import pandas as pd
 from typing import List
@@ -231,91 +228,6 @@ from atklip.controls.ma_type import PD_MAType
 from atklip.controls.ohlcv import   OHLCV
 from atklip.controls.candle import JAPAN_CANDLE,HEIKINASHI,SMOOTH_CANDLE,N_SMOOTH_CANDLE
 from atklip.appmanager import CandleWorker
-
-
-
-def caculate_zz(list_zizgzag:list,ohlcv:OHLCV,percent: float):
-    if percent_caculator(list_zizgzag[0][1],list_zizgzag[1][1]) < percent:
-        if list_zizgzag[0][2] == 'low':
-            if list_zizgzag[0][1] > ohlcv.low:
-                list_zizgzag.pop(0)
-                list_zizgzag.append([ohlcv.index,ohlcv.low,'low'])
-            elif list_zizgzag[1][1] < ohlcv.high:
-                list_zizgzag[-1]=[ohlcv.index,ohlcv.high,'high']
-        elif list_zizgzag[0][2] == 'high':
-            if list_zizgzag[0][1] < ohlcv.high:
-                list_zizgzag.pop(0)
-                list_zizgzag.append([ohlcv.index,ohlcv.high,'high'])
-            elif list_zizgzag[1][1] > ohlcv.low:
-                list_zizgzag[-1]=[ohlcv.index,ohlcv.low,'low']
-    else:
-        if list_zizgzag[-1][2] == 'low':
-            if percent_caculator(list_zizgzag[-1][1],ohlcv.high) > percent:
-                list_zizgzag.append([ohlcv.index,ohlcv.high,'high'])
-            elif list_zizgzag[-1][1] > ohlcv.low:
-                if list_zizgzag[-1][0] == ohlcv.index:
-                    list_zizgzag[-1]=[ohlcv.index,ohlcv.low,'low']
-                else:
-                    list_zizgzag.append([ohlcv.index,ohlcv.low,'low'])
-        elif list_zizgzag[-1][2] == 'high':
-            if percent_caculator(list_zizgzag[-1][1],ohlcv.low) > percent:
-                list_zizgzag.append([ohlcv.index,ohlcv.low,'low'])
-            elif list_zizgzag[-1][1] < ohlcv.high:
-                if list_zizgzag[-1][0] == ohlcv.index:
-                    list_zizgzag[-1]=[ohlcv.index,ohlcv.high,'high']
-                else:
-                    list_zizgzag.append([ohlcv.index,ohlcv.high,'high'])
-    return list_zizgzag
-
-
-def update_zz(list_zizgzag:list,ohlcv:OHLCV,percent: float):
-    if list_zizgzag[-1][2] == 'low':
-        if percent_caculator(list_zizgzag[-1][1],ohlcv.high) > percent:
-            list_zizgzag.append([ohlcv.index,ohlcv.high,'high'])
-        elif list_zizgzag[-1][1] > ohlcv.low:
-            list_zizgzag[-1]=[ohlcv.index,ohlcv.low,'low']
-    elif list_zizgzag[-1][2] == 'high':
-        if percent_caculator(list_zizgzag[-1][1],ohlcv.low) > percent:
-            list_zizgzag.append([ohlcv.index,ohlcv.low,'low'])
-        elif list_zizgzag[-1][1] < ohlcv.high:
-            list_zizgzag[-1]=[ohlcv.index,ohlcv.high,'high']
-    return list_zizgzag
-
-
-def load_zz(list_zizgzag:list,candles: List[OHLCV],percent: float):
-    last_point = list_zizgzag[0]
-    last_time = last_point[0]
-
-    _new_zz = [[candles[0].index,candles[0].low,'low'],[candles[0].index,candles[0].high,'high']]
-    
-    for i in range(len(candles)):
-        if candles[i].index > last_time:
-            _new_zz.pop(0)
-            if _new_zz[-1][0] == last_time:
-                _new_zz.pop(-1)
-            list_zizgzag = _new_zz + list_zizgzag
-            return list_zizgzag
-
-        _new_zz = caculate_zz(_new_zz,candles[i],percent)
-    
-    _new_zz.pop(0)
-    if _new_zz[-1][0] == last_time:
-        _new_zz.pop(-1)
-    list_zizgzag = _new_zz + list_zizgzag
-    return list_zizgzag
-
-
-
-
-def my_zigzag(list_zizgzag:list=[],candles: List[OHLCV]=None,percent: float=0.5):
-    if list_zizgzag == []:
-        list_zizgzag = [[candles[0].index,candles[0].low,'low'],[candles[0].index,candles[0].high,'high']]
-    for i in range(len(candles)):
-        list_zizgzag = caculate_zz(list_zizgzag,candles[i],percent)
-    
-    list_zizgzag.pop(0)
-    return list_zizgzag
-
 
 
 
@@ -559,6 +471,87 @@ class OLD_ZIGZAG(QObject):
                                                                 INDICATOR["zz_dev"].to_numpy()
             self.sig_update_candle.emit()
 
+
+
+def caculate_zz(list_zizgzag:list,ohlcv:OHLCV,percent: float):
+    if percent_caculator(list_zizgzag[0][1],list_zizgzag[1][1]) < percent:
+        if list_zizgzag[0][2] == 'low':
+            if list_zizgzag[0][1] > ohlcv.low:
+                list_zizgzag.pop(0)
+                list_zizgzag.append([ohlcv.index,ohlcv.low,'low'])
+            elif list_zizgzag[1][1] < ohlcv.high:
+                list_zizgzag[-1]=[ohlcv.index,ohlcv.high,'high']
+        elif list_zizgzag[0][2] == 'high':
+            if list_zizgzag[0][1] < ohlcv.high:
+                list_zizgzag.pop(0)
+                list_zizgzag.append([ohlcv.index,ohlcv.high,'high'])
+            elif list_zizgzag[1][1] > ohlcv.low:
+                list_zizgzag[-1]=[ohlcv.index,ohlcv.low,'low']
+    else:
+        if list_zizgzag[-1][2] == 'low':
+            if percent_caculator(list_zizgzag[-1][1],ohlcv.high) > percent:
+                list_zizgzag.append([ohlcv.index,ohlcv.high,'high'])
+            elif list_zizgzag[-1][1] > ohlcv.low:
+                if list_zizgzag[-1][0] == ohlcv.index:
+                    list_zizgzag[-1]=[ohlcv.index,ohlcv.low,'low']
+                else:
+                    list_zizgzag.append([ohlcv.index,ohlcv.low,'low'])
+        elif list_zizgzag[-1][2] == 'high':
+            if percent_caculator(list_zizgzag[-1][1],ohlcv.low) > percent:
+                list_zizgzag.append([ohlcv.index,ohlcv.low,'low'])
+            elif list_zizgzag[-1][1] < ohlcv.high:
+                if list_zizgzag[-1][0] == ohlcv.index:
+                    list_zizgzag[-1]=[ohlcv.index,ohlcv.high,'high']
+                else:
+                    list_zizgzag.append([ohlcv.index,ohlcv.high,'high'])
+    return list_zizgzag
+
+
+def update_zz(list_zizgzag:list,ohlcv:OHLCV,percent: float):
+    if list_zizgzag[-1][2] == 'low':
+        if percent_caculator(list_zizgzag[-1][1],ohlcv.high) > percent:
+            list_zizgzag.append([ohlcv.index,ohlcv.high,'high'])
+        elif list_zizgzag[-1][1] > ohlcv.low:
+            list_zizgzag[-1]=[ohlcv.index,ohlcv.low,'low']
+    elif list_zizgzag[-1][2] == 'high':
+        if percent_caculator(list_zizgzag[-1][1],ohlcv.low) > percent:
+            list_zizgzag.append([ohlcv.index,ohlcv.low,'low'])
+        elif list_zizgzag[-1][1] < ohlcv.high:
+            list_zizgzag[-1]=[ohlcv.index,ohlcv.high,'high']
+    return list_zizgzag
+
+
+def load_zz(list_zizgzag:list,candles: List[OHLCV],percent: float):
+    last_point = list_zizgzag[0]
+    last_time = last_point[0]
+
+    _new_zz = [[candles[0].index,candles[0].low,'low'],[candles[0].index,candles[0].high,'high']]
+    
+    for i in range(len(candles)):
+        if candles[i].index > last_time:
+            _new_zz.pop(0)
+            if _new_zz[-1][0] == last_time:
+                _new_zz.pop(-1)
+            list_zizgzag = _new_zz + list_zizgzag
+            return list_zizgzag
+
+        _new_zz = caculate_zz(_new_zz,candles[i],percent)
+    
+    _new_zz.pop(0)
+    if _new_zz[-1][0] == last_time:
+        _new_zz.pop(-1)
+    list_zizgzag = _new_zz + list_zizgzag
+    return list_zizgzag
+
+
+def my_zigzag(list_zizgzag:list=[],candles: List[OHLCV]=None,percent: float=0.5):
+    if list_zizgzag == []:
+        list_zizgzag = [[candles[0].index,candles[0].low,'low'],[candles[0].index,candles[0].high,'high']]
+    for i in range(len(candles)):
+        list_zizgzag = caculate_zz(list_zizgzag,candles[i],percent)
+    
+    list_zizgzag.pop(0)
+    return list_zizgzag
 
 
 class ZIGZAG(QObject):

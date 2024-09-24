@@ -1,5 +1,5 @@
 from PySide6.QtGui import QColor
-from atklip.graphics.pyqtgraph import *
+from pyqtgraph import *
 
 
 class CustomReplayObject(GraphicsObject):
@@ -7,6 +7,11 @@ class CustomReplayObject(GraphicsObject):
     def __init__(self) -> None:
         """Choose colors of candle"""
         GraphicsObject.__init__(self)
+        self.has = {
+            "name": "rectangle",
+            "type": "drawtool",
+            "id": id
+        }
         self.picture = QtGui.QPicture()
         self.colorline = 'white'
         self.setAcceptHoverEvents(True)
@@ -34,8 +39,7 @@ class CustomReplayObject(GraphicsObject):
         p.drawRect(QtCore.QRectF(x0, h0, x1, h1))
         p.end()
 
-        
-        #self.prepareGeometryChange()
+        self.prepareGeometryChange()
         self.informViewBoundsChanged()
         # self.bounds = [None, None]
         # self.sigPlotChanged.emit(self)

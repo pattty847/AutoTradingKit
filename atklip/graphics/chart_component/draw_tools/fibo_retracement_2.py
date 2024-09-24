@@ -9,7 +9,7 @@ from PySide6.QtWidgets import QWidget
 from atklip.graphics.pyqtgraph import TextItem, mkPen
 from atklip.graphics.pyqtgraph.Point import Point
 
-from .custom_roi import SpecialROI, MyHandle, _FiboLineSegment
+from .roi import SpecialROI, MyHandle, _FiboLineSegment
 
 DEFAULTS_FIBO = [1.0, 0.786, 0.618, 0.5, 0.382, 0.236, 0.0]
 DEFAULTS_COLOR = [(120,123,134,200),(242,54,69,200),(255,152,0,200),(76,175,80,200),(8,153,129,200),(0,188,212,200),(120,123,134,200),(41, 98, 255,200),(242, 54, 69, 200),(156,39,176,200),(233, 30, 99,200),(206,147,216,200),(159,168,218,200),(255,204,128,200),
@@ -41,7 +41,11 @@ class FiboROI2(SpecialROI):
         super().__init__(pos, size, angle, invertible, maxBounds, snapSize, scaleSnap, translateSnap, rotateSnap, parent, pen, hoverPen, handlePen, handleHoverPen, movable, rotatable, resizable, removable, aspectLocked)
         #self.generate_lines()
         self.id = None
-
+        self.has = {
+            "name": "rectangle",
+            "type": "drawtool",
+            "id": id
+        }
         self.parent, self.chart=parent, main    # parent is viewbox
         self.isSelected = False
 
@@ -120,8 +124,7 @@ class FiboROI2(SpecialROI):
         self.finished = False
         self.first_click = False
         self.drawed = False
-        self.chart.mousepossiton_signal.connect(self.setPoint)
-        self.on_click.connect(self.chart.main.show_popup_setting_tool)
+        # self.on_click.connect(self.chart.show_popup_setting_tool)
 
     def selectedHandler(self, is_selected):
         if is_selected:
@@ -152,7 +155,6 @@ class FiboROI2(SpecialROI):
             hover = True
                 
         if not self.isSelected:
-            if self.chart.draw_object: return
             if hover:
                 self.setSelected(True)
                 ev.acceptClicks(QtCore.Qt.MouseButton.LeftButton)  ## If the ROI is hilighted, we should accept all clicks to avoid confusion.
@@ -212,7 +214,6 @@ class FiboROI2(SpecialROI):
     def mousePressEvent(self, ev):
         if ev.button() == Qt.MouseButton.LeftButton:
             print(780, "Left button ne")
-            self.chart.draw_object =None
             self.finished = True
         ev.ignore()
 
@@ -284,8 +285,7 @@ class FiboROI2(SpecialROI):
             raise Exception("Either an event or a position must be given.")
         # h2 = segment.handles[1]['item']
         # print(598, pos, self)
-        if self.chart.draw_object or not self.finished:
-            self.chart.draw_object =None
+        if not self.finished:
             self.finished = True
         self.on_click.emit(self)
 
@@ -359,9 +359,9 @@ class FiboROI2(SpecialROI):
         self.colors_borders = color_border
 
         if "fibo_sp_line" in self.objectName():
-            self.chart.main.fibo_special_levels = list_level
-            self.chart.main.fibo_special_rects = color_rect
-            self.chart.main.fibo_special_colors = color_line
+            self.chart.fibo_special_levels = list_level
+            self.chart.fibo_special_rects = color_rect
+            self.chart.fibo_special_colors = color_line
         else:
             self.chart.custom_fibonacci_levels = list_level
             self.chart.custom_colors_rect = color_rect

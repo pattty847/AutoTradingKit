@@ -39,7 +39,7 @@ class BasicZIGZAG(PlotDataItem):
         
         self.has = {
             "name": f"ZIGZAG 10 1",
-            "y_axis_show":True,
+            "y_axis_show":False,
             "inputs":{
                     "source":self.chart.jp_candle,
                     "source_name": self.chart.jp_candle.source_name,

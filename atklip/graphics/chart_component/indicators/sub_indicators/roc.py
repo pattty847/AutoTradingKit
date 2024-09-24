@@ -38,7 +38,7 @@ class BasicROC(PlotDataItem):
         
         self.has = {
             "name" :f"ROC 3",
-            "y_axis_show":True,
+            "y_axis_show":F,
             "inputs":{
                     "source":self.chart.jp_candle,
                     "source_name": self.chart.jp_candle.source_name,
