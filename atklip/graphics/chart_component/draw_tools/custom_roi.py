@@ -8,9 +8,9 @@ from PySide6 import QtCore
 from PySide6.QtCore import Signal, QObject, QPointF, Qt, QRectF, QCoreApplication, QPoint
 from PySide6.QtGui import QPainter, QPainterPath, QColor, QTransform
 from PySide6.QtWidgets import QWidget, QMenu
-from atklip.graphics.pyqtgraph import functions as fn, LineSegmentROI, ROI, TextItem, TargetItem, mkPen, UIGraphicsItem, GraphicsObject
-from atklip.graphics.pyqtgraph.Point import Point
-from atklip.graphics.pyqtgraph.graphicsItems.ROI import Handle
+from pyqtgraph import functions as fn, LineSegmentROI, ROI, TextItem, TargetItem, mkPen, UIGraphicsItem, GraphicsObject
+from pyqtgraph.Point import Point
+from pyqtgraph.graphicsItems.ROI import Handle
 
 DEFAULTS_FIBO = [1.0, 0.786, 0.618, 0.5, 0.382, 0.236, 0.0]
 DEFAULTS_COLOR = [(120,123,134,200),(242,54,69,200),(255,152,0,200),(76,175,80,200),(8,153,129,200),(0,188,212,200),(120,123,134,200),(41, 98, 255,200),(242, 54, 69, 200),(156,39,176,200),(233, 30, 99,200),(206,147,216,200),(159,168,218,200),(255,204,128,200),
@@ -49,10 +49,10 @@ class MyHandle(Handle, UIGraphicsItem):
         self.radius = radius
         self.typ = typ
         self.pen = fn.mkPen(pen)
-        self.brush = fn.mkBrush("#363a45")
+        self.brush = fn.mkBrush("#ff7028")
         self.currentBrush = self.brush
         self.hoverPen = fn.mkPen(hoverPen)
-        self.hoverBrush = fn.mkBrush("#363a45")
+        self.hoverBrush = fn.mkBrush("#ff7028")
         self.currentPen = self.pen
         self.pen.setWidth(0)
         self.pen.setCosmetic(True)
@@ -227,7 +227,7 @@ class MyHandle(Handle, UIGraphicsItem):
             if s is None:
                 return self.path
             self._shape = s
-              ## beware--this can cause the view to adjust, which would immediately invalidate the shape.
+            self.prepareGeometryChange()  ## beware--this can cause the view to adjust, which would immediately invalidate the shape.
         return self._shape
     
     def boundingRect(self):
@@ -397,7 +397,7 @@ class SpecialROI(ROI):
 
     def __init__(self, *args, **kwargs):
         ROI.__init__(self, *args, **kwargs)
-        self.handleSize = 5
+        self.handleSize = 4
         self.yoff = False
         self.xoff = False
         self.locked = False
@@ -770,7 +770,8 @@ class FiboROI(SpecialROI):
         self.finished = False
         self.first_click = False
         self.drawed = False
-        # self.on_click.connect(self.chart.show_popup_setting_tool)
+        self.chart.mousepossiton_signal.connect(self.setPoint)
+        self.on_click.connect(self.chart.main.show_popup_setting_tool)
    
     def selectedHandler(self, is_selected):
         if is_selected:
@@ -826,6 +827,7 @@ class FiboROI(SpecialROI):
     def mousePressEvent(self, ev):
         if ev.button() == Qt.MouseButton.LeftButton:
             print(780, "Left button ne")
+            self.chart.draw_object =None
             self.finished = True
         ev.ignore()
 
@@ -889,7 +891,8 @@ class FiboROI(SpecialROI):
             raise Exception("Either an event or a position must be given.")
         # h2 = segment.handles[1]['item']
         # print(598, pos, self)
-        if not self.finished:
+        if self.chart.draw_object or not self.finished:
+            self.chart.draw_object =None
             self.finished = True
         self.on_click.emit(self)
 
@@ -963,9 +966,9 @@ class FiboROI(SpecialROI):
         self.colors_borders = color_border
 
         if "fibo_sp_line" in self.objectName():
-            self.chart.fibo_special_levels = list_level
-            self.chart.fibo_special_rects = color_rect
-            self.chart.fibo_special_colors = color_line
+            self.chart.main.fibo_special_levels = list_level
+            self.chart.main.fibo_special_rects = color_rect
+            self.chart.main.fibo_special_colors = color_line
         else:
             self.chart.custom_fibonacci_levels = list_level
             self.chart.custom_colors_rect = color_rect
@@ -1196,7 +1199,7 @@ class FiboSpecialROI(SpecialROI, QWidget):
         self.addScaleHandle([0, 0], [1, 1])
         self.addScaleHandle([1, 1], [0, 0])
         self.popup_setting_tool = None
-        # self.on_click.connect(self.chart.show_popup_setting_tool)
+        # self.on_click.connect(self.chart.main.show_popup_setting_tool)
         self.precision = self.chart.get_trading_rules_precision(self.chart.symbol)
         self.setAcceptedMouseButtons(Qt.MouseButton.LeftButton)
         self.movable = movable
@@ -1324,9 +1327,9 @@ class FiboSpecialROI(SpecialROI, QWidget):
 
         if "fibo_sp_line" in self.objectName():
             # print(1113, list_level)
-            self.chart.fibo_special_levels = list_level
-            self.chart.fibo_special_colors = color_line
-            self.chart.fibo_special_rects = color_rect
+            self.chart.main.fibo_special_levels = list_level
+            self.chart.main.fibo_special_colors = color_line
+            self.chart.main.fibo_special_rects = color_rect
         else:
             self.chart.custom_fibonacci_levels = list_level
             self.chart.custom_colors_rect = color_rect
@@ -1598,7 +1601,7 @@ class TextBoxROI(TargetItem):
         self.locked = False
         self.parent, self.chart=parent, main
         self.is_selected = False
-        # self.on_click.connect(self.chart.show_popup_setting_tool)
+        self.on_click.connect(self.chart.main.show_popup_setting_tool)
         # self.on_click.connect(self.get_pos_point)
 
         self.signal_change_font_size.connect(self.change_font_size)

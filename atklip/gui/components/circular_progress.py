@@ -120,7 +120,7 @@ class CircularProgress(QWidget):
             worker = ProcessWorker(self.loop_set_value)
             worker.signals.sig_process_value.connect(self.set_value)
             worker.signals.finished.connect(self.stop_process)
-            self.threadpool.start(worker)
+            worker.start()
         else:
             self.is_running = False
 

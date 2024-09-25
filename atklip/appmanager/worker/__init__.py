@@ -1,7 +1,7 @@
 
 
 from .qthreadpools import ProcessWorker,\
-    ThreadingAsyncWorker,RequestAsyncWorker,FastWorker,CandleWorker,SimpleWorker
+    ThreadingAsyncWorker,RequestAsyncWorker,FastWorker,CandleWorker,SimpleWorker, QProcessWorker
     
 from .qthreads import  QtheadAsyncWorker
 

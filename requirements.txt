@@ -13,9 +13,8 @@ ccxt
 PyOpenGL
 cython
 dotenv
-# ipython
-# matplotlib
-# matplotlib-inline
+fastapi
+uvicorn
 multitasking
 pandas-datareader
 pyarrow

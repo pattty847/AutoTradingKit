@@ -36,7 +36,7 @@ class DrawTool(QObject):
         self.draw_object_name = None
     def draw_trenlines(self, ev: QEvent):
         pos_x, pos_y = self.get_position_mouse_on_chart(ev)
-        line = TrendlinesROI(positions=[[pos_x, pos_y],[pos_x, pos_y]], pen=("#2962ff"), drawtool=self)
+        line = TrendlinesROI(positions=[[pos_x, pos_y],[pos_x, pos_y]], pen=("#2962ff"),drawtool=self)
         self.chart.addItem(line)
         self.num_trendline += 1
         module_name = "Trend Line " + str(self.num_trendline)

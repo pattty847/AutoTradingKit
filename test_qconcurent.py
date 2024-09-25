@@ -1,54 +1,66 @@
-from concurrent.futures import ProcessPoolExecutor, as_completed
-import time
-from multiprocessing import Process, Queue
+# PyQt with server code
+from multiprocessing import Process
+import multiprocessing
+from fastapi import FastAPI
+import threading
+import uvicorn
+from PySide6.QtWidgets import (QMainWindow, QApplication, QTextEdit)
+import sys
+from PySide6.QtCore import (QRect, Signal, QObject)
 
-# Hàm giả lập nhiệm vụ xử lý trong tiến trình con
-def worker_function(i, q):
-    n = 0
-    while True:
-        time.sleep(0.01)  # Giả lập công việc tốn thời gian
-        result = f"Kết quả từ tiến trình {i} -- {n} "
-        n+=1
-        q.put(result)  # Đưa kết quả vào queue
-        # yield result
 
-def listen(num_processes,queue):
-    while True:
-        time.sleep(0.01)
+import asyncio
+import concurrent.futures
+
+from test_ import app as api_app
+
+
+app = api_app
+
+
+class Signals(QObject):
+    text_signal = Signal(str)
+
+signals = Signals()
+
+
+# main window app in main thread
+class MainWindow(QMainWindow):
+    def __init__(self, *args, **kwargs):
+        super(MainWindow, self).__init__(*args, **kwargs)
+        self.setGeometry(QRect(0, 0, 400, 400))
+        self._initial_widgets()
+        self._create_server()
         
-        for _ in range(num_processes):
-            # print(queue)
-            result = queue.get()  # Lấy kết quả từ queue
-            print(f"Xử lý kết quả trong main_thread: {result}")
-            
+        # future = concurrent.futures.ThreadPoolExecutor().submit(self._create_server)
+        
+        signals.text_signal.connect(self.set_textEdit)
 
-def main():
-    # Tạo một Queue để chia sẻ dữ liệu giữa các tiến trình
-    queue = Queue()
+    def _initial_widgets(self):
+        self.textedit = QTextEdit(self)
+        self.textedit.setGeometry(QRect(100, 0, 100, 100))
+        self.textedit.setReadOnly(True)
+        self.setCentralWidget(self.textedit)
 
-    # Tạo danh sách các tiến trình
-    processes = []
-    num_processes = 5  # Số tiến trình cần chạy
+    def _create_server(self):
+        thread = multiprocessing.Process(target=uvicorn.run, kwargs={
+                                                    "app": "test_qconcurent:app", 
+                                                    "host": "localhost",
+                                                    "port": 81,
+                                                    "ws_max_queue":1000,
+                                                    "limit_max_requests":100000,
+                                                    "workers": 2 
+                                                },daemon=False)
+        thread.start()
+        # thread.terminate()
+        print(thread.pid)
 
-    # Khởi tạo và chạy các tiến trình
-    for i in range(num_processes):
-        p = Process(target=worker_function, args=(i, queue))
-        processes.append(p)
-        p.start()
-    with ProcessPoolExecutor(5) as executor:
-        # Tạo future task và chạy trong process riêng
-        # future = executor.submit(worker_function(5, queue))
-        future = executor.submit(listen(num_processes, queue))
+    def set_textEdit(self, data):
+        self.textedit.setText(data)
 
-    # Thu thập kết quả từ queue trong main_thread
-    
 
-    # Đợi tất cả tiến trình kết thúc
-    for p in processes:
-        p.join()
-
-    print("Tất cả tiến trình đã hoàn thành.")
-
-# Gọi hàm main để chạy chương trình
 if __name__ == "__main__":
-    main()
+    _app = QApplication(sys.argv)
+    window = MainWindow()
+    window.show()
+    _app.exec()

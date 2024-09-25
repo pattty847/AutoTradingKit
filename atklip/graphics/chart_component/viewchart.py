@@ -425,7 +425,7 @@ class Chart(ViewPlotWidget):
         self.sig_reset_exchange = False
 
     def mousePressEvent(self, ev):
-        print(self.drawtool.draw_object_name)
+        # print(self.drawtool.draw_object_name)
         if self.mouse_on_vb and ev.button() & Qt.MouseButton.LeftButton:
             if self.drawtool.draw_object_name ==  "draw_trenlines":
                 self.drawtool.draw_trenlines(ev)
@@ -448,11 +448,12 @@ class Chart(ViewPlotWidget):
             elif self.drawtool.draw_object_name ==  "draw_verticallines":
                 self.drawtool.draw_verticallines(ev)
             else:
-                if self.drawtool.draw_object_name in ["drawed_trenlines", "drawed_fibo_retracement", "drawed_fibo_retracement_2", "drawed_rectangle", "drawed_date_price_range"]:
-                    self.drawtool.draw_object_name =None
-                    self.drawtool.drawing_object.finished = True
-                    self.drawtool.drawing_object.on_click.emit(self.drawtool.drawing_object)
-                    self.drawtool.drawing_object = None
+                pass
+                # if self.drawtool.draw_object_name in ["drawed_trenlines", "drawed_fibo_retracement", "drawed_fibo_retracement_2", "drawed_rectangle", "drawed_date_price_range"]:
+                #     self.drawtool.draw_object_name =None
+                #     self.drawtool.drawing_object.finished = True
+                #     self.drawtool.drawing_object.on_click.emit(self.drawtool.drawing_object)
+                #     self.drawtool.drawing_object = None
                 
         super().mousePressEvent(ev)
 

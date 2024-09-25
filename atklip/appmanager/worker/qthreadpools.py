@@ -8,7 +8,7 @@ import traceback
 from typing import Callable
 from PySide6.QtCore import QObject, Signal, QRunnable, Slot, QThreadPool
 
-from .threadpool import QThreadPool_global,ThreadPoolExecutor_global
+from .threadpool import QThreadPool_global,ThreadPoolExecutor_global,ProcessPoolExecutor_global
 
 
 class WorkerSignals(QObject):
@@ -18,6 +18,34 @@ class WorkerSignals(QObject):
     update_signal = Signal(list)
     sig_object = Signal(object)
     sig_process_value = Signal(float)
+
+
+class QProcessWorker(QObject):
+    "Worker này dùng để update  data trong một cho graph object khi có data mới"
+    finished = Signal()
+    def __init__(self,fn:Callable=None, *args, **kwargs):
+        super(QProcessWorker, self).__init__()
+        self.fn = fn
+        self.args = args
+        self.kwargs = kwargs.copy()
+        self.threadpool = ProcessPoolExecutor_global
+        
+    def start_thread(self):
+        try:
+            funture = self.threadpool.submit(self.run)
+        except RuntimeError:
+            pass
+    
+    @Slot()
+    def run(self):
+        try:
+            self.fn(*self.args, **self.kwargs)
+        except Exception as e:
+            traceback.print_exception(e)
+        finally:
+            self.finished.emit()
+            self.deleteLater()
+
 
 class ProcessWorker(QRunnable):
     "Worker này dùng để update  data trong một cho graph object khi có data mới"
@@ -29,9 +57,13 @@ class ProcessWorker(QRunnable):
         self.signals = WorkerSignals() 
         self.kwargs['sig_process_value'] = self.signals.sig_process_value
         self.kwargs['finished'] = self.signals.finished
-
+        self.threadpool = QThreadPool_global
         self.is_interrupted = False
         self.setAutoDelete(True)
+    
+    def start(self):
+        self.threadpool.start(self)
+    
     @Slot()
     def run(self):
         try:

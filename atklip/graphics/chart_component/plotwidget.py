@@ -325,7 +325,7 @@ class ViewPlotWidget(PlotWidget):
 
     def mouseMoveEvent(self, ev: QEvent) -> None:
         """Mouse moved in PlotWidget"""
-        if not self.is_mouse_click and not self.drawtool.drawing_object:
+        if not self.is_mouse_click:# and not self.drawtool.drawing_object:
             try:
                 self.ev_pos = ev.position()
             except:
