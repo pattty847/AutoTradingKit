@@ -236,7 +236,7 @@ class OLD_ZIGZAG(QObject):
     sig_add_candle = Signal()
     sig_reset_all = Signal()
     signal_delete = Signal()    
-    sig_add_historic = Signal() 
+    sig_add_historic = Signal(int) 
     def __init__(self,parent,_candles,legs,deviation,retrace=False,last_extreme=False) -> None:
         super().__init__(parent=parent)
         self._candles: JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE =_candles
@@ -428,7 +428,7 @@ class OLD_ZIGZAG(QObject):
             self.first_gen = True
             self.is_genering = False
         
-        self.sig_add_historic.emit()
+        self.sig_add_historic.emit(_len)
     
     def add(self,new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]
@@ -559,7 +559,7 @@ class ZIGZAG(QObject):
     sig_add_candle = Signal()
     sig_reset_all = Signal()
     signal_delete = Signal()    
-    sig_add_historic = Signal() 
+    sig_add_historic = Signal(int) 
     def __init__(self,parent,_candles,legs,deviation,retrace=False,last_extreme=False) -> None:
         super().__init__(parent=parent)
         self._candles: JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE =_candles
@@ -710,14 +710,14 @@ class ZIGZAG(QObject):
             self.is_genering = False
         self.sig_reset_all.emit()
     
-    def add_historic(self,n:int):
+    def add_historic(self,_len:int):
         self.is_genering = True
         self.x_data,self.y_data = self.caculate(self.list_zizgzag,self._candles.candles,"load")
         self.is_genering = False
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
-        self.sig_add_historic.emit()
+        self.sig_add_historic.emit(_len)
     
     def add(self,new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]

@@ -181,12 +181,9 @@ class MyHandle(Handle, UIGraphicsItem):
             pos = ev.scenePos() + self.cursorOffset
             self.currentPen = self.hoverPen
             self.currentBrush = self.hoverBrush
-
-            # self.plotItem.vb.mapViewToScene  get_position_crosshair()
-            # print("moving handle", pos, self.parentItem().chart.vb.mapViewToScene(QPointF(position[0],position[1])))
-            if self.parentItem().chart.magnet_on:
-                position = self.parentItem().chart.get_position_crosshair()
-                pos = self.parentItem().chart.vb.mapViewToScene(QPointF(position[0],position[1]))
+            # if self.parentItem().chart.magnet_on:
+            #     position = self.parentItem().chart.get_position_crosshair()
+            #     pos = self.parentItem().chart.vb.mapViewToScene(QPointF(position[0],position[1]))
             self.movePoint(pos, ev.modifiers(), finish=False)
 
     def movePoint(self, pos, modifiers=None, finish=True):

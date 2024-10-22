@@ -1,13 +1,16 @@
 import time
 from typing import TYPE_CHECKING
 import numpy as np
-from atklip.graphics.pyqtgraph import GraphicsObject, PlotDataItem
+from atklip.graphics.pyqtgraph import GraphicsObject
+from atklip.graphics.chart_component.base_items.plotdataitem import PlotDataItem
+
 from atklip.graphics.chart_component.base_items import PriceLine
 from PySide6.QtCore import Signal, QObject,Qt,QRectF
 from PySide6.QtGui import QPicture,QPainter
 from PySide6.QtWidgets import QGraphicsItem
 
 from atklip.controls import PD_MAType,IndicatorType,TSI
+from atklip.controls.models import TSIModel
 
 from atklip.appmanager import FastWorker
 from atklip.app_utils import *
@@ -28,7 +31,7 @@ class BasicTSI(GraphicsObject):
     
     sig_change_indicator_name = Signal(str)
 
-    def __init__(self,get_last_pos_worker,chart,panel,id = None,clickable=True) -> None:
+    def __init__(self,get_last_pos_worker,chart,panel) -> None:
         """Choose colors of candle"""
         GraphicsObject.__init__(self)
         #super().__init__(clickable=clickable)
@@ -64,7 +67,7 @@ class BasicTSI(GraphicsObject):
                     }
                     }
      
-        self.id = id
+        self.id = self.chart.objmanager.add(self)
         
 
         self.on_click.connect(self.on_click_event)
@@ -79,11 +82,11 @@ class BasicTSI(GraphicsObject):
         self.price_line = PriceLine()  # for z value
         self.price_line.setParentItem(self)
         
-        self.price_high = PriceLine(color="green",width=2,movable=True)  # for z value
+        self.price_high = PriceLine(color="green",width=1,movable=True)  # for z value
         self.price_high.setParentItem(self)
         self.price_high.setPos(self.has["inputs"]["price_high"])
         
-        self.price_low = PriceLine(color="red",width=2,movable=True)  # for z value
+        self.price_low = PriceLine(color="red",width=1,movable=True)  # for z value
         self.price_low.setParentItem(self)
         self.price_low.setPos(self.has["inputs"]["price_low"])
         
@@ -95,16 +98,28 @@ class BasicTSI(GraphicsObject):
         
         self.sig_change_yaxis_range.connect(get_last_pos_worker, Qt.ConnectionType.AutoConnection)
         
-        self.INDICATOR  = TSI(parent=self,
-                                _candles=self.has["inputs"]["source"],
-                                source=  self.has["inputs"]["type"],
-                                fast_period=self.has["inputs"]["fast_period"],
-                                slow_period=self.has["inputs"]["slow_period"],
-                                signal_period=self.has["inputs"]["signal_period"],
-                                ma_type=self.has["inputs"]["ma_type"])
+        self.INDICATOR  = TSI(self.has["inputs"]["source"], self.model.__dict__)
         
         self.chart.sig_update_source.connect(self.change_source,Qt.ConnectionType.AutoConnection)   
         self.signal_delete.connect(self.delete)
+    
+    
+    @property
+    def id(self):
+        return self.chart_id
+    
+    @id.setter
+    def id(self,_chart_id):
+        self.chart_id = _chart_id
+        
+    @property
+    def model(self) -> dict:
+        return TSIModel(self.id,"STOCHRSI",self.chart.jp_candle.source_name,
+                        self.has["inputs"]["fast_period"],
+                        self.has["inputs"]["slow_period"],
+                        self.has["inputs"]["signal_period"],
+                        self.has["inputs"]["type"],
+                        self.has["inputs"]["ma_type"].name.lower())
     
     def disconnect_signals(self):
         try:
@@ -112,6 +127,7 @@ class BasicTSI(GraphicsObject):
             self.INDICATOR.sig_update_candle.disconnect(self.setdata_worker)
             self.INDICATOR.sig_add_candle.disconnect(self.setdata_worker)
             self.INDICATOR.signal_delete.disconnect(self.replace_source)
+            self.INDICATOR.sig_add_historic.disconnect(self.add_historic_worker)
         except RuntimeError:
                     pass
     
@@ -163,7 +179,7 @@ class BasicTSI(GraphicsObject):
             if self.chart.sources[_source] != self.has["inputs"][_input]:
                 self.has["inputs"]["source"] = self.chart.sources[_source]
                 self.has["inputs"]["source_name"] = self.chart.sources[_source].source_name
-                self.INDICATOR.change_inputs(_input,self.has["inputs"]["source"])
+                self.INDICATOR.change_input(self.has["inputs"]["source"])
         elif _input == "price_high":
             if _source != self.has["inputs"]["price_high"]:
                 self.has["inputs"]["price_high"] = _source
@@ -178,32 +194,51 @@ class BasicTSI(GraphicsObject):
         if update:
             self.has["name"] = f"TSI {self.has["inputs"]["ma_type"].name} {self.has["inputs"]["fast_period"]} {self.has["inputs"]["slow_period"]} {self.has["inputs"]["signal_period"]} {self.has["inputs"]["type"]}"
             self.sig_change_indicator_name.emit(self.has["name"])
-            self.INDICATOR.change_inputs(_input,_source)
+            self.INDICATOR.change_input(dict_ta_params=self.model.__dict__)
 
+    def set_Data(self,data):
+        xData = data[0]
+        lb = data[1]
+        cb = data[2]
+        self.tsi_line.setData(xData,lb)
+        self.signal.setData(xData,cb)
+
+    def add_historic_Data(self,data):
+        xData = data[0]
+        lb = data[1]
+        cb = data[2]
+        self.tsi_line.addHistoricData(xData,lb)
+        self.signal.addHistoricData(xData,cb)
+        
+    def update_Data(self,data):
+        xData = data[0]
+        lb = data[1]
+        cb = data[2]
+        self.tsi_line.updateData(xData,lb)
+        self.signal.updateData(xData,cb)
+    
     def setdata_worker(self):
         self.worker = None
         self.worker = FastWorker(self.update_data)
-        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.signals.setdata.connect(self.update_Data,Qt.ConnectionType.QueuedConnection)
         self.worker.start()    
 
-    def add_historic_worker(self):
+    def add_historic_worker(self,_len):
         self.worker = None
-        self.worker = FastWorker(self.load_historic_data)
-        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker = FastWorker(self.load_historic_data,_len)
+        self.worker.signals.setdata.connect(self.add_historic_Data,Qt.ConnectionType.QueuedConnection)
         self.worker.start()
     
-    def load_historic_data(self,setdata):
-        xdata,tsi,signalma = self.INDICATOR.get_data()
+    def load_historic_data(self,_len,setdata):
+        xdata,tsi,signalma = self.INDICATOR.get_data(stop=_len)
         setdata.emit((xdata,tsi,signalma))
     
     def update_data(self,setdata):
-        xdata,tsi,signalma = self.INDICATOR.get_data()
+        xdata,tsi,signalma = self.INDICATOR.get_data(start=-1)
         setdata.emit((xdata,tsi,signalma))
         self.last_pos.emit((self.has["inputs"]["indicator_type"],signalma[-1]))
         self._panel.sig_update_y_axis.emit()
         
-
-    "old___________"
     
     def get_inputs(self):
         inputs =  {"source":self.has["inputs"]["source"],
@@ -282,19 +317,6 @@ class BasicTSI(GraphicsObject):
         rect = QRectF(self._start,h_low,self._stop-self._start,h_high-h_low)
         return rect   
     
-    def set_Data(self,data):
-        xData = data[0]
-        lb = data[1]
-        cb = data[2]
-
-        try:
-            self.tsi_line.setData(xData,lb)
-            self.signal.setData(xData,cb)
-        except Exception as e:
-            pass
-        
-        # self.prepareGeometryChange()
-        # self.informViewBoundsChanged()
         
     def get_last_point(self):
         _time = self.signal.xData[-1]

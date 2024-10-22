@@ -1,13 +1,15 @@
 import time
 from typing import Tuple, List,TYPE_CHECKING
 import numpy as np
-from atklip.graphics.pyqtgraph import GraphicsObject, PlotDataItem
+from atklip.graphics.chart_component.base_items.plotdataitem import PlotDataItem
+
 from atklip.graphics.chart_component.base_items import PriceLine
 from PySide6.QtCore import Signal, QObject,Qt,QRectF
 from PySide6.QtGui import QColor,QPicture,QPainter
 from PySide6.QtWidgets import QGraphicsItem
 
 from atklip.controls import PD_MAType,IndicatorType,STC
+from atklip.controls.models import STCModel
 
 from atklip.appmanager import FastWorker
 from atklip.app_utils import *
@@ -28,9 +30,8 @@ class BasicSTC(PlotDataItem):
     
     sig_change_indicator_name = Signal(str)
 
-    def __init__(self,get_last_pos_worker,chart,panel,id = None,clickable=True) -> None:
+    def __init__(self,get_last_pos_worker,chart,panel) -> None:
         """Choose colors of candle"""
-        # GraphicsObject.__init__(self)
         super().__init__()
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
         self.chart:Chart = chart
@@ -65,7 +66,7 @@ class BasicSTC(PlotDataItem):
                     }
                     }
      
-        self.id = id
+        self.id = self.chart.objmanager.add(self)
         
         self.on_click.connect(self.on_click_event)
         self.signal_visible.connect(self.setVisible)
@@ -91,17 +92,27 @@ class BasicSTC(PlotDataItem):
         
         self.sig_change_yaxis_range.connect(get_last_pos_worker, Qt.ConnectionType.AutoConnection)
         
-        self.INDICATOR  = STC(parent=self,
-                               _candles=self.has["inputs"]["source"], 
-                                source=self.has["inputs"]["type"],
-                                tclength=self.has["inputs"]["length_period"],
-                                fast=self.has["inputs"]["fast_period"],
-                                slow=self.has["inputs"]["slow_period"],
-                                ma_type=self.has["inputs"]["ma_type"])
+        self.INDICATOR  = STC(self.has["inputs"]["source"], self.model.__dict__)
         
         self.chart.sig_update_source.connect(self.change_source,Qt.ConnectionType.AutoConnection)   
         self.signal_delete.connect(self.delete)
     
+    @property
+    def id(self):
+        return self.chart_id
+    
+    @id.setter
+    def id(self,_chart_id):
+        self.chart_id = _chart_id
+        
+    @property
+    def model(self) -> dict:
+        return STCModel(self.id,"STC",self.chart.jp_candle.source_name,
+                        self.has["inputs"]["type"],
+                        self.has["inputs"]["length_period"],
+                        self.has["inputs"]["fast_period"],
+                        self.has["inputs"]["slow_period"],
+                        self.has["inputs"]["ma_type"].name.lower())
     
     def disconnect_signals(self):
         try:
@@ -109,6 +120,7 @@ class BasicSTC(PlotDataItem):
             self.INDICATOR.sig_update_candle.disconnect(self.setdata_worker)
             self.INDICATOR.sig_add_candle.disconnect(self.setdata_worker)
             self.INDICATOR.signal_delete.disconnect(self.replace_source)
+            self.INDICATOR.sig_add_historic.disconnect(self.add_historic_worker)
         except RuntimeError:
                     pass
     
@@ -185,14 +197,14 @@ class BasicSTC(PlotDataItem):
             if self.chart.sources[_source] != self.has["inputs"][_input]:
                 self.has["inputs"]["source"] = self.chart.sources[_source]
                 self.has["inputs"]["source_name"] = self.chart.sources[_source].source_name
-                self.INDICATOR.change_inputs(_input,self.has["inputs"]["source"])
+                self.INDICATOR.change_input(self.has["inputs"]["source"])
         elif _source != self.has["inputs"][_input]:
                 self.has["inputs"][_input] = _source
                 update = True
         if update:
             self.has["name"] = f"STC {self.has["inputs"]["ma_type"].name} {self.has["inputs"]["length_period"]} {self.has["inputs"]["fast_period"]} {self.has["inputs"]["slow_period"]} {self.has["inputs"]["type"]}"
             self.sig_change_indicator_name.emit(self.has["name"])
-            self.INDICATOR.change_inputs(_input,_source)
+            self.INDICATOR.change_input(dict_ta_params=self.model.__dict__)
     
     def update_styles(self, _input):
         _style = self.has["styles"][_input]
@@ -210,37 +222,50 @@ class BasicSTC(PlotDataItem):
         else:
             self.hide()
 
-    def setdata_worker(self):
-        self.worker = None
-        self.worker = FastWorker(self.update_data)
-        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
-        self.worker.start()    
-    def add_historic_worker(self):
-        self.worker = None
-        self.worker = FastWorker(self.load_historic_data)
-        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
-        self.worker.start()
-    
-    def load_historic_data(self,setdata):
-        xdata,stc,macd,stoch = self.INDICATOR.get_data()
-        setdata.emit((xdata,stc,macd,stoch))
     def set_Data(self,data):
         xData = data[0]
         lb = data[1]
         cb = data[2]
         ub = data[3]
-        try:
-            self.setData(xData,lb)
-            self.macd_line.setData(xData,cb)
-            self.stoch_line.setData(xData,ub)
-        except Exception as e:
-            pass
-        
-        # self.prepareGeometryChange()
-        # self.informViewBoundsChanged()
+        self.setData(xData,lb)
+        self.macd_line.setData(xData,cb)
+        self.stoch_line.setData(xData,ub)
 
+    def add_historic_Data(self,data):
+        xData = data[0]
+        lb = data[1]
+        cb = data[2]
+        ub = data[3]
+        self.addHistoricData(xData,lb)
+        self.macd_line.addHistoricData(xData,cb)
+        self.stoch_line.addHistoricData(xData,ub)
+        
+    def update_Data(self,data):
+        xData = data[0]
+        lb = data[1]
+        cb = data[2]
+        ub = data[3]
+        self.updateData(xData,lb)
+        self.macd_line.updateData(xData,cb)
+        self.stoch_line.updateData(xData,ub)
+    
+    def setdata_worker(self):
+        self.worker = None
+        self.worker = FastWorker(self.update_data)
+        self.worker.signals.setdata.connect(self.update_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.start()    
+    def add_historic_worker(self,_len):
+        self.worker = None
+        self.worker = FastWorker(self.load_historic_data,_len)
+        self.worker.signals.setdata.connect(self.add_historic_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.start()
+    
+    def load_historic_data(self,_len,setdata):
+        xdata,stc,macd,stoch = self.INDICATOR.get_data(stop=_len)
+        setdata.emit((xdata,stc,macd,stoch))
+    
     def update_data(self,setdata):
-        xdata,stc,macd,stoch = self.INDICATOR.get_data()
+        xdata,stc,macd,stoch = self.INDICATOR.get_data(start=-1)
         setdata.emit((xdata,stc,macd,stoch))
         self.last_pos.emit((self.has["inputs"]["indicator_type"],stc[-1]))
         self._panel.sig_update_y_axis.emit()

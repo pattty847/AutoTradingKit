@@ -90,7 +90,7 @@ def supertrend(
 
     _props = f"_{length}_{multiplier}"
     data = {
-        f"SUPERT{_props}": trend,
+        f"SUPERTt{_props}": trend,
         f"SUPERTd{_props}": dir_,
         f"SUPERTl{_props}": long,
         f"SUPERTs{_props}": short
@@ -109,3 +109,291 @@ def supertrend(
         df.fillna(kwargs["fillna"], inplace=True)
 
     return df
+
+
+import numpy as np
+import pandas as pd
+from typing import List
+from atklip.controls.ohlcv import   OHLCV
+from atklip.controls.candle import JAPAN_CANDLE,HEIKINASHI,SMOOTH_CANDLE,N_SMOOTH_CANDLE
+from atklip.app_api.workers import ApiThreadPool
+
+from PySide6.QtCore import Signal,QObject
+
+class SuperTrend(QObject):
+    sig_update_candle = Signal()
+    sig_add_candle = Signal()
+    sig_reset_all = Signal()
+    signal_delete = Signal()    
+    sig_add_historic = Signal(int)
+    def __init__(self,_candles,dict_ta_params) -> None:
+        super().__init__(parent=None)
+
+        self._candles: JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE =_candles
+                
+        self.source:str = dict_ta_params.get("source")       
+        self.slow_period:int = dict_ta_params.get("slow_period") 
+        self.fast_period:int = dict_ta_params.get("fast_period") 
+        self.signal_period:int = dict_ta_params.get("signal_period") 
+        self.ma_type: str = dict_ta_params.get("ma_type") 
+        self.offset :int=dict_ta_params.get("drift",0)
+
+        #self.signal_delete.connect(self.deleteLater)
+        self.first_gen = False
+        self.is_genering = True
+        self.is_current_update = False
+        self.is_histocric_load = False
+        self.name = f"MACD {self.source} {self.ma_type} {self.slow_period} {self.fast_period} {self.signal_period}"
+
+        self.df = pd.DataFrame([])
+        self.worker = ApiThreadPool
+        
+        self.xdata,self.macd_data,self.histogram,self.signalma = [],[],[],[]
+
+        self.connect_signals()
+    
+    @property
+    def source_name(self)-> str:
+        return self._source_name
+    @source_name.setter
+    def source_name(self,source_name):
+        self._source_name = source_name
+    
+    def change_input(self,candles=None,dict_ta_params:dict={}):
+        if candles != None:
+            self.disconnect_signals()
+            self._candles : JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE= candles
+            self.connect_signals()
+        
+        if dict_ta_params != {}:
+            self.source:str = dict_ta_params.get("source")       
+            self.slow_period:int = dict_ta_params.get("slow_period") 
+            self.fast_period:int = dict_ta_params.get("fast_period") 
+            self.signal_period:int = dict_ta_params.get("signal_period") 
+            self.ma_type: str = dict_ta_params.get("ma_type") 
+            self.offset :int=dict_ta_params.get("drift",0)
+            
+            ta_name:str=dict_ta_params.get("ta_name")
+            obj_id:str=dict_ta_params.get("obj_id") 
+            
+            ta_param = f"{obj_id}-{ta_name}-{self.source}-{self.ma_type}-{self.slow_period}-{self.fast_period}-{self.signal_period}"
+
+            self.indicator_name = ta_param
+        
+        self.first_gen = False
+        self.is_genering = True
+        self.is_current_update = False
+        
+        self.started_worker()
+    
+    def disconnect_signals(self):
+        try:
+            self._candles.sig_reset_all.disconnect(self.started_worker)
+            self._candles.sig_update_candle.disconnect(self.update_worker)
+            self._candles.sig_add_candle.disconnect(self.add_worker)
+            self._candles.signal_delete.disconnect(self.signal_delete)
+            self._candles.sig_add_historic.disconnect(self.add_historic_worker)
+        except RuntimeError:
+                    pass
+    
+    def connect_signals(self):
+        self._candles.sig_reset_all.connect(self.started_worker)
+        self._candles.sig_update_candle.connect(self.update_worker)
+        self._candles.sig_add_candle.connect(self.add_worker)
+        self._candles.sig_add_historic.connect(self.add_historic_worker)
+        self._candles.signal_delete.connect(self.signal_delete)
+    
+    
+    def change_source(self,_candles:JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE):
+        self.disconnect_signals()
+        self._candles =_candles
+        self.connect_signals()
+        self.started_worker()
+    
+    
+    @property
+    def indicator_name(self):
+        return self.name
+    @indicator_name.setter
+    def indicator_name(self,_name):
+        self.name = _name
+    
+    def get_df(self,n:int=None):
+        if not n:
+            return self.df
+        return self.df.tail(n)
+    
+    def get_data(self,start:int=0,stop:int=0):
+        if self.xdata == []:
+            return [],[],[],[]
+        if start == 0 and stop == 0:
+            x_data = self.xdata
+            macd_data,signalma,histogram=self.macd_data,self.signalma,self.histogram
+        elif start == 0 and stop != 0:
+            x_data = self.xdata[:stop]
+            macd_data,signalma,histogram=self.macd_data[:stop],self.signalma[:stop],self.histogram[:stop]
+        elif start != 0 and stop == 0:
+            x_data = self.xdata[start:]
+            macd_data,signalma,histogram=self.macd_data[start:],self.signalma[start:],self.histogram[start:]
+        else:
+            x_data = self.xdata[start:stop]
+            macd_data,signalma,histogram=self.macd_data[start:stop],self.signalma[start:stop],self.histogram[start:stop]
+        return np.array(x_data),np.array(macd_data),np.array(signalma),np.array(histogram)
+    
+    def get_last_row_df(self):
+        return self.df.iloc[-1] 
+
+    
+    def update_worker(self,candle):
+        self.worker.submit(self.update,candle)
+
+    def add_worker(self,candle):
+        self.worker.submit(self.add,candle)
+
+    
+    def add_historic_worker(self,n):
+        self.worker.submit(self.add_historic,n)
+
+    def started_worker(self):
+        self.worker.submit(self.fisrt_gen_data)
+    
+    
+    def paire_data(self,INDICATOR:DataFrame):
+        try:
+            column_names = INDICATOR.columns.tolist()
+            SUPERT_name = ''
+            SUPERTd_name = ''
+            SUPERTl_name = ''
+            SUPERTs_name = ''
+            for name in column_names:
+                if name.__contains__("SUPERTt"):
+                    SUPERT_name = name
+                elif name.__contains__("SUPERTd"):
+                    SUPERTd_name = name
+                elif name.__contains__("SUPERTl"):
+                    SUPERTl_name = name
+                elif name.__contains__("SUPERTs"):
+                    SUPERTs_name = name
+                    
+
+            SUPERTt = INDICATOR[SUPERT_name].dropna().round(4)
+            SUPERTd = INDICATOR[SUPERTd_name].dropna().round(4)
+            SUPERTl = INDICATOR[SUPERTl_name].dropna().round(4)
+            SUPERTs = INDICATOR[SUPERTs_name].dropna().round(4)
+            return SUPERTt,SUPERTd,SUPERTl,SUPERTs
+        except:
+            return Series([]),Series([]),Series([])
+    def caculate(self,df: pd.DataFrame):
+        INDICATOR = supertrend(high=df["high"], 
+                                low=df["low"], 
+                                close=df["close"],
+                                length = self.length, 
+                                atr_length = self.atr_length,
+                                multiplier = self.multiplier,
+                                atr_mamode = self.ma_type,
+                                )
+        return self.paire_data(INDICATOR)
+    
+    def fisrt_gen_data(self):
+        self.is_current_update = False
+        self.is_genering = True
+        self.df = pd.DataFrame([])
+        
+        df:pd.DataFrame = self._candles.get_df()
+        
+        SUPERTt,SUPERTd,SUPERTl,SUPERTs = self.caculate(df)
+        _len = min([len(SUPERTt),len(SUPERTd),len(SUPERTl),len(SUPERTs)])
+        _index = df["index"]
+        self.df = pd.DataFrame({
+                            'index':_index.tail(_len),
+                            "SUPERTt":SUPERTt.tail(_len),
+                            "SUPERTd":SUPERTd.tail(_len),
+                            "SUPERTl":SUPERTl.tail(_len),
+                            "SUPERTs":SUPERTs.tail(_len)
+                            })
+        
+        self.xdata,self.SUPERTt,self.SUPERTd,self.SUPERTl,self.SUPERTs = self.df["index"].to_list(),\
+                                                                    self.df["SUPERTt"].to_list(),\
+                                                                    self.df["SUPERTd"].to_list(),\
+                                                                    self.df["SUPERTl"].to_list(),\
+                                                                    self.df["SUPERTs"].to_list(),
+        
+        self.is_genering = False
+        if self.first_gen == False:
+            self.first_gen = True
+            self.is_genering = False
+        self.sig_reset_all.emit()
+    
+    def add_historic(self,n:int):
+        self.is_genering = True
+        self.is_histocric_load = False
+        _pre_len = len(self.df)
+        df:pd.DataFrame = self._candles.get_df().iloc[:-1*_pre_len]
+        
+        SUPERTt,SUPERTd,SUPERTl,SUPERTs = self.caculate(df)
+        _len = min([len(SUPERTt),len(SUPERTd),len(SUPERTl),len(SUPERTs)])
+        _index = df["index"]
+        _df = pd.DataFrame({
+                            'index':_index.tail(_len),
+                            "SUPERTt":SUPERTt.tail(_len),
+                            "SUPERTd":SUPERTd.tail(_len),
+                            "SUPERTl":SUPERTl.tail(_len),
+                            "SUPERTs":SUPERTs.tail(_len)
+                            })
+        
+        self.df = pd.concat([_df,self.df],ignore_index=True)
+        
+        self.xdata = _df["index"].to_list() + self.xdata
+        self.SUPERTt = _df["SUPERTt"].to_list() + self.SUPERTt
+        self.SUPERTd = _df["SUPERTd"].to_list() + self.SUPERTd
+        self.SUPERTl = _df["SUPERTl"].to_list() + self.SUPERTl
+        self.SUPERTs = _df["SUPERTs"].to_list() + self.SUPERTs
+
+        self.is_genering = False
+        if self.first_gen == False:
+            self.first_gen = True
+            self.is_genering = False
+        self.is_histocric_load = True
+        self.sig_add_historic.emit(_len)
+    
+    
+    def add(self,new_candles:List[OHLCV]):
+        new_candle:OHLCV = new_candles[-1]
+        self.is_current_update = False
+        if (self.first_gen == True) and (self.is_genering == False):
+            df:pd.DataFrame = self._candles.get_df(self.slow_period*5)
+                    
+            macd_data,histogram,signalma = self.caculate(df)
+            
+            new_frame = pd.DataFrame({
+                                    'index':[new_candle.index],
+                                    "macd":[macd_data.iloc[-1]],
+                                    "histogram":[histogram.iloc[-1]],
+                                    "signalma":[signalma.iloc[-1]]
+                                    })
+            
+            self.df = pd.concat([self.df,new_frame],ignore_index=True)
+                                
+            self.xdata,self.macd_data,self.histogram,self.signalma = self.df["index"].to_list(),self.df["macd"].to_list(),\
+                                                self.df["histogram"].to_list(),self.df["signalma"].to_list()
+            
+            self.sig_add_candle.emit()
+            self.is_current_update = True
+        
+    def update(self, new_candles:List[OHLCV]):
+        new_candle:OHLCV = new_candles[-1]
+        self.is_current_update = False
+        if (self.first_gen == True) and (self.is_genering == False):
+            df:pd.DataFrame = self._candles.get_df(self.slow_period*5)
+                    
+            macd_data,histogram,signalma = self.caculate(df)
+                    
+            self.df.iloc[-1] = [new_candle.index,macd_data.iloc[-1],histogram.iloc[-1],signalma.iloc[-1]]
+                    
+            self.xdata,self.macd_data,self.histogram,self.signalma = self.df["index"].to_list(),self.df["macd"].to_list(),\
+                                                self.df["histogram"].to_list(),self.df["signalma"].to_list()
+            
+            self.sig_update_candle.emit()
+            self.is_current_update = True
+            
+

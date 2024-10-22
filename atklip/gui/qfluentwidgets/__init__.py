@@ -10,15 +10,10 @@ Examples are available at https://github.com/zhiyiYo/PyQt-Fluent-Widgets/tree/Py
 
 :copyright: (c) 2021 by zhiyiYo.
 :license: GPLv3 for non-commercial project, see README for more details.
-
-https://github.com/zhiyiYo/PyQt-Fluent-Widgets/commits/PySide6/     XEM có gì mới ở đây
-
-đã cập nhật đến 1.5.8  19/7/2024
-
 """
 
-# __version__ = "1.5.8"
-# __author__ = "zhiyiYo" 
+__version__ = "1.7.0"
+__author__ = "zhiyiYo"
 
 from .components import *
 from .common import *

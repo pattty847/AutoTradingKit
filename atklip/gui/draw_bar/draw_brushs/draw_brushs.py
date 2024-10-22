@@ -21,31 +21,33 @@ class BRUSHS(QFrame):
         self._QLayout.setAlignment(Qt.AlignLeft)
 
         self.splitToolButton = ShowmenuButton(FIF.BRUSH,self.parent)
-
+        self.current_tool = None
+        self.is_enabled = False
         #create menu
         self.menu = RoundMenu(parent=self)
         self.menu.setFixedWidth(200)
-        line_header_wg = QWidget(self.menu)
-        headerLayout = QHBoxLayout(line_header_wg)
-        line_headerLabel = TitleLabel("BRUSHS")
-        line_headerLabel.setFixedHeight(25)
         color = QColor(206, 206, 206) if isDarkTheme() else QColor(0, 0, 0)
-        line_headerLabel.setStyleSheet('QLabel{color: '+color.name()+'}')
-        setFont(line_headerLabel, 13, QFont.DemiBold)
-        headerLayout.addWidget(line_headerLabel)
-        headerLayout.setContentsMargins(5,0,0,0)
-        self.menu.addWidget(line_header_wg)
-
-        self.brush = Card_Item(FIF.BRUSH,"Brush", 'BRUSHS',self)
-        self.highlighter = Card_Item(FIF.HIGHLIGHTER,"Highlighter", 'BRUSHS',self)
-
-        # add item to card
-        self.brush.resize(250, 40)
         
-        self.menu.addWidget(self.brush)
-        self.menu.addWidget(self.highlighter)
-        # split tool button
-        self.menu.addSeparator()
+        # line_header_wg = QWidget(self.menu)
+        # headerLayout = QHBoxLayout(line_header_wg)
+        # line_headerLabel = TitleLabel("BRUSHS")
+        # line_headerLabel.setFixedHeight(25)
+        # line_headerLabel.setStyleSheet('QLabel{color: '+color.name()+'}')
+        # setFont(line_headerLabel, 13, QFont.DemiBold)
+        # headerLayout.addWidget(line_headerLabel)
+        # headerLayout.setContentsMargins(5,0,0,0)
+        # self.menu.addWidget(line_header_wg)
+
+        # self.brush = Card_Item(FIF.BRUSH,"Brush", 'BRUSHS',self)
+        # self.highlighter = Card_Item(FIF.HIGHLIGHTER,"Highlighter", 'BRUSHS',self)
+
+        # # add item to card
+        # self.brush.resize(250, 40)
+        
+        # self.menu.addWidget(self.brush)
+        # self.menu.addWidget(self.highlighter)
+        # # split tool button
+        # self.menu.addSeparator()
 
         chanel_header_wg = QWidget(self.menu)
         chanel_headerLayout = QHBoxLayout(chanel_header_wg)
@@ -61,6 +63,8 @@ class BRUSHS(QFrame):
         self.arrow = Card_Item(FIF.ARROW,"Arrow", 'BRUSHS',self)
         self.arrow_mark_up = Card_Item(FIF.ARROW_MAKER_UP,"Arrow Mark Up", 'BRUSHS',self)
         self.arrow_mark_down = Card_Item(FIF.ARROW_MAKER_DOWN,"Arrow Mark Down", 'BRUSHS',self)
+        
+        self.arrow_marker.resize(250, 40)
         # add item to card
         # split tool button
         self.menu.addWidget(self.arrow_marker)
@@ -84,11 +88,12 @@ class BRUSHS(QFrame):
         self.path = Card_Item(FIF.PATH,"Path", 'BRUSHS',self)
         self.circle = Card_Item(FIF.CIRCLE,"Circle", 'BRUSHS',self)
         self.elipse = Card_Item(FIF.ELIPSE,"Elipse", 'BRUSHS',self)
-        self.polyline = Card_Item(FIF.POLIGON,"Polyline", 'BRUSHS',self)
-        self.triangle = Card_Item(FIF.TRIANGLE,"Triangle", 'BRUSHS',self)
-        self.arc = Card_Item(FIF.ARC,"Arc", 'BRUSHS',self)
-        self.curve = Card_Item(FIF.CURVE,"Curve", 'BRUSHS',self)
-        self.double_curve = Card_Item(FIF.DOUBLE_CURVE,"Double Curve", 'BRUSHS',self)
+        
+        # self.polyline = Card_Item(FIF.POLIGON,"Polyline", 'BRUSHS',self)
+        # self.triangle = Card_Item(FIF.TRIANGLE,"Triangle", 'BRUSHS',self)
+        # self.arc = Card_Item(FIF.ARC,"Arc", 'BRUSHS',self)
+        # self.curve = Card_Item(FIF.CURVE,"Curve", 'BRUSHS',self)
+        # self.double_curve = Card_Item(FIF.DOUBLE_CURVE,"Double Curve", 'BRUSHS',self)
         
 
         self.menu.addWidget(self.rectangle)
@@ -96,11 +101,12 @@ class BRUSHS(QFrame):
         self.menu.addWidget(self.path)
         self.menu.addWidget(self.circle)
         self.menu.addWidget(self.elipse)
-        self.menu.addWidget(self.polyline)
-        self.menu.addWidget(self.triangle)
-        self.menu.addWidget(self.arc)
-        self.menu.addWidget(self.curve)
-        self.menu.addWidget(self.double_curve)
+        
+        # self.menu.addWidget(self.polyline)
+        # self.menu.addWidget(self.triangle)
+        # self.menu.addWidget(self.arc)
+        # self.menu.addWidget(self.curve)
+        # self.menu.addWidget(self.double_curve)
 
 
         
@@ -114,7 +120,18 @@ class BRUSHS(QFrame):
         self.current_tool = tool
         self.splitToolButton.change_item(icon)
         self.set_enable()
-        self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,"draw_trenlines"))
+        if self.rectangle == tool:
+            self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,"draw_rectangle"))
+        elif self.rotated_rectangle == tool:
+            self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,"draw_rotated_rectangle"))
+        elif self.path == tool:
+            self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,"draw_path"))
+        elif self.circle == tool:
+            self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,"draw_fib_retracement_2"))
+        elif self.elipse == tool:
+            self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,"draw_fib_retracement_2"))
+
+        
     def set_enable(self):
         if self.splitToolButton.button.isChecked():
             self.is_enabled = True

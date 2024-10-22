@@ -2,15 +2,16 @@ import time
 from typing import Tuple, List,TYPE_CHECKING
 
 import numpy as np
-from atklip.graphics.pyqtgraph import functions as fn,PlotDataItem
+from atklip.graphics.pyqtgraph import functions as fn
 from PySide6.QtCore import Signal, QObject,Qt,QRectF
 from PySide6.QtWidgets import QGraphicsItem
 from atklip.controls import PD_MAType
 
+from atklip.graphics.chart_component.base_items.plotdataitem import PlotDataItem
 from atklip.controls.ma import MA
-from atklip.graphics.chart_component.base_items import PlotLineItem
 from atklip.appmanager import FastWorker
 from atklip.app_utils import *
+from atklip.controls.models import MAModel
 if TYPE_CHECKING:
     from atklip.graphics.chart_component.viewchart import Chart
 
@@ -23,7 +24,7 @@ class BasicMA(PlotDataItem):
     sig_change_yaxis_range = Signal()
     sig_change_indicator_name = Signal(str)
 
-    def __init__(self,chart,indicator_type: PD_MAType,pen:str="yellow",length:int=30,_type:str="close",id = None,clickable=True) -> None:
+    def __init__(self,chart,indicator_type: PD_MAType,pen:str="yellow",length:int=30,_type:str="close") -> None:
         """Choose colors of candle"""
         super().__init__()
         
@@ -31,9 +32,8 @@ class BasicMA(PlotDataItem):
         self.setCacheMode(QGraphicsItem.CacheMode.DeviceCoordinateCache)
         # self.setCacheMode(QGraphicsItem.CacheMode.ItemCoordinateCache)
         self.setZValue(999)
-        
         self.chart:Chart = chart
-        
+
         self.has = {
             "name": f"{indicator_type.value} {_type} {length}",
             "y_axis_show":False,
@@ -52,35 +52,47 @@ class BasicMA(PlotDataItem):
                     'style': Qt.PenStyle.SolidLine,}
         }
         
+        self.id = self.chart.objmanager.add(self)
+        
         self.opts.update({'pen':pen})
         self._pen = pen
-        self.id = id
         self.is_reset = False
         # self.xData, self.yData = np.array([]),np.array([])
         
-        self.INDICATOR  = MA(self,self.has["inputs"]["source"], self.has["inputs"]["type"],
-                              self.has["inputs"]["ma_type"],self.has["inputs"]["length"])
+        self.INDICATOR  = MA(self.has["inputs"]["source"], self.model.__dict__)
         
         self.chart.sig_update_source.connect(self.change_source,Qt.ConnectionType.AutoConnection)
                 
         self.signal_delete.connect(self.delete)
+    
+    @property
+    def id(self):
+        return self.chart_id
+    
+    @id.setter
+    def id(self,_chart_id):
+        self.chart_id = _chart_id
         
+    @property
+    def model(self) -> dict:
+        return MAModel(self.id,"ZigZag",self.chart.jp_candle.source_name,self.has["inputs"]["ma_type"].name.lower(),
+                              self.has["inputs"]["type"],self.has["inputs"]["length"])
+    
     def disconnect_signals(self):
         try:
             self.INDICATOR.sig_reset_all.disconnect(self.reset_threadpool_asyncworker)
             self.INDICATOR.sig_update_candle.disconnect(self.setdata_worker)
-            self.INDICATOR.sig_add_candle.disconnect(self.setdata_worker)
+            self.INDICATOR.sig_add_candle.disconnect(self.add_worker)
             self.INDICATOR.signal_delete.disconnect(self.replace_source)
+            self.INDICATOR.sig_add_historic.disconnect(self.add_historic_worker)
+
         except RuntimeError:
                     pass
-    
     def connect_signals(self):
         self.INDICATOR.sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
-
         self.INDICATOR.sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
         self.INDICATOR.sig_add_candle.connect(self.add_worker,Qt.ConnectionType.AutoConnection)
         self.INDICATOR.sig_add_historic.connect(self.add_historic_worker,Qt.ConnectionType.AutoConnection)
-        
         self.INDICATOR.signal_delete.connect(self.replace_source,Qt.ConnectionType.AutoConnection)
     
     def fisrt_gen_data(self):
@@ -132,7 +144,7 @@ class BasicMA(PlotDataItem):
             if self.chart.sources[_source] != self.has["inputs"][_input]:
                 self.has["inputs"]["source"] = self.chart.sources[_source]
                 self.has["inputs"]["source_name"] = self.chart.sources[_source].source_name
-                self.INDICATOR.change_inputs(_input,self.has["inputs"]["source"])
+                self.INDICATOR.change_input(self.has["inputs"]["source"])
         elif _input == "type":
             if _source != self.has["inputs"][_input]:
                 self.has["inputs"][_input] = _source
@@ -148,7 +160,8 @@ class BasicMA(PlotDataItem):
         if is_update:
             self.has["name"] = f"{self.has["inputs"]["ma_type"].name} {self.has["inputs"]["length"]} {self.has["inputs"]["type"]}"
             self.sig_change_indicator_name.emit(self.has["name"])
-            self.INDICATOR.change_inputs(_input,_source)
+            
+            self.INDICATOR.change_input(dict_ta_params=self.model.__dict__)
             
     def update_styles(self, _input):
         _style = self.has["styles"][_input]
@@ -173,10 +186,7 @@ class BasicMA(PlotDataItem):
         else:
             self.hide()  
     
-    def set_Data(self,data):
-        xData = data[0]
-        yData = data[1]
-        self.setData(xData, yData)
+    
 
     def get_last_point(self):
         df = self.INDICATOR.get_df(2)
@@ -185,33 +195,51 @@ class BasicMA(PlotDataItem):
         return _time,_value
     
     
+    def set_Data(self,data):
+        xData = data[0]
+        yData = data[1]
+        self.setData(xData, yData)
+    
+    def add_historic_Data(self,data):
+        xData = data[0]
+        yData = data[1]
+        self.addHistoricData(xData, yData)
+    
+    def update_Data(self,data):
+        xData = data[0]
+        yData = data[1]
+        self.updateData(xData, yData)
+    
     def setdata_worker(self):
         self.worker = None
         self.worker = FastWorker(self.update_data)
-        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.signals.setdata.connect(self.update_Data,Qt.ConnectionType.QueuedConnection)
         self.worker.start()    
     
-    def add_historic_worker(self):
+    def add_historic_worker(self,_len):
         self.worker = None
-        self.worker = FastWorker(self.load_historic_data)
-        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker = FastWorker(self.load_historic_data,_len)
+        self.worker.signals.setdata.connect(self.add_historic_Data,Qt.ConnectionType.QueuedConnection)
         self.worker.start() 
     
     def add_worker(self):
         self.worker = None
         self.worker = FastWorker(self.add_data)
-        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.signals.setdata.connect(self.update_Data,Qt.ConnectionType.QueuedConnection)
         self.worker.start()    
     
-    def load_historic_data(self,setdata):
-        _index,_data = self.INDICATOR.get_data()
-        setdata.emit((_index,_data))        
+    def load_historic_data(self,_len,setdata):
+        _index,_data = self.INDICATOR.get_data(stop=_len)
+        setdata.emit((_index,_data))   
+             
     def add_data(self,setdata):
-        _index,_data = self.INDICATOR.get_data()
-        setdata.emit((_index,_data))        
+        _index,_data = self.INDICATOR.get_data(start=-1)
+        setdata.emit((_index,_data))  
+        # setdata.emit((_index,_data))  
     def update_data(self,setdata):
-        _index,_data = self.INDICATOR.get_data()
-        setdata.emit((_index,_data))        
+        _index,_data = self.INDICATOR.get_data(start=-1)
+        setdata.emit((_index,_data))   
+        
     # def boundingRect(self) -> QRectF:
     #     x_left,x_right = int(self.chart.xAxis.range[0]),int(self.chart.xAxis.range[1])
     #     start_index = self.chart.jp_candle.candles[0].index

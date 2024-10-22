@@ -2,7 +2,9 @@ import time
 from typing import Tuple, List,TYPE_CHECKING
 import numpy as np
 import pandas as pd
-from atklip.graphics.pyqtgraph import GraphicsObject, PlotDataItem
+from atklip.graphics.pyqtgraph import GraphicsObject
+from atklip.graphics.chart_component.base_items.plotdataitem import PlotDataItem
+
 from atklip.graphics.pyqtgraph import functions as fn
 from atklip.graphics.chart_component.base_items import PriceLine
 from PySide6.QtCore import Signal, QObject,Qt,QRectF
@@ -10,6 +12,7 @@ from PySide6.QtGui import QColor,QPicture,QPainter
 from PySide6.QtWidgets import QGraphicsItem
 
 from atklip.controls import PD_MAType,IndicatorType,VORTEX
+from atklip.controls.models import VORTEXModel
 
 from atklip.appmanager import FastWorker
 from atklip.app_utils import *
@@ -30,10 +33,9 @@ class BasicVTX(GraphicsObject):
     
     sig_change_indicator_name = Signal(str)
 
-    def __init__(self,get_last_pos_worker,chart,panel,id = None,clickable=True) -> None:
+    def __init__(self,get_last_pos_worker,chart,panel) -> None:
         """Choose colors of candle"""
         GraphicsObject.__init__(self)
-        #super().__init__(clickable=clickable)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
         self.chart:Chart = chart
         self._panel:ViewSubPanel = panel
@@ -48,6 +50,7 @@ class BasicVTX(GraphicsObject):
                     "source_name": self.chart.jp_candle.source_name,
                     "indicator_type":IndicatorType.VTX,
                     "period":13,
+                    "drift":1,
                     "show":True},
 
             "styles":{
@@ -60,9 +63,8 @@ class BasicVTX(GraphicsObject):
                     }
                     }
      
-        self.id = id
+        self.id = self.chart.objmanager.add(self)
         
-
         self.on_click.connect(self.on_click_event)
         self.signal_visible.connect(self.setVisible)
         self.signal_delete.connect(self.delete)
@@ -84,13 +86,26 @@ class BasicVTX(GraphicsObject):
         
         self.sig_change_yaxis_range.connect(get_last_pos_worker, Qt.ConnectionType.AutoConnection)
         
-        self.INDICATOR  = VORTEX(parent=self,
-                            _candles=self.has["inputs"]["source"],
-                            period=self.has["inputs"]["period"]
-                            )
+        self.INDICATOR  = VORTEX(self.has["inputs"]["source"], self.model.__dict__)
 
         self.chart.sig_update_source.connect(self.change_source,Qt.ConnectionType.AutoConnection)   
         self.signal_delete.connect(self.delete)
+
+
+    @property
+    def id(self):
+        return self.chart_id
+    
+    @id.setter
+    def id(self,_chart_id):
+        self.chart_id = _chart_id
+        
+    @property
+    def model(self) -> dict:
+        return VORTEXModel(self.id,"STOCHRSI",self.chart.jp_candle.source_name,
+                        self.has["inputs"]["period"],
+                        self.has["inputs"]["drift"]
+                        )
 
     def disconnect_signals(self):
         try:
@@ -98,6 +113,7 @@ class BasicVTX(GraphicsObject):
             self.INDICATOR.sig_update_candle.disconnect(self.setdata_worker)
             self.INDICATOR.sig_add_candle.disconnect(self.setdata_worker)
             self.INDICATOR.signal_delete.disconnect(self.replace_source)
+            self.INDICATOR.sig_add_historic.connect(self.add_historic_worker)
         except RuntimeError:
                     pass
     
@@ -116,13 +132,6 @@ class BasicVTX(GraphicsObject):
         self.INDICATOR.deleteLater()
         self.chart.sig_remove_item.emit(self)
     
-    def reset_indicator(self):
-        self.worker = None
-        self.worker = FastWorker(self.regen_indicator)
-        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
-        self.worker.start()
-    
-
     def regen_indicator(self,setdata):
         xdata,vortex,signalma = self.INDICATOR.get_data()
         self.has["name"] = f"VTX {self.has["inputs"]["period"]}"
@@ -141,25 +150,53 @@ class BasicVTX(GraphicsObject):
         if self.has["inputs"]["source_name"] == source.source_name:
             self.update_inputs("source",source.source_name)
     
+    def set_Data(self,data):
+        xData = data[0]
+        lb = data[1]
+        cb = data[2]
+        self.vortex_line.setData(xData,lb)
+        self.signal.setData(xData,cb)
+        
+    def add_historic_Data(self,data):
+        xData = data[0]
+        lb = data[1]
+        cb = data[2]
+        self.vortex_line.addHistoricData(xData,lb)
+        self.signal.addHistoricData(xData,cb)
+        
+    
+    def update_Data(self,data):
+        xData = data[0]
+        lb = data[1]
+        cb = data[2]
+        self.vortex_line.updateData(xData,lb)
+        self.signal.updateData(xData,cb)
 
-    def setdata_worker(self):
+    
+    def reset_indicator(self):
         self.worker = None
-        self.worker = FastWorker(self.update_data)
-        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
-        self.worker.start()    
-
-    def add_historic_worker(self):
-        self.worker = None
-        self.worker = FastWorker(self.load_historic_data)
+        self.worker = FastWorker(self.regen_indicator)
         self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
         self.worker.start()
     
-    def load_historic_data(self,setdata):
-        xdata,vortex,signalma = self.INDICATOR.get_data()
+    def setdata_worker(self):
+        self.worker = None
+        self.worker = FastWorker(self.update_data)
+        self.worker.signals.setdata.connect(self.update_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.start()    
+
+    def add_historic_worker(self,_len):
+        self.worker = None
+        self.worker = FastWorker(self.load_historic_data,_len)
+        self.worker.signals.setdata.connect(self.add_historic_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.start()
+    
+    def load_historic_data(self,_len,setdata):
+        xdata,vortex,signalma = self.INDICATOR.get_data(stop=_len)
         setdata.emit((xdata,vortex,signalma))
 
     def update_data(self,setdata):
-        xdata,vortex,signalma = self.INDICATOR.get_data()
+        xdata,vortex,signalma = self.INDICATOR.get_data(start=-1)
         setdata.emit((xdata,vortex,signalma))
         self.last_pos.emit((self.has["inputs"]["indicator_type"],signalma[-1]))
         self._panel.sig_update_y_axis.emit()
@@ -173,14 +210,14 @@ class BasicVTX(GraphicsObject):
             if self.chart.sources[_source] != self.has["inputs"][_input]:
                 self.has["inputs"]["source"] = self.chart.sources[_source]
                 self.has["inputs"]["source_name"] = self.chart.sources[_source].source_name
-                self.INDICATOR.change_inputs(_input,self.has["inputs"]["source"])
+                self.INDICATOR.change_input(self.has["inputs"]["source"])
         elif _source != self.has["inputs"][_input]:
                 self.has["inputs"][_input] = _source
                 update = True
         if update:
             self.has["name"] = f"VTX {self.has["inputs"]["period"]}"
             self.sig_change_indicator_name.emit(self.has["name"])
-            self.INDICATOR.change_inputs(_input,_source)
+            self.INDICATOR.change_input(dict_ta_params=self.model.__dict__)
             
     def get_inputs(self):
         inputs =  {"source":self.has["inputs"]["source"],
@@ -229,8 +266,7 @@ class BasicVTX(GraphicsObject):
     def paint(self, p:QPainter, *args):
         self.picture.play(p)
     
-    # def boundingRect(self) -> QRectF:
-    #     return self.vortex_line.boundingRect()
+
     def boundingRect(self) -> QRectF:
         x_left,x_right = int(self.chart.xAxis.range[0]),int(self.chart.xAxis.range[1])
         start_index = self.chart.jp_candle.candles[0].index
@@ -253,20 +289,7 @@ class BasicVTX(GraphicsObject):
         rect = QRectF(self._start,h_low,self._stop-self._start,h_high-h_low)
         return rect   
     
-    def set_Data(self,data):
-        xData = data[0]
-        lb = data[1]
-        cb = data[2]
-
-        try:
-            self.vortex_line.setData(xData,lb)
-            self.signal.setData(xData,cb)
-        except Exception as e:
-            pass
-        
-        # self.prepareGeometryChange()
-        # self.informViewBoundsChanged()
-        
+  
     def get_last_point(self):
         _time = self.signal.xData[-1]
         _value = self.signal.yData[-1]

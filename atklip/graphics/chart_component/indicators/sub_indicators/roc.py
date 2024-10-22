@@ -1,14 +1,16 @@
 import time
 from typing import Tuple, List, TYPE_CHECKING
 import numpy as np
-from atklip.graphics.pyqtgraph import PlotDataItem
+
+from atklip.graphics.chart_component.base_items.plotdataitem import PlotDataItem
+
 from atklip.graphics.chart_component.base_items import PriceLine
 
 from PySide6.QtCore import Signal, QObject,Qt,QRectF
 from PySide6.QtWidgets import QGraphicsItem
 
 from atklip.controls import IndicatorType,ROC
-
+from atklip.controls.models import ROCModel
 from atklip.appmanager import FastWorker
 from atklip.app_utils import *
 if TYPE_CHECKING:
@@ -27,7 +29,7 @@ class BasicROC(PlotDataItem):
     
     sig_change_indicator_name = Signal(str)
 
-    def __init__(self,get_last_pos_worker, chart,panel,id = None,clickable=True) -> None:
+    def __init__(self,get_last_pos_worker, chart,panel,clickable=True) -> None:
         """Choose colors of candle"""
         super().__init__(clickable=clickable)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
@@ -38,7 +40,7 @@ class BasicROC(PlotDataItem):
         
         self.has = {
             "name" :f"ROC 3",
-            "y_axis_show":F,
+            "y_axis_show":True,
             "inputs":{
                     "source":self.chart.jp_candle,
                     "source_name": self.chart.jp_candle.source_name,
@@ -55,9 +57,9 @@ class BasicROC(PlotDataItem):
                     'style': Qt.PenStyle.SolidLine,}
                 }
         
+        self.id = self.chart.objmanager.add(self)
+        
         self.opts.update({'pen':"yellow"})
-
-        self.id = id
 
         self.signal_visible.connect(self.setVisible)
         self.signal_delete.connect(self.delete)
@@ -70,31 +72,43 @@ class BasicROC(PlotDataItem):
         self.destroyed.connect(self.price_line.deleteLater)
         self.last_pos.connect(self.price_line.update_price_line_indicator,Qt.ConnectionType.AutoConnection)
 
-        self.price_high = PriceLine(color="green",width=2,movable=True)  # for z value
+        self.price_high = PriceLine(color="green",width=1,movable=True)  # for z value
         self.price_high.setParentItem(self)
         self.price_high.setPos(self.has["inputs"]["price_high"])
         
-        self.price_low = PriceLine(color="red",width=2,movable=True)  # for z value
+        self.price_low = PriceLine(color="red",width=1,movable=True)  # for z value
         self.price_low.setParentItem(self)
         self.price_low.setPos(self.has["inputs"]["price_low"])
         
         self.sig_change_yaxis_range.connect(get_last_pos_worker, Qt.ConnectionType.AutoConnection)
         
         
-        self.INDICATOR  = ROC(parent=self,
-                               _candles=self.has["inputs"]["source"], 
-                                source=self.has["inputs"]["type"],
-                                length=self.has["inputs"]["period"])
+        self.INDICATOR  = ROC(self.has["inputs"]["source"], self.model.__dict__)
         
         self.chart.sig_update_source.connect(self.change_source,Qt.ConnectionType.AutoConnection)   
         self.signal_delete.connect(self.delete)
 
+    @property
+    def id(self):
+        return self.chart_id
+    
+    @id.setter
+    def id(self,_chart_id):
+        self.chart_id = _chart_id
+        
+    @property
+    def model(self) -> dict:
+        return ROCModel(self.id,"ROC",self.chart.jp_candle.source_name,
+                        self.has["inputs"]["type"],
+                        self.has["inputs"]["period"])
+    
     def disconnect_signals(self):
         try:
             self.INDICATOR.sig_reset_all.disconnect(self.reset_threadpool_asyncworker)
             self.INDICATOR.sig_update_candle.disconnect(self.setdata_worker)
             self.INDICATOR.sig_add_candle.disconnect(self.setdata_worker)
             self.INDICATOR.signal_delete.disconnect(self.replace_source)
+            self.INDICATOR.sig_add_historic.disconnect(self.add_historic_worker)
         except RuntimeError:
                     pass
     
@@ -160,7 +174,7 @@ class BasicROC(PlotDataItem):
             if self.chart.sources[_source] != self.has["inputs"][_input]:
                 self.has["inputs"]["source"] = self.chart.sources[_source]
                 self.has["inputs"]["source_name"] = self.chart.sources[_source].source_name
-                self.INDICATOR.change_inputs(_input,self.has["inputs"]["source"])
+                self.INDICATOR.change_input(self.has["inputs"]["source"])
                 
         elif _input == "price_high":
             if _source != self.has["inputs"]["price_high"]:
@@ -177,7 +191,7 @@ class BasicROC(PlotDataItem):
         if update:
             self.has["name"] = f"ROC {self.has["inputs"]["period"]} {self.has["inputs"]["type"]}"
             self.sig_change_indicator_name.emit(self.has["name"])
-            self.INDICATOR.change_inputs(_input,_source)
+            self.INDICATOR.change_input(dict_ta_params=self.model.__dict__)
             
     
     def update_styles(self, _input):
@@ -217,35 +231,41 @@ class BasicROC(PlotDataItem):
     #         h_low,h_high = self._panel.yAxis.range[0],self._panel.yAxis.range[1]
     #     rect = QRectF(self._start,h_low,self._stop-self._start,h_high-h_low)
     #     return rect  
-    def setdata_worker(self):
-        self.worker = None
-        self.worker = FastWorker(self.update_data)
-        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
-        self.worker.start()    
     
-    def add_historic_worker(self):
-        self.worker = None
-        self.worker = FastWorker(self.load_historic_data)
-        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
-        self.worker.start()
-    
-    def load_historic_data(self,setdata):
-        _index,_data = self.INDICATOR.get_data()
-        setdata.emit((_index,_data))    
-        
     def set_Data(self,data):
         xData = data[0]
         yData = data[1]
-        try:
-            self.setData(xData, yData)
-        except Exception as e:
-            pass
-        # 
-        # self.prepareGeometryChange()
-        # self.informViewBoundsChanged()
+        self.setData(xData, yData)
 
+    def add_historic_Data(self,data):
+        xData = data[0]
+        yData = data[1]
+        self.addHistoricData(xData, yData)
+        
+    def update_Data(self,data):
+        xData = data[0]
+        yData = data[1]
+        self.updateData(xData, yData)
+    
+    def setdata_worker(self):
+        self.worker = None
+        self.worker = FastWorker(self.update_data)
+        self.worker.signals.setdata.connect(self.update_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.start()    
+    
+    def add_historic_worker(self,_len):
+        self.worker = None
+        self.worker = FastWorker(self.load_historic_data,_len)
+        self.worker.signals.setdata.connect(self.add_historic_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.start()
+    
+    def load_historic_data(self,_len,setdata):
+        _index,_data = self.INDICATOR.get_data(stop=_len)
+        setdata.emit((_index,_data))    
+        
+    
     def update_data(self,setdata):
-        xdata,y_data = self.INDICATOR.get_data()
+        xdata,y_data = self.INDICATOR.get_data(start=-1)
         setdata.emit((xdata,y_data))
         self.last_pos.emit((IndicatorType.ROC,y_data[-1]))
         self._panel.sig_update_y_axis.emit()

@@ -79,6 +79,8 @@ class ViewPlotWidget(PlotWidget):
         self._parent = parent
 
         self.list_candle_indicators = []
+        self.indicators:List = []
+        self.drawtools:List = []
         
         self.is_living = False
         self._precision = 3
@@ -182,6 +184,13 @@ class ViewPlotWidget(PlotWidget):
         else:
             item = args
         self.list_candle_indicators.remove(item)
+        
+        if item in self.indicators:
+            self.indicators.remove(item) 
+            
+        if item in self.drawtools:
+            self.drawtools.remove(item) 
+
         del self.yAxis.dict_objects[item]
         self.removeItem(item) 
         item.deleteLater()

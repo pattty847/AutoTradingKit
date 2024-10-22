@@ -143,6 +143,8 @@ class ViewSubPanel(PlotWidget):
             self.indicator = BasicMACD(self.get_last_pos_worker,self.Chart,self)
         elif _indicator_type == IndicatorType.RSI:
             self.indicator = BasicRSI(self.get_last_pos_worker,self.Chart,self)
+        elif _indicator_type == IndicatorType.CCI:
+            self.indicator = BasicCCI(self.get_last_pos_worker,self.Chart,self)
         elif _indicator_type == IndicatorType.VOLUME:
             self.indicator = Volume(self.get_last_pos_worker,self.Chart,self)
         elif _indicator_type == IndicatorType.ROC:
@@ -168,6 +170,7 @@ class ViewSubPanel(PlotWidget):
             self.panel = IndicatorPanel(mainwindow,self, self.indicator)
             self.container_indicator_wg.add_indicator_panel(self.panel)
             self.indicator.fisrt_gen_data()
+        return self.indicator
             
     
     def setdockLabel(self,docklabel):
@@ -204,6 +207,9 @@ class ViewSubPanel(PlotWidget):
             item = args
         self.list_candle_indicators.remove(item)
         del self.yAxis.dict_objects[item]
+        
+        if item in self.Chart.indicators:
+            self.Chart.indicators.remove(item) 
         self.removeItem(item) 
         item.deleteLater()
         self.sig_delete_sub_panel.emit(self)

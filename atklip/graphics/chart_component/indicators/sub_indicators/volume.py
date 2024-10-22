@@ -45,7 +45,7 @@ class Volume(GraphicsObject):
                 "brush_lowcolor":mkBrush(low_color,width=0.7)
                     }
                 }
-        
+        self.id = self.chart.objmanager.add(self)
         self.chart.jp_candle.signal_delete.connect(self.signal_delete)
         if not isinstance(self.chart.jp_candle,JAPAN_CANDLE):
             self.chart.jp_candle.setParent(self)
@@ -71,10 +71,18 @@ class Volume(GraphicsObject):
         self.chart.jp_candle.sig_reset_all.connect(self.fisrt_gen_data,Qt.ConnectionType.AutoConnection)
         self.chart.jp_candle.sig_add_candle.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
         self.chart.jp_candle.sig_add_historic.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
-        
         self.sig_change_yaxis_range.connect(get_last_pos_worker, Qt.ConnectionType.AutoConnection)
         
+    
+    @property
+    def id(self):
+        return self.chart_id
+    
+    @id.setter
+    def id(self,_chart_id):
+        self.chart_id = _chart_id
         
+    
     def get_inputs(self):
         inputs =  {}
         return inputs
@@ -248,8 +256,8 @@ class Volume(GraphicsObject):
         try:
             if len(x_data) != len(y_data[0]):
                 raise Exception("Len of x_data must be the same as y_data")
-            # setdata.emit((x_data, y_data))
-            self.setData((x_data, y_data))
+            setdata.emit((x_data, y_data))
+            # self.setData((x_data, y_data))
         except Exception as e:
             print(e)
       

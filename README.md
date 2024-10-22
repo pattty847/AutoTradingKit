@@ -122,6 +122,8 @@ activate venv: venv/scripts/activate
 
 install libs: pip install -r requirements.txt
 
+pip install -U git+https://github.com/twopirllc/pandas-ta.git@development (cai ban pandas-ta development)
+
 run mainwindow.py to start app: python mainwindow.py
 
 ## Build exe

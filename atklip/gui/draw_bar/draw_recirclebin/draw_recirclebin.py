@@ -30,6 +30,7 @@ class RECIRCLEBIN(QFrame):
         self.splitToolButton.change_item(icon)
         self.set_enable()
         self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,"draw_trenlines"))
+        
     def set_enable(self):
         if self.splitToolButton.button.isChecked():
             self.is_enabled = True

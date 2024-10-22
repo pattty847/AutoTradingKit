@@ -3,7 +3,8 @@ from typing import Tuple
 import numpy as np
 from PySide6.QtCore import Signal, Qt, QObject
 from PySide6.QtGui import QColor
-from atklip.graphics.pyqtgraph import PlotDataItem
+from atklip.graphics.chart_component.base_items.plotdataitem import PlotDataItem
+
 from atklip.graphics.pyqtgraph import functions as fn
 
 from atklip.app_utils import *

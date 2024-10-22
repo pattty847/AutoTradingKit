@@ -35,45 +35,47 @@ class PROJECTS(QFrame):
         headerLayout.addWidget(line_headerLabel)
         headerLayout.setContentsMargins(5,0,0,0)
         self.menu.addWidget(line_header_wg)
-        self.long_position = Card_Item(FIF.LONG_POSITION,"Long Position", 'VOLUME-BASED',self)
-        self.short_position = Card_Item(FIF.SHORT_POSITION,"Short Position", 'VOLUME-BASED',self)
-        self.forecast = Card_Item(FIF.FORECAST,"Forecast", 'VOLUME-BASED',self)
-        self.bar_pattern = Card_Item(FIF.BAR_PATTERN,"Bar Pattern", 'VOLUME-BASED',self)
-        self.ghost_feed = Card_Item(FIF.SHOST_FEED,"Shost Feed", 'VOLUME-BASED',self)
-        self.projection = Card_Item(FIF.PROJECT, "Projection", 'VOLUME-BASED',self)
+        self.long_position = Card_Item(FIF.LONG_POSITION,"Long Position", 'PROJECTION',self)
+        self.short_position = Card_Item(FIF.SHORT_POSITION,"Short Position", 'PROJECTION',self)
+        
+        # self.forecast = Card_Item(FIF.FORECAST,"Forecast", 'VOLUME-BASED',self)
+        # self.bar_pattern = Card_Item(FIF.BAR_PATTERN,"Bar Pattern", 'VOLUME-BASED',self)
+        # self.ghost_feed = Card_Item(FIF.SHOST_FEED,"Shost Feed", 'VOLUME-BASED',self)
+        # self.projection = Card_Item(FIF.PROJECT, "Projection", 'VOLUME-BASED',self)
        
         # add item to card
         self.long_position.resize(250, 40)
         
         self.menu.addWidget(self.long_position)
         self.menu.addWidget(self.short_position)
-        self.menu.addWidget(self.forecast)
-        self.menu.addWidget(self.bar_pattern)
-        self.menu.addWidget(self.ghost_feed)
-        self.menu.addWidget(self.projection)
+        
+        # self.menu.addWidget(self.forecast)
+        # self.menu.addWidget(self.bar_pattern)
+        # self.menu.addWidget(self.ghost_feed)
+        # self.menu.addWidget(self.projection)
 
         # split tool button
         self.menu.addSeparator()
 
-        chanel_header_wg = QWidget(self.menu)
-        chanel_headerLayout = QHBoxLayout(chanel_header_wg)
-        chanel_headerLabel = TitleLabel("VOLUME-BASED")
-        chanel_headerLabel.setFixedHeight(25)
-        chanel_headerLabel.setStyleSheet('QLabel{color: '+color.name()+'}')
-        setFont(chanel_headerLabel, 13, QFont.DemiBold)
-        chanel_headerLayout.addWidget(chanel_headerLabel)
-        chanel_headerLayout.setContentsMargins(5,0,0,0)
-        self.menu.addWidget(chanel_header_wg)
+        # chanel_header_wg = QWidget(self.menu)
+        # chanel_headerLayout = QHBoxLayout(chanel_header_wg)
+        # chanel_headerLabel = TitleLabel("VOLUME-BASED")
+        # chanel_headerLabel.setFixedHeight(25)
+        # chanel_headerLabel.setStyleSheet('QLabel{color: '+color.name()+'}')
+        # setFont(chanel_headerLabel, 13, QFont.DemiBold)
+        # chanel_headerLayout.addWidget(chanel_headerLabel)
+        # chanel_headerLayout.setContentsMargins(5,0,0,0)
+        # self.menu.addWidget(chanel_header_wg)
 
-        self.anchored_vwap = Card_Item(FIF.ANCHORED_VWAP,"Anchored VWAP", 'VOLUME-BASED',self)
-        self.fix_range_volume = Card_Item(FIF.FIX_RANGE_VOLUME,"Fixed Range Volume Profile", 'VOLUME-BASED',self)
-        self.anchored_volume = Card_Item(FIF.ANHCHORED_VOLUME,"Anchored Volume Profile", 'VOLUME-BASED',self)
-        # add item to card
-        # split tool button
-        self.menu.addWidget(self.anchored_vwap)
-        self.menu.addWidget(self.fix_range_volume)
-        self.menu.addWidget(self.anchored_volume)
-        self.menu.addSeparator()
+        # self.anchored_vwap = Card_Item(FIF.ANCHORED_VWAP,"Anchored VWAP", 'VOLUME-BASED',self)
+        # self.fix_range_volume = Card_Item(FIF.FIX_RANGE_VOLUME,"Fixed Range Volume Profile", 'VOLUME-BASED',self)
+        # self.anchored_volume = Card_Item(FIF.ANHCHORED_VOLUME,"Anchored Volume Profile", 'VOLUME-BASED',self)
+        # # add item to card
+        # # split tool button
+        # self.menu.addWidget(self.anchored_vwap)
+        # self.menu.addWidget(self.fix_range_volume)
+        # self.menu.addWidget(self.anchored_volume)
+        # self.menu.addSeparator()
 
         pitchfork_header_wg = QWidget(self.menu)
         pitchfork_headerLayout = QHBoxLayout(pitchfork_header_wg)
@@ -85,15 +87,15 @@ class PROJECTS(QFrame):
         pitchfork_headerLayout.setContentsMargins(5,0,0,0)
         self.menu.addWidget(pitchfork_header_wg)
 
-        self.price_range = Card_Item(FIF.PRICE_RANGE,"Price Range", 'VOLUME-BASED',self)
-        self.date_range = Card_Item(FIF.DATE_RANGE,"Date Range", 'VOLUME-BASED',self)
-        self.date_price_range = Card_Item(FIF.DATE_PRICE_RANGE,"Date & Price Range", 'VOLUME-BASED',self)
+        self.price_range = Card_Item(FIF.PRICE_RANGE,"Price Range", 'MEASURER',self)
+        self.date_range = Card_Item(FIF.DATE_RANGE,"Date Range", 'MEASURER',self)
+        self.date_price_range = Card_Item(FIF.DATE_PRICE_RANGE,"Date & Price Range", 'MEASURER',self)
       
         self.menu.addWidget(self.price_range)
         self.menu.addWidget(self.date_range)
         self.menu.addWidget(self.date_price_range)
 
-        
+
         self.splitToolButton.setFlyout(self.menu)
 
         self._QLayout.addWidget(self.splitToolButton)

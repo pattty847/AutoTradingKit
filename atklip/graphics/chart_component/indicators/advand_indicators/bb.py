@@ -5,9 +5,11 @@ from PySide6.QtCore import Signal, QObject,Qt,QRectF
 from PySide6.QtWidgets import QGraphicsItem
 from PySide6.QtGui import QPainter,QPicture
 
-from atklip.graphics.pyqtgraph import GraphicsObject,PlotDataItem
 from .fillbetweenitem import FillBetweenItem
+from atklip.graphics.chart_component.base_items.plotdataitem import PlotDataItem
+
 from atklip.controls import PD_MAType,IndicatorType,BBANDS
+from atklip.controls.models import BBandsModel
 
 from atklip.appmanager import FastWorker
 from atklip.app_utils import *
@@ -58,6 +60,7 @@ class BasicBB(PlotDataItem):
                     "brush_color": mkBrush('#3f3964',width=0.7),
                     }
                     }
+        self.id = self.chart.objmanager.add(self)
         self.setPen(color=self.has["styles"]['pen_center_line'])
         self.lowline = PlotDataItem(pen=self.has["styles"]['pen_low_line'])  # for z value
         self.lowline.setParentItem(self)
@@ -66,18 +69,32 @@ class BasicBB(PlotDataItem):
         self.highline = PlotDataItem(pen=self.has["styles"]['pen_high_line'])
         self.highline.setParentItem(self)
         
-        self.bb_bank = FillBetweenItem(self.lowline,self.highline,self.has["styles"]['brush_color'])
-        self.bb_bank.setParentItem(self)
+        # self.bb_bank = FillBetweenItem(self.lowline,self.highline,self.has["styles"]['brush_color'])
+        # self.bb_bank.setParentItem(self)
      
         self.picture: QPicture = QPicture()
                 
-        self.INDICATOR  = BBANDS(self,self.has["inputs"]["source"], self.has["inputs"]["type"],
-                              self.has["inputs"]["ma_type"],self.has["inputs"]["length"],
-                              self.has["inputs"]["std_dev_mult"])
+        self.INDICATOR  = BBANDS(self.has["inputs"]["source"], self.model.__dict__)
         
         self.chart.sig_update_source.connect(self.change_source,Qt.ConnectionType.AutoConnection)   
         self.signal_delete.connect(self.delete)
+    
+    
+    @property
+    def id(self):
+        return self.chart_id
+    
+    @id.setter
+    def id(self,_chart_id):
+        self.chart_id = _chart_id
         
+    @property
+    def model(self) -> dict:
+        return BBandsModel(self.id,"BBands",self.chart.jp_candle.source_name,self.has["inputs"]["ma_type"].name.lower(),
+                              self.has["inputs"]["type"],self.has["inputs"]["length"],
+                              self.has["inputs"]["std_dev_mult"])
+    
+    
     def disconnect_signals(self):
         try:
             self.INDICATOR.sig_reset_all.disconnect(self.reset_threadpool_asyncworker)
@@ -159,7 +176,7 @@ class BasicBB(PlotDataItem):
             if self.chart.sources[_source] != self.has["inputs"][_input]:
                 self.has["inputs"]["source"] = self.chart.sources[_source]
                 self.has["inputs"]["source_name"] = self.chart.sources[_source].source_name
-                self.INDICATOR.change_inputs(_input,self.has["inputs"]["source"])
+                self.INDICATOR.change_input(self.has["inputs"]["source"])
         elif _source != self.has["inputs"][_input]:
                 self.has["inputs"][_input] = _source
                 is_update = True
@@ -167,7 +184,7 @@ class BasicBB(PlotDataItem):
         if is_update:
             self.has["name"] = f"BB {self.has["inputs"]["length"]} {self.has["inputs"]["std_dev_mult"]} {self.has["inputs"]["type"]} {self.has["inputs"]["ma_type"].name}"
             self.sig_change_indicator_name.emit(self.has["name"])
-            self.INDICATOR.change_inputs(_input,_source)
+            self.INDICATOR.change_input(dict_ta_params=self.model.__dict__)
     
     def update_styles(self, _input):
         _style = self.has["styles"][_input]
@@ -192,29 +209,6 @@ class BasicBB(PlotDataItem):
         else:
             self.hide()
 
-    def setdata_worker(self):
-        self.worker = None
-        self.worker = FastWorker(self.update_data)
-        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
-        self.worker.start()    
-        
-    def add_historic_worker(self):
-        self.worker = None
-        self.worker = FastWorker(self.load_historic_data)
-        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
-        self.worker.start() 
-    def add_worker(self):
-        self.worker = None
-        self.worker = FastWorker(self.add_data)
-        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
-        self.worker.start()
-    
-    def load_historic_data(self,setdata):
-        xdata,lb,cb,ub= self.INDICATOR.get_data()
-        setdata.emit((xdata,lb,cb,ub))    
-    def add_data(self,setdata):
-        xdata,lb,cb,ub= self.INDICATOR.get_data()
-        setdata.emit((xdata,lb,cb,ub))    
     
     def set_Data(self,data):
         xData = data[0]
@@ -222,16 +216,54 @@ class BasicBB(PlotDataItem):
         cb = data[2]
         ub = data[3]
         self.lowline.setData(xData,lb)
-        # self.centerline.setData(xData,cb)
         self.setData(xData,cb)
         self.highline.setData(xData,ub)
+    
+    def add_historic_Data(self,data):
+        xData = data[0]
+        lb = data[1]
+        cb = data[2]
+        ub = data[3]
+        self.lowline.addHistoricData(xData,lb)
+        self.addHistoricData(xData,cb)
+        self.highline.addHistoricData(xData,ub)
         
-        # self.prepareGeometryChange()
-        # self.informViewBoundsChanged()
-
+    def update_Data(self,data):
+        xData = data[0]
+        lb = data[1]
+        cb = data[2]
+        ub = data[3]
+        self.lowline.updateData(xData,lb)
+        self.updateData(xData,cb)
+        self.highline.updateData(xData,ub)
+    
+    def setdata_worker(self):
+        self.worker = None
+        self.worker = FastWorker(self.update_data)
+        self.worker.signals.setdata.connect(self.update_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.start()    
+        
+    def add_historic_worker(self,_len):
+        self.worker = None
+        self.worker = FastWorker(self.load_historic_data,_len)
+        self.worker.signals.setdata.connect(self.add_historic_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.start() 
+    def add_worker(self):
+        self.worker = None
+        self.worker = FastWorker(self.add_data)
+        self.worker.signals.setdata.connect(self.update_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.start()
+    
+    def load_historic_data(self,_len,setdata):
+        xdata,lb,cb,ub= self.INDICATOR.get_data(stop=_len)
+        setdata.emit((xdata,lb,cb,ub))    
+    def add_data(self,setdata):
+        xdata,lb,cb,ub= self.INDICATOR.get_data(start=-1)
+        setdata.emit((xdata,lb,cb,ub))    
+    
     def update_data(self,setdata):
-        xdata,lb,cb,ub= self.INDICATOR.get_data()
-        setdata.emit((xdata,lb,cb,ub))   
+        xdata,lb,cb,ub= self.INDICATOR.get_data(start=-1)
+        setdata.emit((xdata,lb,cb,ub))  
 
        
     def boundingRect(self) -> QRectF:

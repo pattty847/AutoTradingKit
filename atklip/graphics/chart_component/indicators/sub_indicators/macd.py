@@ -1,13 +1,16 @@
 import time
 from typing import Tuple, List,TYPE_CHECKING
 import numpy as np
-from atklip.graphics.pyqtgraph import GraphicsObject, PlotDataItem
+from atklip.graphics.pyqtgraph import GraphicsObject
+from atklip.graphics.chart_component.base_items.plotdataitem import PlotDataItem
+
 from atklip.graphics.chart_component.base_items import PriceLine
 from PySide6.QtCore import Signal, QObject,Qt,QRectF
 from PySide6.QtGui import QColor,QPicture,QPainter
 from PySide6.QtWidgets import QGraphicsItem
 
 from atklip.controls import PD_MAType,IndicatorType, MACD
+from atklip.controls.models import MACDModel
 
 from .macd_histogram import MACDHistogram
 from atklip.appmanager import FastWorker
@@ -29,7 +32,7 @@ class BasicMACD(GraphicsObject):
     
     sig_change_indicator_name = Signal(str)
 
-    def __init__(self,get_last_pos_worker,chart,panel,id = None) -> None:
+    def __init__(self,get_last_pos_worker,chart,panel) -> None:
         """Choose colors of candle"""
         GraphicsObject.__init__(self)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
@@ -49,7 +52,7 @@ class BasicMACD(GraphicsObject):
                     "fast_period":12,
                     "slow_period":26,
                     "signal_period":9,
-                    "ma_type":PD_MAType.EMA,
+                    "ma_type":PD_MAType.RMA,
                     "price_high":60,
                     "price_low":-60,
                     "show":True},
@@ -68,7 +71,7 @@ class BasicMACD(GraphicsObject):
                     }
                     }
      
-        self.id = id
+        self.id = self.chart.objmanager.add(self)
         self.fisrt_setup = False
 
         self.on_click.connect(self.on_click_event)
@@ -87,11 +90,11 @@ class BasicMACD(GraphicsObject):
         self.price_line = PriceLine()  # for z value
         self.price_line.setParentItem(self)
         
-        self.price_high = PriceLine(color="green",width=2,movable=True)  # for z value
+        self.price_high = PriceLine(color="green",width=1,movable=True)  # for z value
         self.price_high.setParentItem(self)
         self.price_high.setPos(self.has["inputs"]["price_high"])
         
-        self.price_low = PriceLine(color="red",width=2,movable=True)  # for z value
+        self.price_low = PriceLine(color="red",width=1,movable=True)  # for z value
         self.price_low.setParentItem(self)
         self.price_low.setPos(self.has["inputs"]["price_low"])
         
@@ -104,28 +107,41 @@ class BasicMACD(GraphicsObject):
 
         self.sig_change_yaxis_range.connect(get_last_pos_worker, Qt.ConnectionType.AutoConnection)
         
-        self.INDICATOR  = MACD(parent=self,
-                               _candles=self.has["inputs"]["source"], 
-                                source=self.has["inputs"]["type"],
-                                fast_period=self.has["inputs"]["fast_period"],
-                                slow_period=self.has["inputs"]["slow_period"],
-                                signal_period=self.has["inputs"]["signal_period"],
-                                ma_type=self.has["inputs"]["ma_type"])
+        self.INDICATOR  = MACD(self.has["inputs"]["source"], self.model.__dict__)
         
         self.chart.sig_update_source.connect(self.change_source,Qt.ConnectionType.AutoConnection)   
         self.signal_delete.connect(self.delete)
+    
+    @property
+    def id(self):
+        return self.chart_id
+    
+    @id.setter
+    def id(self,_chart_id):
+        self.chart_id = _chart_id
         
+    @property
+    def model(self) -> dict:
+        return MACDModel(self.id,"MACD",self.chart.jp_candle.source_name,
+                        self.has["inputs"]["type"],
+                        self.has["inputs"]["slow_period"],
+                        self.has["inputs"]["fast_period"],
+                        self.has["inputs"]["signal_period"],
+                        self.has["inputs"]["ma_type"].name.lower())
+    
+    
     def disconnect_signals(self):
         try:
-            self.INDICATOR.sig_reset_all.disconnect(self.reset_threadpool_asyncworker)
+            self.INDICATOR.sig_reset_all.disconnect(self.reset_indicator)
             self.INDICATOR.sig_update_candle.disconnect(self.setdata_worker)
             self.INDICATOR.sig_add_candle.disconnect(self.add_worker)
             self.INDICATOR.signal_delete.disconnect(self.replace_source)
+            self.INDICATOR.sig_add_historic.disconnect(self.add_historic_worker)
         except RuntimeError:
                     pass
     
     def connect_signals(self):
-        self.INDICATOR.sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
+        self.INDICATOR.sig_reset_all.connect(self.reset_indicator,Qt.ConnectionType.AutoConnection)
         self.INDICATOR.sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
         self.INDICATOR.sig_add_candle.connect(self.add_worker,Qt.ConnectionType.AutoConnection)
         self.INDICATOR.sig_add_historic.connect(self.add_historic_worker,Qt.ConnectionType.AutoConnection)
@@ -139,22 +155,10 @@ class BasicMACD(GraphicsObject):
         self.INDICATOR.deleteLater()
         self.chart.sig_remove_item.emit(self)
     
-    def update_histogram(self,data):
-        self.histogram.sig_update_histogram.emit(data)
-    
     def reset_histogram(self,data):
         xdata,histogram = data[0], data[3]
         self.histogram.sig_reset_histogram.emit((xdata,histogram),"reset")
         
-    
-    def add_historic_histogram(self,data):
-        xdata,histogram = data[0], data[3]
-        self.histogram.sig_load_historic_histogram.emit((xdata,histogram),"load_historic")
-    
-    def add_histogram(self,data):
-        xdata,histogram = data[0][-3:-1], data[3][-3:-1]
-        self.histogram.sig_add_histogram.emit((xdata,histogram),"add")
-    
     def reset_indicator(self):
         self.fisrt_setup = True
         self.worker = None
@@ -172,8 +176,6 @@ class BasicMACD(GraphicsObject):
     def replace_source(self):
         self.update_inputs( "source",self.chart.jp_candle.source_name)
         
-    def reset_threadpool_asyncworker(self):
-        self.reset_indicator()
         
     def change_source(self,source):   
         if self.has["inputs"]["source_name"] == source.source_name:
@@ -212,7 +214,7 @@ class BasicMACD(GraphicsObject):
             if self.chart.sources[_source] != self.has["inputs"][_input]:
                 self.has["inputs"]["source"] = self.chart.sources[_source]
                 self.has["inputs"]["source_name"] = self.chart.sources[_source].source_name
-                self.INDICATOR.change_inputs(_input,self.has["inputs"]["source"])
+                self.INDICATOR.change_input(self.has["inputs"]["source"])
         elif _input == "price_high":
             if _source != self.has["inputs"]["price_high"]:
                 self.has["inputs"]["price_high"] = _source
@@ -227,7 +229,7 @@ class BasicMACD(GraphicsObject):
         if update:
             self.has["name"] = f"MACD {self.has["inputs"]["ma_type"].name} {self.has["inputs"]["fast_period"]} {self.has["inputs"]["slow_period"]} {self.has["inputs"]["signal_period"]} {self.has["inputs"]["type"]}"
             self.sig_change_indicator_name.emit(self.has["name"])
-            self.INDICATOR.change_inputs(_input,_source)
+            self.INDICATOR.change_input(dict_ta_params=self.model.__dict__)
     
     
     def update_styles(self, _input):
@@ -249,64 +251,86 @@ class BasicMACD(GraphicsObject):
             self.show()
         else:
             self.hide()
+    
 
-    def setdata_worker(self):
-        self.worker = None
-        self.worker = FastWorker(self.update_data)
-        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
-        self.worker.start()    
-    
-    def add_historic_worker(self):
-        self.worker = None
-        self.worker = FastWorker(self.load_historic_data)
-        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
-        self.worker.signals.setdata.connect(self.add_historic_histogram,Qt.ConnectionType.QueuedConnection)
-        self.worker.start() 
-    
-    def add_worker(self):
-        self.worker = None
-        self.worker = FastWorker(self.add_data)
-        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
-        self.worker.signals.setdata.connect(self.add_histogram,Qt.ConnectionType.QueuedConnection)
-        self.worker.start()    
-    
-    def load_historic_data(self,setdata):
-        xdata,macd,signalma,histogram= self.INDICATOR.get_data()
-        setdata.emit((xdata,macd,signalma,histogram))
-        self.last_pos.emit((self.has["inputs"]["indicator_type"],signalma[-1]))
-        self._panel.sig_update_y_axis.emit() 
-    
-    def update_data(self,setdata):
-        xdata,macd,signalma,histogram= self.INDICATOR.get_data()
-        setdata.emit((xdata,macd,signalma,histogram))
-        self.last_pos.emit((self.has["inputs"]["indicator_type"],signalma[-1]))
-        self._panel.sig_update_y_axis.emit() 
-    
-    def add_data(self,setdata):
-        xdata,macd,signalma,histogram= self.INDICATOR.get_data()
-        setdata.emit((xdata,macd,signalma,histogram))
-        self.last_pos.emit((self.has["inputs"]["indicator_type"],signalma[-1]))
-        self._panel.sig_update_y_axis.emit()  
-    
     
     def set_Data(self,data):
         xData = data[0]
         lb = data[1]
         cb = data[2]
         histogram = data[3]
-        self.update_histogram((xData[-2:],histogram[-2:]))
-        try:
-            self.macd_line.setData(xData,lb)
-            self.signal.setData(xData,cb)
-            if self.fisrt_setup:
-                self.fisrt_setup = False
-                self.sig_change_yaxis_range.emit()
-        except Exception as e:
-            pass
+
+        self.histogram.sig_update_histogram.emit((xData[-2:],histogram[-2:]))
         
+        self.macd_line.setData(xData,lb)
+        self.signal.setData(xData,cb)
+        if self.fisrt_setup:
+            self.fisrt_setup = False
+            self.sig_change_yaxis_range.emit()
         self.prepareGeometryChange()
         self.informViewBoundsChanged()
+    
+    def add_historic_Data(self,data):
+        xData = data[0]
+        lb = data[1]
+        cb = data[2]
+        histogram = data[3]
+        self.histogram.sig_load_historic_histogram.emit((xData,histogram),"load_historic")
+        self.macd_line.addHistoricData(xData,lb)
+        self.signal.addHistoricData(xData,cb)
 
+        
+    def update_Data(self,data):
+        xData = data[0]
+        lb = data[1]
+        cb = data[2]
+        histogram = data[3]
+        
+        self.histogram.sig_update_histogram.emit((xData,histogram))
+        
+        self.macd_line.updateData(xData,lb)
+        self.signal.updateData(xData,cb)
+    
+    def add_Data(self,data):
+        xData = data[0]
+        lb = data[1]
+        cb = data[2]
+        histogram = data[3]
+        
+        self.histogram.sig_add_histogram.emit((xData, histogram),"add")
+        self.macd_line.updateData(xData,lb)
+        self.signal.updateData(xData,cb)
+        
+
+    def setdata_worker(self):
+        self.worker = None
+        self.worker = FastWorker(self.update_data)
+        self.worker.signals.setdata.connect(self.update_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.start()    
+    
+    def add_historic_worker(self,_len):
+        self.worker = None
+        self.worker = FastWorker(self.load_historic_data,_len)
+        self.worker.signals.setdata.connect(self.add_historic_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.start() 
+    
+    def add_worker(self):
+        self.worker = None
+        self.worker = FastWorker(self.update_data)
+        self.worker.signals.setdata.connect(self.add_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.start()    
+    
+    def load_historic_data(self,_len,setdata):
+        xdata,macd,signalma,histogram= self.INDICATOR.get_data(stop=_len)
+        setdata.emit((xdata,macd,signalma,histogram))
+
+    
+    def update_data(self,setdata):
+        xdata,macd,signalma,histogram= self.INDICATOR.get_data(start=-1)
+        setdata.emit((xdata,macd,signalma,histogram))
+        self.last_pos.emit((self.has["inputs"]["indicator_type"],signalma[-1]))
+        self._panel.sig_update_y_axis.emit() 
+    
     def boundingRect(self) -> QRectF:
         return self.histogram.boundingRect()
     

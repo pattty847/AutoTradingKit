@@ -4,7 +4,7 @@ from .apo import apo
 from .bias import bias
 from .bop import bop
 from .brar import brar
-from .cci import cci
+from .cci import cci, CCI
 from .cfo import cfo
 from .cg import cg
 from .cmo import cmo

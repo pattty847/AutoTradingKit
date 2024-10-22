@@ -64,12 +64,12 @@ class TitleBar(HWIDGET):
         # left 0, top 5  dang thu nho la bot 196 of 400, right 560 of 800\\ mo lon right 1295 of 1536 , bot 567 of 793
         # if width_chart < updated_cursor_x:
         #     updated_cursor_x = width_chart
-        # elif updated_cursor_x < 0:
+        # if updated_cursor_x < 0:
         #     updated_cursor_x = 0
         # if height_chart < updated_cursor_y:
         #     updated_cursor_y = height_chart
-        # elif updated_cursor_y < 5:
-        #     updated_cursor_y = 5
+        if updated_cursor_y < 5:
+            updated_cursor_y = 5
         #print(updated_cursor_x, updated_cursor_y)
         self.sig_mouse_move.emit((updated_cursor_x, updated_cursor_y))
         return super().mouseMoveEvent(event)

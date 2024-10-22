@@ -187,7 +187,9 @@ class GraphSplitter(ViewSplitter):
     
     def create_sub_indicator(self,indicator_name:IndicatorType):
         panel = ViewSubPanel(self.chart,self)
-        panel.setup_indicator((indicator_name,self.mainwindow))
+        indicator = panel.setup_indicator((indicator_name,self.mainwindow))
+        if indicator:
+            self.chart.indicators.append(indicator) 
         self.add_sub_panel(panel)
         QApplication.processEvents()
 
@@ -204,7 +206,6 @@ class GraphSplitter(ViewSplitter):
         QApplication.processEvents()
 
     def create_normal_indicator(self,indicator_name:IndicatorType):
-        print(indicator_name)
         QApplication.processEvents()
 
     def setup_chart(self,mainwindow,current_ex:str="",current_symbol:str="",curent_interval:str=""):

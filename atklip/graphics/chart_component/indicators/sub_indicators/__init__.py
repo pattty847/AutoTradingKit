@@ -10,3 +10,4 @@ from .trix import BasicTRIX
 from .stc import BasicSTC
 from .uo import BasicUO
 from .stoch import BasicSTOCH
+from .cci import BasicCCI

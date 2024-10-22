@@ -12,10 +12,11 @@ import sys
 import warnings
 from collections import OrderedDict
 
+from typing import TypeAlias, TypedDict
+
 import numpy as np
 
 from . import Qt, debug, getConfigOption, reload
-from .metaarray import MetaArray
 from .Qt import QT_LIB, QtCore, QtGui
 from .util.cupy_helper import getCupy
 
@@ -65,6 +66,28 @@ SI_PREFIX_EXPONENTS['u'] = -6
 
 FLOAT_REGEX = re.compile(r'(?P<number>[+-]?((((\d+(\.\d*)?)|(\d*\.\d+))([eE][+-]?\d+)?)|((?i:nan)|(inf))))\s*((?P<siPrefix>[u' + SI_PREFIXES + r']?)(?P<suffix>\w.*))?$')
 INT_REGEX = re.compile(r'(?P<number>[+-]?\d+)\s*(?P<siPrefix>[u' + SI_PREFIXES + r']?)(?P<suffix>.*)$')
+
+class HueKeywordArgs(TypedDict):
+    hues: int
+    values: int
+    maxValue: int
+    minValue: int
+    maxHue: int
+    minHue: int
+    sat: int
+    alpha: int
+
+color_like: TypeAlias = (
+    QtGui.QColor 
+    | str 
+    | float
+    | int
+    | tuple[int, int, int]
+    | tuple[int, int, int, int]
+    | tuple[float, float, float]
+    | tuple[float, float, float, float]
+    | tuple[int, HueKeywordArgs]
+)
 
 
 def siScale(x, minVal=1e-25, allowUnicode=True):
@@ -223,9 +246,9 @@ class Color(QtGui.QColor):
         
     def __getitem__(self, ind):
         return (self.red, self.green, self.blue, self.alpha)[ind]()
-        
-    
-def mkColor(*args):
+
+
+def mkColor(*args) -> QtGui.QColor:
     """
     Convenience function for constructing QColor from a variety of argument 
     types. Accepted arguments are:
@@ -628,8 +651,8 @@ def eq(a, b):
             return True
 
     # Avoid comparing large arrays against scalars; this is expensive and we know it should return False.
-    aIsArr = isinstance(a, (np.ndarray, MetaArray))
-    bIsArr = isinstance(b, (np.ndarray, MetaArray))
+    aIsArr = isinstance(a, np.ndarray)
+    bIsArr = isinstance(b, np.ndarray)
     if (aIsArr or bIsArr) and type(a) != type(b):
         return False
 
@@ -687,16 +710,13 @@ def eq(a, b):
         return e
     elif t is np.bool_:
         return bool(e)
-    elif isinstance(e, np.ndarray) or (hasattr(e, 'implements') and e.implements('MetaArray')):
+    elif isinstance(e, np.ndarray):
         try:   ## disaster: if a is an empty array and b is not, then e.all() is True
             if a.shape != b.shape:
                 return False
         except:
             return False
-        if (hasattr(e, 'implements') and e.implements('MetaArray')):
-            return e.asarray().all()
-        else:
-            return e.all()
+        return e.all()
     else:
         raise TypeError("== operator returned type %s" % str(type(e)))
 
@@ -1745,23 +1765,15 @@ def gaussianFilter(data, sigma):
     return filtered + baseline
     
     
-def downsample(data, n, axis=0, xvals='subsample'):
+def downsample(data, n, axis=0, xvals='subsample', *, nanPolicy='propagate'):
     """Downsample by averaging points together across axis.
     If multiple axes are specified, runs once per axis.
-    If a metaArray is given, then the axis values can be either subsampled
-    or downsampled to match.
     """
-    ma = None
-    if (hasattr(data, 'implements') and data.implements('MetaArray')):
-        ma = data
-        data = data.view(np.ndarray)
-        
-    
     if hasattr(axis, '__len__'):
         if not hasattr(n, '__len__'):
             n = [n]*len(axis)
         for i in range(len(axis)):
-            data = downsample(data, n[i], axis[i])
+            data = downsample(data, n[i], axis[i], nanPolicy=nanPolicy)
         return data
     
     if n <= 1:
@@ -1773,21 +1785,14 @@ def downsample(data, n, axis=0, xvals='subsample'):
     sl = [slice(None)] * data.ndim
     sl[axis] = slice(0, nPts*n)
     d1 = data[tuple(sl)]
-    #print d1.shape, s
     d1.shape = tuple(s)
-    d2 = d1.mean(axis+1)
-    
-    if ma is None:
-        return d2
+    if nanPolicy == 'propagate':
+        d2 = d1.mean(axis+1)
+    elif nanPolicy == 'omit':
+        d2 = np.nanmean(d1, axis+1)
     else:
-        info = ma.infoCopy()
-        if 'values' in info[axis]:
-            if xvals == 'subsample':
-                info[axis]['values'] = info[axis]['values'][::n][:nPts]
-            elif xvals == 'downsample':
-                info[axis]['values'] = downsample(info[axis]['values'], n)
-        return MetaArray(d2, info=info)
-
+        raise ValueError(f"Keyword argument {nanPolicy=} must be one of {'propagate', 'omit'}.")
+    return d2
 
 def _compute_backfill_indices(isfinite):
     # the presence of inf/nans result in an empty QPainterPath being generated
@@ -2068,8 +2073,12 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
 
     # decide which points are connected by lines
     if connect == 'pairs':
+        mask = 1                # by default connect every 2nd point to every 1st one
+        if finiteCheck and not all_isfinite:
+            mask = isfinite[:len(x)//2 * 2]             # ensure even number of points
+            mask = mask[0::2] & mask[1::2]              # don't connect non-finite pairs
         arr['c'][0::2] = 0
-        arr['c'][1::2] = 1  # connect every 2nd point to every 1st one
+        arr['c'][1::2] = mask
     elif connect == 'array':
         # Let's call a point with either x or y being nan is an invalid point.
         # A point will anyway not connect to an invalid point regardless of the
@@ -2923,6 +2932,8 @@ def invertQTransform(tr):
     """
     try:
         det = tr.determinant()
+        if np.isinf(det):
+            return np_invert_qtransform(tr)
         detr = 1.0 / det    # let singular matrices raise ZeroDivisionError
         inv = tr.adjoint()
         inv *= detr
@@ -2930,6 +2941,34 @@ def invertQTransform(tr):
     except ZeroDivisionError:
         return _pinv_fallback(tr)
     
+
+def turnInfToSysMax(val):
+    """Turns infinite values into sys.float_info.max and -infinite values into -sys.float_info.max.
+       Used for QPointF and QTransform or normal float values.
+    """
+    if isinstance(val, QtCore.QPointF):
+        return QtCore.QPointF(turnInfToSysMax(val.x()), turnInfToSysMax(val.y()))
+    if isinstance(val, QtGui.QTransform):
+        return QtGui.QTransform(turnInfToSysMax(val.m11()), turnInfToSysMax(val.m12()), turnInfToSysMax(val.m13()),
+                                turnInfToSysMax(val.m21()), turnInfToSysMax(val.m22()), turnInfToSysMax(val.m23()),
+                                turnInfToSysMax(val.m31()), turnInfToSysMax(val.m32()), turnInfToSysMax(val.m33()))
+    if val == math.inf:
+        return sys.float_info.max
+    if val == -math.inf:
+        return -sys.float_info.max
+    return val
+
+
+def np_invert_qtransform(tr):
+    """
+    Inverts a QTransform without using the Qt API. This is useful when the Qt API fails to invert a matrix and produces NaNs.
+    """
+    np_inv_tr = np.linalg.inv(np.array([[tr.m11(), tr.m12(), tr.m13()],
+                                       [tr.m21(), tr.m22(), tr.m23()],
+                                       [tr.m31(), tr.m32(), tr.m33()]]))
+    q_transform = QtGui.QTransform(*np_inv_tr.ravel().tolist())
+    q_transform = turnInfToSysMax(q_transform)
+    return q_transform
 
 def pseudoScatter(data, spacing=None, shuffle=True, bidir=False, method='exact'):
     """Return an array of position values needed to make beeswarm or column scatter plots.

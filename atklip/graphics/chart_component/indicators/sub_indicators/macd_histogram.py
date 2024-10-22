@@ -209,15 +209,15 @@ class MACDHistogram(GraphicsObject):
         try:
             if _type == "reset":
                 self._is_change_source = True
-                # setdata.emit((x_data[:-1], y_data[:-1]))
-                self.setData((x_data[:-1], y_data[:-1]))
+                setdata.emit((x_data, y_data))
+                # self.setData((x_data[:-1], y_data[:-1]))
             if _type == "load_historic":
                 _len = len(self._bar_picutures)
-                # setdata.emit((x_data[:-1], y_data[:-1]))
-                self.setData((x_data[:-1*_len], y_data[:-1*_len]))
+                setdata.emit((x_data, y_data))
+                # self.setData((x_data[:-1*_len], y_data[:-1*_len]))
             if _type == "add":
-                # setdata.emit((x_data[:-1], y_data[:-1]))
-                self.setData((x_data[-2:], y_data[-2:]))
+                setdata.emit((x_data, y_data))
+                # self.setData((x_data[-2:], y_data[-2:]))
             #QCoreApplication.processEvents()
         except Exception as e:
             pass

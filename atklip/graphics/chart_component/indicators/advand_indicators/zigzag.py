@@ -28,9 +28,8 @@ class BasicZIGZAG(PlotDataItem):
     
     sig_change_indicator_name = Signal(str)
 
-    def __init__(self,chart,id = None,clickable=True) -> None:
+    def __init__(self,chart) -> None:
         """Choose colors of candle"""
-        # GraphicsObject.__init__(self)
         super().__init__()
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
         self.chart:Chart = chart
@@ -55,7 +54,7 @@ class BasicZIGZAG(PlotDataItem):
                     }
                     }
      
-        self.id = id
+        self.id = self.chart.objmanager.add(self)
         
         self.on_click.connect(self.on_click_event)
         self.signal_visible.connect(self.setVisible)
@@ -78,13 +77,21 @@ class BasicZIGZAG(PlotDataItem):
         self.chart.sig_update_source.connect(self.change_source,Qt.ConnectionType.AutoConnection)   
         self.signal_delete.connect(self.delete)
     
+    @property
+    def id(self):
+        return self.chart_id
     
+    @id.setter
+    def id(self,_chart_id):
+        self.chart_id = _chart_id
+        
     def disconnect_signals(self):
         try:
             self.INDICATOR.sig_reset_all.disconnect(self.reset_threadpool_asyncworker)
             self.INDICATOR.sig_update_candle.disconnect(self.setdata_worker)
             self.INDICATOR.sig_add_candle.disconnect(self.setdata_worker)
             self.INDICATOR.signal_delete.disconnect(self.replace_source)
+            self.INDICATOR.sig_add_historic.disconnect(self.add_historic_worker)
         except RuntimeError:
                     pass
     
@@ -173,9 +180,9 @@ class BasicZIGZAG(PlotDataItem):
         self.worker = FastWorker(self.update_data)
         self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
         self.worker.start()    
-    def add_historic_worker(self):
+    def add_historic_worker(self,_len):
         self.worker = None
-        self.worker = FastWorker(self.load_historic_data)
+        self.worker = FastWorker(self.load_historic_data,_len)
         self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
         self.worker.start()
     def regen_indicator(self,setdata):
@@ -184,7 +191,8 @@ class BasicZIGZAG(PlotDataItem):
         self.has["name"] = f"ZIGZAG {self.has["inputs"]["legs"]} {self.has["inputs"]["deviation"]}"
         self.sig_change_indicator_name.emit(self.has["name"])
         self.sig_change_yaxis_range.emit()
-    def load_historic_data(self,setdata):
+    def load_historic_data(self,_len,setdata):
+        "zigzag do not need _len"
         xdata, zz_value = self.INDICATOR.get_data()
         setdata.emit((xdata,zz_value))
     def set_Data(self,data):

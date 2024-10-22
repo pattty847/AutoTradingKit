@@ -39,9 +39,9 @@ class DRAW_BAR(QFrame,Ui_draw_bar):
         self.current_btn.set_icon_color()
         self.add_item(self._cursor)
         self.add_item(LINES(self,self.sig_draw_object_name))
-        # self.add_item(FIBONACCI(self))
-        # self.add_item(PROJECTS(self))
-        # self.add_item(BRUSHS(self))
+        self.add_item(FIBONACCI(self,self.sig_draw_object_name))
+        self.add_item(PROJECTS(self,self.sig_draw_object_name))
+        self.add_item(BRUSHS(self,self.sig_draw_object_name))
         # self.add_item(TEXTS(self))
         # self.addSeparator()
         # self.add_item(MEASURE(self))
@@ -49,9 +49,9 @@ class DRAW_BAR(QFrame,Ui_draw_bar):
         # self.add_item(ZOOM(self))
         # self.add_item(MAGNET(self))
         # self.add_item(EYES(self))
-        # self.addSeparator()
-        # self.add_item(RECIRCLEBIN(self))
-        # self._setting_layout.addWidget(FAVORITE(self))
+        self.addSeparator()
+        self.add_item(RECIRCLEBIN(self,self.sig_draw_object_name))
+        self._setting_layout.addWidget(FAVORITE(self,self.sig_draw_object_name))
     
     def get_current_btn(self):
         if isinstance(self.current_btn, ShowmenuButton):

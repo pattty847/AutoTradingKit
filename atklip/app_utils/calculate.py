@@ -10,7 +10,7 @@ import numpy as np
 def round_(v):
     return np.floor(v+0.5)
 
-def convert_precicion(number):
+def convert_precision(number):
     if number >= 1:
         return int(number)
     number = f"{number}"

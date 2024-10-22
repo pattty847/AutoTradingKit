@@ -55,8 +55,11 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
     def initWindow(self):
         desktop = screen.getCurrentScreenGeometry()
         w, h = desktop.width(), desktop.height()
-        self.setGeometry(int(w/4 - self.width()/4),int(h/4 - self.height()/4),w/2,h/2)
-        self.resize(w/2, h/2)
+        _w, _h = 1200, 800
+        self.resize(_w, _h)
+        self.setGeometry(int(w/2 - self.width()/2),int(h/2 - self.height()/2),_w,_h)
+        # self.resize(_w, _h)
+
     def load_pre_config(self):
         curent_tab = AppConfig.get_config_value("profiles.current_tab")
         if curent_tab == None:

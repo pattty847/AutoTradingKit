@@ -47,8 +47,8 @@ class PriceLine(InfiniteLine):
         colorline = "green" if _close >= _open else "red"
         self.pen.setColor(mkColor(colorline))
         self.setPos(_close)
-        self.prepareGeometryChange()
-        self.informViewBoundsChanged()
+        # self.prepareGeometryChange()
+        # self.informViewBoundsChanged()
             
     def update_price_line_indicator(self,lastcandle:list[OHLCV]|float):
         

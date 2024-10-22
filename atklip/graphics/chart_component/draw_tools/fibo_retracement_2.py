@@ -54,10 +54,8 @@ class FiboROI2(SpecialROI):
         self.segments = []
         self.popup_setting_tool = None
        
-        # self.setAcceptedMouseButtons(Qt.MouseButton.LeftButton)
-        self.precision = self.chart.get_trading_rules_precision(self.chart.symbol)
-        # print(489, self.precision, self.chart.symbol)
-        # self.add_cross_line_fibo()
+        self.precision = self.chart._precision
+
 
         self.signal_visible.connect(self.setVisible)
         self.signal_delete.connect(self.delete)
@@ -68,7 +66,7 @@ class FiboROI2(SpecialROI):
 
         self.last_left_pos = None
         self.last_right_pos = None
-        self.reverse = True if self.chart.fibo_reverse else False
+        self.reverse = True #if self.chart.fibo_reverse else False
         self.movable = movable
         self.locked = False
         self.trend_line = True

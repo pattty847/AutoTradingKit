@@ -7,7 +7,7 @@ from PySide6.QtCore import (QEasingCurve, QEvent, QPropertyAnimation, QObject, Q
                           Qt, QSize, QRectF, Signal, QPoint, QTimer, QObject, QParallelAnimationGroup)
 from PySide6.QtGui import (QAction, QIcon, QColor, QPainter, QPen, QPixmap, QRegion, QCursor, QTextCursor, QHoverEvent,
                            QFontMetrics, QKeySequence)
-from PySide6.QtWidgets import (QApplication, QMenu, QProxyStyle, QStyle,
+from PySide6.QtWidgets import (QApplication, QMenu, QProxyStyle, QStyle, QStyleFactory,
                                QGraphicsDropShadowEffect, QListWidget, QWidget, QHBoxLayout,
                                QListWidgetItem, QLineEdit, QTextEdit, QStyledItemDelegate, QStyleOptionViewItem, QLabel)
 
@@ -169,7 +169,7 @@ class MenuActionListWidget(QListWidget):
         self._itemHeight = 28
         self._maxVisibleItems = -1  # adjust visible items according to the size of screen
 
-        self.setViewportMargins(0, 0, 0, 0)
+        self.setViewportMargins(0, 6, 0, 6)
         self.setTextElideMode(Qt.ElideNone)
         self.setDragEnabled(False)
         self.setMouseTracking(True)
@@ -209,8 +209,9 @@ class MenuActionListWidget(QListWidget):
 
         # adjust the height of viewport
         w, h = MenuAnimationManager.make(self, aniType).availableViewSize(pos)
-        r = self.viewport().childrenRect()
-        self.viewport().resize(r.size())
+
+        # fixes https://github.com/zhiyiYo/PyQt-Fluent-Widgets/issues/844
+        # self.viewport().adjustSize()
 
         # adjust the height of list widget
         m = self.viewportMargins()
@@ -280,7 +281,6 @@ class RoundMenu(QMenu):
         self.itemHeight = 28
 
         self.hBoxLayout = QHBoxLayout(self)
-        self.hBoxLayout.setContentsMargins(0,0,0,0)
         self.view = MenuActionListWidget(self)
 
         self.aniManager = None
@@ -294,14 +294,17 @@ class RoundMenu(QMenu):
         self.setAttribute(Qt.WA_TranslucentBackground)
         self.setMouseTracking(True)
 
+        # fixes https://github.com/zhiyiYo/PyQt-Fluent-Widgets/issues/848
+        self.setStyle(QStyleFactory.create("fusion"))
+
         self.timer.setSingleShot(True)
         self.timer.setInterval(400)
         self.timer.timeout.connect(self._onShowMenuTimeOut)
 
-        self.setShadowEffect(blurRadius=0)
+        self.setShadowEffect()
         self.hBoxLayout.addWidget(self.view, 1, Qt.AlignCenter)
 
-        self.hBoxLayout.setContentsMargins(0, 0, 0, 0)
+        self.hBoxLayout.setContentsMargins(12, 8, 12, 20)
         FluentStyleSheet.MENU.apply(self)
 
         self.view.itemClicked.connect(self._onItemClicked)
@@ -320,7 +323,7 @@ class RoundMenu(QMenu):
         self.itemHeight = height
         self.view.setItemHeight(height)
 
-    def setShadowEffect(self, blurRadius=30, offset=(0, 0), color=QColor(0, 0, 0, 30)):
+    def setShadowEffect(self, blurRadius=30, offset=(0, 8), color=QColor(0, 0, 0, 30)):
         """ add shadow to dialog """
         self.shadowEffect = QGraphicsDropShadowEffect(self.view)
         self.shadowEffect.setBlurRadius(blurRadius)
@@ -348,8 +351,11 @@ class RoundMenu(QMenu):
 
     def clear(self):
         """ clear all actions """
-        for i in range(len(self._actions)-1, -1, -1):
-            self.removeAction(self._actions[i])
+        while self._actions:
+            self.removeAction(self._actions[-1])
+
+        while self._subMenus:
+            self.removeMenu(self._subMenus[-1])
 
     def setIcon(self, icon: Union[QIcon, FluentIconBase]):
         """ set the icon of menu """
@@ -514,14 +520,17 @@ class RoundMenu(QMenu):
             return
 
         # remove item
-        self.view.takeItem(self.view.row(item))
-        item.setData(Qt.UserRole, None)
+        self._removeItem(item)
         super().removeAction(action)
 
-        # delete widget
-        widget = self.view.itemWidget(item)
-        if widget:
-            widget.deleteLater()
+    def removeMenu(self, menu):
+        """ remove submenu """
+        if menu not in self._subMenus:
+            return
+
+        item = menu.menuItem
+        self._subMenus.remove(menu)
+        self._removeItem(item)
 
     def setDefaultAction(self, action: Union[QAction, Action]):
         """ set the default action """
@@ -581,6 +590,15 @@ class RoundMenu(QMenu):
         w.resize(item.sizeHint())
 
         return item, w
+
+    def _removeItem(self, item):
+        self.view.takeItem(self.view.row(item))
+        item.setData(Qt.UserRole, None)
+
+        # delete widget
+        widget = self.view.itemWidget(item)
+        if widget:
+            widget.deleteLater()
 
     def _showSubMenu(self, item):
         """ show sub menu """
@@ -732,7 +750,7 @@ class RoundMenu(QMenu):
         if self.isSubMenu:
             self.menuItem.setSelected(True)
 
-    def exec_(self, pos: QPoint, ani=True, aniType=MenuAnimationType.DROP_DOWN):
+    def exec_(self, pos: QPoint, ani=True, aniType=MenuAnimationType.NONE):
         """ show menu
 
         Parameters
@@ -845,7 +863,7 @@ class DummyMenuAnimationManager(MenuAnimationManager):
         self.menu.move(self._endPosition(pos))
 
 
-@MenuAnimationManager.register(MenuAnimationType.DROP_DOWN)
+@MenuAnimationManager.register(MenuAnimationType.NONE)
 class DropDownMenuAnimationManager(MenuAnimationManager):
     """ Drop down menu animation manager """
 
@@ -867,7 +885,7 @@ class DropDownMenuAnimationManager(MenuAnimationManager):
         self.menu.setMask(QRegion(0, y, w, h))
 
 
-@MenuAnimationManager.register(MenuAnimationType.PULL_UP)
+@MenuAnimationManager.register(MenuAnimationType.NONE)
 class PullUpMenuAnimationManager(MenuAnimationManager):
     """ Pull up menu animation manager """
 
@@ -897,7 +915,7 @@ class PullUpMenuAnimationManager(MenuAnimationManager):
         self.menu.setMask(QRegion(0, y, w, h - 28))
 
 
-@MenuAnimationManager.register(MenuAnimationType.FADE_IN_DROP_DOWN)
+@MenuAnimationManager.register(MenuAnimationType.NONE)
 class FadeInDropDownMenuAnimationManager(MenuAnimationManager):
     """ Fade in drop down menu animation manager """
 
@@ -928,7 +946,7 @@ class FadeInDropDownMenuAnimationManager(MenuAnimationManager):
         return ss.width() - 100, max(ss.bottom() - pos.y() - 10, 1)
 
 
-@MenuAnimationManager.register(MenuAnimationType.FADE_IN_PULL_UP)
+@MenuAnimationManager.register(MenuAnimationType.NONE)
 class FadeInPullUpMenuAnimationManager(MenuAnimationManager):
     """ Fade in pull up menu animation manager """
 
@@ -1015,7 +1033,7 @@ class EditMenu(RoundMenu):
     def _parentSelectedText(self):
         raise NotImplementedError
 
-    def exec(self, pos, ani=True, aniType=MenuAnimationType.DROP_DOWN):
+    def exec(self, pos, ani=True, aniType=MenuAnimationType.NONE):
         self.clear()
         self.createActions()
 
@@ -1074,7 +1092,7 @@ class LineEditMenu(EditMenu):
     def _parentSelectedText(self):
         return self.parent().selectedText()
 
-    def exec(self, pos, ani=True, aniType=MenuAnimationType.DROP_DOWN):
+    def exec(self, pos, ani=True, aniType=MenuAnimationType.NONE):
         return super().exec(pos, ani, aniType)
 
 
@@ -1102,7 +1120,7 @@ class TextEditMenu(EditMenu):
 
         super()._onItemClicked(item)
 
-    def exec(self, pos, ani=True, aniType=MenuAnimationType.DROP_DOWN):
+    def exec(self, pos, ani=True, aniType=MenuAnimationType.NONE):
         return super().exec(pos, ani, aniType)
 
 
@@ -1118,9 +1136,9 @@ class IndicatorMenuItemDelegate(MenuItemDelegate):
         painter.setRenderHints(
             QPainter.Antialiasing | QPainter.SmoothPixmapTransform | QPainter.TextAntialiasing)
 
-        # painter.setPen(Qt.NoPen)
-        # painter.setBrush(themeColor())
-        # painter.drawRoundedRect(6, 11+option.rect.y(), 3, 15, 1.5, 1.5)
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(themeColor())
+        painter.drawRoundedRect(6, 11+option.rect.y(), 3, 15, 1.5, 1.5)
 
         painter.restore()
 
@@ -1206,7 +1224,7 @@ class CheckableMenu(RoundMenu):
         w = super()._adjustItemText(item, action)
         item.setSizeHint(QSize(w + 26, self.itemHeight))
 
-    def exec(self, pos, ani=True, aniType=MenuAnimationType.DROP_DOWN):
+    def exec(self, pos, ani=True, aniType=MenuAnimationType.NONE):
         return super().exec(pos, ani, aniType)
 
 
@@ -1258,7 +1276,7 @@ class LabelContextMenu(RoundMenu):
     def label(self) -> QLabel:
         return self.parent()
 
-    def exec(self, pos, ani=True, aniType=MenuAnimationType.DROP_DOWN):
+    def exec(self, pos, ani=True, aniType=MenuAnimationType.NONE):
         if self.label().hasSelectedText():
             self.addActions([self.copyAct, self.selectAllAct])
         else:

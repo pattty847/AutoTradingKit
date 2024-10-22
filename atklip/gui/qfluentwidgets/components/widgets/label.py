@@ -50,7 +50,6 @@ class FluentLabelBase(QLabel):
     * FluentLabelBase(`text`: str, `parent`: QWidget = None)
     """
 
-
     @singledispatchmethod
     def __init__(self, parent: QWidget = None):
         super().__init__(parent)
@@ -321,6 +320,15 @@ class ImageLabel(QLabel):
         if self.movie():
             self.movie().setScaledSize(QSize(w, height))
 
+    def setScaledSize(self, size: QSize):
+        if self.isNull():
+            return
+
+        self.setFixedSize(size)
+
+        if self.movie():
+            self.movie().setScaledSize(size)
+
     def isNull(self):
         return self.image.isNull()
 
@@ -431,7 +439,7 @@ class AvatarWidget(ImageLabel):
     """
 
     def _postInit(self):
-        self.setRadius(18)
+        self.setRadius(48)
 
     def getRadius(self):
         return self._radius
