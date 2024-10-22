@@ -35,7 +35,7 @@ async def main():
     message_hash = market['lowercaseId'] + '@miniTicker'
     while True:
         try:
-            print(await exchange.watc(message_hash))
+            print(await exchange.watch_public(message_hash))
         except Exception as e:
             print(type(e).__name__, str(e))
     await exchange.close()

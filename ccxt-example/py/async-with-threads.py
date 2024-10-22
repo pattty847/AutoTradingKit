@@ -12,7 +12,7 @@ import ccxt.async_support as ccxt  # noqa: E402
 
 
 async def test(loop):
-    exchange = ccxt.binance({
+    exchange = ccxt.bittrex({
         'asyncio_loop': loop,
     })
     print(await exchange.fetch_ticker('ETH/BTC'))

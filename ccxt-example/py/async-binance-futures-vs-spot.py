@@ -31,16 +31,15 @@ async def load(exchange, symbol, type='spot'):
 
 
 async def run():
-    exchange = ccxt.binanceusdm({
-        'apiKey': "zhBF9X2mhD7rY6fpFU243biBtE4ySGpXTBPdYYOExyx27G5CrU6cCEditBhO7ek4",
-        'secret': "6rIYDN1xBaxxGyuLslYGMxlHFtjgzhVh6nV4zO8IKaspdF1H3tC5MKXMgxA1rHDA",
+    exchange = ccxt.binance({
+        'apiKey': 'YOUR_API_KEY',
+        'secret': 'YOUR_SECRET',
     })
     symbol = 'BTC/USDT'
     everything = {
         'spot': await load(exchange, symbol, 'spot'),
         'future': await load(exchange, symbol, 'future'),
     }
-    print(everything["future"])
     await exchange.close()
     return everything
 

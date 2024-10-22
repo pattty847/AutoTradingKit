@@ -19,7 +19,7 @@ import ccxt  # noqa: E402
 # -----------------------------------------------------------------------------
 
 kraken = ccxt.kraken()
-coinbasepro = ccxt.coinbase()
+coinbasepro = ccxt.coinbasepro()
 
 symbol = 'BTC/USD'
 

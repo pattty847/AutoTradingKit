@@ -6,7 +6,6 @@ import asyncio
 import os
 import sys
 from pprint import pprint
-import time
 
 root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(root + '/python')
@@ -16,32 +15,29 @@ import ccxt.async_support as ccxt  # noqa: E402
 
 async def main():
     exchange = ccxt.binance({
-        'apiKey': '',
-        'secret': '',
+        'apiKey': 'YOUR_API_KEY',
+        'secret': 'YOUR_SECRET',
         # 'verbose': True,  # for debug output
     })
     await exchange.load_markets()
     market_id = 'ETH-221028-1700-C'
-    symbol = 'ETH/USDT'
+    symbol = 'ETH/USDT:USDT-221028-1700-C'
     timeframe = '1m'
     since = 1592317127349
     limit = 10
-    while True:
-        try:
-            # response = await exchange.fetch_ohlcv(symbol, timeframe, limit)
-            # Implicit API:
-            response = await exchange.eapiPublicGetKlines({
-                'symbol': market_id,
-                'interval': timeframe,
-                # 'startTime': since,  # optional
-                # 'limit': limit,  # optional
-            })
-            pprint(response)
-        except Exception as e:
-            print('fetch_OHLCV() failed')
-            print(e)
-            break
-        time.sleep(1)
+    try:
+        response = await exchange.fetch_OHLCV(symbol, timeframe, since, limit)
+        # Implicit API:
+        # response = await exchange.eapiPublicGetKlines({
+        #     'symbol': market_id,
+        #     'interval': timeframe,
+        #     # 'startTime': since,  # optional
+        #     # 'limit': limit,  # optional
+        # })
+        pprint(response)
+    except Exception as e:
+        print('fetch_OHLCV() failed')
+        print(e)
     await exchange.close()
 
 
