@@ -17,8 +17,10 @@ uvicorn
 multitasking
 pandas-datareader
 pyarrow
+arrow
 setuptools
 streamlit
+tulipy
 # polars
 # polars-lts-cpu
 python-rapidjson
