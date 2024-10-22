@@ -111,6 +111,7 @@ class FiboROI2(SpecialROI):
             target = TextItem("")
             target.setAnchor((1,0.6))
             self.list_lines.append(target)
+            # target.setParentItem(self)
             self.parent.addItem(target)
         
         try:

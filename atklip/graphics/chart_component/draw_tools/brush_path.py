@@ -34,7 +34,7 @@ class _PolyLineSegment(LineSegmentROI):
             ev.acceptDrags(Qt.MouseButton.LeftButton)
         return LineSegmentROI.hoverEvent(self, ev)
     
-class MyPolyLineROI(SpecialROI):
+class BasePolyLineROI(SpecialROI):
     r"""
     Container class for multiple connected LineSegmentROIs.
 
@@ -231,7 +231,7 @@ class MyPolyLineROI(SpecialROI):
         for seg in self.segments:
             seg.setPen(*args, **kwds)
 
-class PathROI(MyPolyLineROI):
+class PathROI(BasePolyLineROI):
     on_click = Signal(QObject)
     on_Doubleclick = Signal(QObject)
     draw_rec = Signal()

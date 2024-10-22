@@ -8,7 +8,7 @@ epoch_period = 1e30
 
 from ..draw_tools.roi import SpecialROI, _FiboLineSegment
 
-class MyPolyLine(SpecialROI):
+class BasePolyLine(SpecialROI):
     r"""
     Container class for multiple connected LineSegmentROIs.
 
@@ -179,7 +179,7 @@ class MyPolyLine(SpecialROI):
         for seg in self.segments:
             seg.setPen(*args, **kwds)
 
-class RangePolyLine(MyPolyLine):     # for date price range
+class RangePolyLine(BasePolyLine):     # for date price range
     on_click = Signal(object)
 
     signal_visible = Signal(bool)
