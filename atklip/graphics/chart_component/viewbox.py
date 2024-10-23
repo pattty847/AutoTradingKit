@@ -84,6 +84,7 @@ class PlotViewBox(ViewBox):
                 }
         })
         
+        self.setLimits(minXRange=100, maxXRange=1440)
     def makepen(self,color, style=None, width=1):
         if style is None or style == '-':
             return mkPen(color=color, width=width)
@@ -177,10 +178,10 @@ class PlotViewBox(ViewBox):
         y_range = (self.plotwidget.yAxis.range[1] + self.plotwidget.yAxis.range[0])/2
         x_range = self.plotwidget.xAxis.range[1]
         tr = self.targetRect()
-        if tr.right() - tr.left() >=1440 and ev.delta() < 0:
-            "giới hạn 1440 candle trên viewchart"
-            if axis == None or axis == 0:
-                return True
+        # if tr.right() - tr.left() >=1440 and ev.delta() < 0:
+        #     "giới hạn 1440 candle trên viewchart"
+        #     if axis == None or axis == 0:
+        #         return True
         
         if axis is None:
                 mask = [True, False]   # Zom theo trục x
@@ -266,9 +267,9 @@ class PlotViewBox(ViewBox):
             x0 = tr.left()
             x1 = tr.right()
             # print(159, x1-x0)
-            if x1 - x0  >= 1440 and dif[0] < 0:
-                "giới hạn 1440 candle trên viewchart"
-                return True
+            # if x1 - x0  >= 1440 and dif[0] < 0:
+            #     "giới hạn 1440 candle trên viewchart"
+            #     return True
                 
             dif[0] *= -1
             s = ((mask * 0.02) + 1) ** dif
