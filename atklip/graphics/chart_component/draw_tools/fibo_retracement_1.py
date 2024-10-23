@@ -508,7 +508,7 @@ class FiboROI(SpecialROI):
             bot = self.mapToView(Point(0,0)).y()
             top = bot + self.size().y()
             for i in range(self.counts):
-                price = round(cal_line_price_fibo(top, bot, self.fibonacci_levels[i]),f)
+                price = cal_line_price_fibo(top, bot, self.fibonacci_levels[i])
                 self.update_text_percentage([i, price, parentbound.x(), 1])
                 p.setPen(mkPen(self.colors_lines[i],width=1))
                 y_line_pointf = (-self.fibonacci_levels[self.counts-i-1]+self.fibonacci_levels[0])*unit
