@@ -1,10 +1,11 @@
 import datetime as dt
 from operator import itemgetter
+import random
 
 import pytz
 from PySide6 import QtCore, QtWidgets
 from PySide6.QtCore import Signal, QPointF, Qt, QRectF, QCoreApplication
-from PySide6.QtGui import QPainter, QColor
+from PySide6.QtGui import QPainter, QColor,QTextItem
 from PySide6.QtWidgets import QWidget
 from atklip.graphics.pyqtgraph import TextItem, mkPen
 from atklip.graphics.pyqtgraph.Point import Point
@@ -25,6 +26,21 @@ def cal_line_price_fibo(top, bot, percent, direct=1):
     if direct == 1:
         return top - diff
     return bot + diff
+
+
+class BaseTextItem(TextItem):
+    def __init__(self, text='', color=(200,200,200), html=None, anchor=(0,0),
+                 border=None, fill=None, angle=0, rotateAxis=None, ensureInBounds=False):
+        super().__init__(text=text, color=color, html=html, anchor=anchor,
+                 border=border, fill=fill, angle=angle, rotateAxis=rotateAxis, ensureInBounds=ensureInBounds)
+    def updateTextPos(self):
+        pass
+        # # update text position to obey anchor
+        # r = self.textItem.boundingRect()
+        # tl = self.textItem.mapToParent(r.topLeft())
+        # br = self.textItem.mapToParent(r.bottomRight())
+        # offset = (br - tl) * self.anchor
+        # self.textItem.setPos(-offset)
 
 class FiboROI(SpecialROI):
     on_click = Signal(object)
@@ -101,13 +117,12 @@ class FiboROI(SpecialROI):
         while self.counts > len(self.colors_rect):
             adding = self.colors_rect[-1]
             self.colors_rect.append(adding)
-
         for i in range(self.counts):
-            target = TextItem("")
-            target.setAnchor((1,0.6))
+            target = BaseTextItem("", anchor=(1, 0.2))
+            # target.setAnchor((1,0.6))
             self.list_lines.append(target)
-            # target.setParentItem(self)
-            self.parent.addItem(target)
+            target.setParentItem(self)
+            # self.parent.addItem(target)
         
         try:
             self.addSegment(self.handles[0]['item'], self.handles[1]['item'])
@@ -185,25 +200,46 @@ class FiboROI(SpecialROI):
         # h.mousePressEvent = self.mousePressEvent
         return h
     
+    
+    def updateTextPos(self,textItem:TextItem,y_line_pointf):
+        # update text position to obey anchor
+        r = textItem.textItem.boundingRect()
+        tl = textItem.textItem.mapToParent(r.topLeft())
+        br = textItem.textItem.mapToParent(r.bottomRight())
+        offset = (br - tl) * textItem.anchor
+        p = textItem.parentItem()
+        if p is not None:
+            prb = p.boundingRect()
+            x,y,w,h = prb.x(),prb.y(),prb.width(),prb.height()
+            _x = -offset.x() + x
+            mapFromParent = textItem.mapFromParent(Point(0,y_line_pointf))
+            pos = Point(_x,mapFromParent.y())
+            textItem.textItem.setPos(pos)
+    
     def update_text_percentage(self, data):
         i, price, x, direct = data[0], data[1], data[2], data[3]
+        
+        mapFromParent = self.mapFromParent(Point(0,price))
+        y_line_pointf = mapFromParent.y()
         text = self.list_lines[i]
-        if self.extend_left:
-            x = self.chart.viewRect().left()
-            text.setAnchor((0,0.8))
-        else:
-            text.setAnchor((1,0.6))
+        # if self.extend_left:
+        #     x = self.chart.viewRect().left()
+        #     text.setAnchor((0,0.8))
+        # else:
+        #     text.setAnchor((1,0.6))
+        # print(y_line_pointf)
+        self.updateTextPos(text,y_line_pointf)
 
         if direct == 1:
             text.percent = self.fibonacci_levels[i]
             text.setColor(self.colors_lines[self.counts - i - 1])
             text.setText(f"{text.percent} ({str(price)})" )
-            text.setPos(x, price)
+            # text.setPos(x, price)
         else:
             text.percent = self.fibonacci_levels[self.counts - i - 1] 
             text.setColor(self.colors_lines[i])
             text.setText(f"{text.percent} ({str(price)})" )
-            text.setPos(x, price)
+            # text.setPos(x, price)
 
     def mousePressEvent(self, ev):
         if ev.button() == Qt.MouseButton.LeftButton:
@@ -306,121 +342,11 @@ class FiboROI(SpecialROI):
         diff = counts - self.counts
         if diff > 0:
             for i in range(counts):
-                target = TextItem("")
+                target = BaseTextItem("")
                 target.setAnchor((1,0.6))
                 self.list_lines.append(target)
                 self.parent.addItem(target)
             self.counts = len(self.list_lines)
-
-    def update_fibo(self, mapchart_trading, setting_tool_menu):
-        # print(161, setting_tool_menu.scrollAreaWidgetContents.findChildren(QWidget, "widget_fibo_lines"))
-        list_line_config = setting_tool_menu.scrollAreaWidgetContents.findChildren(QWidget, "widget_fibo_lines")
-        list_fibo_level_temp = []
-        for wid in list_line_config:
-            if wid.cb_on_off.isChecked():
-                try:
-                    list_fibo_level_temp.append({
-                    "per_price": float(wid.txt_per_price.text()),
-                    "color": wid.pick_color.color()
-                    })
-                except ValueError:
-                    continue
-            if wid.cb_on_off_2.isChecked():
-                try:
-                    list_fibo_level_temp.append({
-                        "per_price": float(wid.txt_per_price_2.text()),
-                        "color": wid.pick_color_2.color()
-                    })
-                except ValueError:
-                    continue
-        list_fibo_line_sorted = sorted(list_fibo_level_temp, key=itemgetter('per_price'), reverse=True)
-        # print(179, list_fibo_line_sorted)   
-        list_level = []
-        color_rect = []
-        color_line = []
-        color_border = []
-        for line in list_fibo_line_sorted:
-            list_level.append(line["per_price"])
-            red = line["color"].red()
-            green = line["color"].green()
-            blue = line["color"].blue()
-            try:
-                color_line.insert(0, (red, green, blue, 200))
-                color_rect.insert(0, QColor(red, green, blue, 40))
-                color_border.insert(0, (red, green, blue, 0))
-            except:
-                color_line.append((red, green, blue, 200))
-                color_rect.append(QColor(red, green, blue, 40))
-                color_border.append((red, green, blue, 0))
-        # p = QPainter(self)
-        # p.beginNativePainting()
-        if len(list_level) >= len(self.fibonacci_levels):
-            for i in range(len(list_level) - len(self.fibonacci_levels)):
-                target = TextItem("")
-                target.setAnchor((1,0.6))
-                self.list_lines.append(target)
-                self.parent.addItem(target)
-        else:
-            for i in range(-len(list_level) +len(self.fibonacci_levels)):
-                target = self.list_lines.pop()
-                self.parent.removeItem(target)
-
-        self.fibonacci_levels = list_level
-        self.counts = len(list_level)
-        self.colors_rect = color_rect
-        self.colors_lines = color_line
-        self.colors_borders = color_border
-
-        if "fibo_sp_line" in self.objectName():
-            self.chart.fibo_special_levels = list_level
-            self.chart.fibo_special_rects = color_rect
-            self.chart.fibo_special_colors = color_line
-        else:
-            self.chart.custom_fibonacci_levels = list_level
-            self.chart.custom_colors_rect = color_rect
-            self.chart.custom_colors_lines = color_line
-            self.chart.custom_colors_borders = color_border
-
-        if hasattr(setting_tool_menu, "cb_trend_line"):
-            if setting_tool_menu.cb_trend_line.isChecked():
-                self.trend_line = True
-            else:
-                self.trend_line = False
-        
-        # move coordinates
-        first_date = setting_tool_menu.dt_edit_first.dateTime().toString("yyyy-MM-dd hh:mm:ss")
-        first_ele = dt.datetime.strptime(first_date, "%Y-%m-%d %H:%M:%S")
-        first_utc = pytz.timezone('UTC').localize(first_ele).timestamp()
-        second_date = setting_tool_menu.dt_edit_second.dateTime().toString("yyyy-MM-dd hh:mm:ss")
-        second_ele = dt.datetime.strptime(second_date, "%Y-%m-%d %H:%M:%S")
-        second_utc = pytz.timezone('UTC').localize(second_ele).timestamp()
-        # print(680, first_utc, second_utc, self.handles)
-        h1_pre_pos = self.handles[1]["item"].pos()
-        se_price = setting_tool_menu.sp_box_second_price.value()
-        fi_price = setting_tool_menu.sp_box_first_price.value()
-        self.movePoint(1, QPointF(second_utc, se_price))
-        self.movePoint(0, QPointF(first_utc, fi_price)) 
-        if self.reverse != setting_tool_menu.cb_reverse.isChecked():
-            self.reverse = setting_tool_menu.cb_reverse.isChecked()
-            if h1_pre_pos == self.handles[1]["item"].pos():
-                print("ko chay reverse position")
-                self.movePoint(1, QPointF(second_utc+1, se_price*1.001))
-                self.movePoint(0, QPointF(first_utc, fi_price)) 
-                self.movePoint(1, QPointF(second_utc, se_price))
-
-        if hasattr(setting_tool_menu, "cb_extend_left"):
-            if setting_tool_menu.cb_extend_left.isChecked():
-                self.extend_to_left(True)
-            else:
-                self.extend_to_left(False)
-            if setting_tool_menu.cb_extend_right.isChecked():
-                self.extend_to_right(True)
-            else:
-                self.extend_to_right(False)
-        
-        # print(688, "checking point", h1_pre_pos, self.handles[1]["item"].pos(), h0_pre_pos, self.handles[0]["item"].pos(), first_utc, second_utc)
-
-        self.draw_rec.emit()
 
     def locked_handle(self):
         self.yoff = True
@@ -566,7 +492,7 @@ class FiboROI(SpecialROI):
             bot = top + self.size().y()
             for i in range(self.counts):
                 price = round(cal_line_price_fibo(top, bot, self.fibonacci_levels[self.counts - i - 1], -1),f)
-                self.signal_update_text.emit([i, price, parentbound.x(), -1])
+                self.update_text_percentage([i, price, parentbound.x(), -1])
                 p.setPen(mkPen(self.colors_lines[i],width=1))
                 y_line_pointf = (self.fibonacci_levels[self.counts-i-1]-self.fibonacci_levels[-1])*unit
                 p.drawLine(QPointF(0,y_line_pointf), QPointF(1,y_line_pointf))
@@ -583,7 +509,7 @@ class FiboROI(SpecialROI):
             top = bot + self.size().y()
             for i in range(self.counts):
                 price = round(cal_line_price_fibo(top, bot, self.fibonacci_levels[i]),f)
-                self.signal_update_text.emit([i, price, parentbound.x(), 1])
+                self.update_text_percentage([i, price, parentbound.x(), 1])
                 p.setPen(mkPen(self.colors_lines[i],width=1))
                 y_line_pointf = (-self.fibonacci_levels[self.counts-i-1]+self.fibonacci_levels[0])*unit
                 p.drawLine(QPointF(0,y_line_pointf), QPointF(1,y_line_pointf))
@@ -593,7 +519,7 @@ class FiboROI(SpecialROI):
                     p.setBrush(self.colors_rect[i]) #QBrush(mkBrush(color))
                     rect =  QRectF(0,pre_y_line_pointf, 1, -pre_y_line_pointf+y_line_pointf)
                     p.fillRect(rect, self.colors_rect[i])
-    
+        # p.end()
     # def keyPressEvent(self, event: QKeyEvent) -> None:
     #     print(325, "keyPressEvent", event)
     #     return super().keyPressEvent(event)
