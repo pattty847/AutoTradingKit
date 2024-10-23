@@ -10,6 +10,7 @@ from atklip.graphics.pyqtgraph import TextItem, mkPen
 from atklip.graphics.pyqtgraph.Point import Point
 
 from .roi import SpecialROI, MyHandle, _FiboLineSegment
+from .basetextitem import BaseTextItem
 
 DEFAULTS_FIBO = [1.0, 0.786, 0.618, 0.5, 0.382, 0.236, 0.0]
 DEFAULTS_COLOR = [(120,123,134,200),(242,54,69,200),(255,152,0,200),(76,175,80,200),(8,153,129,200),(0,188,212,200),(120,123,134,200),(41, 98, 255,200),(242, 54, 69, 200),(156,39,176,200),(233, 30, 99,200),(206,147,216,200),(159,168,218,200),(255,204,128,200),
@@ -62,7 +63,6 @@ class FiboROI2(SpecialROI):
         self.signal_change_color.connect(self.change_color)
         self.signal_change_width.connect(self.change_width)
         self.signal_change_type.connect(self.change_type)
-        self.signal_update_text.connect(self.update_text_percentage)
 
         self.last_left_pos = None
         self.last_right_pos = None
@@ -108,11 +108,9 @@ class FiboROI2(SpecialROI):
             self.colors_rect.append(adding)
 
         for i in range(self.counts):
-            target = TextItem("")
-            target.setAnchor((1,0.6))
+            target = BaseTextItem("", anchor=(1, 0.2))
             self.list_lines.append(target)
-            # target.setParentItem(self)
-            self.parent.addItem(target)
+            target.setParentItem(self)
         
         try:
             self.addSegment(self.handles[0]['item'], self.handles[1]['item'])
@@ -192,23 +190,20 @@ class FiboROI2(SpecialROI):
     
     def update_text_percentage(self, data):
         i, price, x, direct = data[0], data[1], data[2], data[3]
-        text = self.list_lines[i]
-        if self.extend_left:
-            x = self.chart.viewRect().left()
-            text.setAnchor((0,0.8))
-        else:
-            text.setAnchor((1,0.6))
+        text:BaseTextItem = self.list_lines[i]
+
+        mapFromParent = self.mapFromParent(Point(0,price))
+        y_line_pointf = mapFromParent.y()
+        text.updatePos(y_line_pointf)
         
         if direct == 1:
             text.percent = self.fibonacci_levels[i]
             text.setColor(self.colors_lines[self.counts - i - 1])
             text.setText(f"{text.percent} ({str(price)})" )
-            text.setPos(x, price)
         else:
             text.percent = self.fibonacci_levels[self.counts - i - 1]
             text.setColor(self.colors_lines[i])
             text.setText(f"{text.percent} ({str(price)})" )
-            text.setPos(x, price)
 
     def mousePressEvent(self, ev):
         if ev.button() == Qt.MouseButton.LeftButton:
@@ -292,10 +287,9 @@ class FiboROI2(SpecialROI):
         diff = counts - self.counts
         if diff > 0:
             for i in range(counts):
-                target = TextItem("")
-                target.setAnchor((1,0.6))
+                target = BaseTextItem("", anchor=(1, 0.2))
                 self.list_lines.append(target)
-                self.parent.addItem(target)
+                target.setParentItem(self)
             self.counts = len(self.list_lines)
 
     def update_fibo(self, mapchart_trading, setting_tool_menu):
@@ -571,10 +565,11 @@ class FiboROI2(SpecialROI):
             top = self.mapToView(Point(0,0)).y()
             bot = top + self.size().y()
             for i in range(self.counts):
-                price = round(cal_line_price_fibo(top, bot, self.fibonacci_levels[self.counts - i - 1], -1),f)
-                self.signal_update_text.emit([i, price, parentbound.x(), -1])
+                price = round(cal_line_price_fibo(top, bot, self.fibonacci_levels[self.counts-i-1], -1),f)
+                self.update_text_percentage([i, price, parentbound.x(), -1])
                 p.setPen(mkPen(self.colors_lines[i],width=1))
                 y_line_pointf = (self.fibonacci_levels[self.counts-i-1]-self.fibonacci_levels[-1])*unit
+                
                 p.drawLine(QPointF(0,y_line_pointf), QPointF(1,y_line_pointf))
                 if i >0:
                     pre_y_line_pointf = (self.fibonacci_levels[self.counts-i]-self.fibonacci_levels[-1])*unit
@@ -588,7 +583,7 @@ class FiboROI2(SpecialROI):
             top = bot + self.size().y()
             for i in range(self.counts):
                 price = round(cal_line_price_fibo(top, bot, self.fibonacci_levels[i]),f)
-                self.signal_update_text.emit([i, price, parentbound.x(), 1])
+                self.update_text_percentage([i, price, parentbound.x(), 1])
                 p.setPen(mkPen(self.colors_lines[i],width=1))
                 y_line_pointf = (-self.fibonacci_levels[self.counts-i-1]+self.fibonacci_levels[0])*unit
                 p.drawLine(QPointF(0,y_line_pointf), QPointF(1,y_line_pointf))

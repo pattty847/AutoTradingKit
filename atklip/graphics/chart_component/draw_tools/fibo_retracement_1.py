@@ -11,6 +11,8 @@ from atklip.graphics.pyqtgraph import TextItem, mkPen
 from atklip.graphics.pyqtgraph.Point import Point
 
 from .roi import SpecialROI, MyHandle, _FiboLineSegment
+from .basetextitem import BaseTextItem
+
 
 DEFAULTS_FIBO = [1.0, 0.786, 0.618, 0.5, 0.382, 0.236, 0.0]
 DEFAULTS_COLOR = [(120,123,134,200),(242,54,69,200),(255,152,0,200),(76,175,80,200),(8,153,129,200),(0,188,212,200),(120,123,134,200),(41, 98, 255,200),(242, 54, 69, 200),(156,39,176,200),(233, 30, 99,200),(206,147,216,200),(159,168,218,200),(255,204,128,200),
@@ -27,20 +29,6 @@ def cal_line_price_fibo(top, bot, percent, direct=1):
         return top - diff
     return bot + diff
 
-
-class BaseTextItem(TextItem):
-    def __init__(self, text='', color=(200,200,200), html=None, anchor=(0,0),
-                 border=None, fill=None, angle=0, rotateAxis=None, ensureInBounds=False):
-        super().__init__(text=text, color=color, html=html, anchor=anchor,
-                 border=border, fill=fill, angle=angle, rotateAxis=rotateAxis, ensureInBounds=ensureInBounds)
-    def updateTextPos(self):
-        pass
-        # # update text position to obey anchor
-        # r = self.textItem.boundingRect()
-        # tl = self.textItem.mapToParent(r.topLeft())
-        # br = self.textItem.mapToParent(r.bottomRight())
-        # offset = (br - tl) * self.anchor
-        # self.textItem.setPos(-offset)
 
 class FiboROI(SpecialROI):
     on_click = Signal(object)
@@ -80,7 +68,6 @@ class FiboROI(SpecialROI):
         self.signal_change_color.connect(self.change_color)
         self.signal_change_width.connect(self.change_width)
         self.signal_change_type.connect(self.change_type)
-        self.signal_update_text.connect(self.update_text_percentage)
 
         self.last_left_pos = None
         self.last_right_pos = None
@@ -119,10 +106,8 @@ class FiboROI(SpecialROI):
             self.colors_rect.append(adding)
         for i in range(self.counts):
             target = BaseTextItem("", anchor=(1, 0.2))
-            # target.setAnchor((1,0.6))
             self.list_lines.append(target)
             target.setParentItem(self)
-            # self.parent.addItem(target)
         
         try:
             self.addSegment(self.handles[0]['item'], self.handles[1]['item'])
@@ -201,45 +186,23 @@ class FiboROI(SpecialROI):
         return h
     
     
-    def updateTextPos(self,textItem:TextItem,y_line_pointf):
-        # update text position to obey anchor
-        r = textItem.textItem.boundingRect()
-        tl = textItem.textItem.mapToParent(r.topLeft())
-        br = textItem.textItem.mapToParent(r.bottomRight())
-        offset = (br - tl) * textItem.anchor
-        p = textItem.parentItem()
-        if p is not None:
-            prb = p.boundingRect()
-            x,y,w,h = prb.x(),prb.y(),prb.width(),prb.height()
-            _x = -offset.x() + x
-            mapFromParent = textItem.mapFromParent(Point(0,y_line_pointf))
-            pos = Point(_x,mapFromParent.y())
-            textItem.textItem.setPos(pos)
+    
     
     def update_text_percentage(self, data):
         i, price, x, direct = data[0], data[1], data[2], data[3]
         
         mapFromParent = self.mapFromParent(Point(0,price))
         y_line_pointf = mapFromParent.y()
-        text = self.list_lines[i]
-        # if self.extend_left:
-        #     x = self.chart.viewRect().left()
-        #     text.setAnchor((0,0.8))
-        # else:
-        #     text.setAnchor((1,0.6))
-        # print(y_line_pointf)
-        self.updateTextPos(text,y_line_pointf)
-
+        text:BaseTextItem = self.list_lines[i]
+        text.updatePos(y_line_pointf)
         if direct == 1:
             text.percent = self.fibonacci_levels[i]
             text.setColor(self.colors_lines[self.counts - i - 1])
             text.setText(f"{text.percent} ({str(price)})" )
-            # text.setPos(x, price)
         else:
             text.percent = self.fibonacci_levels[self.counts - i - 1] 
             text.setColor(self.colors_lines[i])
             text.setText(f"{text.percent} ({str(price)})" )
-            # text.setPos(x, price)
 
     def mousePressEvent(self, ev):
         if ev.button() == Qt.MouseButton.LeftButton:
@@ -343,7 +306,7 @@ class FiboROI(SpecialROI):
         if diff > 0:
             for i in range(counts):
                 target = BaseTextItem("")
-                target.setAnchor((1,0.6))
+                target.setAnchor((1,0.2))
                 self.list_lines.append(target)
                 self.parent.addItem(target)
             self.counts = len(self.list_lines)
@@ -479,8 +442,13 @@ class FiboROI(SpecialROI):
         unit = 1/(self.fibonacci_levels[0]-self.fibonacci_levels[-1])
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
         p.setPen(self.currentPen)
+
+        print(r.left(), r.top())
+
         p.translate(r.left(), r.top())
         p.scale(r.width(), r.height())
+
+        print(r.left(), r.top())
         # h0 = self.handles[0]['item']
         # h1 = self.handles[1]['item']
         # diff = h1.pos() - h0.pos()

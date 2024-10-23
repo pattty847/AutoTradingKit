@@ -6,9 +6,6 @@ from atklip.gui.views.fluentwindow import WindowBase
 from PySide6.QtCore import QCoreApplication,QSize
 from PySide6.QtGui import QCloseEvent,QIcon
 from PySide6.QtWidgets import QApplication
-import warnings
-# warnings.filterwarnings("ignore", category=DeprecationWarning)
-# warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 class MainWindow(WindowBase):
     def __init__(self):
