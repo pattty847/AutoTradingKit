@@ -21,7 +21,8 @@ class PROJECTS(QFrame):
         self._QLayout.setAlignment(Qt.AlignLeft)
 
         self.splitToolButton = ShowmenuButton(FIF.LONG_POSITION,self.parent)
-
+        self.current_tool = None
+        self.is_enabled = False
         #create menu
         self.menu = RoundMenu(parent=self)
         self.menu.setFixedWidth(200)
@@ -106,7 +107,14 @@ class PROJECTS(QFrame):
         self.current_tool = tool
         self.splitToolButton.change_item(icon)
         self.set_enable()
-        self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,"draw_trenlines"))
+        if self.date_price_range == tool:
+            self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,"draw_date_price_range"))
+        # elif self.rotated_rectangle == tool:
+        #     self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,"draw_rotated_rectangle"))
+        # elif self.path == tool:
+        #     self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,"draw_path"))
+    
+        
     def set_enable(self):
         if self.splitToolButton.button.isChecked():
             self.is_enabled = True

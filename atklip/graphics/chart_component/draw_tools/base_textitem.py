@@ -1,13 +1,12 @@
-import datetime as dt
-from operator import itemgetter
-import random
-import pytz
-from PySide6 import QtCore, QtWidgets
-from PySide6.QtCore import Signal, QPointF, Qt, QRectF, QCoreApplication
-from PySide6.QtGui import QPainter, QColor,QTextItem
-from PySide6.QtWidgets import QWidget
-from atklip.graphics.pyqtgraph import TextItem, mkPen
+from atklip.graphics.pyqtgraph import TextItem
 from atklip.graphics.pyqtgraph.Point import Point
+
+def cal_line_price_fibo(top, bot, percent, direct=1):
+
+    diff = (top - bot) * percent
+    if direct == 1:
+        return top - diff
+    return bot + diff
 
 
 class BaseTextItem(TextItem):
@@ -19,7 +18,7 @@ class BaseTextItem(TextItem):
     def updateTextPos(self):
         pass
 
-    def updatePos(self,y_line_pointf:float=0):
+    def updatePos(self,y_line_pointf):
         # update text position to obey anchor
         r = self.textItem.boundingRect()
         tl = self.textItem.mapToParent(r.topLeft())
@@ -31,7 +30,6 @@ class BaseTextItem(TextItem):
             x,y,w,h = prb.x(),prb.y(),prb.width(),prb.height()
             _x = -offset.x() + x
             mapFromParent = self.mapFromParent(Point(0,y_line_pointf))
-            _y = self.anchor.y() + mapFromParent.y()
-            # print(_x,_y,mapFromParent,y_line_pointf, prb.height(),offset)
+            _y = mapFromParent.y()-r.height()/2
             pos = Point(_x,_y)
             self.textItem.setPos(pos)

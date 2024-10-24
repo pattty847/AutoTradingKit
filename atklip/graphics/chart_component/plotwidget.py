@@ -127,7 +127,7 @@ class ViewPlotWidget(PlotWidget):
         self.vb:PlotViewBox = self.getViewBox()
         self.lastMousePositon = None
         self.nearest_value = None
-        self.is_mouse_click = False
+        self.is_mouse_pressed = False
         #self.ObjectManager = UniqueObjectManager()
         self.mode_replay = False
         self.replay_enabled = False
@@ -320,27 +320,26 @@ class ViewPlotWidget(PlotWidget):
         return ohlcv #index_of_closest_value, closest_value
     
     def mousePressEvent(self, ev):
-        self.is_mouse_click =  True
+        self.is_mouse_pressed =  True
         self.mouse_clicked_signal.emit(None)
         super().mousePressEvent(ev)
         
-
     def mouseReleaseEvent(self, ev):
-        self.is_mouse_click = False
-        self.drawtool.drawing_object = None
-        self.drawtool.draw_object_name = None
+        self.is_mouse_pressed = False
         super().mouseReleaseEvent(ev)
         
-
     def mouseMoveEvent(self, ev: QEvent) -> None:
         """Mouse moved in PlotWidget"""
-        if not self.is_mouse_click:# and not self.drawtool.drawing_object:
-            try:
-                self.ev_pos = ev.position()
-            except:
-                self.ev_pos = ev.pos()
-            self.lastMousePositon = self.plotItem.vb.mapSceneToView(self.ev_pos)
-
+        try:
+            self.ev_pos = ev.position()
+        except:
+            self.ev_pos = ev.pos()
+        self.lastMousePositon = self.plotItem.vb.mapSceneToView(self.ev_pos)
+        
+        if self.drawtool.drawing_object:
+            self.emit_mouse_position(self.lastMousePositon)
+            
+        if not self.is_mouse_pressed:
             if self.crosshair_enabled and self.sceneBoundingRect().contains(self.ev_pos):
                 if not self.hLine.isVisible():
                     self.hLine.show()
@@ -364,12 +363,10 @@ class ViewPlotWidget(PlotWidget):
                     pass
             elif not self.sceneBoundingRect().contains(self.ev_pos):
                 self.mouse_on_vb = False
-            
-            self.emit_mouse_position(self.lastMousePositon)
         super().mouseMoveEvent(ev)
 
     def emit_mouse_position(self, lastpos):
-        if not self.drawtool.drawing_object:
+        if self.drawtool.drawing_object:
             if hasattr(self.drawtool.drawing_object,"setPoint"): 
                 self.drawtool.drawing_object.setPoint(lastpos.x(),lastpos.y())
 

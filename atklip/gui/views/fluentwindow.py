@@ -55,7 +55,7 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
     def initWindow(self):
         desktop = screen.getCurrentScreenGeometry()
         w, h = desktop.width(), desktop.height()
-        _w, _h = 800, 600
+        _w, _h = 1000, 800
         self.resize(_w, _h)
         self.setGeometry(int(w/2 - self.width()/2),int(h/2 - self.height()/2),_w,_h)
         # self.resize(_w, _h)

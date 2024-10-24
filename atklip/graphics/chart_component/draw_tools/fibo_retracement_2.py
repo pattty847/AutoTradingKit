@@ -9,8 +9,8 @@ from PySide6.QtWidgets import QWidget
 from atklip.graphics.pyqtgraph import TextItem, mkPen
 from atklip.graphics.pyqtgraph.Point import Point
 
-from .roi import SpecialROI, MyHandle, _FiboLineSegment
-from .basetextitem import BaseTextItem
+from .roi import SpecialROI, BaseHandle, _FiboLineSegment
+from .base_textitem import BaseTextItem
 
 DEFAULTS_FIBO = [1.0, 0.786, 0.618, 0.5, 0.382, 0.236, 0.0]
 DEFAULTS_COLOR = [(120,123,134,200),(242,54,69,200),(255,152,0,200),(76,175,80,200),(8,153,129,200),(0,188,212,200),(120,123,134,200),(41, 98, 255,200),(242, 54, 69, 200),(156,39,176,200),(233, 30, 99,200),(206,147,216,200),(159,168,218,200),(255,204,128,200),
@@ -63,10 +63,12 @@ class FiboROI2(SpecialROI):
         self.signal_change_color.connect(self.change_color)
         self.signal_change_width.connect(self.change_width)
         self.signal_change_type.connect(self.change_type)
+        
+        self.signal_update_text.connect(self.update_text_percentage)
 
         self.last_left_pos = None
         self.last_right_pos = None
-        self.reverse = True #if self.chart.fibo_reverse else False
+        self.reverse = False #if self.chart.fibo_reverse else False
         self.movable = movable
         self.locked = False
         self.trend_line = True
@@ -108,7 +110,7 @@ class FiboROI2(SpecialROI):
             self.colors_rect.append(adding)
 
         for i in range(self.counts):
-            target = BaseTextItem("", anchor=(1, 0.2))
+            target = BaseTextItem("", anchor=(1, 0))
             self.list_lines.append(target)
             target.setParentItem(self)
         
@@ -164,7 +166,7 @@ class FiboROI2(SpecialROI):
     def addHandle(self, info, index=None):
         ## If a Handle was not supplied, create it now
         if 'item' not in info or info['item'] is None:
-            h = MyHandle(self.handleSize, typ=info['type'], pen=self.handlePen,
+            h = BaseHandle(self.handleSize, typ=info['type'], pen=self.handlePen,
                        hoverPen=self.handleHoverPen, parent=self)
             info['item'] = h
             # info["yoff"] = True
@@ -191,39 +193,36 @@ class FiboROI2(SpecialROI):
     def update_text_percentage(self, data):
         i, price, x, direct = data[0], data[1], data[2], data[3]
         text:BaseTextItem = self.list_lines[i]
-
         mapFromParent = self.mapFromParent(Point(0,price))
         y_line_pointf = mapFromParent.y()
         text.updatePos(y_line_pointf)
-        
         if direct == 1:
             text.percent = self.fibonacci_levels[i]
             text.setColor(self.colors_lines[self.counts - i - 1])
-            text.setText(f"{text.percent} ({str(price)})" )
+            text.setText(f"{text.percent} ({str(price)})  " )
         else:
             text.percent = self.fibonacci_levels[self.counts - i - 1]
             text.setColor(self.colors_lines[i])
-            text.setText(f"{text.percent} ({str(price)})" )
+            text.setText(f"{text.percent} ({str(price)})  " )
 
-    def mousePressEvent(self, ev):
+    def mouseClickEvent(self, ev):
         if ev.button() == Qt.MouseButton.LeftButton:
-            print(780, "Left button ne")
+            if not self.boundingRect().contains(ev.pos()):
+                ev.accept()
+                self.on_click.emit(self)
             self.finished = True
+            self.chart.drawtool.drawing_object =None
         ev.ignore()
 
-    def setPoint(self,data):
-        # print(318, "lastmouse_position", data, self.finished)
-        if not self.finished and data[0]=="drawed_fibo_retracement_2":
+    def setPoint(self,pos_x, pos_y):
+        if not self.finished:
             if self.chart.magnet_on:
                 pos_x, pos_y = self.chart.get_position_crosshair()
-            else:
-                pos_x, pos_y = data[1], data[2]
             if self.reverse:
                 self.movePoint(0, QPointF(pos_x, pos_y))
             else:
                 self.movePoint(-1, QPointF(pos_x, pos_y))
-            # self.state['size'] = [pos_x-self.state['pos'][0], pos_y-self.state['pos'][1]]
-            # self.stateChanged()
+            self.stateChanged()
     
     def setObjectName(self, name):
         self.indicator_name = name
@@ -281,16 +280,8 @@ class FiboROI2(SpecialROI):
         # print(598, pos, self)
         if not self.finished:
             self.finished = True
+            self.chart.drawtool.drawing_object =None
         self.on_click.emit(self)
-
-    def add_text(self, counts):
-        diff = counts - self.counts
-        if diff > 0:
-            for i in range(counts):
-                target = BaseTextItem("", anchor=(1, 0.2))
-                self.list_lines.append(target)
-                target.setParentItem(self)
-            self.counts = len(self.list_lines)
 
     def update_fibo(self, mapchart_trading, setting_tool_menu):
         # print(161, setting_tool_menu.scrollAreaWidgetContents.findChildren(QWidget, "widget_fibo_lines"))
@@ -566,7 +557,7 @@ class FiboROI2(SpecialROI):
             bot = top + self.size().y()
             for i in range(self.counts):
                 price = round(cal_line_price_fibo(top, bot, self.fibonacci_levels[self.counts-i-1], -1),f)
-                self.update_text_percentage([i, price, parentbound.x(), -1])
+                self.signal_update_text.emit([i, price, parentbound.x(), -1])
                 p.setPen(mkPen(self.colors_lines[i],width=1))
                 y_line_pointf = (self.fibonacci_levels[self.counts-i-1]-self.fibonacci_levels[-1])*unit
                 
@@ -583,7 +574,7 @@ class FiboROI2(SpecialROI):
             top = bot + self.size().y()
             for i in range(self.counts):
                 price = round(cal_line_price_fibo(top, bot, self.fibonacci_levels[i]),f)
-                self.update_text_percentage([i, price, parentbound.x(), 1])
+                self.signal_update_text.emit([i, price, parentbound.x(), 1])
                 p.setPen(mkPen(self.colors_lines[i],width=1))
                 y_line_pointf = (-self.fibonacci_levels[self.counts-i-1]+self.fibonacci_levels[0])*unit
                 p.drawLine(QPointF(0,y_line_pointf), QPointF(1,y_line_pointf))

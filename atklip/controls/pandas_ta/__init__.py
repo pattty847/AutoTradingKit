@@ -38,7 +38,7 @@ from atklip.controls.pandas_ta.ma import ma
 from atklip.controls.pandas_ta.custom import create_dir, import_dir
 
 # Enable "ta" DataFrame Extension
-from atklip.controls.pandas_ta.core import AnalysisIndicators
+# from atklip.controls.pandas_ta.core import AnalysisIndicators
 
 __all__ = [
     "name",
@@ -50,7 +50,7 @@ __all__ = [
     "ma",
     "create_dir",
     "import_dir",
-    "AnalysisIndicators",
+    # "AnalysisIndicators",
 ]
 
 __all__ += [

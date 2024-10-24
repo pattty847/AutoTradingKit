@@ -13,6 +13,6 @@ from atklip.graphics.chart_component.base_items import CandleStick, PriceLine
 from atklip.graphics.chart_component.indicators import *
 
 from atklip.graphics.chart_component.draw_tools import FiboROI,FiboROI2, TrendlinesROI, Horizontal_line, Horizontal_ray, FiboSpecialROI, DEFAULTS_FIBO, DEFAULTS_COLOR,\
-    HorizontalRayNoHandle, RectangleROI, PathROI, TextBoxROI, Vertical_line
+    HorizontalRayNoHandle, Rectangle, PathROI, TextBoxROI, Vertical_line
 from atklip.graphics.chart_component.clone_tv_indicators import FinPolyLine, RangePolyLine
 from atklip.graphics.chart_component.graph_items.inforlabel import InfLabel

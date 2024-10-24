@@ -154,6 +154,13 @@ class Horizontal_line(InfiniteLine):
         self.change_pen_signal.emit(("#363a45",float(self.getYPos())))
 
     def hoverEvent(self, ev):
+        if not ev.exit: # and not self.boundingRect().contains(ev.pos()):
+            hover = True
+            # self.setCursor(Qt.CursorShape.PointingHandCursor)
+        else:
+            hover = False
+            # self.setCursor(Qt.CursorShape.CrossCursor)
+        
         if not self.isSelected:
             if (not ev.isExit()) and self.movable and ev.acceptDrags(QtCore.Qt.MouseButton.LeftButton):
                 self.setMouseHover(True)

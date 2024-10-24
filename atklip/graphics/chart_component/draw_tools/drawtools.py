@@ -8,12 +8,14 @@ TextBoxROI, SpecialROI, CustomLineSegmentROI
 from .horizontal_line import Horizontal_line
 from .horizontal_ray import Horizontal_ray, HorizontalRayNoHandle
 from .brush_path import PathROI
-from .brush_rectangle import RectangleROI
+from .rectangle import Rectangle
+from .rotate_rectangle import RotateRectangle
 from .fibo_retracement_1 import FiboROI
 from .fibo_retracement_2 import FiboROI2
 from .trend_lines import TrendlinesROI
 from .vertical_line import Vertical_line
 from .polylines import RangePolyLine
+from .base_arrow import BaseArrowItem
 
 if TYPE_CHECKING:
     from atklip.graphics.chart_component.viewchart import Chart
@@ -29,7 +31,6 @@ class DrawTool(QObject):
         self.custom_colors_borders = None
         self.fibo_reverse = False
         
-        
         self.num_fibo = 0
         self.num_fibo2 = 0
         self.num_trendline = 0
@@ -42,26 +43,27 @@ class DrawTool(QObject):
         self.num_textbox = 0
         self.drawing_object = None
         self.draw_object_name = None
+        
     def draw_trenlines(self, ev: QEvent):
         pos_x, pos_y = self.get_position_mouse_on_chart(ev)
-        line = TrendlinesROI(positions=[[pos_x, pos_y],[pos_x, pos_y]], pen=("#2962ff"),drawtool=self)
-        self.chart.addItem(line)
-        self.chart.drawtools.append(line)
+        obj = TrendlinesROI(positions=[[pos_x, pos_y],[pos_x, pos_y]], pen=("#2962ff"),drawtool=self)
+        self.chart.addItem(obj)
+        self.chart.drawtools.append(obj)
         self.num_trendline += 1
         module_name = "Trend Line " + str(self.num_trendline)
-        line.setObjectName(module_name)
-        self.drawing_object = line
+        obj.setObjectName(module_name)
+        self.drawing_object = obj
         self.draw_object_name = "drawed_trenlines"
 
     def draw_verticallines(self, ev: QEvent):
         pos_x, pos_y = self.get_position_mouse_on_chart(ev)
-        line = Vertical_line(pos=pos_x, movable=True,angle=90,pen=mkPen("#2962ff"), chart=self.chart)
-        self.chart.addItem(line)
-        self.chart.drawtools.append(line)
+        obj = Vertical_line(pos=pos_x, movable=True,angle=90,pen=mkPen("#2962ff"), chart=self.chart)
+        self.chart.addItem(obj)
+        self.chart.drawtools.append(obj)
         self.num_vertical_line += 1
         module_name = "Vertital Line " + str(self.num_vertical_line)
-        line.setObjectName(module_name)
-        uid_obj = self.chart.objmanager.add(line)
+        obj.setObjectName(module_name)
+        uid_obj = self.chart.objmanager.add(obj)
         self.draw_object_name = None
     def get_position_crosshair(self):
         return self.chart.vLine.getXPos(), self.chart.hLine.getYPos()
@@ -99,75 +101,124 @@ class DrawTool(QObject):
 
     def draw_fibo(self, ev: QEvent):
         pos_x, pos_y = self.get_position_mouse_on_chart(ev)
-        r3a =FiboROI([pos_x, pos_y], [0, 0],invertible=True,movable=True, resizable=False, removable=True, pen=mkPen("green",width=1), fibo_level=self.custom_fibonacci_levels, color_rect=self.custom_colors_rect, color_line=self.custom_colors_lines, color_borders=self.custom_colors_borders,parent=self.chart.vb, main=self.chart)
+        obj =FiboROI([pos_x, pos_y], [0, 0],invertible=True,movable=True, resizable=False, removable=True, pen=mkPen("green",width=1), fibo_level=self.custom_fibonacci_levels, color_rect=self.custom_colors_rect, color_line=self.custom_colors_lines, color_borders=self.custom_colors_borders,parent=self.chart.vb, main=self.chart)
     
-        self.chart.addItem(r3a)
-        self.chart.drawtools.append(r3a)
+        self.chart.addItem(obj)
+        self.chart.drawtools.append(obj)
         self.num_fibo += 1
         module_name = "Fibo Retracement(I) " + str(self.num_fibo)
-        r3a.setObjectName(module_name)
-        self.drawing_object = r3a
-        uid_obj = self.chart.objmanager.add(r3a)
+        obj.setObjectName(module_name)
+        self.drawing_object = obj
+        uid_obj = self.chart.objmanager.add(obj)
         self.draw_object_name = "drawed_fibo_retracement"
 
     def draw_fibo_2(self, ev: QEvent):
         pos_x, pos_y = self.get_position_mouse_on_chart(ev)
-        r3a_ =FiboROI2([pos_x, pos_y], [0, 0],invertible=True,movable=True, resizable=False, removable=True, pen=mkPen("green",width=1), 
+        obj =FiboROI2([pos_x, pos_y], [0, 0],invertible=True,movable=True, resizable=False, removable=True, pen=mkPen("green",width=1), 
                           parent=self.chart.vb, main=self.chart)
 
-        self.chart.addItem(r3a_)
-        self.chart.drawtools.append(r3a_)
+        self.chart.addItem(obj)
+        self.chart.drawtools.append(obj)
         self.num_fibo2 += 1
         module_name = "Fibo Retracement(II) " + str(self.num_fibo2)
-        r3a_.setObjectName(module_name)
-        self.drawing_object = r3a_
-        uid_obj = self.chart.objmanager.add(r3a_)
+        obj.setObjectName(module_name)
+        self.drawing_object = obj
+        uid_obj = self.chart.objmanager.add(obj)
         self.draw_object_name = "drawed_fibo_retracement_2"
 
     def draw_path(self, ev: QEvent):
         pos_x, pos_y = self.get_position_mouse_on_chart(ev)
-        Path =PathROI(positions=[(pos_x, pos_y), (pos_x, pos_y)], pen=mkPen("#2962ff"), drawtool=self)
-        self.chart.addItem(Path)
-        self.chart.drawtools.append(Path)
+        obj =PathROI(positions=[(pos_x, pos_y), (pos_x, pos_y)], pen=mkPen("#2962ff"), drawtool=self)
+        self.chart.addItem(obj)
+        self.chart.drawtools.append(obj)
         self.num_path += 1
         module_name = "Path " + str(self.num_path)
-        Path.setObjectName(module_name)
-        self.drawing_object = Path
-        uid_obj = self.chart.objmanager.add(Path)
+        obj.setObjectName(module_name)
+        self.drawing_object = obj
+        uid_obj = self.chart.objmanager.add(obj)
         self.draw_object_name = "drawed_path"
 
     def draw_rectangle(self, ev: QEvent):
         pos_x, pos_y = self.get_position_mouse_on_chart(ev)
-        Rectangle =RectangleROI([pos_x, pos_y], [0, 0],invertible=True,movable=True, resizable=False, removable=True, pen=mkPen("#2962ff",width=1),parent=self.chart.vb, drawtool=self)
-        self.chart.addItem(Rectangle)
-        self.chart.drawtools.append(Rectangle)
+        obj =Rectangle([pos_x, pos_y], [0, 0],invertible=True,movable=True, resizable=False, removable=True, pen=mkPen("#2962ff",width=1),parent=self.chart.vb, drawtool=self)
+        self.chart.addItem(obj)
+        self.chart.drawtools.append(obj)
         self.num_rectangle += 1
         module_name = "Rectangle " + str(self.num_rectangle)
-        Rectangle.setObjectName(module_name)
-        self.drawing_object = Rectangle
-        uid_obj = self.chart.objmanager.add(Rectangle)
+        obj.setObjectName(module_name)
+        self.drawing_object = obj
+        uid_obj = self.chart.objmanager.add(obj)
         self.draw_object_name = "drawed_rectangle"
+    
+    def draw_rotate_rectangle(self, ev: QEvent):
+        pos_x, pos_y = self.get_position_mouse_on_chart(ev)
+        obj =RotateRectangle([pos_x, pos_y], [0, 0],invertible=True,movable=True, resizable=False, removable=True, pen=mkPen("#2962ff",width=1),parent=self.chart.vb, drawtool=self)
+        self.chart.addItem(obj)
+        self.chart.drawtools.append(obj)
+        self.num_rectangle += 1
+        module_name = "Rotate_rectangle " + str(self.num_rectangle)
+        obj.setObjectName(module_name)
+        self.drawing_object = obj
+        uid_obj = self.chart.objmanager.add(obj)
+        self.draw_object_name = "drawed_rotate_rectangle"
 
     def draw_text(self, ev: QEvent):
         pos_x, pos_y = self.get_position_mouse_on_chart(ev)
-        TextBox = TextBoxROI(size=5,symbol="o",pen="green",brush = "green",parent=self.chart.vb, main=self.chart)
-        TextBox.setPos(pos_x, pos_y)
-        self.chart.addItem(TextBox)
-        self.chart.drawtools.append(TextBox)
+        obj = TextBoxROI(size=5,symbol="o",pen="green",brush = "green",parent=self.chart.vb, main=self.chart)
+        obj.setPos(pos_x, pos_y)
+        self.chart.addItem(obj)
+        self.chart.drawtools.append(obj)
         self.num_textbox += 1
         module_name = "TextBox " + str(self.num_textbox)
-        TextBox.setObjectName(module_name)
+        obj.setObjectName(module_name)
         self.draw_object_name = None
-        uid_obj = self.chart.objmanager.add(TextBox)
+        uid_obj = self.chart.objmanager.add(obj)
 
     def draw_date_price_range(self, ev):
         pos_x, pos_y = self.get_position_mouse_on_chart(ev)
-        Date_price_range = RangePolyLine(self.chart.vb, self, [0, 0], closed=False, pen=mkPen('#fca326'), movable=True)
-        Date_price_range.setPos(pos_x, pos_y)
-        self.chart.addItem(Date_price_range)
-        self.chart.drawtools.append(Date_price_range)
+        obj = RangePolyLine([pos_x, pos_y], [0, 0],drawtool=self, pen=mkPen('#2962ff'), movable=True)
+        # obj.setPos(pos_x, pos_y)
+        self.chart.addItem(obj)
+        self.chart.drawtools.append(obj)
         self.num_dateprice_range += 1
         module_name = "DatePrice Range " + str(self.num_dateprice_range)
-        Date_price_range.setObjectName(module_name)
-        uid_obj = self.chart.objmanager.add(Date_price_range)
+        obj.setObjectName(module_name)
+        self.drawing_object = obj
+        uid_obj = self.chart.objmanager.add(obj)
         self.draw_object_name = "drawed_date_price_range"
+    
+    def draw_up_arrow(self, ev):
+        pos_x, pos_y = self.get_position_crosshair()
+        obj = BaseArrowItem(chart=self.chart,angle=90, tipAngle=60, headLen=10, tailLen=10, tailWidth=5, pen=None, brush='green')
+        obj.setPos(pos_x, pos_y)
+        self.chart.addItem(obj)
+        self.chart.drawtools.append(obj)
+        self.num_dateprice_range += 1
+        module_name = "ArrowItem " + str(self.num_dateprice_range)
+        obj.setObjectName(module_name)
+        uid_obj = self.chart.objmanager.add(obj)
+        self.draw_object_name = "drawed_draw_up_arrow"
+    
+    def draw_down_arrow(self, ev):
+        pos_x, pos_y = self.get_position_crosshair()
+        obj = BaseArrowItem(chart=self.chart,angle=270, tipAngle=60, headLen=10, tailLen=10, tailWidth=5, pen=None, brush='red')
+        obj.setPos(pos_x, pos_y)
+        self.chart.addItem(obj)
+        self.chart.drawtools.append(obj)
+        self.num_dateprice_range += 1
+        module_name = "ArrowItem " + str(self.num_dateprice_range)
+        obj.setObjectName(module_name)
+        uid_obj = self.chart.objmanager.add(obj)
+        self.draw_object_name = "drawed_draw_down_arrow"
+    
+    def draw_arrow(self, ev):
+        pos_x, pos_y = self.get_position_crosshair()
+        obj = BaseArrowItem(chart=self.chart,angle=180, tipAngle=60, headLen=5, tailLen=2, tailWidth=2, pen=None, brush='red')
+        obj.setPos(pos_x, pos_y)
+        self.chart.addItem(obj)
+        self.chart.drawtools.append(obj)
+        self.num_dateprice_range += 1
+        module_name = "ArrowItem " + str(self.num_dateprice_range)
+        obj.setObjectName(module_name)
+        uid_obj = self.chart.objmanager.add(obj)
+        self.draw_object_name = "drawed_draw_down_arrow"

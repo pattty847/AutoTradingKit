@@ -111,7 +111,7 @@ class ViewSubPanel(PlotWidget):
         self.lastMousePositon = None
         #self.ObjectManager = UniqueObjectManager()
 
-        self.is_mouse_click = False
+        self.is_mouse_pressed = False
         self.indicator = None
         self.first_run = False
         self.threadpool = QThreadPool(self)
@@ -352,13 +352,13 @@ class ViewSubPanel(PlotWidget):
         return ohlcv #index_of_closest_value, closest_value
     def mousePressEvent(self, ev):
         super().mousePressEvent(ev)
-        self.is_mouse_click =  True
+        self.is_mouse_pressed =  True
 
     def mouseReleaseEvent(self, ev):
         super().mouseReleaseEvent(ev)
-        self.is_mouse_click = False
+        self.is_mouse_pressed = False
     def mouseMoveEvent(self, ev: QEvent) -> None:
-        if not self.is_mouse_click:
+        if not self.is_mouse_pressed:
             self._precision = self.Chart.get_precision()
             """Mouse moved in PlotWidget"""
             try:

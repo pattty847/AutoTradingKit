@@ -22,7 +22,7 @@ def bind(name: str, f: types.FunctionType, method: types.MethodType = None):
         method (fcn): The class method corresponding to the passed function
     """
     setattr(pandas_ta, name, f)
-    setattr(pandas_ta.AnalysisIndicators, name, method)
+    # setattr(pandas_ta.AnalysisIndicators, name, method)
 
 
 def create_dir(path: str, create_categories: bool = True, verbose: bool = True):

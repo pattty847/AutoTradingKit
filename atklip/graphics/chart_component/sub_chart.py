@@ -123,7 +123,7 @@ class SubChart(PlotWidget):
         #self.ObjectManager = UniqueObjectManager()
 
         self.indicator = None
-        self.is_mouse_click = False
+        self.is_mouse_pressed = False
         self.threadpool = QThreadPool(self)
         self.threadpool.setMaxThreadCount(1)
         
@@ -512,13 +512,13 @@ class SubChart(PlotWidget):
         return sub_ohlcv, main_ohlcv 
     def mousePressEvent(self, ev):
         super().mousePressEvent(ev)
-        self.is_mouse_click =  True
+        self.is_mouse_pressed =  True
 
     def mouseReleaseEvent(self, ev):
         super().mouseReleaseEvent(ev)
-        self.is_mouse_click = False
+        self.is_mouse_pressed = False
     def mouseMoveEvent(self, ev: QEvent) -> None:
-        if not self.is_mouse_click:
+        if not self.is_mouse_pressed:
             self._precision = self.get_precision()
             """Mouse moved in PlotWidget"""
             try:

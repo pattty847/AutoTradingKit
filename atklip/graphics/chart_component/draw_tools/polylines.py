@@ -1,91 +1,60 @@
 from PySide6.QtCore import Qt, QRectF, QPointF, Signal
 from PySide6.QtGui import QPainter, QColor, QPainterPath
+from PySide6.QtWidgets import QGraphicsItem
 from pyqtgraph import PolyLineROI, TextItem, Point, ArrowItem, mkPen
 
-draw_line_color = '#fca326'
+draw_line_color = '#2962ff'
 epoch_period = 1e30
 
+from .roi import BaseHandle, SpecialROI, _FiboLineSegment
 
-from .roi import SpecialROI, _FiboLineSegment
-
-class BasePolyLine(SpecialROI):
-    r"""
-    Container class for multiple connected LineSegmentROIs.
-
-    This class allows the user to draw paths of multiple line segments.
-
-    ============== =============================================================
-    **Arguments**
-    positions      (list of length-2 sequences) The list of points in the path.
-                   Note that, unlike the handle positions specified in other
-                   ROIs, these positions must be expressed in the normal
-                   coordinate system of the ROI, rather than (0 to 1) relative
-                   to the size of the ROI.
-    closed         (bool) if True, an extra LineSegmentROI is added connecting 
-                   the beginning and end points.
-    \**args        All extra keyword arguments are passed to ROI()
-    ============== =============================================================
+class RangePolyLine(SpecialROI):     # for date price range
+    on_click = Signal(object)
+    signal_visible = Signal(bool)
+    signal_delete = Signal()
     
-    """
-    def __init__(self, positions, closed=False, pos=None, **args):
+    def __init__(self, pos, size=..., angle=0, invertible=True, maxBounds=None, snapSize=1, scaleSnap=False, translateSnap=False, rotateSnap=False, parent=None, pen=None, hoverPen=None, handlePen=None, handleHoverPen=None, movable=True, rotatable=True, resizable=True, removable=False, aspectLocked=False, drawtool=None):
+        super().__init__(pos, size, angle, invertible, maxBounds, snapSize, scaleSnap, translateSnap, rotateSnap, parent, pen, hoverPen, handlePen, handleHoverPen, movable, rotatable, resizable, removable, aspectLocked)
+    
+        self.drawtool = drawtool
+        self.chart = self.drawtool.chart
         
-        if pos is None:
-            pos = [0,0]
-            
-        self.closed = closed
+        self.has = {
+            "name": "rectangle",
+            "type": "drawtool",
+            "id": id
+        }
+        self.texts = []
+        self.arrows = []
+        self.finished = False
+        self.dounbleclick = False
+        self.last_point = None
         self.segments = []
-        SpecialROI.__init__(self, pos, size=[1,1], **args)
+        self.isSelected = False
+        self.indicator_name="Ruler..."
         
-        self.setPoints(positions)
+        
+        self.v_arrow = ArrowItem(angle=90, tipAngle=30, baseAngle=20, headLen=10, tailWidth=1, pen=None, brush=draw_line_color)
+        self.h_arrow = ArrowItem(angle=180, tipAngle=30, baseAngle=20, headLen=10, tailWidth=1, pen=None, brush=draw_line_color)
+        self.text = TextItem(color=draw_line_color,anchor=(0,0))
 
-    def setPoints(self, points, closed=None):
-        """
-        Set the complete sequence of points displayed by this ROI.
+        self.v_arrow.setParentItem(self)
+        self.h_arrow.setParentItem(self)
+        self.text.setParentItem(self)
         
-        ============= =========================================================
-        **Arguments**
-        points        List of (x,y) tuples specifying handle locations to set.
-        closed        If bool, then this will set whether the ROI is closed 
-                      (the last point is connected to the first point). If
-                      None, then the closed mode is left unchanged.
-        ============= =========================================================
-        
-        """
-        if closed is not None:
-            self.closed = closed
-        
-        self.clearPoints()
-        
-        for p in points:
-            self.addFreeHandle(p)
-        
-        start = -1 if self.closed else 0
-        for i in range(start, len(self.handles)-1):
-            self.addSegment(self.handles[i]['item'], self.handles[i+1]['item'])
-        
-    def clearPoints(self):
-        """
-        Remove all handles and segments.
-        """
-        while len(self.handles) > 0:
-            self.removeHandle(self.handles[0]['item'])
+        self.addScaleHandle([0, 0], [1, 1])
+        self.addScaleHandle([1, 1], [0, 0])
+        try:
+            self.addSegment(self.handles[0]['item'], self.handles[1]['item'])
+        except:
+            import traceback
+            traceback.print_exc()
+
+    @property
+    def endpoints(self):
+        # must not be cached because self.handles may change.
+        return [h['item'] for h in self.handles]
     
-    def getState(self):
-        state = SpecialROI.getState(self)
-        state['closed'] = self.closed
-        state['points'] = [Point(h.pos()) for h in self.getHandles()]
-        return state
-
-    def saveState(self):
-        state = SpecialROI.saveState(self)
-        state['closed'] = self.closed
-        state['points'] = [tuple(h.pos()) for h in self.getHandles()]
-        return state
-
-    def setState(self, state):
-        SpecialROI.setState(self, state)
-        self.setPoints(state['points'], closed=state['closed'])
-        
     def addSegment(self, h1, h2, index=None):
         seg = _FiboLineSegment(handles=(h1, h2), pen=mkPen(color="#9598a1",width= 1,style= Qt.DashLine), hoverPen=self.hoverPen,
                                parent=self, movable=False)
@@ -96,192 +65,121 @@ class BasePolyLine(SpecialROI):
         seg.sigClicked.connect(self.segmentClicked)
         seg.setAcceptedMouseButtons(Qt.MouseButton.LeftButton)
         seg.setZValue(self.zValue()+1)
-        for h in seg.handles:
-            h['item'].setDeletable(True)
-            h['item'].setAcceptedMouseButtons(h['item'].acceptedMouseButtons() | Qt.MouseButton.LeftButton) ## have these handles take left clicks too, so that handles cannot be added on top of other handles
-        
-    def setMouseHover(self, hover):
-        ## Inform all the ROI's segments that the mouse is(not) hovering over it
-        SpecialROI.setMouseHover(self, hover)
-        for s in self.segments:
-            s.setParentHover(hover)
-          
-    def addHandle(self, info, index=None):
-        h = SpecialROI.addHandle(self, info, index=index)
-        h.sigRemoveRequested.connect(self.removeHandle)
-        self.stateChanged(finish=True)
-        return h
-        
-    def segmentClicked(self, segment, ev=None, pos=None): ## pos should be in this item's coordinate system
-        if ev is not None:
-            pos = segment.mapToParent(ev.pos())
-        elif pos is None:
-            raise Exception("Either an event or a position must be given.")
-        h2 = segment.handles[1]['item']
-        
-        i = self.segments.index(segment)
-        h3 = self.addFreeHandle(pos, index=self.indexOfHandle(h2))
-        self.addSegment(h3, h2, index=i+1)
-        segment.replaceHandle(h2, h3)
-        
-    def removeHandle(self, handle, updateSegments=True):
-        SpecialROI.removeHandle(self, handle)
-        handle.sigRemoveRequested.disconnect(self.removeHandle)
-        
-        if not updateSegments:
-            return
-        segments = handle.rois[:]
-        
-        if len(segments) == 1:
-            self.removeSegment(segments[0])
-        elif len(segments) > 1:
-            handles = [h['item'] for h in segments[1].handles]
-            handles.remove(handle)
-            segments[0].replaceHandle(handle, handles[0])
-            self.removeSegment(segments[1])
-        self.stateChanged(finish=True)
-        
-    def removeSegment(self, seg):
-        for handle in seg.handles[:]:
-            seg.removeHandle(handle['item'])
-        self.segments.remove(seg)
-        seg.sigClicked.disconnect(self.segmentClicked)
-        self.scene().removeItem(seg)
-        
-    def checkRemoveHandle(self, h):
-        ## called when a handle is about to display its context menu
-        if self.closed:
-            return len(self.handles) > 3
-        else:
-            return len(self.handles) > 2
-        
-    def paint(self, p, *args):
-        pass
+        # for h in seg.handles:
+            # h['item'].setDeletable(True)
+            # h['item'].setAcceptedMouseButtons(h['item'].acceptedMouseButtons() | Qt.MouseButton.LeftButton) ## have these handles take left clicks too, so that handles cannot be added on top of other handles
     
-    def boundingRect(self):
-        return self.shape().boundingRect()
+    def change_size_handle(self, size):
+        for handle in self.endpoints:
+            handle.change_size_handle(size)
+    
+    def selectedHandler(self, is_selected):
+        if is_selected:
+            self.isSelected = True
+            # self.setSelected(True)
+            self.change_size_handle(3)
+        else:
+            self.isSelected = False
+            # self.setSelected(False)
+            self.change_size_handle(4)
 
-    def shape(self):
-        p = QPainterPath()
-        if len(self.handles) == 0:
-            return p
-        p.moveTo(self.handles[0]['item'].pos())
-        for i in range(len(self.handles)):
-            p.lineTo(self.handles[i]['item'].pos())
-        p.lineTo(self.handles[0]['item'].pos())
-        return p
+    def setSelected(self, s):
+        QGraphicsItem.setSelected(self, s)
+        #print "select", self, s
+        if s:
+            [h['item'].show() for h in self.handles]
+            [h.show() for h in self.segments]
 
-    def getArrayRegion(self, *args, **kwds):
-        return self._getArrayRegionForArbitraryShape(*args, **kwds)
+        else:
+            [h['item'].hide() for h in self.handles]
+            [h.hide() for h in self.segments]
 
-    def setPen(self, *args, **kwds):
-        SpecialROI.setPen(self, *args, **kwds)
-        for seg in self.segments:
-            seg.setPen(*args, **kwds)
+    def hoverEvent(self, ev):
+        hover = False
+        if ev.exit:
+            hover = False
+        else:
+            hover = True
+                
+        if not self.isSelected:
+            if hover:
+                self.setSelected(True)
+                ev.acceptClicks(Qt.MouseButton.LeftButton)  ## If the ROI is hilighted, we should accept all clicks to avoid confusion.
+                ev.acceptClicks(Qt.MouseButton.RightButton)
+                ev.acceptClicks(Qt.MouseButton.MiddleButton)
+                self.sigHoverEvent.emit(self)
+            else:
+                self.setSelected(False)
+    
+    def mouseDragEvent(self, ev, axis=None, line=None):
+        self.setSelected(True)
+        if ev.button == Qt.KeyboardModifier.ShiftModifier:
+            return self.chart.vb.mouseDragEvent(ev, axis)
 
-class RangePolyLine(BasePolyLine):     # for date price range
-    on_click = Signal(object)
-
-    signal_visible = Signal(bool)
-    signal_delete = Signal()
-    def __init__(self, vb, chart, *args, **kwargs):
-        self.vb = self.chart.vb # init before parent constructor
-        self.chart = chart
-        self.has = {
-            "name": "rectangle",
-            "type": "drawtool",
-            "id": id
-        }
-        self.texts = []
-        self.arrows = []
-        self.finished = False
-        self.indicator_name="Ruler..."
-        super().__init__(*args, **kwargs)
-        # self.on_click.connect(self.chart.show_popup_setting_tool)
-
+        if not self.locked and line:
+            return super().mouseDragEvent(ev)
+        elif self.locked and line:
+            ev.ignore()
+        ev.ignore()
+    
     def mousePressEvent(self, ev):
         if ev.button() == Qt.MouseButton.LeftButton:
             self.finished = True
         ev.ignore()
-
-    def setLastPoint(self, data):
-        if not self.finished and data[0]=="drawed_date_price_range":
-            pos = self.mapSceneToParent(QPointF(data[1], data[2]))
-            print("setLastPoint", pos, data, )
-            h0 = self.handles[0]['item'].pos()
-            h1 = self.handles[1]['item'].pos()
-            print(h0, h1)
-            self.movePoint(-1, pos)
-            self.stateChanged()
+    
 
     def setObjectName(self, name):
         self.indicator_name = name
 
     def mouseClickEvent(self, ev):
         if ev.button() == Qt.MouseButton.LeftButton:
-            # widget = self.childAt(ev.position().toPoint())
-            # print(191, ev.pos().toPoint())
-            self.on_click.emit(self)
+            if not self.boundingRect().contains(ev.pos()):
+                ev.accept()
+                self.on_click.emit(self)
+            self.finished = True
+            self.drawtool.drawing_object =None
         ev.ignore()
-
+    
     def objectName(self):
         return self.indicator_name
         
-    def addSegment(self, h1, h2, index=None):
-        super().addSegment(h1, h2, index)
-        text = TextItem(color=draw_line_color)
-        text.setZValue(50)
-        text.segment = self.segments[-1 if index is None else index]
+    def setPoint(self, pos_x, pos_y):
+        print(pos_x, pos_y, self.drawtool)
+        if not self.finished:
+            if self.chart.magnet_on:
+                pos_x, pos_y = self.drawtool.get_position_crosshair()
 
-        # super().addSegment(h1, h2)
-        # super().addSegment(h1, h2)
-        for seg in self.segments:
-            seg.hide()
-        self.v_arrow = ArrowItem(angle=90, tipAngle=30, baseAngle=20, headLen=10, tailWidth=1, pen=None, brush=draw_line_color)
-        self.h_arrow = ArrowItem(angle=180, tipAngle=30, baseAngle=20, headLen=10, tailWidth=1, pen=None, brush=draw_line_color)
-        self.h_arrow.setZValue(50)
-        self.v_arrow.setZValue(50)
-        self.arrows.append(self.h_arrow)
-        self.arrows.append(self.v_arrow)
-        self.update_arrows()
-        self.v_arrow.show()
-        self.h_arrow.show()
-        self.vb.addItem(self.h_arrow, ignoreBounds=True)
-        self.vb.addItem(self.v_arrow, ignoreBounds=True)
-        if index is None:
-            self.texts.append(text)
-        else:
-            self.texts.insert(index, text)
-        self.update_text(text)
-        self.vb.addItem(text, ignoreBounds=True)
-
-    def removeSegment(self, seg):
-        super().removeSegment(seg)
-        for text in list(self.texts):
-            if text.segment == seg:
-                self.vb.removeItem(text)
-                self.texts.remove(text)
-
+            point = Point(pos_x, pos_y)
+            pos = self.chart.vb.mapViewToScene(point)
+            self.last_point = point
+            lasthandle = self.handles[-1]['item']
+                        
+            lasthandle.movePoint(pos)
+            # self.update_arrows()
+            self.stateChanged()
+    
     def update_text(self, text):
-        h0 = text.segment.handles[0]['item']
-        h1 = text.segment.handles[1]['item']
-        # self.segments
-        diff = h1.pos() - h0.pos()
-        if diff.y() < 0:
-            text.setAnchor((0.5,0))
-        else:
-            text.setAnchor((0.5,1))
-        text.setPos(h1.pos())
-        text.setText(_draw_line_segment_text(self, text.segment, h0.pos(), h1.pos()))
+        print(text)
+        # h0 = text.segment.handles[0]['item']
+        # h1 = text.segment.handles[1]['item']
+        # # self.segments
+        # diff = h1.pos() - h0.pos()
+        # if diff.y() < 0:
+        #     text.setAnchor((0.5,0))
+        # else:
+        #     text.setAnchor((0.5,1))
+        # text.setPos(h1.pos())
+        # text.setText(_draw_line_segment_text(self, text.segment, h0.pos(), h1.pos()))
 
     def update_texts(self):
-        for text in self.texts:
-            self.update_text(text)
+        self.update_text("text")
 
     def update_arrows(self):
-        h0 = self.handles[0]['item']
-        h1 = self.handles[1]['item']
-        diff = h1.pos() - h0.pos()
+        h0 = self.handles[0]['item'].pos()
+        h1 = self.handles[1]['item'].pos()
+        diff = h1 - h0
+        _width = abs(diff.x()) 
+        _height = abs(diff.y()) #- self.v_arrow.opts["headLen"]
         if diff.y() < 0:
             # print(63, "di xuong")
             self.v_arrow.setStyle(angle=-90)
@@ -293,164 +191,81 @@ class RangePolyLine(BasePolyLine):     # for date price range
         else:
             self.h_arrow.setStyle(angle=0)
             # print(66, "di len")
-        self.h_arrow.setPos(h1.pos().x(), h1.pos().y() - diff.y() /2)
-        self.v_arrow.setPos(h1.pos().x() - diff.x() /2, h1.pos().y())
+        self.h_arrow.setPos(h1.x(), h1.y() - diff.y() /2)
+        self.v_arrow.setPos(h1.x() - diff.x() /2, h1.y())
 
-    def movePoint(self, handle, pos, modifiers=Qt.KeyboardModifier, finish=True, coords='parent'):
-        super().movePoint(handle, pos, modifiers, finish, coords)
-        self.update_texts()
-        self.update_arrows()
+    def segmentClicked(self, segment, ev=None, pos=None): ## pos should be in this item's coordinate system
+        if ev is not None:
+            pos = segment.mapToParent(ev.pos())
+        elif pos is None:
+            raise Exception("Either an event or a position must be given.")
+        # h2 = segment.handles[1]['item']
+        print(598, pos, self)
+        if not self.finished:
+            self.finished = True
+            self.drawtool.drawing_object =None
+        self.on_click.emit(self)
 
-    def segmentClicked(self, segment, ev=None, pos=None):
-        # pos = segment.mapToParent(ev.pos())
-        # pos = _clamp_point(self.vb.parent(), pos)
-        # super().segmentClicked(segment, pos=pos)
-        # self.update_texts()
+    
+    def addHandle(self, info, index=None):
+        ## If a Handle was not supplied, create it now
+        if 'item' not in info or info['item'] is None:
+            h = BaseHandle(self.handleSize, typ=info['type'], pen=self.handlePen,
+                       hoverPen=self.handleHoverPen, parent=self)
+            info['item'] = h
+            # info["yoff"] = True
+        else:
+            h = info['item']
+            # info["yoff"] = True
+            if info['pos'] is None:
+                info['pos'] = h.pos()
+        h.setPos(info['pos'] * self.state['size'])
+
+        ## connect the handle to this ROI
+        #iid = len(self.handles)
+        h.connectROI(self)
+        if index is None:
+            self.handles.append(info)
+        else:
+            self.handles.insert(index, info)
+        
+        h.setZValue(self.zValue()+1)
+        self.stateChanged()
+        h.mousePressEvent = self.mousePressEvent
+        h.mouseClickEvent = self.mouseClickEvent_Handle
+        h.mouseDoubleClickEvent = self.mouseDoubleClickEvent
+        return h
+    
+    
+    def mouseDoubleClickEvent(self, event) -> None:
+        self.drawtool.drawing_object =None
+        self.finished = True
+        self.dounbleclick = True
+        self.update()
+    
+    def mouseClickEvent_Handle(self, ev):
         if ev.button() == Qt.MouseButton.LeftButton:
-            self.on_click.emit(self)
-        return
-
-    def addHandle(self, info, index=None):
-        handle = super().addHandle(info, index)
-        # handle.movePoint = partial(_roihandle_move_snap, self.vb, handle.movePoint)
-        return handle
+            if self.last_point != None and (not self.dounbleclick):
+                self.drawtool.drawing_object =None
+                self.finished = True
+                self.dounbleclick = True
+                print(111,self.drawtool.drawing_object)
+                self.update()
     
     def paint(self, p: QPainter, *args):
-        # p.setRenderHint(QPainter.Antialiasing)
-        # p.drawRect(0, 0 , self.pixelWidth(), self.pixelHeight())
-        # p.drawLine(QPointF(0,1), QPointF(1,1))
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
-        p.setPen(self.currentPen)
+        p.setPen(mkPen(draw_line_color,width=1))
         if self.handles:
             h0 = self.handles[0]['item'].pos()
             h1 = self.handles[1]['item'].pos()
             diff = h1 - h0
             p.drawLine(QPointF(h1.x(), h1.y() - diff.y() /2), QPointF(h0.x(), h1.y() - diff.y() /2))
             p.drawLine(QPointF(h1.x() - diff.x() /2, h1.y()), QPointF(h1.x() - diff.x() /2, h0.y()))
-
             p.setPen(QColor(252, 163, 38, 40))
             p.setBrush(QColor(252, 163, 38, 40))
-            # p.drawRect(QRectF(h0, h1))
             p.fillRect(QRectF(h1,h0), QColor(252, 163, 38, 40))
+            self.update_arrows()
 
-
-class FinPolyLine(PolyLineROI):     # for ruler
-    def __init__(self, vb, *args, **kwargs):
-        self.vb = vb # init before parent constructor
-        self.texts = []
-        self.arrows = []
-        self.indicator_name="Ruler..."
-        super().__init__(*args, **kwargs)
-
-    def setObjectName(self, name):
-        self.indicator_name = name
-
-    def objectName(self):
-        return self.indicator_name
-        
-    def addSegment(self, h1, h2, index=None):
-        super().addSegment(h1, h2, index)
-        text = TextItem(color=draw_line_color)
-        text.setZValue(50)
-        text.segment = self.segments[-1 if index is None else index]
-
-        # super().addSegment(h1, h2)
-        # super().addSegment(h1, h2)
-        for seg in self.segments:
-            seg.hide()
-        self.v_arrow = ArrowItem(angle=90, tipAngle=30, baseAngle=20, headLen=10, tailWidth=1, pen=None, brush=draw_line_color)
-        self.h_arrow = ArrowItem(angle=180, tipAngle=30, baseAngle=20, headLen=10, tailWidth=1, pen=None, brush=draw_line_color)
-        self.h_arrow.setZValue(50)
-        self.v_arrow.setZValue(50)
-        self.arrows.append(self.h_arrow)
-        self.arrows.append(self.v_arrow)
-        self.update_arrows()
-        self.v_arrow.show()
-        self.h_arrow.show()
-        self.vb.addItem(self.h_arrow, ignoreBounds=True)
-        self.vb.addItem(self.v_arrow, ignoreBounds=True)
-        if index is None:
-            self.texts.append(text)
-        else:
-            self.texts.insert(index, text)
-        self.update_text(text)
-        self.vb.addItem(text, ignoreBounds=True)
-
-    def removeSegment(self, seg):
-        super().removeSegment(seg)
-        for text in list(self.texts):
-            if text.segment == seg:
-                self.vb.removeItem(text)
-                self.texts.remove(text)
-
-    def update_text(self, text):
-        h0 = text.segment.handles[0]['item']
-        h1 = text.segment.handles[1]['item']
-        # self.segments
-        diff = h1.pos() - h0.pos()
-        if diff.y() < 0:
-            text.setAnchor((0.5,0))
-        else:
-            text.setAnchor((0.5,1))
-        text.setPos(h1.pos())
-        text.setText(_draw_line_segment_text(self, text.segment, h0.pos(), h1.pos()))
-
-    def update_texts(self):
-        for text in self.texts:
-            self.update_text(text)
-
-    def update_arrows(self):
-        h0 = self.handles[0]['item']
-        h1 = self.handles[1]['item']
-        diff = h1.pos() - h0.pos()
-        if diff.y() < 0:
-            # print(63, "di xuong")
-            self.v_arrow.setStyle(angle=-90)
-        else:
-            self.v_arrow.setStyle(angle=90)
-        if diff.x() > 0:
-            # sang phai
-            self.h_arrow.setStyle(angle=180)
-        else:
-            self.h_arrow.setStyle(angle=0)
-            # print(66, "di len")
-        self.h_arrow.setPos(h1.pos().x(), h1.pos().y() - diff.y() /2)
-        self.v_arrow.setPos(h1.pos().x() - diff.x() /2, h1.pos().y())
-
-    def movePoint(self, handle, pos, modifiers=Qt.KeyboardModifier, finish=True, coords='parent'):
-        super().movePoint(handle, pos, modifiers, finish, coords)
-        self.update_texts()
-        self.update_arrows()
-
-    def segmentClicked(self, segment, ev=None, pos=None):
-        # pos = segment.mapToParent(ev.pos())
-        # pos = _clamp_point(self.vb.parent(), pos)
-        # super().segmentClicked(segment, pos=pos)
-        # self.update_texts()
-        return
-
-    def addHandle(self, info, index=None):
-        handle = super().addHandle(info, index)
-        # handle.movePoint = partial(_roihandle_move_snap, self.vb, handle.movePoint)
-        return handle
-    
-    def paint(self, p: QPainter, *args):
-        # p.setRenderHint(QPainter.Antialiasing)
-        # p.drawRect(0, 0 , self.pixelWidth(), self.pixelHeight())
-        # p.drawLine(QPointF(0,1), QPointF(1,1))
-        p.setRenderHint(QPainter.RenderHint.Antialiasing)
-        p.setPen(self.currentPen)
-        if self.handles:
-            h0 = self.handles[0]['item'].pos()
-            h1 = self.handles[1]['item'].pos()
-            diff = h1 - h0
-            p.drawLine(QPointF(h1.x(), h1.y() - diff.y() /2), QPointF(h0.x(), h1.y() - diff.y() /2))
-            p.drawLine(QPointF(h1.x() - diff.x() /2, h1.y()), QPointF(h1.x() - diff.x() /2, h0.y()))
-
-            p.setPen(QColor(252, 163, 38, 40))
-            p.setBrush(QColor(252, 163, 38, 40))
-            # p.drawRect(QRectF(h0, h1))
-            p.fillRect(QRectF(h1,h0), QColor(252, 163, 38, 40))
 
 class MouseDragHandler(object):
     """Implements default mouse drag behavior for ROI (not for ROI handles).

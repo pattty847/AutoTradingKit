@@ -2,13 +2,14 @@ from PySide6 import QtCore, QtGui
 from PySide6.QtCore import Signal, QObject, Qt
 from PySide6.QtGui import QColor
 
-from .roi import SpecialROI, MyHandle
+from .roi import SpecialROI, BaseHandle
+
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from atklip.graphics.chart_component.draw_tools.drawtools import DrawTool
     
-class RectangleROI(SpecialROI):
+class Rectangle(SpecialROI):
     on_click = Signal(QObject)
     draw_rec = Signal()
 
@@ -19,9 +20,14 @@ class RectangleROI(SpecialROI):
     signal_change_type = Signal(str)
 
 
-    def __init__(self, pos, size=..., angle=0,id=None, invertible=False, maxBounds=None, snapSize=1, scaleSnap=False, translateSnap=False, rotateSnap=False, parent=None, pen=None, hoverPen=None, handlePen=None, handleHoverPen=None, movable=True, rotatable=True, resizable=True, removable=False, aspectLocked=False,drawtool=None):
-        super().__init__(pos, size, angle, invertible, maxBounds, snapSize, scaleSnap, translateSnap, rotateSnap, parent, pen, hoverPen, handlePen, handleHoverPen, movable, rotatable, resizable, removable, aspectLocked)
-        #ROI.__init__(self, pos, **args)
+    def __init__(self, pos, size=..., angle=0,id=None, invertible=False, maxBounds=None, \
+        snapSize=1, scaleSnap=False, translateSnap=False, rotateSnap=False, parent=None, \
+            pen=None, hoverPen=None, handlePen=None, handleHoverPen=None, movable=True, \
+                rotatable=True, resizable=True, removable=False, aspectLocked=False,drawtool=None):
+        super().__init__(pos, size, angle, invertible, maxBounds, snapSize, scaleSnap, \
+            translateSnap, rotateSnap, parent, pen, hoverPen, handlePen, handleHoverPen,\
+                movable, rotatable, resizable, removable, aspectLocked)
+        
         self.drawtool:DrawTool= drawtool
         self.indicator_name = None
         self.isSelected = False
@@ -70,8 +76,10 @@ class RectangleROI(SpecialROI):
         hover = False
         if not ev.exit: # and not self.boundingRect().contains(ev.pos()):
             hover = True
+            # self.setCursor(Qt.CursorShape.PointingHandCursor)
         else:
             hover = False
+            # self.setCursor(Qt.CursorShape.CrossCursor)
                 
         if not self.isSelected:
             if hover:
@@ -86,7 +94,7 @@ class RectangleROI(SpecialROI):
     def addHandle(self, info, index=None):
         ## If a Handle was not supplied, create it now
         if 'item' not in info or info['item'] is None:
-            h = MyHandle(self.handleSize, typ=info['type'], pen=self.handlePen,
+            h = BaseHandle(self.handleSize, typ=info['type'], pen=self.handlePen,
                        hoverPen=self.handleHoverPen, parent=self)
             info['item'] = h
             # info["yoff"] = True
@@ -107,24 +115,12 @@ class RectangleROI(SpecialROI):
         
         h.setZValue(self.zValue()+1)
         self.stateChanged()
-        h.mousePressEvent = self.mousePressEvent
         return h
 
-    def mousePressEvent(self, ev):
-        if ev.button() == Qt.MouseButton.LeftButton:
-            self.finished = True
-            self.on_click.emit(self)
-            # print(82, "mouse press rectangle")
-        ev.ignore()
-
-    def setPoint(self,data):
-        #print(318, "lastmouse_position", data, self.finished)
-        if not self.finished and data[0]=="drawed_rectangle":
+    def setPoint(self,pos_x, pos_y):
+        if not self.finished:
             if self.drawtool.chart.magnet_on:
                 pos_x, pos_y = self.drawtool.get_position_crosshair()
-            else:
-                pos_x, pos_y = self.drawtool.get_position_crosshair()
-                pos_y = data[2]
             self.state['size'] = [pos_x-self.state['pos'][0], pos_y-self.state['pos'][1]]
             self.stateChanged()
     
@@ -246,6 +242,8 @@ class RectangleROI(SpecialROI):
             if not self.boundingRect().contains(ev.pos()):
                 ev.accept()
                 self.on_click.emit(self)
+            self.finished = True
+            self.drawtool.drawing_object =None
         ev.ignore()
 
         

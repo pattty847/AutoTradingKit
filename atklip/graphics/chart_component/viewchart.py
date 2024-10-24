@@ -233,7 +233,7 @@ class Chart(ViewPlotWidget):
                             is_updated = False
                             return is_updated
                 
-                elif isinstance(indicator,Volume) and isinstance(indicator,BasicZIGZAG):
+                elif isinstance(indicator,Volume) or isinstance(indicator,BasicZIGZAG):
                     pass
                 elif indicator.INDICATOR.is_current_update == False:
                     is_updated = False
@@ -424,8 +424,21 @@ class Chart(ViewPlotWidget):
             
             elif self.drawtool.draw_object_name ==  "draw_rectangle":
                 self.drawtool.draw_rectangle(ev)
+            elif self.drawtool.draw_object_name ==  "draw_rotate_rectangle":
+                self.drawtool.draw_rotate_rectangle(ev)
             elif self.drawtool.draw_object_name ==  "draw_path":
                 self.drawtool.draw_path(ev)
+            elif self.drawtool.draw_object_name ==  "draw_up_arrow":
+                self.drawtool.draw_up_arrow(ev)
+            elif self.drawtool.draw_object_name ==  "draw_down_arrow":
+                self.drawtool.draw_down_arrow(ev)
+            elif self.drawtool.draw_object_name ==  "draw_arrow":
+                self.drawtool.draw_arrow(ev)
+                
+                
+                
+                
+                
                 
             elif self.drawtool.draw_object_name ==  "draw_text":
                 self.drawtool.draw_text(ev)    

@@ -123,15 +123,17 @@ class BRUSHS(QFrame):
         if self.rectangle == tool:
             self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,"draw_rectangle"))
         elif self.rotated_rectangle == tool:
-            self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,"draw_rotated_rectangle"))
+            self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,"draw_rotate_rectangle"))
         elif self.path == tool:
             self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,"draw_path"))
-        elif self.circle == tool:
-            self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,"draw_fib_retracement_2"))
-        elif self.elipse == tool:
-            self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,"draw_fib_retracement_2"))
-
+        elif self.arrow_mark_up == tool:
+            self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,"draw_up_arrow"))
+        elif self.arrow_mark_down == tool:
+            self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,"draw_down_arrow"))
+        elif self.arrow == tool:
+            self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,"draw_arrow"))
         
+
     def set_enable(self):
         if self.splitToolButton.button.isChecked():
             self.is_enabled = True
