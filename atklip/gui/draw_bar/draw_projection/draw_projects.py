@@ -107,8 +107,14 @@ class PROJECTS(QFrame):
         self.current_tool = tool
         self.splitToolButton.change_item(icon)
         self.set_enable()
-        if self.date_price_range == tool:
+        if self.price_range == tool:
+            self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,"draw_price_range"))
+        elif self.date_range == tool:
+            self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,"draw_date_range"))
+        elif self.date_price_range == tool:
             self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,"draw_date_price_range"))
+            
+            
         # elif self.rotated_rectangle == tool:
         #     self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,"draw_rotated_rectangle"))
         # elif self.path == tool:

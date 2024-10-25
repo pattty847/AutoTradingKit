@@ -20,7 +20,7 @@ plot.setWindowTitle('pyqtgraph example: text')
 curve = plot.plot(x,y)  ## add a single curve
 
 ## Create text object, use HTML tags to specify color/size
-text = pg.TextItem(html='<div style="text-align: center"><span style="color: #FFF;">This is the</span><br><span style="color: #FF0; font-size: 16pt;">PEAK</span></div>', anchor=(-0.3,0.5), angle=45, border='w', fill=(0, 0, 255, 100))
+text = pg.TextItem(html='<div style="text-align: center"><span style="color: #FFF;">This is the</span><br><span style="color: #FF0; font-size: 16pt;">PEAK</span></div>', anchor=(0.5,1), angle=0, border='w', fill=(0, 0, 255, 100))
 plot.addItem(text)
 text.setPos(0, y.max())
 

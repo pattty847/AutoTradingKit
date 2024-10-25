@@ -41,7 +41,7 @@ class TitleBar(MSFluentTitleBar):
 
         self.tabBar.setMovable(False)
         self.tabBar.setTabMaximumWidth(180)
-        self.tabBar.setTabShadowEnabled(True)
+        # self.tabBar.setTabShadowEnabled(True)
         self.tabBar.setTabSelectedBackgroundColor(QColor(255, 255, 255, 125), QColor(255, 255, 255, 50))
 
         self.tabBar.setScrollable(True)
@@ -52,7 +52,7 @@ class TitleBar(MSFluentTitleBar):
 
         self.hBoxLayout.insertWidget(5, self.tabBar, 1)
         self.hBoxLayout.setStretch(6, 0)
-        #FluentStyleSheet.TITLEBAR.apply(self)
+        FluentStyleSheet.TITLEBAR.apply(self)
 
 
 

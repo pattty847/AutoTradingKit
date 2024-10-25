@@ -6,7 +6,7 @@ from atklip.graphics.chart_component import  CustomDateAxisItem
 from .viewchart import Chart
 from .sub_chart import SubChart
 from atklip.gui.qfluentwidgets.common import FluentStyleSheet
-from PySide6.QtWidgets import QWidget, QSplitter,QApplication,QLabel
+from PySide6.QtWidgets import QWidget, QSplitter,QApplication,QLabel,QFrame
 from .pliterbox_ui import Ui_Form
 from .axisitem import *
 from .sub_panel_indicator import ViewSubPanel 
@@ -119,7 +119,7 @@ class CustomDockLabel(DockLabel):
             self.setStyleSheet(self.hStyle)
     
 
-class ViewSplitter(QSplitter,Ui_Form):
+class ViewSplitter(QFrame,Ui_Form):
     sig_add_indicator_to_chart = Signal(tuple)
     sig_add_sub_panel = Signal(object)
     sig_show_hide_cross = Signal(tuple)

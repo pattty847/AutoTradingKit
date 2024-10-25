@@ -56,7 +56,8 @@ class DrawTool(QObject):
         self.draw_object_name = "drawed_trenlines"
 
     def draw_verticallines(self, ev: QEvent):
-        pos_x, pos_y = self.get_position_mouse_on_chart(ev)
+        # pos_x, pos_y = self.get_position_mouse_on_chart(ev)
+        pos_x, pos_y = self.get_position_crosshair()
         obj = Vertical_line(pos=pos_x, movable=True,angle=90,pen=mkPen("#2962ff"), chart=self.chart)
         self.chart.addItem(obj)
         self.chart.drawtools.append(obj)
@@ -89,7 +90,8 @@ class DrawTool(QObject):
         self.draw_object_name = None
     
     def draw_horizontal_ray(self, ev: QEvent):
-        pos_x, pos_y = self.get_position_mouse_on_chart(ev)
+        # pos_x, pos_y = self.get_position_mouse_on_chart(ev)
+        pos_x, pos_y = self.get_position_crosshair()
         obj = Horizontal_ray(positions=[[pos_x, pos_y]], pen=("#2962ff"), chart=self.chart)
         self.chart.addItem(obj)
         self.chart.drawtools.append(obj)
@@ -100,7 +102,8 @@ class DrawTool(QObject):
         self.draw_object_name = None
 
     def draw_fibo(self, ev: QEvent):
-        pos_x, pos_y = self.get_position_mouse_on_chart(ev)
+        # pos_x, pos_y = self.get_position_mouse_on_chart(ev)
+        pos_x, pos_y = self.get_position_crosshair()
         obj =FiboROI([pos_x, pos_y], [0, 0],invertible=True,movable=True, resizable=False, removable=True, pen=mkPen("green",width=1), fibo_level=self.custom_fibonacci_levels, color_rect=self.custom_colors_rect, color_line=self.custom_colors_lines, color_borders=self.custom_colors_borders,parent=self.chart.vb, main=self.chart)
     
         self.chart.addItem(obj)
@@ -113,7 +116,8 @@ class DrawTool(QObject):
         self.draw_object_name = "drawed_fibo_retracement"
 
     def draw_fibo_2(self, ev: QEvent):
-        pos_x, pos_y = self.get_position_mouse_on_chart(ev)
+        # pos_x, pos_y = self.get_position_mouse_on_chart(ev)
+        pos_x, pos_y = self.get_position_crosshair()
         obj =FiboROI2([pos_x, pos_y], [0, 0],invertible=True,movable=True, resizable=False, removable=True, pen=mkPen("green",width=1), 
                           parent=self.chart.vb, main=self.chart)
 

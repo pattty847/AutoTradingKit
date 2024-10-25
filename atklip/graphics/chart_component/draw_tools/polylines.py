@@ -1,12 +1,44 @@
+from typing import List
 from PySide6.QtCore import Qt, QRectF, QPointF, Signal
 from PySide6.QtGui import QPainter, QColor, QPainterPath
 from PySide6.QtWidgets import QGraphicsItem
-from pyqtgraph import PolyLineROI, TextItem, Point, ArrowItem, mkPen
+from pyqtgraph import PolyLineROI, TextItem, Point, ArrowItem, mkPen,mkBrush
 
 draw_line_color = '#2962ff'
 epoch_period = 1e30
 
 from .roi import BaseHandle, SpecialROI, _FiboLineSegment
+from .base_textitem import BaseTextItem
+from atklip.app_utils import covert_time_to_sec,percent_caculator,divide_with_remainder
+
+
+def _draw_line_segment_text(interval,precision,pos0, pos1):
+    sec_per_interval = covert_time_to_sec(interval)
+    diff = pos1 - pos0
+    fsecs = int(abs(diff.x())) #*epoch_period)
+    secs = fsecs*sec_per_interval
+    
+    _min, _sec = divide_with_remainder(secs, 60)
+    
+    _hour, __min = divide_with_remainder(_min, 60)
+    
+    _day, __hour = divide_with_remainder(_hour, 24)
+    
+    if _day == 0:
+        _text = '%0.2i:%0.2i' % (_hour, __min)
+    else:
+        _text = '%id %0.2i:%0.2i' % (_day, __hour, __min)
+    
+    # ysc = polyline.vb.yscale
+    if diff.y() >= 0:
+        percent = percent_caculator(pos1.y(), pos0.y())
+    else:
+        percent = -percent_caculator(pos0.y(), pos1.y())
+    return round(diff.y(),precision), percent,fsecs,_text #f'{diff.y()} ({percent}%) \n{fsecs} bars {ts}'
+
+"""
+    The yaxis parameter can be one of [False, 'linear', 'log'].'''
+"""
 
 class RangePolyLine(SpecialROI):     # for date price range
     on_click = Signal(object)
@@ -18,12 +50,16 @@ class RangePolyLine(SpecialROI):     # for date price range
     
         self.drawtool = drawtool
         self.chart = self.drawtool.chart
+        self.interval = self.chart.interval
+        self.precision = self.chart._precision
         
         self.has = {
             "name": "rectangle",
             "type": "drawtool",
             "id": id
         }
+        self.handles:List[dict] = []
+        
         self.texts = []
         self.arrows = []
         self.finished = False
@@ -36,11 +72,10 @@ class RangePolyLine(SpecialROI):     # for date price range
         
         self.v_arrow = ArrowItem(angle=90, tipAngle=30, baseAngle=20, headLen=10, tailWidth=1, pen=None, brush=draw_line_color)
         self.h_arrow = ArrowItem(angle=180, tipAngle=30, baseAngle=20, headLen=10, tailWidth=1, pen=None, brush=draw_line_color)
-        self.text = TextItem(color=draw_line_color,anchor=(0,0))
-
+        self.textitem = TextItem("",color=draw_line_color)
         self.v_arrow.setParentItem(self)
         self.h_arrow.setParentItem(self)
-        self.text.setParentItem(self)
+        self.textitem.setParentItem(self)
         
         self.addScaleHandle([0, 0], [1, 1])
         self.addScaleHandle([1, 1], [0, 0])
@@ -144,7 +179,6 @@ class RangePolyLine(SpecialROI):     # for date price range
         return self.indicator_name
         
     def setPoint(self, pos_x, pos_y):
-        print(pos_x, pos_y, self.drawtool)
         if not self.finished:
             if self.chart.magnet_on:
                 pos_x, pos_y = self.drawtool.get_position_crosshair()
@@ -152,27 +186,60 @@ class RangePolyLine(SpecialROI):     # for date price range
             point = Point(pos_x, pos_y)
             pos = self.chart.vb.mapViewToScene(point)
             self.last_point = point
-            lasthandle = self.handles[-1]['item']
-                        
+            lasthandle = self.handles[-1]['item'] 
             lasthandle.movePoint(pos)
-            # self.update_arrows()
             self.stateChanged()
     
-    def update_text(self, text):
-        print(text)
-        # h0 = text.segment.handles[0]['item']
-        # h1 = text.segment.handles[1]['item']
-        # # self.segments
-        # diff = h1.pos() - h0.pos()
-        # if diff.y() < 0:
-        #     text.setAnchor((0.5,0))
-        # else:
-        #     text.setAnchor((0.5,1))
-        # text.setPos(h1.pos())
-        # text.setText(_draw_line_segment_text(self, text.segment, h0.pos(), h1.pos()))
+    
+    def updatePos(self,pointf):
+        # update text position to obey anchor
+        r = self.textItem.boundingRect()
+        tl = self.textItem.mapToParent(r.topLeft())
+        br = self.textItem.mapToParent(r.bottomRight())
+        offset = (br - tl) * self.anchor
+        p = self.parentItem()
+        if p is not None:
+            # prb = p.boundingRect()
+            # x,y,w,h = prb.x(),prb.y(),prb.width(),prb.height()
+            # _x = -offset.x() + x
+            mapFromParent = self.mapFromParent(pointf)
+            _x = -offset.x() + mapFromParent.x()
+            _y = mapFromParent.y()-r.height()/2
+            pos = Point(_x,_y)
+            self.textItem.setPos(pos)
+    
+    def update_text(self):
+        h0 = self.handles[0]['item'].pos()
+        h1 = self.handles[1]['item'].pos()
+        diff = h1 - h0
+        point0 = self.mapFromParent(Point(h0))
+        point1 = self.mapFromParent(Point(h1))
 
-    def update_texts(self):
-        self.update_text("text")
+        diff_y, percent,fsecs,ts = _draw_line_segment_text(self.chart.interval,self.chart._precision,point0, point1)
+        
+        if diff.y() < 0:
+            self.textitem.setAnchor((1,0))
+        else:
+            self.textitem.setAnchor((1,1))
+        
+        html=f"""<div style="text-align: center"><span style="color: #FFF; font-size: 11pt;">{diff_y} ({percent}%)</span><br><span style="color: #FFF; font-size: 11pt;">{fsecs} bars, {ts}</span></div>"""
+        
+        self.textitem.setHtml(html)
+        
+        r = self.textitem.textItem.boundingRect()
+        tl = self.textitem.textItem.mapToParent(r.topLeft())
+        br = self.textitem.textItem.mapToParent(r.bottomRight())
+        offset = (br - tl) * self.textitem.anchor
+        
+        _pointf = Point(h1.x() - diff.x()/2, h1.y())
+        _x = _pointf.x()+offset.x()/2
+        
+        if diff.y() < 0:
+            _y = _pointf.y()-offset.y()/2
+        else:
+            _y = _pointf.y() + offset.y()/2
+        self.textitem.setPos(Point(_x,_y))
+
 
     def update_arrows(self):
         h0 = self.handles[0]['item'].pos()
@@ -261,142 +328,9 @@ class RangePolyLine(SpecialROI):     # for date price range
             diff = h1 - h0
             p.drawLine(QPointF(h1.x(), h1.y() - diff.y() /2), QPointF(h0.x(), h1.y() - diff.y() /2))
             p.drawLine(QPointF(h1.x() - diff.x() /2, h1.y()), QPointF(h1.x() - diff.x() /2, h0.y()))
-            p.setPen(QColor(252, 163, 38, 40))
-            p.setBrush(QColor(252, 163, 38, 40))
-            p.fillRect(QRectF(h1,h0), QColor(252, 163, 38, 40))
+            # p.setPen(QColor(252, 163, 38, 40))
+            p.setBrush(QColor(43, 106, 255, 40))
+            p.fillRect(QRectF(h1,h0),QColor(43, 106, 255, 40))
             self.update_arrows()
+            self.update_text()
 
-
-class MouseDragHandler(object):
-    """Implements default mouse drag behavior for ROI (not for ROI handles).
-    """
-    def __init__(self, roi):
-        self.roi = roi
-        self.dragMode = None
-        self.startState = None
-        self.snapModifier = Qt.KeyboardModifier.ControlModifier
-        self.translateModifier = Qt.KeyboardModifier.NoModifier
-        self.rotateModifier = Qt.KeyboardModifier.AltModifier
-        self.scaleModifier = Qt.KeyboardModifier.ShiftModifier
-        self.rotateSpeed = 0.5
-        self.scaleSpeed = 1.01
-
-    def mouseDragEvent(self, ev):
-        roi = self.roi
-
-        if ev.isStart():
-            if ev.button() == Qt.MouseButton.LeftButton:
-                roi.setSelected(True)
-                mods = ev.modifiers() & ~self.snapModifier
-                if roi.translatable and mods == self.translateModifier:
-                    self.dragMode = 'translate'
-                elif roi.rotatable and mods == self.rotateModifier:
-                    self.dragMode = 'rotate'
-                elif roi.resizable and mods == self.scaleModifier:
-                    self.dragMode = 'scale'
-                else:
-                    self.dragMode = None
-                
-                if self.dragMode is not None:
-                    roi._moveStarted()
-                    self.startPos = roi.mapToParent(ev.buttonDownPos())
-                    print(164, self.startPos)
-                    self.startState = roi.saveState()
-                    self.cursorOffset = roi.pos() - self.startPos
-                    ev.accept()
-                else:
-                    ev.ignore()
-            else:
-                self.dragMode = None
-                ev.ignore()
-
-
-        if ev.isFinish() and self.dragMode is not None:
-            roi._moveFinished()
-            return
-
-        # roi.isMoving becomes False if the move was cancelled by right-click
-        if not roi.isMoving or self.dragMode is None:
-            return
-
-        snap = True if (ev.modifiers() & self.snapModifier) else None
-        pos = roi.mapToParent(ev.pos())
-        if self.dragMode == 'translate':
-            newPos = pos + self.cursorOffset
-            roi.translate(newPos - roi.pos(), snap=snap, finish=False)
-        elif self.dragMode == 'rotate':
-            diff = self.rotateSpeed * (ev.scenePos() - ev.buttonDownScenePos()).x()
-            angle = self.startState['angle'] - diff
-            roi.setAngle(angle, centerLocal=ev.buttonDownPos(), snap=snap, finish=False)
-        elif self.dragMode == 'scale':
-            diff = self.scaleSpeed ** -(ev.scenePos() - ev.buttonDownScenePos()).y()
-            roi.setSize(Point(self.startState['size']) * diff, centerLocal=ev.buttonDownPos(), snap=snap, finish=False)
-
-
-def _draw_line_segment_text(polyline, segment, pos0, pos1):
-    diff = pos1 - pos0
-    fsecs = abs(diff.x()) #*epoch_period)
-    secs = int(fsecs)
-    mins = secs//60
-    hours = mins//60
-    mins = mins%60
-    secs = secs%60
-    if hours==0 and mins==0 and secs < 60: # and   < 1:
-        msecs = int((fsecs-int(fsecs))*1000)
-        ts = '%0.2i:%0.2i.%0.3i' % (mins, secs, msecs)
-    elif hours==0 and mins < 60 and epoch_period < 60:
-        ts = '%0.2i:%0.2i:%0.2i' % (hours, mins, secs)
-    elif hours < 24:
-        ts = '%0.2i:%0.2i' % (hours, mins)
-    else:
-        days = hours // 24
-        hours %= 24
-        ts = '%id %0.2i:%0.2i' % (days, hours, mins)
-        if ts.endswith(' 00:00'):
-            ts = ts.partition(' ')[0]
-    # ysc = polyline.vb.yscale
-    if 1: # polyline.vb.y_positive:
-        # y0,y1 = ysc.xform(pos0.y()), ysc.xform(pos1.y())
-        y0,y1 = pos0.y(), pos1.y()
-        if y0:
-            gain = y1 / y0 - 1
-            if gain > 10:
-                value = 'x%i' % gain
-            else:
-                value = '%+.2f %%' % (100 * gain)
-        elif not y1:
-            value = '0'
-        else:
-            value = '+∞' if y1>0 else '-∞'
-    else:
-        dy = diff.y() # ysc.xform(diff.y())
-        if dy and (abs(dy) >= 1e4 or abs(dy) <= 1e-2):
-            value = '%+3.3g' % dy
-        else:
-            value = '%+2.2f' % dy
-    extra = _draw_line_extra_text(polyline, segment, pos0, pos1)
-    # print(180, value, extra, ts)
-    return '%s %s (%s)' % (value, extra, ts)
-
-
-def _draw_line_extra_text(polyline, segment, pos0, pos1):
-    '''Shows the proportions of this line height compared to the previous segment.'''
-    prev_text = None
-    for text in polyline.texts:
-        if prev_text is not None and text.segment == segment:
-            h0 = prev_text.segment.handles[0]['item']
-            h1 = prev_text.segment.handles[1]['item']
-            prev_change = h1.pos().y() - h0.pos().y()
-            this_change = pos1.y() - pos0.y()
-            if abs(prev_change) <= 1e-14:
-                break
-            change_part = abs(this_change / prev_change)
-            # print(196, change_part)
-            return ' = 1:%.2f ' % change_part
-        prev_text = text
-    return ''
-
-
-"""
-    The yaxis parameter can be one of [False, 'linear', 'log'].'''
-"""

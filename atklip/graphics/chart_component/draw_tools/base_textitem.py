@@ -18,18 +18,16 @@ class BaseTextItem(TextItem):
     def updateTextPos(self):
         pass
 
-    def updatePos(self,y_line_pointf):
+
+    def updatePos(self,pointf):
         # update text position to obey anchor
         r = self.textItem.boundingRect()
         tl = self.textItem.mapToParent(r.topLeft())
         br = self.textItem.mapToParent(r.bottomRight())
         offset = (br - tl) * self.anchor
-        p = self.parentItem()
-        if p is not None:
-            prb = p.boundingRect()
-            x,y,w,h = prb.x(),prb.y(),prb.width(),prb.height()
-            _x = -offset.x() + x
-            mapFromParent = self.mapFromParent(Point(0,y_line_pointf))
-            _y = mapFromParent.y()-r.height()/2
-            pos = Point(_x,_y)
-            self.textItem.setPos(pos)
+
+        mapFromParent = self.mapFromParent(pointf)
+        _x = -offset.x() + mapFromParent.x()
+        _y = mapFromParent.y()-r.height()/2
+        pos = Point(_x,_y)
+        self.textItem.setPos(pos)

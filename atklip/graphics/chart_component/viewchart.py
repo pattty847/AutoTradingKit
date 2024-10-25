@@ -445,6 +445,10 @@ class Chart(ViewPlotWidget):
             
             elif self.drawtool.draw_object_name == "draw_date_price_range":
                 self.drawtool.draw_date_price_range(ev)
+            elif self.drawtool.draw_object_name == "draw_date_range":
+                self.drawtool.draw_date_price_range(ev)
+            elif self.drawtool.draw_object_name == "draw_price_range":
+                self.drawtool.draw_date_price_range(ev)
             
             else:
                 pass

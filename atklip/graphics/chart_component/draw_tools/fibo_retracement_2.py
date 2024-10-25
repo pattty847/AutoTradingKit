@@ -192,10 +192,11 @@ class FiboROI2(SpecialROI):
     
     def update_text_percentage(self, data):
         i, price, x, direct = data[0], data[1], data[2], data[3]
+        pointf = self.mapFromParent(Point(x,price))
+        # y_line_pointf = mapFromParent.y()
+        # x_line_pointf = mapFromParent.x()
         text:BaseTextItem = self.list_lines[i]
-        mapFromParent = self.mapFromParent(Point(0,price))
-        y_line_pointf = mapFromParent.y()
-        text.updatePos(y_line_pointf)
+        text.updatePos(pointf)
         if direct == 1:
             text.percent = self.fibonacci_levels[i]
             text.setColor(self.colors_lines[self.counts - i - 1])

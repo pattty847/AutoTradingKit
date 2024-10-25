@@ -71,13 +71,19 @@ def xminmax(datasrc, x_indexed, init_steps=None, extra_margin=0):
 def find_nearest_index(lst, special_value):
         index = min(range(len(lst)), key=lambda i: abs(lst[i] - special_value))
         return index
+
+@njit(cache=True) 
+def divide_with_remainder(a, b):
+    quotient, remainder = divmod(a, b)
+    return quotient, remainder
+
 @njit(cache=True)
 def percent_caculator(start, stop):
     percent = float(((float(start) - float(stop)) / float(start))) * 100
     if percent > 0:
-        return percent
+        return round(percent,2)
     else:
-        return abs(percent)
+        return round(abs(percent),2)
 
 @jit(nopython=True)
 def binary_search(x,arr,length):
@@ -140,6 +146,6 @@ def covert_time_to_sec(string):
     return count
 
 def timestamptodate(timestamp):
-        from datetime import datetime
-        return datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S")
+    from datetime import datetime
+    return datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S")
 

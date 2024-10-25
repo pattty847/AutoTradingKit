@@ -47,18 +47,18 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
         self.tabBar.tabAddRequested.connect(self.onTabAddRequested)
         self.tabBar.tabCloseRequested.connect(self.onTabCloseRequested)
         qconfig.themeChangedFinished.connect(self._onThemeChangedFinished)
-        
         FluentStyleSheet.FLUENT_WINDOW.apply(self)
-        self.initWindow()
         self.onTabAddRequested()
+        self.initWindow()
 
     def initWindow(self):
         desktop = screen.getCurrentScreenGeometry()
         w, h = desktop.width(), desktop.height()
         _w, _h = 1000, 800
         self.resize(_w, _h)
-        self.setGeometry(int(w/2 - self.width()/2),int(h/2 - self.height()/2),_w,_h)
-        # self.resize(_w, _h)
+        self.setGeometry(int(w/2 - _w/2),int(h/2 - _h/2),_w,_h)
+        self.resize(_w, _h)
+
 
     def load_pre_config(self):
         curent_tab = AppConfig.get_config_value("profiles.current_tab")
@@ -134,10 +134,10 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
         # self.stackedWidget.resize(self.width(), self.height() - self.titleBar.height())
         TabInterface = MainWidget(self,tabItem,routeKey,current_ex,current_symbol,curent_interval)
         
-        old_interface = self.stackedWidget.currentWidget()
-        if isinstance(old_interface,MainWidget):
-            old_interface.hide()
-            TabInterface.resize(old_interface.width(),old_interface.height())
+        # old_interface = self.stackedWidget.currentWidget()
+        # if isinstance(old_interface,MainWidget):
+        #     old_interface.hide()
+        #     TabInterface.resize(old_interface.width(),old_interface.height())
             
         self.addInterface(TabInterface)
         self.switchTo(TabInterface)
