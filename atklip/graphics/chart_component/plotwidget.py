@@ -7,7 +7,7 @@ from atklip.controls import *
 from PySide6 import QtGui
 from PySide6.QtCore import Signal,QPointF,Qt,QSize,QEvent,QCoreApplication
 from PySide6.QtGui import QColor,QPainter
-from PySide6.QtWidgets import QGraphicsView
+from PySide6.QtWidgets import QGraphicsView,QWidget
 from atklip.graphics.pyqtgraph import mkPen, PlotWidget, InfiniteLine,SignalProxy
 
 
@@ -35,11 +35,10 @@ class Crosshair:
 
 
 class ViewPlotWidget(PlotWidget):
-    mouse_clicked_signal = Signal(Any)
+    mouse_clicked_signal = Signal(QEvent)
     sig_show_process = Signal(bool)
     sig_change_tab_infor = Signal(tuple)
     sig_goto_date = Signal(tuple)
-    sig_change_candle_type = Signal(str)
     "signal from TopBar"
     sig_add_item = Signal(object)
     sig_remove_item = Signal(object)
@@ -51,8 +50,8 @@ class ViewPlotWidget(PlotWidget):
     sig_add_indicator_panel = Signal(tuple)
     sig_reload_indicator_panel = Signal()
     sig_update_source = Signal(object)
-    sig_remove_source = Signal(str)
     sig_update_y_axis = Signal() 
+    sig_show_pop_up_draw_tool = Signal(object)
 
     def __init__(self, parent=None, type_chart="trading", background: str = "#161616",) -> None: #str = "#f0f0f0"
         # Make sure we have LiveAxis in the bottom
@@ -77,8 +76,9 @@ class ViewPlotWidget(PlotWidget):
         self.setOptimizationFlag(QGraphicsView.OptimizationFlag.DontAdjustForAntialiasing, True)
 
         self._parent = parent
+        
+        self.mainwindow:QWidget = None
 
-        self.list_candle_indicators = []
         self.indicators:List = []
         self.drawtools:List = []
         
@@ -171,7 +171,7 @@ class ViewPlotWidget(PlotWidget):
             item = args[0]
         else:
             item = args
-        self.list_candle_indicators.append(item)
+                    
         self.addItem(item) 
         if "y_axis_show" in list(item.has.keys()):
             self.yAxis.dict_objects.update({item:item.has["y_axis_show"]})
@@ -182,18 +182,17 @@ class ViewPlotWidget(PlotWidget):
         if isinstance(args,tuple):
             item = args[0]
         else:
-            item = args
-        self.list_candle_indicators.remove(item)
-        
+            item = args       
         if item in self.indicators:
             self.indicators.remove(item) 
-            
         if item in self.drawtools:
             self.drawtools.remove(item) 
-
-        del self.yAxis.dict_objects[item]
+        
+        if item in list(self.yAxis.dict_objects.keys()):
+            del self.yAxis.dict_objects[item]
         self.removeItem(item) 
-        item.deleteLater()
+        if hasattr(item, "deleteLater"):
+            item.deleteLater()
     def addItem(self, *args: Any, **kwargs: Any) -> None:
         if hasattr(args[0], "_vl_kwargs") and args[0]._vl_kwargs is not None:
             self.plotItem.addItem(args[0]._vl_kwargs["line"], ignoreBounds=True)
@@ -205,9 +204,7 @@ class ViewPlotWidget(PlotWidget):
             self.plotItem.addItem(args[0]._hl_kwargs["text"], ignoreBounds=True)
             args[0].plot_widget = self
             return
-        elif hasattr(args[0], "update_leading_line"):
-            setattr(args[0], "x_format", self.x_format)
-            setattr(args[0], "y_format", self.y_format)
+  
         self.plotItem.addItem(*args)
         args[0].plot_widget = self
     def auto_xrange(self):
@@ -321,7 +318,7 @@ class ViewPlotWidget(PlotWidget):
     
     def mousePressEvent(self, ev):
         self.is_mouse_pressed =  True
-        self.mouse_clicked_signal.emit(None)
+        self.mouse_clicked_signal.emit(ev)
         super().mousePressEvent(ev)
         
     def mouseReleaseEvent(self, ev):

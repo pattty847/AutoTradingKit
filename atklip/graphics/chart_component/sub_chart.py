@@ -52,7 +52,6 @@ class SubChart(PlotWidget):
     sig_show_candle_infor = Signal(list)
     sig_reload_indicator_panel = Signal()
     sig_update_source = Signal(object)
-    sig_remove_source = Signal(str)
 
     def __init__(self,chart, parent:None,indicator_name:None,mainwindow:None,background: str = "#161616",) -> None: #str = "#f0f0f0"
         kwargs = {Crosshair.ENABLED: True,
@@ -76,8 +75,6 @@ class SubChart(PlotWidget):
         self._parent.destroyed.connect(lambda :asyncio.run(self.close()))
         self.indicator_name,self.mainwindow = indicator_name,mainwindow
         # self.setCacheMode(QGraphicsView.CacheModeFlag.CacheBackground)
-
-        self.list_candle_indicators = []
 
         self.Chart: Chart = chart
         
@@ -183,7 +180,6 @@ class SubChart(PlotWidget):
     
     def remove_source(self,source:HEIKINASHI|SMOOTH_CANDLE|JAPAN_CANDLE|N_SMOOTH_CANDLE):
         if source.source_name in list(self.sources.keys()):
-            self.sig_remove_source.emit(source.source_name)
             del self.sources[source.source_name]
             # if not isinstance(source,JAPAN_CANDLE):
             #     source.deleteLater()
@@ -366,7 +362,6 @@ class SubChart(PlotWidget):
             item = args[0]
         else:
             item = args
-        self.list_candle_indicators.append(item)
         self.addItem(item) 
         self.yAxis.dict_objects.update({item:item.has["y_axis_show"]})
 
@@ -375,7 +370,6 @@ class SubChart(PlotWidget):
             item = args[0]
         else:
             item = args
-        self.list_candle_indicators.remove(item)
         del self.yAxis.dict_objects[item]
         self.removeItem(item) 
         item.deleteLater()
@@ -435,9 +429,7 @@ class SubChart(PlotWidget):
         if hasattr(args[0], "_hl_kwargs") and args[0]._hl_kwargs is not None:
             self.plotItem.addItem(args[0]._hl_kwargs["line"], ignoreBounds=True)
             self.plotItem.addItem(args[0]._hl_kwargs["text"], ignoreBounds=True)
-        if hasattr(args[0], "update_leading_line"):
-            setattr(args[0], "x_format", self.x_format)
-            setattr(args[0], "y_format", self.y_format)
+
         self.plotItem.addItem(*args)
         args[0].plot_widget = self
     

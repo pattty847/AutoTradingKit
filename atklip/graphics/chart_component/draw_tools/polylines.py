@@ -40,6 +40,11 @@ def _draw_line_segment_text(interval,precision,pos0, pos1):
     The yaxis parameter can be one of [False, 'linear', 'log'].'''
 """
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from atklip.graphics.chart_component.viewchart import Chart
+    from atklip.graphics.chart_component.draw_tools.drawtools import DrawTool
+
 class RangePolyLine(SpecialROI):     # for date price range
     on_click = Signal(object)
     signal_visible = Signal(bool)
@@ -48,15 +53,26 @@ class RangePolyLine(SpecialROI):     # for date price range
     def __init__(self, pos, size=..., angle=0, invertible=True, maxBounds=None, snapSize=1, scaleSnap=False, translateSnap=False, rotateSnap=False, parent=None, pen=None, hoverPen=None, handlePen=None, handleHoverPen=None, movable=True, rotatable=True, resizable=True, removable=False, aspectLocked=False, drawtool=None):
         super().__init__(pos, size, angle, invertible, maxBounds, snapSize, scaleSnap, translateSnap, rotateSnap, parent, pen, hoverPen, handlePen, handleHoverPen, movable, rotatable, resizable, removable, aspectLocked)
     
-        self.drawtool = drawtool
-        self.chart = self.drawtool.chart
+        self.drawtool:DrawTool = drawtool
+        self.chart:Chart = self.drawtool.chart
         self.interval = self.chart.interval
         self.precision = self.chart._precision
         
         self.has = {
+            "x_axis_show":True,
             "name": "rectangle",
             "type": "drawtool",
-            "id": id
+            "id": id,
+            "inputs":{
+                    },
+            "styles":{
+                    'pen': pen,
+                    'brush': pen,
+                    'width': 1,
+                    'style': Qt.PenStyle.SolidLine,
+                    "lock":True,
+                    "setting": False,
+                    "delete":True,}
         }
         self.handles:List[dict] = []
         
@@ -85,6 +101,30 @@ class RangePolyLine(SpecialROI):     # for date price range
             import traceback
             traceback.print_exc()
 
+    
+    def get_inputs(self):
+        inputs =  {}
+        return inputs
+    
+    def get_styles(self):
+        styles =  {"pen":self.has["styles"]["pen"],
+                    "width":self.has["styles"]["width"],
+                    "style":self.has["styles"]["style"],
+                    "delete":self.has["styles"]["delete"],
+                    "lock":self.has["styles"]["lock"],
+                    "setting":self.has["styles"]["setting"],}
+        return styles
+    
+    def update_inputs(self,_input,_source):
+        is_update = False
+    
+    def update_styles(self, _input):
+        _style = self.has["styles"][_input]
+        if _input == "pen" or _input == "width" or _input == "style":
+            self.setPen(color=self.has["styles"]["pen"], width=self.has["styles"]["width"],style=self.has["styles"]["style"])
+
+    
+    
     @property
     def endpoints(self):
         # must not be cached because self.handles may change.
@@ -232,7 +272,7 @@ class RangePolyLine(SpecialROI):     # for date price range
         offset = (br - tl) * self.textitem.anchor
         
         _pointf = Point(h1.x() - diff.x()/2, h1.y())
-        _x = _pointf.x()+offset.x()/2
+        _x = _pointf.x() +r.width()/2
         
         if diff.y() < 0:
             _y = _pointf.y()-offset.y()/2

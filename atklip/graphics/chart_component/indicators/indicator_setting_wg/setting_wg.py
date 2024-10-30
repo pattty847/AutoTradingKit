@@ -203,6 +203,8 @@ class IndicatorSettingMenu(MovingWidget):
         indicator.sig_change_indicator_name.connect(self.change_title,Qt.ConnectionType.AutoConnection)
         
         self.chart:Chart|ViewSubPanel = chart
+        
+        self.chart.mouse_clicked_signal.connect(self.delete)
         menu =  SettingWidget(self,indicator,self.chart)
         menu.sig_change_widget.connect(self.update_size,Qt.ConnectionType.AutoConnection)
         
@@ -221,6 +223,16 @@ class IndicatorSettingMenu(MovingWidget):
         self.resize(self.w,_height)
         
         FluentStyleSheet.INDICATORMENU.apply(self)
+    
+    def delete(self,ev):
+        try:
+            ev_pos = ev.position()
+        except:
+            ev_pos = ev.pos()
+        _rect = QRectF(self.x(),self.y(),self.width(),self.height())
+        if not _rect.contains(QPoint(ev_pos.x(),ev_pos.y())):
+            self.deleteLater()
+
     def deleteLater(self) -> None:
         return super().deleteLater()
     def update_size(self,height):

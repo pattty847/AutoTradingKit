@@ -8,11 +8,12 @@ from atklip.gui import FluentIcon as FIF
 # from atklip.gui.draw_bar import *
 from atklip.gui.qfluentwidgets.common import *
 class PROJECTS(QFrame):
-    def __init__(self,parent:QWidget=None,sig_draw_object_name=None):
+    def __init__(self,parent:QWidget=None,sig_draw_object_name=None,sig_add_to_favorite=None):
         super().__init__(parent)
         #self.setClickEnabled(False)
         self.parent = parent
         self.sig_draw_object_name = sig_draw_object_name
+        self.sig_add_to_favorite = sig_add_to_favorite
         self.setContentsMargins(0,0,0,0)
         self.setFixedSize(50,40)
         self._QLayout = QHBoxLayout(self)
@@ -20,7 +21,10 @@ class PROJECTS(QFrame):
         self._QLayout.setContentsMargins(0, 0, 0, 0)
         self._QLayout.setAlignment(Qt.AlignLeft)
 
-        self.splitToolButton = ShowmenuButton(FIF.LONG_POSITION,self.parent)
+        self.splitToolButton = ShowmenuButton(FIF.PRICE_RANGE,self.parent)
+        self.splitToolButton.clicked.connect(self.drawing)
+        
+        
         self.current_tool = None
         self.is_enabled = False
         #create menu
@@ -46,6 +50,7 @@ class PROJECTS(QFrame):
        
         # add item to card
         self.long_position.resize(250, 40)
+        
         
         self.menu.addWidget(self.long_position)
         self.menu.addWidget(self.short_position)
@@ -95,31 +100,37 @@ class PROJECTS(QFrame):
         self.menu.addWidget(self.price_range)
         self.menu.addWidget(self.date_range)
         self.menu.addWidget(self.date_price_range)
+        
+        self.current_tool =  self.price_range
 
 
         self.splitToolButton.setFlyout(self.menu)
 
         self._QLayout.addWidget(self.splitToolButton)
         #self.splitToolButton.dropButton.hide()
+        self.map_btn_name:dict = {
+            self.long_position: "draw_long_position",
+            self.short_position: "draw_short_position",
+            self.price_range:"draw_price_range",
+            self.date_range:"draw_date_range",
+            self.date_price_range:"draw_date_price_range",
+        }
+        #self.splitToolButton.dropButton.hide()
+    
+    def favorite_infor(self,tool_infor):
+        tool,icon,is_add = tool_infor[0],tool_infor[1],tool_infor[2]
+        self.sig_add_to_favorite.emit((tool,icon,self.map_btn_name[tool],is_add))
+    
+    def drawing(self):
+        self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,self.map_btn_name[self.current_tool])) 
     
     def set_current_tool(self,tool_infor):
         tool,icon = tool_infor[0],tool_infor[1]
         self.current_tool = tool
         self.splitToolButton.change_item(icon)
         self.set_enable()
-        if self.price_range == tool:
-            self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,"draw_price_range"))
-        elif self.date_range == tool:
-            self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,"draw_date_range"))
-        elif self.date_price_range == tool:
-            self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,"draw_date_price_range"))
-            
-            
-        # elif self.rotated_rectangle == tool:
-        #     self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,"draw_rotated_rectangle"))
-        # elif self.path == tool:
-        #     self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,"draw_path"))
-    
+        self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,self.map_btn_name[self.current_tool]))
+        
         
     def set_enable(self):
         if self.splitToolButton.button.isChecked():

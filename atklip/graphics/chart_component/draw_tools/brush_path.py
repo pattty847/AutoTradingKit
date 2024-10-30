@@ -12,28 +12,37 @@ translate = QtCore.QCoreApplication.translate
 
 
 class PathROI(BasePolyLineROI):
-    on_click = Signal(QObject)
+    on_click = Signal(object)
     on_Doubleclick = Signal(QObject)
     draw_rec = Signal()
-    
-
     signal_visible = Signal(bool)
     signal_delete = Signal()
-    signal_change_color = Signal(str)
-    signal_change_width = Signal(int)
-    signal_change_type = Signal(str)
 
-    def __init__(self, positions, closed=False,id=None, pos=None,drawtool=None, **args):
-        super().__init__(positions, closed, pos, **args)
 
-        self.has = {
-            "name": "rectangle",
-            "type": "drawtool",
-            "id": id
-        }
+    def __init__(self, positions, closed=False,id=None, pos=None,drawtool=None, pen=None):
+        super().__init__(positions, closed, pos)
+
+        self.setPen(pen)
         
         self.uid = None
         self.id = id
+        
+        self.has = {
+            "x_axis_show":True,
+            "name": "rectangle",
+            "type": "drawtool",
+            "id": id,
+            "inputs":{
+                    },
+            "styles":{
+                    'pen': pen,
+                    'width': 1,
+                    'style': Qt.PenStyle.SolidLine,
+                    "lock":True,
+                    "setting": False,
+                    "delete":True,}
+        }
+        
         self.drawtool=drawtool
         self.chart = self.drawtool.chart
         self.isSelected = False
@@ -52,9 +61,7 @@ class PathROI(BasePolyLineROI):
 
         self.signal_visible.connect(self.setVisible)
         self.signal_delete.connect(self.delete)
-        self.signal_change_color.connect(self.change_color)
-        self.signal_change_width.connect(self.change_width)
-        self.signal_change_type.connect(self.change_type)
+
 
     def selectedHandler(self, is_selected):
         if is_selected:
@@ -149,30 +156,27 @@ class PathROI(BasePolyLineROI):
         for seg in self.segments:
             seg.setPen(*args, **kwds)
 
-    def change_type(self, type_):
-        if type_ == "SolidLine":
-            self.currentPen.setStyle(Qt.PenStyle.SolidLine)
-        elif type_ == "DashLine":
-            self.currentPen.setStyle(Qt.PenStyle.DashLine)
-        elif type_ == "DotLine":
-            self.currentPen.setStyle(Qt.PenStyle.DotLine)
-        self.setPen(self.currentPen)
-        self.update()
+    def get_inputs(self):
+        inputs =  {}
+        return inputs
+    
+    def get_styles(self):
+        styles =  {"pen":self.has["styles"]["pen"],
+                    "width":self.has["styles"]["width"],
+                    "style":self.has["styles"]["style"],
+                    "delete":self.has["styles"]["delete"],
+                    "lock":self.has["styles"]["lock"],
+                    "setting":self.has["styles"]["setting"],}
+        return styles
+    
+    def update_inputs(self,_input,_source):
+        is_update = False
+    
+    def update_styles(self, _input):
+        _style = self.has["styles"][_input]
+        if _input == "pen" or _input == "width" or _input == "style":
+            self.setPen(color=self.has["styles"]["pen"], width=self.has["styles"]["width"],style=self.has["styles"]["style"])
 
-    def change_width(self, width):
-        self.currentPen.setWidth(width)
-        self.setPen(self.currentPen)
-        self.update()
-
-    def change_color(self, color):
-        if isinstance(color, (tuple, list)):
-            r, g, b = color[0], color[1], color[2]
-            color = QColor(r, g, b)
-        elif isinstance(color, str):
-            color = QColor(color)
-        self.currentPen.setColor(color)
-        self.setPen(self.currentPen)
-        self.update()
 
     def setVisible(self, visible):
         if visible:

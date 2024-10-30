@@ -38,9 +38,7 @@ class CandleButton(SplitWidgetBase):
     * SplitToolButton(`parent`: QWidget = None)
     * SplitToolButton(`icon`: QIcon | str | FluentIconBase, `parent`: QWidget = None)
     """
-
     clicked = Signal()
-    sig_change_candle_type = Signal(str)
     #@singledispatchmethod
     def __init__(self, parent: QWidget = None):
         super().__init__(parent=parent)
@@ -111,8 +109,7 @@ class CandleButton(SplitWidgetBase):
             self.current_active = current_active
         elif self.current_active != current_active:
             self.current_active = current_active 
-            if self.is_loaded:
-                self.sig_change_candle_type.emit(("change_candle_type",self.current_active.objectName()))
+
         
         self.current_active.setChecked(True)
         self.current_active.show()

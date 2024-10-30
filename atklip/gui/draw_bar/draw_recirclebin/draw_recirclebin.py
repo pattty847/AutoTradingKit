@@ -7,11 +7,11 @@ from atklip.gui import FluentIcon as FIF
 from atklip.gui.qfluentwidgets.common import *
 
 class RECIRCLEBIN(QFrame):
-    def __init__(self,parent:QWidget=None,sig_draw_object_name=None):
+    def __init__(self,parent:QWidget=None,sig_delete_all=None):
         super().__init__(parent)
         #self.setClickEnabled(False)
         self.parent = parent
-        self.sig_draw_object_name = sig_draw_object_name
+        self.sig_delete_all = sig_delete_all
         self.setContentsMargins(0,0,0,0)
         self.setFixedSize(50,40)
         self._QLayout = QHBoxLayout(self)
@@ -19,7 +19,7 @@ class RECIRCLEBIN(QFrame):
         self._QLayout.setContentsMargins(0, 0, 0, 0)
         self._QLayout.setAlignment(Qt.AlignLeft)
         self.splitToolButton = Tradingview_Button(FIF.CYCLEBIN,self.parent)
-   
+        self.splitToolButton.clicked.connect(self.sig_delete_all)
 
         self._QLayout.addWidget(self.splitToolButton)
         #self.splitToolButton.dropButton.hide()
@@ -29,7 +29,6 @@ class RECIRCLEBIN(QFrame):
         self.current_tool = tool
         self.splitToolButton.change_item(icon)
         self.set_enable()
-        self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,"draw_trenlines"))
         
     def set_enable(self):
         if self.splitToolButton.button.isChecked():

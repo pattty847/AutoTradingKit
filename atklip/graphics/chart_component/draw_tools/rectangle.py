@@ -7,17 +7,16 @@ from .roi import SpecialROI, BaseHandle
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
+    from atklip.graphics.chart_component.viewchart import Chart
     from atklip.graphics.chart_component.draw_tools.drawtools import DrawTool
     
 class Rectangle(SpecialROI):
-    on_click = Signal(QObject)
+    on_click = Signal(object)
     draw_rec = Signal()
 
     signal_visible = Signal(bool)
     signal_delete = Signal()
-    signal_change_color = Signal(str)
-    signal_change_width = Signal(int)
-    signal_change_type = Signal(str)
+
 
 
     def __init__(self, pos, size=..., angle=0,id=None, invertible=False, maxBounds=None, \
@@ -29,14 +28,26 @@ class Rectangle(SpecialROI):
                 movable, rotatable, resizable, removable, aspectLocked)
         
         self.drawtool:DrawTool= drawtool
+        self.chart:Chart = self.drawtool.chart
         self.indicator_name = None
         self.isSelected = False
         self.id = id
         
         self.has = {
+            "x_axis_show":True,
             "name": "rectangle",
             "type": "drawtool",
-            "id": id
+            "id": id,
+            "inputs":{
+                    },
+            "styles":{
+                    'pen': pen,
+                    'brush': pen,
+                    'width': 1,
+                    'style': Qt.PenStyle.SolidLine,
+                    "lock":True,
+                    "setting": False,
+                    "delete":True,}
         }
 
         self.addScaleHandle([1, 0.5], [0, 0.5])
@@ -53,9 +64,6 @@ class Rectangle(SpecialROI):
 
         self.signal_visible.connect(self.setVisible)
         self.signal_delete.connect(self.delete)
-        self.signal_change_color.connect(self.change_color)
-        self.signal_change_width.connect(self.change_width)
-        self.signal_change_type.connect(self.change_type)
 
         self.lastMousePos = pos
         self.finished = False
@@ -130,30 +138,27 @@ class Rectangle(SpecialROI):
     def objectName(self):
         return self.indicator_name
 
-    def change_type(self, type_):
-        if type_ == "SolidLine":
-            self.currentPen.setStyle(Qt.PenStyle.SolidLine)
-        elif type_ == "DashLine":
-            self.currentPen.setStyle(Qt.PenStyle.DashLine)
-        elif type_ == "DotLine":
-            self.currentPen.setStyle(Qt.PenStyle.DotLine)
-        self.setPen(self.currentPen)
-        self.update()
+    def get_inputs(self):
+        inputs =  {}
+        return inputs
+    
+    def get_styles(self):
+        styles =  {"pen":self.has["styles"]["pen"],
+                    "width":self.has["styles"]["width"],
+                    "style":self.has["styles"]["style"],
+                    "delete":self.has["styles"]["delete"],
+                    "lock":self.has["styles"]["lock"],
+                    "setting":self.has["styles"]["setting"],}
+        return styles
+    
+    def update_inputs(self,_input,_source):
+        is_update = False
+    
+    def update_styles(self, _input):
+        _style = self.has["styles"][_input]
+        if _input == "pen" or _input == "width" or _input == "style":
+            self.setPen(color=self.has["styles"]["pen"], width=self.has["styles"]["width"],style=self.has["styles"]["style"])
 
-    def change_width(self, width):
-        self.currentPen.setWidth(width)
-        self.setPen(self.currentPen)
-        self.update()
-
-    def change_color(self, color):
-        if isinstance(color, (tuple, list)):
-            r, g, b = color[0], color[1], color[2]
-            color = QColor(r, g, b)
-        elif isinstance(color, str):
-            color = QColor(color)
-        self.currentPen.setColor(color)
-        self.setPen(self.currentPen)
-        self.update()
 
     def setVisible(self, visible):
         if visible:

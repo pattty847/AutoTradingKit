@@ -15,7 +15,7 @@ from PySide6.QtCore import Qt,Signal
 from PySide6.QtWidgets import QHBoxLayout
 
 class Card_Item(CardWidget):
-    """ App card """
+    """ App card only for draw bar btn"""
     signal_infor = Signal(tuple)
     def __init__(self, icon, title, _type:str="", parent=None):
         super().__init__(parent)
@@ -47,7 +47,7 @@ class Card_Item(CardWidget):
         
         self.setObjectName(f"{_type}_{title}")
         
-        self.signal_infor.connect(self.parent.set_current_tool)
+        # self.signal_infor.connect(self.parent.set_current_tool)
         
         if self.btn_fovarite.isChecked():
             self.btn_fovarite.show()
@@ -60,10 +60,14 @@ class Card_Item(CardWidget):
     def getObjectname(self) -> str:
         return self.ob_name
     def onbtn_fovariteClicked(self):
-        pass
+        if self.btn_fovarite.isChecked():
+            self.parent.favorite_infor((self,self.icon,True))
+        else:
+            self.parent.favorite_infor((self,self.icon,False))
         #self.parent.splitToolButton.add_remove_to_favorites(self.icon)
     def on_clicked(self):
-        self.signal_infor.emit((self,self.icon))
+        self.parent.set_current_tool((self,self.icon))
+        # self.signal_infor.emit((self,self.icon))
     
     def enterEvent(self, event):
         self.btn_fovarite.show()

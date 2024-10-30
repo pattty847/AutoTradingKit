@@ -13,7 +13,7 @@ draw_line_color = '#2962ff'
 
 class HorizontalRayNoHandle(MyLineNoHandleROI):
     """ Use for drawing history base """
-    on_click = Signal(QObject)
+    on_click = Signal(object)
     drag_signal = Signal()
     signal_visible = Signal(bool)
     signal_delete = Signal()
@@ -311,21 +311,25 @@ class HorizontalRayNoHandle(MyLineNoHandleROI):
 
         return rgn
     
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from atklip.graphics.chart_component.viewchart import Chart
+    from atklip.graphics.chart_component.draw_tools.drawtools import DrawTool
 
 class Horizontal_ray(CustomLineSegmentROI):
     
-    on_click = Signal(QObject)
+    on_click = Signal(object)
     drag_signal = Signal()
 
     signal_visible = Signal(bool)
     signal_delete = Signal()
-    signal_change_color = Signal(str)
-    signal_change_width = Signal(int)
-    signal_change_type = Signal(str)
+
     
-    def __init__(self, positions=None, pen=("#eaeaea"), chart=None):
+    def __init__(self, positions=None, pen=("#eaeaea"), drawtool=None):
         super().__init__(positions=positions,pen=pen, movable=False, resizable=False)
-        self.chart = chart  # plot mapchart
+        
+        self.drawtool:DrawTool = drawtool
+        self.chart:Chart = self.drawtool.chart  # plot mapchart
         self.vb = self.chart.vb
         self.price_axis = self.chart.getAxis('right')
         self.bottom_axis = self.chart.getAxis('bottom')
@@ -334,12 +338,17 @@ class Horizontal_ray(CustomLineSegmentROI):
             "y_axis_show":True,
             "name": "rectangle",
             "type": "drawtool",
-            "id": id
+            "id": id,
+            "inputs":{
+                    },
+            "styles":{
+                    'pen': pen,
+                    'width': 1,
+                    'style': Qt.PenStyle.SolidLine,
+                    "lock":True,
+                    "setting": False,
+                    "delete":True,}
         }
-        # try:  
-            # self.on_click.connect(self.chart.show_popup_setting_tool)
-        # except:
-        #     pass
         self.id = None
         
         self.dragMode = None
@@ -353,9 +362,6 @@ class Horizontal_ray(CustomLineSegmentROI):
         self.scaleSpeed = 1.01
         self.signal_visible.connect(self.setVisible)
         self.signal_delete.connect(self.delete)
-        self.signal_change_color.connect(self.change_color)
-        self.signal_change_width.connect(self.change_width)
-        self.signal_change_type.connect(self.change_type)
 
         #super(LineSegmentROI).mouseDragEvent = self.mouseDragEvent
 
@@ -403,30 +409,27 @@ class Horizontal_ray(CustomLineSegmentROI):
     def get_pen_style(self):
         return self.currentPen.style().name
     
-    def change_type(self, type_):
-        if type_ == "SolidLine":
-            self.currentPen.setStyle(Qt.PenStyle.SolidLine)
-        elif type_ == "DashLine":
-            self.currentPen.setStyle(Qt.PenStyle.DashLine)
-        elif type_ == "DotLine":
-            self.currentPen.setStyle(Qt.PenStyle.DotLine)
-        self.setPen(self.currentPen)
-        self.update()
+    def get_inputs(self):
+        inputs =  {}
+        return inputs
+    
+    def get_styles(self):
+        styles =  {"pen":self.has["styles"]["pen"],
+                    "width":self.has["styles"]["width"],
+                    "style":self.has["styles"]["style"],
+                    "delete":self.has["styles"]["delete"],
+                    "lock":self.has["styles"]["lock"],
+                    "setting":self.has["styles"]["setting"],}
+        return styles
+    
+    def update_inputs(self,_input,_source):
+        is_update = False
+    
+    def update_styles(self, _input):
+        _style = self.has["styles"][_input]
+        if _input == "pen" or _input == "width" or _input == "style":
+            self.setPen(color=self.has["styles"]["pen"], width=self.has["styles"]["width"],style=self.has["styles"]["style"])
 
-    def change_width(self, width):
-        self.currentPen.setWidth(width)
-        self.setPen(self.currentPen)
-        self.update()
-
-    def change_color(self, color):
-        if isinstance(color, (tuple, list)):
-            r, g, b = color[0], color[1], color[2]
-            color = QColor(r, g, b)
-        elif isinstance(color, str):
-            color = QColor(color)
-        self.currentPen.setColor(color)
-        self.setPen(self.currentPen)
-        self.update()
 
     def setVisible(self, visible):
         if visible:

@@ -1,9 +1,11 @@
 import traceback,asyncio,time
+import winloop
 from typing import Dict
 from PySide6 import QtCore
 from PySide6.QtCore import Qt, Signal, QCoreApplication, QKeyCombination, QThreadPool,QObject
 from PySide6.QtGui import QKeyEvent
 
+from atklip.app_utils.syncer import sync
 from atklip.graphics.chart_component.base_items import CandleStick
 from atklip.graphics.chart_component.indicators import BasicMA,BasicBB,BasicDonchianChannels,BasicZIGZAG
 from atklip.graphics.chart_component import ViewPlotWidget
@@ -56,6 +58,7 @@ class Chart(ViewPlotWidget):
         self.sig_reset_exchange = False
         self.is_reseting =  False
         self.worker = None
+        self.worker_reload = None
         self.worker_auto_load_old_data = None
         
         self.sources: Dict[str:object] = {}
@@ -64,14 +67,22 @@ class Chart(ViewPlotWidget):
         self.time_delay = 5
                 
         self._init_async_loop()
-        self.crypto_ex, self.crypto_ex_ws = self.ExchangeManager.add_exchange(self.exchange_name,self.id,self.apikey,self.secretkey)
-        asyncio.run(self.ExchangeManager.reload_markets(self.crypto_ex, self.crypto_ex_ws))
+        self.crypto_ex, self.crypto_ex_ws = self.ExchangeManager.add_exchange(self.exchange_name,self.id,self.symbol,self.interval,self.apikey,self.secretkey)
+        # self.reload_market()
         
         self.vb.load_old_data.connect(self.auto_load_old_data)
         self.sig_add_indicator_panel.connect(self.setup_indicator,Qt.ConnectionType.AutoConnection)
         self.first_run.connect(self.set_data_dataconnect,Qt.ConnectionType.AutoConnection)
         
         self.fast_reset_worker()
+        
+    def reload_market(self):
+        if self.worker_reload != None:
+            if isinstance(self.worker_reload,FastStartThread):
+                self.worker_reload.stop_thread()
+        self.worker_reload = FastStartThread(self.ExchangeManager.reload_markets,self.exchange_name,self.id,self.symbol,self.interval)
+        self.worker_reload.start_thread()
+
         
     @property
     def id(self):
@@ -82,7 +93,6 @@ class Chart(ViewPlotWidget):
         self.chart_id = _chart_id
     
     def _init_async_loop(self) -> asyncio.AbstractEventLoop:
-        import winloop
         winloop.install()
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
@@ -141,9 +151,17 @@ class Chart(ViewPlotWidget):
                 break
         self.sources[source.source_name] = source
     
+    def delete_all_draw_obj(self):
+        # if self.drawtools != []:
+        while self.drawtools:
+            tool = self.drawtools.pop()
+            # for tool in self.drawtools:
+            self.remove_item(tool)
+            
+                
+    
     def remove_source(self,source:HEIKINASHI|SMOOTH_CANDLE|JAPAN_CANDLE|N_SMOOTH_CANDLE):
         if source.source_name in list(self.sources.keys()):
-            # self.sig_remove_source.emit(source.source_name)
             del self.sources[source.source_name]
             # if not isinstance(source,JAPAN_CANDLE):
             #     source.deleteLater()
@@ -161,8 +179,7 @@ class Chart(ViewPlotWidget):
     def on_reset_exchange(self,args):
         """("change_symbol",symbol,self.exchange_id,exchange_name,symbol_icon_path,echange_icon_path)"""
         
-        asyncio.run(self.ExchangeManager.remove_exchange(self.exchange_name,self.id))
-        # self.ExchangeManager.remove_exchange(self.exchange_name,self.id)
+        asyncio.run(self.ExchangeManager.remove_exchange(self.exchange_name,self.id,self.symbol,self.interval))
         
         _type, symbol, exchange_name = args[0],args[1],args[2]
         self.exchange_name = exchange_name
@@ -172,8 +189,8 @@ class Chart(ViewPlotWidget):
         self.sig_show_process.emit(True)
         self.sig_reset_exchange = True
         
-        self.crypto_ex, self.crypto_ex_ws = self.ExchangeManager.add_exchange(self.exchange_name,self.id,self.apikey,self.secretkey)
-        asyncio.run(self.ExchangeManager.reload_markets(self.crypto_ex, self.crypto_ex_ws))
+        self.crypto_ex, self.crypto_ex_ws = self.ExchangeManager.add_exchange(self.exchange_name,self.id,self.symbol,self.interval,self.apikey,self.secretkey)
+        # self.reload_market()
         
         self.sig_change_tab_infor.emit((self.symbol,self.interval))
 
@@ -183,8 +200,7 @@ class Chart(ViewPlotWidget):
         """
         ("change_interval",interval)
         """
-        asyncio.run(self.ExchangeManager.remove_exchange(self.exchange_name,self.id))
-        # self.ExchangeManager.remove_exchange(self.exchange_name,self.id)
+        asyncio.run(self.ExchangeManager.remove_exchange(self.exchange_name,self.id,self.symbol,self.interval))
         _type, interval = args[0],args[1]
         
         self.sig_show_process.emit(True)
@@ -192,8 +208,8 @@ class Chart(ViewPlotWidget):
         self.interval = interval
         self.is_reseting =  False
         
-        self.crypto_ex, self.crypto_ex_ws = self.ExchangeManager.add_exchange(self.exchange_name,self.id,self.apikey,self.secretkey)
-        asyncio.run(self.ExchangeManager.reload_markets(self.crypto_ex, self.crypto_ex_ws))
+        self.crypto_ex, self.crypto_ex_ws = self.ExchangeManager.add_exchange(self.exchange_name,self.id,self.symbol,self.interval,self.apikey,self.secretkey)
+        # self.reload_market()
         
         self.sig_change_tab_infor.emit((self.symbol,self.interval))
 
@@ -221,6 +237,8 @@ class Chart(ViewPlotWidget):
         self.update_sources(self.heikinashi)
         self.heikinashi.fisrt_gen_data()
         
+        self.first_run.emit()
+        
         await self.loop_watch_ohlcv(self.symbol,self.interval,self.exchange_name)
     
     def check_all_indicator_updated(self):
@@ -243,27 +261,38 @@ class Chart(ViewPlotWidget):
     async def loop_watch_ohlcv(self,symbol,interval,exchange_name):
         firt_run = False
         _ohlcv = []
+        n = 0
         while True:
-            ws = self.ExchangeManager.get_ws_exchange(exchange_name,self.id)
-            if not ws:
+                       
+            client_socket = self.ExchangeManager.get_client_exchange(exchange_name,self.id,symbol,interval)
+            ws_socket = self.ExchangeManager.get_ws_exchange(exchange_name,self.id,symbol,interval)
+            
+            if not client_socket and not ws_socket:
                 break
             if not (self.symbol == symbol and self.interval == interval and self.exchange_name == exchange_name):
                 break
-            if self.crypto_ex != None and self.crypto_ex_ws != None:
+            if client_socket != None and ws_socket != None:
+                
+                if n == 300:
+                    n=0
+                    client_socket.load_markets(True)
+                    await ws_socket.load_markets(True)
+                    print(f'{exchange_name}-{self.id}-{symbol}-{interval} --- Markets reloaded')
+                
                 try:
-                    if "watchOHLCV" in list(self.crypto_ex_ws.has.keys()):
+                    if "watchOHLCV" in list(ws_socket.has.keys()):
                         if _ohlcv == []:
-                            _ohlcv = self.crypto_ex.fetch_ohlcv(symbol,interval,limit=2)
+                            _ohlcv = client_socket.fetch_ohlcv(symbol,interval,limit=2)
                         else:
-                            ohlcv = await self.crypto_ex_ws.watch_ohlcv(symbol,interval,limit=2)
+                            ohlcv = await ws_socket.watch_ohlcv(symbol,interval,limit=2)
                             if _ohlcv[-1][0]/1000 == ohlcv[-1][0]/1000:
                                 _ohlcv[-1] = ohlcv[-1]
                             else:
-                                _ohlcv = self.crypto_ex.fetch_ohlcv(symbol,interval,limit=2)
+                                _ohlcv = client_socket.fetch_ohlcv(symbol,interval,limit=2)
                                 # _ohlcv.append(ohlcv[-1])
                                 # _ohlcv = _ohlcv[-2:]
-                    elif "fetchOHLCV" in list(self.crypto_ex.has.keys()):
-                        _ohlcv = self.crypto_ex.fetch_ohlcv(symbol,interval,limit=2)
+                    elif "fetchOHLCV" in list(client_socket.has.keys()):
+                        _ohlcv = client_socket.fetch_ohlcv(symbol,interval,limit=2)
                     else:
                         await asyncio.sleep(0.3)
                         continue
@@ -278,12 +307,13 @@ class Chart(ViewPlotWidget):
                     
                     is_updated =  self.check_all_indicator_updated()
                     if is_updated:
+                        n+=1 
                         _is_add_candle = self.jp_candle.update([pre_ohlcv,last_ohlcv])
                         self.heikinashi.update(self.jp_candle.candles[-2:],_is_add_candle)
                     
-                    if firt_run == False:
-                        self.first_run.emit()
-                        firt_run = True
+                    # if firt_run == False:
+                    #     self.first_run.emit()
+                    #     firt_run = True
             else:
                 break
             try:
@@ -297,7 +327,7 @@ class Chart(ViewPlotWidget):
             print("turn-off with error!!!")
         
     async def close(self):
-        await self.ExchangeManager.remove_exchange(self.exchange_name,self.id)
+        await self.ExchangeManager.remove_exchange(self.exchange_name,self.id,self.symbol,self.interval)
         self.crypto_ex_ws,self.crypto_ex = None,None
         self.exchange_name = None
         self.id = None
@@ -344,20 +374,20 @@ class Chart(ViewPlotWidget):
     def setup_indicator(self,indicator_data):
         _group_indicator = indicator_data[0][0]
         _indicator_type = indicator_data[0][1]
-        mainwindow = indicator_data[1]
+        self.mainwindow = indicator_data[1]
         indicator = None
         # print("view chart", _group_indicator,_indicator_type)
         if _group_indicator == "Basic Indicator":
             indicator = BasicMA(self,indicator_type=_indicator_type,length=30,_type="close",pen="#ffaa00")
             
-            panel = IndicatorPanel(mainwindow,self, indicator)
+            panel = IndicatorPanel(self.mainwindow,self, indicator)
             self.container_indicator_wg.add_indicator_panel(panel)
             self.add_item(indicator)
             indicator.fisrt_gen_data()
 
         elif _group_indicator == "Candle Indicator":
             candle:CandleStick = self.get_candle(_indicator_type)
-            panel = IndicatorPanel(mainwindow,self, candle)
+            panel = IndicatorPanel(self.mainwindow,self, candle)
             # self.container_indicator_wg.sig_add_panel.emit(panel)
             self.container_indicator_wg.add_indicator_panel(panel)
             #self.sig_add_item.emit(candle)
@@ -372,20 +402,20 @@ class Chart(ViewPlotWidget):
             
             if _indicator_type==IndicatorType.BB:
                 indicator = BasicBB(self)
-                panel = IndicatorPanel(mainwindow,self, indicator)
+                panel = IndicatorPanel(self.mainwindow,self, indicator)
                 self.container_indicator_wg.add_indicator_panel(panel)
                 self.add_item(indicator)
                 indicator.fisrt_gen_data()
                 
             elif _indicator_type==IndicatorType.DonchianChannels:
                 indicator = BasicDonchianChannels(self)
-                panel = IndicatorPanel(mainwindow,self, indicator)
+                panel = IndicatorPanel(self.mainwindow,self, indicator)
                 self.container_indicator_wg.add_indicator_panel(panel)
                 self.add_item(indicator)
                 indicator.fisrt_gen_data()
             elif _indicator_type==IndicatorType.ZIGZAG:
                 indicator = BasicZIGZAG(self)
-                panel = IndicatorPanel(mainwindow,self, indicator)
+                panel = IndicatorPanel(self.mainwindow,self, indicator)
                 self.container_indicator_wg.add_indicator_panel(panel)
                 self.add_item(indicator)
                 indicator.fisrt_gen_data()
@@ -394,7 +424,7 @@ class Chart(ViewPlotWidget):
                     
 
     def set_data_dataconnect(self):
-        if self.list_candle_indicators == []:
+        if self.indicators == []:
             "load data when starting app"
             self.sig_reload_indicator_panel.emit()
         else:  
@@ -434,13 +464,11 @@ class Chart(ViewPlotWidget):
                 self.drawtool.draw_down_arrow(ev)
             elif self.drawtool.draw_object_name ==  "draw_arrow":
                 self.drawtool.draw_arrow(ev)
-                
-                
-                
-                
-                
+                   
                 
             elif self.drawtool.draw_object_name ==  "draw_text":
+                self.drawtool.draw_text(ev)   
+            elif self.drawtool.draw_object_name ==  "draw_note":
                 self.drawtool.draw_text(ev)    
             
             elif self.drawtool.draw_object_name == "draw_date_price_range":
@@ -449,15 +477,7 @@ class Chart(ViewPlotWidget):
                 self.drawtool.draw_date_price_range(ev)
             elif self.drawtool.draw_object_name == "draw_price_range":
                 self.drawtool.draw_date_price_range(ev)
-            
-            else:
-                pass
-                # if self.drawtool.draw_object_name in ["drawed_trenlines", "drawed_fibo_retracement", "drawed_fibo_retracement_2", "drawed_rectangle", "drawed_date_price_range"]:
-                #     self.drawtool.draw_object_name =None
-                #     self.drawtool.drawing_object.finished = True
-                #     self.drawtool.drawing_object.on_click.emit(self.drawtool.drawing_object)
-                #     self.drawtool.drawing_object = None
-                
+                    
         super().mousePressEvent(ev)
 
     def get_position_crosshair(self):

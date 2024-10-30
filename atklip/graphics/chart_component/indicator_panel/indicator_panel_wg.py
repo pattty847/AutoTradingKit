@@ -77,7 +77,7 @@ class IndicatorPanel(QWidget):
             self.btn_show_hide.setIcon(QIcon(icon_path))
             if not isinstance(self.indicator,BasicMA):
                 self.chart.yAxis.dict_objects.update({self.indicator:True})
-        self.chart.prepareGeometryChange()
+        # self.chart.prepareGeometryChange()
     
     def show_menu(self)->None:
         if self._menu is None:
@@ -100,7 +100,7 @@ class IndicatorPanel(QWidget):
                 y = (_y-self._menu.height())/3
                 self._menu.move(QPoint(x, y))
                 self._menu.show()
-        self.chart.prepareGeometryChange()
+        # self.chart.prepareGeometryChange()
     
     def enterEvent(self, ev):
         global_signal.sig_show_hide_cross.emit((False,None))

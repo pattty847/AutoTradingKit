@@ -8,11 +8,12 @@ from atklip.gui import FluentIcon as FIF
 # from atklip.gui.draw_bar import *
 from atklip.gui.qfluentwidgets.common import *
 class BRUSHS(QFrame):
-    def __init__(self,parent:QWidget=None,sig_draw_object_name=None):
+    def __init__(self,parent:QWidget=None,sig_draw_object_name=None,sig_add_to_favorite=None):
         super().__init__(parent)
         #self.setClickEnabled(False)
         self.parent = parent
         self.sig_draw_object_name = sig_draw_object_name
+        self.sig_add_to_favorite = sig_add_to_favorite
         self.setContentsMargins(0,0,0,0)
         self.setFixedSize(50,40)
         self._QLayout = QHBoxLayout(self)
@@ -20,7 +21,9 @@ class BRUSHS(QFrame):
         self._QLayout.setContentsMargins(0, 0, 0, 0)
         self._QLayout.setAlignment(Qt.AlignLeft)
 
-        self.splitToolButton = ShowmenuButton(FIF.BRUSH,self.parent)
+        self.splitToolButton = ShowmenuButton(FIF.RECTANGLE,self.parent)
+        self.splitToolButton.clicked.connect(self.drawing)
+        
         self.current_tool = None
         self.is_enabled = False
         #create menu
@@ -89,6 +92,9 @@ class BRUSHS(QFrame):
         self.circle = Card_Item(FIF.CIRCLE,"Circle", 'BRUSHS',self)
         self.elipse = Card_Item(FIF.ELIPSE,"Elipse", 'BRUSHS',self)
         
+        
+        self.current_tool =  self.rectangle
+        
         # self.polyline = Card_Item(FIF.POLIGON,"Polyline", 'BRUSHS',self)
         # self.triangle = Card_Item(FIF.TRIANGLE,"Triangle", 'BRUSHS',self)
         # self.arc = Card_Item(FIF.ARC,"Arc", 'BRUSHS',self)
@@ -114,25 +120,33 @@ class BRUSHS(QFrame):
         
         self._QLayout.addWidget(self.splitToolButton)
         #self.splitToolButton.dropButton.hide()
+        self.map_btn_name:dict = {
+            self.rectangle:"draw_rectangle",
+            self.rotated_rectangle:"draw_rotate_rectangle",
+            self.path:"draw_path",
+            self.arrow_marker : "draw_arrow_marker",
+            self.arrow_mark_up:"draw_up_arrow",
+            self.arrow_mark_down:"draw_down_arrow",
+            self.arrow:"draw_arrow",
+            self.circle:"draw_circle",
+            self.elipse:"draw_elipse",
+        }
+        #self.splitToolButton.dropButton.hide()
+    
+    def favorite_infor(self,tool_infor):
+        tool,icon,is_add = tool_infor[0],tool_infor[1],tool_infor[2]
+        self.sig_add_to_favorite.emit((tool,icon,self.map_btn_name[tool],is_add))
+    
+    def drawing(self):
+        self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,self.map_btn_name[self.current_tool])) 
     
     def set_current_tool(self,tool_infor):
         tool,icon = tool_infor[0],tool_infor[1]
         self.current_tool = tool
         self.splitToolButton.change_item(icon)
         self.set_enable()
-        if self.rectangle == tool:
-            self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,"draw_rectangle"))
-        elif self.rotated_rectangle == tool:
-            self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,"draw_rotate_rectangle"))
-        elif self.path == tool:
-            self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,"draw_path"))
-        elif self.arrow_mark_up == tool:
-            self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,"draw_up_arrow"))
-        elif self.arrow_mark_down == tool:
-            self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,"draw_down_arrow"))
-        elif self.arrow == tool:
-            self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,"draw_arrow"))
-        
+        self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,self.map_btn_name[self.current_tool]))
+    
 
     def set_enable(self):
         if self.splitToolButton.button.isChecked():

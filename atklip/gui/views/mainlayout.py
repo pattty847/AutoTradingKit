@@ -4,7 +4,7 @@ from .mainwidget_ui import Ui_MainWidget
 from atklip.gui.components import CircularProgress,LoadingProgress
 from atklip.gui.qfluentwidgets.common import FluentStyleSheet
 from PySide6.QtWidgets import QFrame,QWidget
-from PySide6.QtCore import QPropertyAnimation,QEasingCurve, Signal, Qt
+from PySide6.QtCore import QPropertyAnimation,QEasingCurve, Signal, Qt,QEvent
 from atklip.gui.qfluentwidgets.common.icon import *
 
 
@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from .fluentwindow import WindowBase
 
 class MainWidget(QWidget,Ui_MainWidget):
+    mouse_clicked_signal = Signal(QEvent)
     def __init__(self, parent,tabItem,name,current_ex,current_symbol,curent_interval):
         super().__init__(parent)
         self.setObjectName(name)
@@ -24,12 +25,24 @@ class MainWidget(QWidget,Ui_MainWidget):
         
         self.chartbox_splitter.setup_chart(self,current_ex,current_symbol,curent_interval)
         
+        
         self.rightbar.object.splitToolButton.clicked.connect(lambda :self.extend_right_menu(self.rightview))
 
         self.chartbox_splitter.chart.sig_change_tab_infor.connect(self.change_tab_infor,Qt.ConnectionType.AutoConnection)
 
         "signal from drawbar"
         self.drawbar.sig_draw_object_name.connect(self.draw_tool)
+        self.drawbar.sig_delete_all.connect(self.chartbox_splitter.chart.delete_all_draw_obj)
+        
+        
+        
+        self.chartbox_splitter.chart.sig_show_pop_up_draw_tool.connect(self.drawbar.reset_drawbar)
+        
+        
+        
+        
+        
+        self.tool_name:str = None
         
         
         "signal from TopBar"
@@ -38,7 +51,6 @@ class MainWidget(QWidget,Ui_MainWidget):
         self.topbar.sig_goto_date.connect(self.chartbox_splitter.chart.sig_goto_date,Qt.ConnectionType.AutoConnection)
         
         self.topbar.sig_add_indicator_to_chart.connect(self.chartbox_splitter.sig_add_indicator_to_chart,Qt.ConnectionType.AutoConnection)
-        self.topbar.sig_change_candle_type.connect(self.chartbox_splitter.chart.sig_change_candle_type,Qt.ConnectionType.AutoConnection)
         "signal from TopBar"
         self.progress = LoadingProgress(self)
         self.chartbox_splitter.chart.sig_show_process.connect(self.progress.run_process,Qt.ConnectionType.AutoConnection)
@@ -50,11 +62,11 @@ class MainWidget(QWidget,Ui_MainWidget):
         self.topbar.setup_indicator_menu()
         self.topbar.setup_symbol_menu()
         FluentStyleSheet.SPLITTER.apply(self.chartbox_splitter)
-    
+
     def draw_tool(self,tool_infor):
-        current_tool,is_enabled,tool_name = tool_infor[0],tool_infor[1],tool_infor[2]# "draw_trenlines"
-        print(current_tool,is_enabled,tool_name)
-        self.chartbox_splitter.chart.drawtool.draw_object_name = tool_name
+        current_tool,is_enabled,self.tool_name = tool_infor[0],tool_infor[1],tool_infor[2]# "draw_trenlines"
+        print(current_tool,is_enabled,self.tool_name)
+        self.chartbox_splitter.chart.drawtool.draw_object_name = self.tool_name
     
     def resizeEvent(self, e):
         super().resizeEvent(e)
@@ -90,3 +102,9 @@ class MainWidget(QWidget,Ui_MainWidget):
         self.box.setEndValue(widthExtended)
         self.box.setEasingCurve(QEasingCurve.Linear)
         self.box.start()
+
+    def mousePressEvent(self, ev:QEvent):
+        # print(self.drawtool.draw_object_name)
+        if Qt.MouseButton.LeftButton:
+            self.mouse_clicked_signal.emit(ev)
+            super().mousePressEvent(ev)

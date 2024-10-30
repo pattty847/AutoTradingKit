@@ -9,11 +9,12 @@ from atklip.gui import FluentIcon as FIF
 from atklip.gui.qfluentwidgets.common import *
 
 class FIBONACCI(QFrame):
-    def __init__(self,parent:QWidget=None,sig_draw_object_name=None):
+    def __init__(self,parent:QWidget=None,sig_draw_object_name=None,sig_add_to_favorite=None):
         super().__init__(parent)
         #self.setClickEnabled(False)
         self.parent = parent
         self.sig_draw_object_name = sig_draw_object_name
+        self.sig_add_to_favorite = sig_add_to_favorite
         self.setContentsMargins(0,0,0,0)
         self.setFixedSize(50,40)
         self._QLayout = QHBoxLayout(self)
@@ -22,6 +23,8 @@ class FIBONACCI(QFrame):
         self._QLayout.setAlignment(Qt.AlignLeft)
 
         self.splitToolButton = ShowmenuButton(FIF.FIB_RETRACEMENT,self.parent)
+        self.splitToolButton.clicked.connect(self.drawing)
+        
         self.current_tool = None
         self.is_enabled = False
         #create menu
@@ -53,6 +56,8 @@ class FIBONACCI(QFrame):
 
         # add item to card
         self.fib_retracement.resize(250, 40)
+        
+        self.current_tool =  self.fib_retracement
         
         self.menu.addWidget(self.fib_retracement)
         self.menu.addWidget(self.fib_retracement_2)
@@ -95,19 +100,26 @@ class FIBONACCI(QFrame):
 
         self._QLayout.addWidget(self.splitToolButton)
         #self.splitToolButton.dropButton.hide()
+        self.map_btn_name:dict = {
+            self.fib_retracement:"draw_fib_retracement",
+            self.fib_retracement_2:"draw_fib_retracement_2",
+        }
+        #self.splitToolButton.dropButton.hide()
     
+    def favorite_infor(self,tool_infor):
+        tool,icon,is_add = tool_infor[0],tool_infor[1],tool_infor[2]
+        self.sig_add_to_favorite.emit((tool,icon,self.map_btn_name[tool],is_add))
+    
+    def drawing(self):
+        self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,self.map_btn_name[self.current_tool])) 
     
     def set_current_tool(self,tool_infor):
         tool,icon = tool_infor[0],tool_infor[1]
         self.current_tool = tool
         self.splitToolButton.change_item(icon)
         self.set_enable()
-        if self.fib_retracement == tool:
-            self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,"draw_fib_retracement"))
-        elif self.fib_retracement_2 == tool:
-            self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,"draw_fib_retracement_2"))
-        
-    
+        self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,self.map_btn_name[self.current_tool]))
+   
     def set_enable(self):
         if self.splitToolButton.button.isChecked():
             self.is_enabled = True

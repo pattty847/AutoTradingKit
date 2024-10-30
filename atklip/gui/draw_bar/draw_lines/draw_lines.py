@@ -9,11 +9,13 @@ from atklip.gui import FluentIcon as FIF
 from atklip.gui.qfluentwidgets.common import *
 
 class LINES(QFrame):
-    def __init__(self,parent:QWidget=None,sig_draw_object_name=None):
+    def __init__(self,parent:QWidget=None,sig_draw_object_name=None,sig_add_to_favorite=None):
         super().__init__(parent)
         #self.setClickEnabled(False)
         self.parent = parent
         self.sig_draw_object_name = sig_draw_object_name
+        self.sig_add_to_favorite = sig_add_to_favorite
+        
         self.setContentsMargins(0,0,0,0)
         self.setFixedSize(50,40)
         self._QLayout = QHBoxLayout(self)
@@ -22,6 +24,7 @@ class LINES(QFrame):
         self._QLayout.setAlignment(Qt.AlignLeft)
 
         self.splitToolButton = ShowmenuButton(FIF.TRENDLINE,self.parent)
+        self.splitToolButton.clicked.connect(self.drawing)
         
         self.current_tool = None
         self.is_enabled = False
@@ -50,6 +53,7 @@ class LINES(QFrame):
         # self.cross_line = Card_Item(FIF.CROSS_LINE,"Cross Line", 'LINE',self)
         # add item to card
         self.trend_line.resize(250, 40)
+        self.current_tool =  self.trend_line
         
         self.menu.addWidget(self.trend_line)
         # self.menu.addWidget(self.ray)
@@ -105,25 +109,33 @@ class LINES(QFrame):
         # self.menu.addWidget(self.modify_schiff_pitchfork)
         # self.menu.addWidget(self.inside_pitchfork)
 
-        
         self.splitToolButton.setFlyout(self.menu)
         
         self._QLayout.addWidget(self.splitToolButton)
+        
+        
+        self.map_btn_name:dict = {
+            self.trend_line:"draw_trenlines",
+            self.horizon_line:"draw_horizontal_line",
+            self.horizon_ray:"draw_horizontal_ray",
+            self.vertical_line:"draw_verticallines",
+        }
         #self.splitToolButton.dropButton.hide()
+    
+    def favorite_infor(self,tool_infor):
+        tool,icon,is_add = tool_infor[0],tool_infor[1],tool_infor[2]
+        self.sig_add_to_favorite.emit((tool,icon,self.map_btn_name[tool],is_add))
+    
+    def drawing(self):
+        self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,self.map_btn_name[self.current_tool])) 
     
     def set_current_tool(self,tool_infor):
         tool,icon = tool_infor[0],tool_infor[1]
         self.current_tool = tool
         self.splitToolButton.change_item(icon)
         self.set_enable()
-        if self.trend_line == tool:
-            self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,"draw_trenlines"))
-        elif self.horizon_line == tool:
-            self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,"draw_horizontal_line"))
-        elif self.horizon_ray == tool:
-            self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,"draw_horizontal_ray"))
-        elif self.vertical_line == tool:
-            self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,"draw_verticallines"))
+        self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,self.map_btn_name[self.current_tool]))
+
     
     
     def set_enable(self):

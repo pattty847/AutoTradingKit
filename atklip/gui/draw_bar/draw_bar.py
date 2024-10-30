@@ -24,13 +24,17 @@ from .draw_bar_ui import Ui_draw_bar
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from views.mainlayout import MainWidget
+    from atklip.graphics.chart_component.viewchart import Chart
 
 class DRAW_BAR(QFrame,Ui_draw_bar):
     sig_draw_object_name = Signal(tuple)
-    sig_reject_tool = Signal()
+    sig_delete_all = Signal()
+    sig_add_to_favorite = Signal(tuple)
     def __init__(self,parent:QWidget=None):
         super().__init__(parent)
         self.parent:MainWidget = self.parent()
+        
+        # self.chart:Chart= self.parent.chartbox_splitter.chart
         self.setupUi(self)
         self.items = []
         self._cursor = CURSOR(self)
@@ -38,11 +42,19 @@ class DRAW_BAR(QFrame,Ui_draw_bar):
         #self.current_btn.setChecked(True)
         self.current_btn.set_icon_color()
         self.add_item(self._cursor)
-        self.add_item(LINES(self,self.sig_draw_object_name))
-        self.add_item(FIBONACCI(self,self.sig_draw_object_name))
-        self.add_item(PROJECTS(self,self.sig_draw_object_name))
-        self.add_item(BRUSHS(self,self.sig_draw_object_name))
-        # self.add_item(TEXTS(self))
+        self.LINES = LINES(self,self.sig_draw_object_name,self.sig_add_to_favorite)
+        self.FIBONACCI = FIBONACCI(self,self.sig_draw_object_name,self.sig_add_to_favorite)
+        self.PROJECTS = PROJECTS(self,self.sig_draw_object_name,self.sig_add_to_favorite)
+        self.BRUSHS = BRUSHS(self,self.sig_draw_object_name,self.sig_add_to_favorite)
+        self.TEXTS = TEXTS(self,self.sig_draw_object_name,self.sig_add_to_favorite)
+        self.RECIRCLEBIN = RECIRCLEBIN(self,self.sig_delete_all)
+        self.FAVORITE = FAVORITE(self.parent,self.sig_add_to_favorite,self.sig_draw_object_name)
+        
+        self.add_item(self.LINES)
+        self.add_item(self.FIBONACCI)
+        self.add_item(self.PROJECTS)
+        self.add_item(self.BRUSHS)
+        self.add_item(self.TEXTS)
         # self.addSeparator()
         # self.add_item(MEASURE(self))
         #self.addSeparator()
@@ -50,8 +62,16 @@ class DRAW_BAR(QFrame,Ui_draw_bar):
         # self.add_item(MAGNET(self))
         # self.add_item(EYES(self))
         self.addSeparator()
-        self.add_item(RECIRCLEBIN(self,self.sig_draw_object_name))
-        self._setting_layout.addWidget(FAVORITE(self,self.sig_draw_object_name))
+        self.add_item(self.RECIRCLEBIN)
+        self._setting_layout.setContentsMargins(1,1,1,5)
+        self._setting_layout.addWidget(self.FAVORITE)
+        
+        
+        
+    
+    def reset_drawbar(self,drawed_obj):
+        self.current_btn = self._cursor.splitToolButton
+        self.reset_draw_bar()
     
     def get_current_btn(self):
         if isinstance(self.current_btn, ShowmenuButton):
@@ -66,7 +86,11 @@ class DRAW_BAR(QFrame,Ui_draw_bar):
     def add_item(self,item):
         self.items.append(item)
         self._draw_layout.addWidget(item)
+        
     def uncheck_items(self,_item:Tradingview_Button|ShowmenuButton):
+        
+        print(_item)
+        
         self.current_btn = _item
         if self.current_btn == self._cursor.splitToolButton:
             self.reset_draw_bar()
@@ -97,6 +121,7 @@ class DRAW_BAR(QFrame,Ui_draw_bar):
                 self.current_btn = self._cursor.splitToolButton
                 self.current_btn.setChecked(True)
                 self.current_btn.set_icon_color()
+    
     def reset_draw_bar(self):
         # if self.current_btn != self._cursor.splitToolButton:
         #     self.current_btn = self._cursor.splitToolButton

@@ -17,7 +17,7 @@ p = cw.addPlot(row=0, col=0)
 p2 = cw.addPlot(row=1, col=0)
 
 ## variety of arrow shapes
-a1 = pg.ArrowItem(angle=-160, tipAngle=60, headLen=40, tailLen=40, tailWidth=20, pen={'color': 'w', 'width': 3})
+a1 = pg.ArrowItem(angle=-160, tipAngle=60, headLen=40, tailLen=40, tailWidth=20, pen={'color': 'w', 'width': 3},pxMode=False)
 a2 = pg.ArrowItem(angle=0, tipAngle=60, baseAngle=30, headLen=20, tailLen=100, tailWidth=2, pen=None, brush='green')
 a3 = pg.ArrowItem(angle=-60, baseAngle=20, headLen=40, headWidth=20, tailLen=None, brush=None)
 a4 = RulerROI((30,0))

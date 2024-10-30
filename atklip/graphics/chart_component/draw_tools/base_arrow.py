@@ -5,6 +5,11 @@ from psygnal import Signal
 from PySide6.QtGui import QTransform,QPainter
 from PySide6.QtWidgets import QGraphicsPathItem,QGraphicsSceneHoverEvent
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from atklip.graphics.chart_component.viewchart import Chart
+    from atklip.graphics.chart_component.draw_tools.drawtools import DrawTool
+
 __all__ = ['BaseArrowItem']
 
 class BaseArrowItem(QGraphicsPathItem):
@@ -14,7 +19,7 @@ class BaseArrowItem(QGraphicsPathItem):
     For arrows pointing to a location on a curve, see CurveArrow
     
     """
-    def __init__(self, parent=None,chart=None, **opts):
+    def __init__(self, parent=None,drawtool=None, **opts):
         """
         Arrows can be initialized with any keyword arguments accepted by 
         the setStyle() method.
@@ -28,7 +33,7 @@ class BaseArrowItem(QGraphicsPathItem):
             opts['headWidth'] = opts['width']
         pos = opts.pop('pos', (0, 0))
 
-        defaultOpts = {
+        self.defaultOpts = {
             'pxMode': True,
             'angle': -150,   ## If the angle is 0, the arrow points left
             'headLen': 20,
@@ -40,15 +45,30 @@ class BaseArrowItem(QGraphicsPathItem):
             'pen': (200,200,200),
             'brush': (50,50,200),
         }
-        defaultOpts.update(opts)
+        self.defaultOpts.update(opts)
         
         self.moving = False
         self.cursorOffset = None
         self.startPosition = None
-        self.chart = chart
+        self.drawtool:DrawTool = drawtool
+        self.chart:Chart = self.drawtool.chart
         
         
-        self.setStyle(**defaultOpts)
+        self.has = {
+            "x_axis_show":True,
+            "name": "rectangle",
+            "type": "drawtool",
+            "id": id,
+            "inputs":{
+                    },
+            "styles":{
+                    'brush': opts["brush"],
+                    "lock":True,
+                    "setting": False,
+                    "delete":True,}
+        }
+        
+        self.setStyle(**self.defaultOpts)
 
         # for backward compatibility
         # self.setPos(*pos)
@@ -87,6 +107,26 @@ class BaseArrowItem(QGraphicsPathItem):
     
     def objectName(self):
         return self._objectName
+    
+    def get_inputs(self):
+        inputs =  {}
+        return inputs
+    
+    def get_styles(self):
+        styles =  {"brush":self.has["styles"]["brush"],
+                    "delete":self.has["styles"]["delete"],
+                    "lock":self.has["styles"]["lock"],
+                    "setting":self.has["styles"]["setting"],}
+        return styles
+    
+    def update_inputs(self,_input,_source):
+        is_update = False
+    
+    def update_styles(self, _input):
+        _style = self.has["styles"][_input]
+        if _input == "brush":
+            self.defaultOpts["brush"] = _style
+            self.setStyle(**self.defaultOpts)
     
     def setStyle(self, **opts):
         """
@@ -145,14 +185,15 @@ class BaseArrowItem(QGraphicsPathItem):
             self.setFlags(self.flags() | self.GraphicsItemFlag.ItemIgnoresTransformations)
         else:
             self.setFlags(self.flags() & ~self.GraphicsItemFlag.ItemIgnoresTransformations)
-
+    
     def paint(self, p, *args):
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        # p.drawRect(self.boundingRect())
         super().paint(p, *args)
         
         #p.setPen(fn.mkPen('r'))
         #p.setBrush(fn.mkBrush(None))
-        #p.drawRect(self.boundingRect())
+        
 
     def shape(self):
         #if not self.opts['pxMode']:

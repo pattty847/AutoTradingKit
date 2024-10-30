@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     
 class BasicZIGZAG(PlotDataItem):
     """RSI"""
-    on_click = Signal(QObject)
+    on_click = Signal(object)
 
     last_pos = Signal(tuple)
 

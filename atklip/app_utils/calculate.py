@@ -71,6 +71,13 @@ def xminmax(datasrc, x_indexed, init_steps=None, extra_margin=0):
 def find_nearest_index(lst, special_value):
         index = min(range(len(lst)), key=lambda i: abs(lst[i] - special_value))
         return index
+    
+@njit(cache=True) 
+def cal_line_price_fibo(top, bot, percent, direct=1):
+    diff = (top - bot) * percent
+    if direct == 1:
+        return top - diff
+    return bot + diff
 
 @njit(cache=True) 
 def divide_with_remainder(a, b):

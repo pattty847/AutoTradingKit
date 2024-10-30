@@ -92,8 +92,8 @@ class CandleStick(GraphicsObject):
         self._start:int = None
         self._stop:int = None
 
-        self.historic_candle = SingleCandleStick(self.chart,self.source,has=self.has)
-        self.historic_candle.setParentItem(self)
+        self.current_candle = SingleCandleStick(self.chart,self.source,has=self.has)
+        self.current_candle.setParentItem(self)
         
         
         self.price_line = PriceLine()  # for z value
@@ -252,15 +252,13 @@ class CandleStick(GraphicsObject):
             self.has["styles"]["brush_highcolor"] = mkBrush(_style,width=0.7)
         elif _input == "brush_lowcolor":
             self.has["styles"]["brush_lowcolor"] = mkBrush(_style,width=0.7)
-        self.historic_candle.reset_threadpool_asyncworker()
+        self.current_candle.reset_threadpool_asyncworker()
         self.threadpool_asyncworker(True)
         
     def set_price_line(self):
         lastcandle = self.source.last_data()
         self.price_line.update_data(lastcandle)
         
-    
-    
     def first_setup_candle(self):
         self.threadpool_asyncworker(True)
         # x_data, y_data = self.source.get_index_data(stop=-1)
@@ -414,7 +412,7 @@ class CandleStick(GraphicsObject):
     
     def updateData(self, data) -> None:
         """y_data must be in format [[open, close, min, max], ...]"""
-        self.historic_candle.setData(data)
+        self.current_candle.setData(data)
         self.chart.sig_update_y_axis.emit()
         
         self._to_update = False
@@ -522,6 +520,7 @@ class SingleCandleStick(GraphicsObject):
             y_data = np.array(y_data)
         self.picture = QPicture()
         p = QPainter(self.picture)
+        QPainterPath()
         w = 1 / 5
         t = x_data[-1]
         _open, _max, _min, close = y_data[0][-1],y_data[1][-1],y_data[2][-1],y_data[3][-1]

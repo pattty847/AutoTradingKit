@@ -12,7 +12,7 @@ from atklip.graphics.pyqtgraph.Point import Point
 
 from .roi import SpecialROI, BaseHandle, _FiboLineSegment
 from .base_textitem import BaseTextItem
-
+from atklip.app_utils.calculate import cal_line_price_fibo
 
 DEFAULTS_FIBO = [1.0, 0.786, 0.618, 0.5, 0.382, 0.236, 0.0]
 DEFAULTS_COLOR = [(120,123,134,200),(242,54,69,200),(255,152,0,200),(76,175,80,200),(8,153,129,200),(0,188,212,200),(120,123,134,200),(41, 98, 255,200),(242, 54, 69, 200),(156,39,176,200),(233, 30, 99,200),(206,147,216,200),(159,168,218,200),(255,204,128,200),
@@ -22,13 +22,10 @@ RIGHT_FAR_TIMESTAMP = 1783728000
 translate = QCoreApplication.translate
 
 
-def cal_line_price_fibo(top, bot, percent, direct=1):
-
-    diff = (top - bot) * percent
-    if direct == 1:
-        return top - diff
-    return bot + diff
-
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from atklip.graphics.chart_component.viewchart import Chart
+    from atklip.graphics.chart_component.draw_tools.drawtools import DrawTool
 
 class FiboROI(SpecialROI):
     on_click = Signal(object)
@@ -42,7 +39,7 @@ class FiboROI(SpecialROI):
     signal_change_type = Signal(str)
     signal_update_text = Signal(list)
 
-    def __init__(self, pos, size=..., angle=0, invertible=True, maxBounds=None, snapSize=1, scaleSnap=False, translateSnap=False, rotateSnap=False, parent=None, pen=None, hoverPen=None, handlePen=None, handleHoverPen=None, movable=True, rotatable=True, resizable=True, removable=False, aspectLocked=False, main=None, fibo_level=None, color_rect=None, color_line=None, color_borders=None,):
+    def __init__(self, pos, size=..., angle=0, invertible=True, maxBounds=None, snapSize=1, scaleSnap=False, translateSnap=False, rotateSnap=False, parent=None, pen=None, hoverPen=None, handlePen=None, handleHoverPen=None, movable=True, rotatable=True, resizable=True, removable=False, aspectLocked=False, drawtool=None, fibo_level=None, color_rect=None, color_line=None, color_borders=None,):
         super().__init__(pos, size, angle, invertible, maxBounds, snapSize, scaleSnap, translateSnap, rotateSnap, parent, pen, hoverPen, handlePen, handleHoverPen, movable, rotatable, resizable, removable, aspectLocked)
         #self.generate_lines()
         self.id = None
@@ -51,8 +48,9 @@ class FiboROI(SpecialROI):
             "type": "drawtool",
             "id": id
         }
-        self.parent, self.chart=parent, main    # parent is viewbox
-        
+        self.drawtool:DrawTool = drawtool
+        self.chart:Chart = self.drawtool.chart  # plot mapchart
+        self.vb = self.chart.vb
         
 
         self.addScaleHandle([0, 0], [1, 1])
@@ -394,8 +392,8 @@ class FiboROI(SpecialROI):
     def remove(self):
         for item in self.list_lines:
             # print(156, "remove", item)
-            self.parent.removeItem(item)
-        self.parent.removeItem(self)
+            self.chart.removeItem(item)
+        self.chart.removeItem(self)
 
     def hide(self):
         super().hide()
@@ -416,6 +414,7 @@ class FiboROI(SpecialROI):
         if self.fibonacci_levels[-1] < 0:
             height += y_size*abs(self.fibonacci_levels[-1])
         # print("height", height, y_size)
+        
         return QRectF(0, top, self.state['size'][0], height).normalized()
     
     @property

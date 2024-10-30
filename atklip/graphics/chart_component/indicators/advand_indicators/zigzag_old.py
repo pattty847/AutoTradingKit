@@ -11,7 +11,7 @@ from atklip.app_utils import *
 
 class BasicZigzag(PlotDataItem):
     """Zigzag plot"""
-    on_click = Signal(QObject)
+    on_click = Signal(object)
 
     signal_visible = Signal(bool)
     signal_delete = Signal()

@@ -2,15 +2,17 @@ from typing import List,TYPE_CHECKING
 
 from PySide6.QtCore import Qt,Signal
 from PySide6.QtGui import QBrush
+from PySide6.QtWidgets import QWidget
 
 from .combobox_value_ui import Ui_combobox_value as ComboboxValue
 from .single_value_ui import Ui_single_value as SingleValue
 from .double_value_ui import Ui_double_value as DoubleValue
 from .edit_value_ui import Ui_text_value as TextValue
 from .color_value_ui import Ui_color_value as ColorValue
-from atklip.gui.qfluentwidgets.common.icon import FluentIcon as FIF
-from PySide6.QtWidgets import QWidget
 
+from atklip.gui.qfluentwidgets.common.icon import FluentIcon as FIF
+from atklip.gui.components._pushbutton import Color_Picker_Button
+from atklip.gui.qfluentwidgets.components.widgets import ComboBox
 from atklip.controls.candle import JAPAN_CANDLE,HEIKINASHI,SMOOTH_CANDLE
 from atklip.controls.ma_type import PD_MAType
 from atklip.app_utils import mkPen, mkBrush
@@ -353,4 +355,114 @@ class WidthEdit(ComboboxEdit):
             self.value.setCurrentIndex(2)
         elif _value == 4:
             self.value.setCurrentIndex(3)
+
+
+"styles setting"
+class ColorEditDrawTool(Color_Picker_Button):
+    def __init__(self,parent:QWidget=None,indicator=None, _input=None):
+        super(ColorEditDrawTool,self).__init__(parent,enableAlpha = True)
+        self.indicator = indicator
+        self._input = _input
+        self._parent = parent
+        self.indicator = indicator
+        self._input = _input
+        self.setFixedSize(30,30)
+        self.load_color()
+        self.colorChanged.connect(self.change_color)
+
+    def change_color(self,color):
+        if "brush" in self._input:
+            color = mkBrush(color)
+        self.indicator.has["styles"][self._input] = color
+        #print(self._input,color,self.indicator.has["styles"])
+        self.indicator.update_styles(self._input)
+    def load_color(self):
+        _color = self.indicator.has["styles"].get(self._input)
+        print(_color)
+        if isinstance(_color,QBrush):
+            _color = _color.color()
+        self.setColor(_color)
+
+class StyleEditDrawTool(ComboBox):
+    def __init__(self,parent:QWidget=None,indicator=None, _input=None):
+        super(StyleEditDrawTool,self).__init__(parent)
+        self.indicator = indicator
+        self._input = _input
+        
+        self.set_values([("SolidLine",FIF.LINE),("DashLine",FIF.DASH_LINE),("DotLine",FIF.DOT_LINE)])
+        self.load_style()
+        self.currentTextChanged.connect(self.change_style)
+        self.setFixedSize(100,30)
+
+    def set_value(self,value):
+        self.setText(str(value))
+    def set_values(self,list_item: List[str]):
+        self.addItems(list_item)
+    def addItems(self, texts):
+        for text in texts:
+            if isinstance(text,str):
+                self.addItem(text)
+            elif isinstance(text,tuple):
+                self.addItem(text[0],text[1])
+    
+    def change_style(self,text):
+        if text == "SolidLine":
+            self.indicator.has["styles"][self._input] = Qt.PenStyle.SolidLine
+        elif text == "DashLine":
+            self.indicator.has["styles"][self._input] = Qt.PenStyle.DashLine
+        elif text == "DotLine":
+            self.indicator.has["styles"][self._input] = Qt.PenStyle.DotLine
+        self.indicator.update_styles(self._input)
+    def load_style(self):
+        _value = self.indicator.has["styles"].get(self._input)
+        if _value == Qt.PenStyle.SolidLine:
+            self.setCurrentIndex(0)
+        elif _value == Qt.PenStyle.DashLine:
+            self.setCurrentIndex(1)
+        elif _value == Qt.PenStyle.DotLine:
+            self.setCurrentIndex(2)
+
+    
+class WidthEditDrawTool(ComboBox):
+    def __init__(self,parent:QWidget=None,indicator=None, _input=None):
+        super(WidthEditDrawTool,self).__init__(parent)
+        self.indicator = indicator
+        self._input = _input
+        self.set_values([("1px ",FIF.ONE_PIX),("2px ",FIF.TWO_PIX),("3px ",FIF.THREE_PIX),("4px ",FIF.FOUR_PIX)])
+        self.load_value()
+        self.currentTextChanged.connect(self.change_width)
+        self.setFixedSize(60,30)
+    
+    
+    def set_value(self,value):
+        self.setText(str(value))
+    def set_values(self,list_item: List[str]):
+        self.addItems(list_item)
+    def addItems(self, texts):
+        for text in texts:
+            if isinstance(text,str):
+                self.addItem(text)
+            elif isinstance(text,tuple):
+                self.addItem(text[0],text[1])
+    
+    def change_width(self,text):
+        if text == "1px ":
+            self.indicator.has["styles"][self._input] = 1
+        elif text == "2px ":
+            self.indicator.has["styles"][self._input] = 2
+        elif text == "3px ":
+            self.indicator.has["styles"][self._input] = 3
+        elif text == "4px ":
+            self.indicator.has["styles"][self._input] = 4
+        self.indicator.update_styles(self._input)
+    def load_value(self):
+        _value = self.indicator.has["styles"].get(self._input)
+        if _value == 1:
+            self.setCurrentIndex(0)
+        elif _value == 2:
+            self.setCurrentIndex(1)
+        elif _value == 3:
+            self.setCurrentIndex(2)
+        elif _value == 4:
+            self.setCurrentIndex(3)
 

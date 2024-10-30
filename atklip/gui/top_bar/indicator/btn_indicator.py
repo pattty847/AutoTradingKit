@@ -1,5 +1,5 @@
 from typing import TYPE_CHECKING,List
-from PySide6.QtCore import Signal, Qt, QSize, QPoint
+from PySide6.QtCore import Signal, Qt, QSize, QPoint,QRectF
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QPushButton, QWidget
 
@@ -79,7 +79,7 @@ class IndicatorButton(_PushButton):
         self.setIconSize(QSize(30, 30))
         self._pre_x_pos = None
         self._pre_y_pos = None
-        self._menu = None
+        self._menu:IndicatorMenu = None
         self.sig_add_indicator_to_chart = sig_add_indicator_to_chart
         self.clicked.connect(self.show_menu)
         self.sig_remove_menu.connect(self.remove_menu,Qt.ConnectionType.AutoConnection)
@@ -129,7 +129,22 @@ class IndicatorButton(_PushButton):
                 y = (_y-self._menu.height())/3
                 self._menu.move(QPoint(x, y))
                 self._menu.show()
-    def remove_menu(self)->None:
+    
+    def delete(self,ev):
+        try:
+            ev_pos = ev.position()
+        except:
+            ev_pos = ev.pos()
+        
+        self.remove_menu(ev_pos)
+    
+    def remove_menu(self,pos=None)->None:
         if self._menu != None:
-            self._menu.hide()
+            if pos!=None:
+                _pos = self.mapFromParent(QPoint(pos.x(),pos.y()))
+                _rect = QRectF(self._menu.x(),self._menu.y(),self._menu.width(),self._menu.height())
+                if not _rect.contains(QPoint(pos.x(),pos.y())):
+                    self._menu.hide()
+            else:
+                self._menu.hide()
     

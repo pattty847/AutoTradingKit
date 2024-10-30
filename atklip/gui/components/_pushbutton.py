@@ -239,14 +239,15 @@ class ShowmenuButton(SplitWidgetBase):
         w = self.flyout
         if not w:
             return
-        if isinstance(w, RoundMenu):
-            w.view.setMinimumWidth(self.width())
-            w.view.adjustSize()
-            w.adjustSize()
-            x = self.width()
-            #y = self.height()
-            y = 0
-            w.exec(self.mapToGlobal(QPoint(x, y)))
+        # if isinstance(w, RoundMenu):
+        w.view.setMinimumWidth(self.width())
+        w.view.adjustSize()
+        w.adjustSize()
+        x = self.width()
+        #y = self.height()
+        y = 0
+        w.show()
+        w.move(self.mapToGlobal(QPoint(x, y)))
 
 
 class ICON_TEXT_BUTTON(CardWidget,ICON_WITH_TEXT_WG):
@@ -331,7 +332,8 @@ class Color_Picker_Button(PrimaryToolButton):
 
     def setColor(self, color):
         """ set color """
-        self.color = QColor(color)
+        if isinstance(color,str):
+            self.color = QColor(color)
         self.update()
 
     def paintEvent(self, e):
@@ -541,8 +543,53 @@ class Tradingview_Button(_PushButton):
                 self.setIcon(self.icon.path(Theme.DARK))
             else:
                 self.setIcon(self.icon.path(Theme.LIGHT))
-     
-        self.parent().parent.uncheck_items(self)
+
+        if hasattr(self.parent().parent,"uncheck_items"):
+            self.parent().parent.uncheck_items(self)
+
+
+class Lock_Unlock_Button(_PushButton):
+    """ Transparent toggle tool button
+
+    Constructors
+    ------------
+    * TransparentToggleToolButton(`parent`: QWidget = None)
+    * TransparentToggleToolButton(`icon`: QIcon | str | FluentIconBase, `parent`: QWidget = None)
+    """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.icon:FIF = args[0]
+        self.setCheckable(True)
+        self.setChecked(False)
+        self.setFixedSize(40,40)
+        self.setIconSize(QSize(30,30))
+        self.setContentsMargins(1,1,1,1)
+        self.clicked.connect(self.set_icon_color)
+        self.set_icon_color()
+        FluentStyleSheet.BUTTON.apply(self)
+
+    def _drawIcon(self, icon, painter, rect):
+        if not self.isChecked():
+            return ToolButton._drawIcon(self, icon, painter, rect)
+        PrimaryToolButton._drawIcon(self, icon, painter, rect, QIcon.On)
+
+    def set_icon(self, _path):
+        icon_path = QIcon(_path)
+        self.setIcon(icon_path)
+
+    def set_icon_color(self):
+        if self.isChecked():
+            self.setChecked(True)
+            _icon = change_svg_color(FIF.LOCK.value,"#0055ff")
+            self.setIcon(QIcon(_icon))
+        else:
+            self.setChecked(False)
+            if isDarkTheme():
+                self.setIcon(FIF.UNLOCK.path(Theme.DARK))
+            else:
+                self.setIcon(FIF.UNLOCK.path(Theme.LIGHT))
+
+
 
 
 class Candle_Button(BasePushButton):
@@ -728,13 +775,13 @@ class Hide_Show_Button(BasePushButton):
         self.clicked.connect(self.set_icon_color)
         self.setToolTip("What is this, read document!!!")
         self.setToolTipDuration(1000)
-        self.setIconSize(QSize(15, 15))
+        self.setIconSize(QSize(35, 35))
         icon_path = icon.path(Theme.DARK) if isDarkTheme() else icon.path(Theme.LIGHT)
         self.set_icon(icon_path)
         self.setCheckable(True)
         self.setChecked(False)
-        self.setFixedSize(20,20)
-        self.setContentsMargins(1,1,1,1)
+        self.setFixedSize(35,35)
+        self.setContentsMargins(0,0,0,0)
         # self.button2.setToolTipDuration(-1)  # won't disappear
         self.installEventFilter(ToolTipFilter(self, 0, ToolTipPosition.RIGHT))
         #self.set_icon_color()

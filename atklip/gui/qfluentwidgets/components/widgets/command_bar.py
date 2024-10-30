@@ -205,7 +205,7 @@ class CommandBar(QFrame):
         setFont(self, 12)
         self.setAttribute(Qt.WA_TranslucentBackground)
 
-    def setSpaing(self, spacing: int):
+    def setSpacing(self, spacing: int):
         if spacing == self._spacing:
             return
 
@@ -546,8 +546,8 @@ class CommandBarView(FlyoutViewBase):
     def addWidget(self, widget: QWidget):
         self.bar.addWidget(widget)
 
-    def setSpaing(self, spacing: int):
-        self.bar.setSpaing(spacing)
+    def setSpacing(self, spacing: int):
+        self.bar.setSpacing(spacing)
 
     def spacing(self):
         return self.bar.spacing()

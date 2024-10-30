@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     from atklip.graphics.chart_component.viewchart import Chart
 
 class BasicSMC(GraphicsObject):
-    on_click = Signal(QObject)
+    on_click = Signal(object)
     signal_visible = Signal(bool)
     signal_delete = Signal()
     signal_change_color = Signal(str)
@@ -69,7 +69,6 @@ class BasicSMC(GraphicsObject):
         self.threadpool.setMaxThreadCount(1)
         
         self.chart.sig_update_source.connect(self.change_source,Qt.ConnectionType.AutoConnection)
-        self.chart.sig_remove_source.connect(self.replace_source,Qt.ConnectionType.AutoConnection)
         self.signal_delete.connect(self.delete)
         
         self.has["inputs"]["source"].sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)

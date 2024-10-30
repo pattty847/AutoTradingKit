@@ -1,14 +1,6 @@
 from atklip.graphics.pyqtgraph import TextItem
 from atklip.graphics.pyqtgraph.Point import Point
 
-def cal_line_price_fibo(top, bot, percent, direct=1):
-
-    diff = (top - bot) * percent
-    if direct == 1:
-        return top - diff
-    return bot + diff
-
-
 class BaseTextItem(TextItem):
     def __init__(self, text='', color=(200,200,200), html=None, anchor=(0,0),
                  border=None, fill=None, angle=0, rotateAxis=None, ensureInBounds=False):

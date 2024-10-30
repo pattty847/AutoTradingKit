@@ -1,11 +1,12 @@
 from typing import TYPE_CHECKING
-from PySide6.QtCore import Qt, QSize,QPoint,Signal
+from PySide6.QtCore import Qt, QSize,QPoint,Signal,QRectF
 from PySide6.QtWidgets import QWidget, QFrame,QHBoxLayout
-from atklip.gui.qfluentwidgets.components import ToolButton
+from atklip.gui.qfluentwidgets.components import ToolButton,FastCalendarPicker
 from atklip.gui.qfluentwidgets.common import FluentIcon as FIF,isDarkTheme
 from atklip.gui.components import _PushButton
 
 from .goto_menu import DateTimeMenu
+
 
 
 if TYPE_CHECKING:
@@ -111,7 +112,21 @@ class GotoButton(QFrame):
                 y = (_y-self._menu.height())/3
                 self._menu.move(QPoint(x, y))
                 self._menu.show()
-    def remove_menu(self)->None:
+    
+    def delete(self,ev):
+        try:
+            ev_pos = ev.position()
+        except:
+            ev_pos = ev.pos()
+        self.remove_menu(ev_pos)
+    
+    def remove_menu(self,pos=None)->None:
         if self._menu != None:
-            self._menu.hide()
+            if pos!=None:
+                _pos = self.mapFromParent(QPoint(pos.x(),pos.y()))
+                _rect = QRectF(self._menu.x(),self._menu.y(),self._menu.width(),self._menu.height())
+                if not _rect.contains(QPoint(pos.x(),pos.y())):
+                    self._menu.hide()
+            else:
+                self._menu.hide()
   

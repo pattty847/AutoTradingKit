@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     
 class BasicVTX(GraphicsObject):
     """RSI"""
-    on_click = Signal(QObject)
+    on_click = Signal(object)
 
     last_pos = Signal(tuple)
 

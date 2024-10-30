@@ -48,15 +48,16 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
         self.tabBar.tabCloseRequested.connect(self.onTabCloseRequested)
         qconfig.themeChangedFinished.connect(self._onThemeChangedFinished)
         FluentStyleSheet.FLUENT_WINDOW.apply(self)
-        self.onTabAddRequested()
         self.initWindow()
+        self.onTabAddRequested()
 
     def initWindow(self):
         desktop = screen.getCurrentScreenGeometry()
         w, h = desktop.width(), desktop.height()
-        _w, _h = 1000, 800
-        self.resize(_w, _h)
-        self.setGeometry(int(w/2 - _w/2),int(h/2 - _h/2),_w,_h)
+        _w, _h = 900, 800
+        # self.resize(_w, _h)
+        self.move(int(w/2 - _w/2),int(h/2 - _h/2))
+        # self.setGeometry(int(w/2 - _w/2),int(h/2 - _h/2),_w,_h)
         self.resize(_w, _h)
 
 

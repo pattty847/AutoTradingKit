@@ -1,9 +1,7 @@
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QWidget, QFrame,QHBoxLayout
-from atklip.gui.qfluentwidgets.components import RoundMenu,TitleLabel
-from atklip.gui.components import ShowmenuButton,Card_Item,Tradingview_Button
+from atklip.gui.components import Tradingview_Button
 from atklip.gui import FluentIcon as FIF
 # from atklip.gui.draw_bar import *
 from atklip.gui.qfluentwidgets.common import *

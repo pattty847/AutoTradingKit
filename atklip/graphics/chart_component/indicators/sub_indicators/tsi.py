@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     
 class BasicTSI(GraphicsObject):
     """RSI"""
-    on_click = Signal(QObject)
+    on_click = Signal(object)
 
     last_pos = Signal(tuple)
 

@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     
 class BasicMACD(GraphicsObject):
     """RSI"""
-    on_click = Signal(QObject)
+    on_click = Signal(object)
 
     last_pos = Signal(tuple)
 

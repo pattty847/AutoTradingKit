@@ -18,7 +18,7 @@ from atklip.app_utils import *
 
 class BasicSPTrend(PlotDataItem):
     """RSI"""
-    on_click = Signal(QObject)
+    on_click = Signal(object)
 
     signal_visible = Signal(bool)
     signal_delete = Signal()
@@ -210,7 +210,7 @@ class BasicSPTrend(PlotDataItem):
 
 class CurrentSPTrend(PlotDataItem):
     """Zigzag plot"""
-    on_click = Signal(QObject)
+    on_click = Signal(object)
 
     signal_visible = Signal(bool)
     signal_delete = Signal()

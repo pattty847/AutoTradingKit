@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
 class BasicMA(PlotDataItem):
     """DEMA EMA HMA SMA SMMA TEMA TRIX ZLEMA WMA"""
-    on_click = Signal(QObject)
+    on_click = Signal(object)
     signal_delete = Signal()
     sig_change_yaxis_range = Signal()
     sig_change_indicator_name = Signal(str)

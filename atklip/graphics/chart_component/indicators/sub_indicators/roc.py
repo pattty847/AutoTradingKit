@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from atklip.graphics.chart_component.sub_panel_indicator import ViewSubPanel
 class BasicROC(PlotDataItem):
     """ROC"""
-    on_click = Signal(QObject)
+    on_click = Signal(object)
 
     last_pos = Signal(tuple)
 

@@ -1,57 +1,59 @@
-import random
+"UT BOT --- Buy Sell Signal"
 
-from atklip.controls.talipp.indicators import  AccuDist, ADX, ALMA, AO, Aroon, ATR, BB, BOP, CCI, ChaikinOsc, ChandeKrollStop, CHOP, \
-    CoppockCurve, DEMA, DonchianChannels, DPO, EMA, EMV,FibRetracement, ForceIndex, HMA, Ichimoku, KAMA, KeltnerChannels, KST, KVO, \
-    MACD, MassIndex,McGinleyDynamic, MeanDev, OBV, PivotsHL, ROC, RSI, ParabolicSAR, SFX, SMA, SMMA, SOBV, STC, StdDev, Stoch, StochRSI, \
-    SuperTrend, T3, TEMA, TRIX, TSI, TTM, UO, VTX, VWAP, VWMA, WMA, ZLEMA
+import numpy as np
+import matplotlib.pyplot as plt
 
-from atklip.controls.talipp.ohlcv import OHLCVFactory,OHLCV
-import time
+# Các thông số đầu vào
+a = 1      # Key Value
+c = 10     # ATR Period
+h = False  # Dùng Heikin Ashi hay không
 
-def generate_random_ohlcv_data(num_records):
-    ohlcv_data = []
-    current_price = 500  # Initial price
-    n = True
-    m = 0
-    for _ in range(num_records):
-        # Generate random OHLCV data for each record
-        open_price = current_price
-        high_price = open_price + random.uniform(0, 5)
-        low_price = open_price - random.uniform(0, 5)
-        close_price = random.uniform(low_price, high_price)
-        volume = random.randint(1000, 10000)
+# Dữ liệu giả (thay thế bằng dữ liệu thực tế của bạn)
+np.random.seed(0)
+n = 100
+close = np.random.rand(n) * 100 + 100  # Dữ liệu giá đóng cửa ngẫu nhiên
 
-        # Update current price for the next record
-        
-        if n:
-            current_price = current_price + random.uniform(3, 10)
-            m+=1
-            if m == 10:
-                n = False
-                m = 0
-        else:
-            current_price = current_price - random.uniform(3, 10)
-            m+=1
-            if m == 10:
-                n = True
-                m = 0
+# Tính ATR
+def atr(period, data):
+    return np.convolve(np.abs(np.diff(data)), np.ones(period)/period, mode='valid')
 
+xATR = atr(c, close)
+nLoss = a * xATR
 
-        candle = OHLCV(open_price,high_price,low_price,close_price,volume,time.time(),_)
+# Heikin Ashi hoặc giá đóng cửa thực tế
+src = close if not h else np.cumsum(close)  # Giả sử Heikin Ashi là giá tăng dần
 
-        # Append OHLCV data to the list
-        ohlcv_data.append(candle)
+# Tính toán xATRTrailingStop
+xATRTrailingStop = np.zeros(n)
+for i in range(1, n):
+    if src[i] > xATRTrailingStop[i-1] and src[i-1] > xATRTrailingStop[i-1]:
+        xATRTrailingStop[i] = max(xATRTrailingStop[i-1], src[i] - nLoss[min(i-1, len(nLoss)-1)])
+    elif src[i] < xATRTrailingStop[i-1] and src[i-1] < xATRTrailingStop[i-1]:
+        xATRTrailingStop[i] = min(xATRTrailingStop[i-1], src[i] + nLoss[min(i-1, len(nLoss)-1)])
+    else:
+        xATRTrailingStop[i] = src[i] - nLoss[min(i-1, len(nLoss)-1)] if src[i] > xATRTrailingStop[i-1] else src[i] + nLoss[min(i-1, len(nLoss)-1)]
 
-    return ohlcv_data
+# Tính toán tín hiệu mua/bán
+pos = np.zeros(n)
+for i in range(1, n):
+    if src[i-1] < xATRTrailingStop[i-1] and src[i] > xATRTrailingStop[i-1]:
+        pos[i] = 1
+    elif src[i-1] > xATRTrailingStop[i-1] and src[i] < xATRTrailingStop[i-1]:
+        pos[i] = -1
+    else:
+        pos[i] = pos[i-1]
 
-if __name__ == "__main__":
-    ohlcv = generate_random_ohlcv_data(500)
-    ohlcv_update = generate_random_ohlcv_data(500)
-    spt = DEMA(20, ohlcv,_type="close")
-    for i in range(1000):
-        #print(spt.input_values[-1:])
-        if isinstance(ohlcv_update[-i], OHLCV):
-            spt.add(ohlcv_update[-i]) # example for update last candle as a sigle candle
-            #spt.update([ohlcv[-i]]) # example for update last candle as a list of candles
-            print(f'outputs: {len(spt.output_values)} {len(spt.output_values)} {spt.output_times[-1]} {spt.output_values[-1]}')
-            time.sleep(0.1)
+# Vẽ biểu đồ
+plt.figure(figsize=(12, 6))
+plt.plot(src, label="Price", color="blue")
+plt.plot(xATRTrailingStop, label="ATR Trailing Stop", color="orange")
+
+buy_signals = np.where(pos == 1)[0]
+sell_signals = np.where(pos == -1)[0]
+
+plt.scatter(buy_signals, src[buy_signals], marker="^", color="green", label="Buy Signal")
+plt.scatter(sell_signals, src[sell_signals], marker="v", color="red", label="Sell Signal")
+
+plt.legend()
+plt.title("UT Bot Alerts in Python")
+plt.show()

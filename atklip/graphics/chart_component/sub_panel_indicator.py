@@ -67,8 +67,6 @@ class ViewSubPanel(PlotWidget):
         self._parent = parent
         # 
 
-        self.list_candle_indicators = []
-
         self.Chart: Chart = chart
         
         self.sources = self.Chart.sources
@@ -180,10 +178,8 @@ class ViewSubPanel(PlotWidget):
         
     
     def fast_reset_worker(self):
-        if self.list_candle_indicators == []:
-            self.setup_indicator(self.indicator_data)
-        else:
-            pass
+        self.setup_indicator(self.indicator_data)
+        
         
     async def reset_panel(self):
         while True:
@@ -196,7 +192,6 @@ class ViewSubPanel(PlotWidget):
             item = args[0]
         else:
             item = args
-        self.list_candle_indicators.append(item)
         self.addItem(item) 
         self.yAxis.dict_objects.update({item:item.has["y_axis_show"]})
 
@@ -205,7 +200,6 @@ class ViewSubPanel(PlotWidget):
             item = args[0]
         else:
             item = args
-        self.list_candle_indicators.remove(item)
         del self.yAxis.dict_objects[item]
         
         if item in self.Chart.indicators:
@@ -259,9 +253,7 @@ class ViewSubPanel(PlotWidget):
         if hasattr(args[0], "_hl_kwargs") and args[0]._hl_kwargs is not None:
             self.plotItem.addItem(args[0]._hl_kwargs["line"], ignoreBounds=True)
             self.plotItem.addItem(args[0]._hl_kwargs["text"], ignoreBounds=True)
-        if hasattr(args[0], "update_leading_line"):
-            setattr(args[0], "x_format", self.x_format)
-            setattr(args[0], "y_format", self.y_format)
+
         self.plotItem.addItem(*args)
         args[0].plot_widget = self
     
