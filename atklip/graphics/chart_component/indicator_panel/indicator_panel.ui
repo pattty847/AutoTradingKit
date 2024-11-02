@@ -30,7 +30,7 @@
 	border: solid;
     border-width: 0.5px;
     border-radius: 5px;
-    border-color: #878787;
+    border-color: #474747;
 }
 
 QWidget:!hover {

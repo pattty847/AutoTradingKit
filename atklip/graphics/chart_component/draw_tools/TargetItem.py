@@ -533,12 +533,21 @@ class TextBoxROI(TargetItem):
     
     def get_pos_point(self):
         return self.pos()
-
+    def set_lock(self,btn):
+        print(btn,btn.isChecked())
+        if btn.isChecked():
+            self.locked_handle()
+        else:
+            self.unlocked_handle()
+            
     def locked_handle(self):
         self.movable = False
+        self.locked = True
+        
 
     def unlocked_handle(self):
         self.movable = True
+        self.locked = False
 
     def change_color(self, color):
         r, g, b = color[0], color[1], color[2]
@@ -550,12 +559,6 @@ class TextBoxROI(TargetItem):
         text = self.getText()
         self.update_html(color=self.color, text=text, font_size=size)
 
-    def mouseDragEvent(self, ev, axis=None, line=None):
-        if not self.locked:
-            return super().mouseDragEvent(ev)
-        elif self.locked:
-            ev.ignore()
-        ev.ignore()
 
     def mouseDoubleClickEvent(self, event) -> None:
         # print(325, "mouseDoubleClickEvent", event)

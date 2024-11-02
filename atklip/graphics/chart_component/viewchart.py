@@ -311,9 +311,6 @@ class Chart(ViewPlotWidget):
                         _is_add_candle = self.jp_candle.update([pre_ohlcv,last_ohlcv])
                         self.heikinashi.update(self.jp_candle.candles[-2:],_is_add_candle)
                     
-                    # if firt_run == False:
-                    #     self.first_run.emit()
-                    #     firt_run = True
             else:
                 break
             try:
@@ -447,17 +444,31 @@ class Chart(ViewPlotWidget):
             elif self.drawtool.draw_object_name ==  "draw_verticallines":
                 self.drawtool.draw_verticallines(ev)
                 
+                
             elif self.drawtool.draw_object_name ==  "draw_fib_retracement":
                 self.drawtool.draw_fibo(ev)
             elif self.drawtool.draw_object_name ==  "draw_fib_retracement_2":
                 self.drawtool.draw_fibo_2(ev)
+            elif self.drawtool.draw_object_name ==  "draw_risk_reward_ratio":
+                self.drawtool.draw_risk_reward_ratio(ev)
             
+            
+            elif self.drawtool.draw_object_name ==  "draw_long_position":
+                self.drawtool.draw_long_position(ev)  
             elif self.drawtool.draw_object_name ==  "draw_rectangle":
                 self.drawtool.draw_rectangle(ev)
             elif self.drawtool.draw_object_name ==  "draw_rotate_rectangle":
                 self.drawtool.draw_rotate_rectangle(ev)
             elif self.drawtool.draw_object_name ==  "draw_path":
                 self.drawtool.draw_path(ev)
+            elif self.drawtool.draw_object_name ==  "draw_circle":
+                self.drawtool.draw_circle(ev)
+            elif self.drawtool.draw_object_name ==  "draw_elipse":
+                self.drawtool.draw_ellipse(ev)
+                
+                
+                
+                
             elif self.drawtool.draw_object_name ==  "draw_up_arrow":
                 self.drawtool.draw_up_arrow(ev)
             elif self.drawtool.draw_object_name ==  "draw_down_arrow":

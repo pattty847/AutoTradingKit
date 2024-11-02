@@ -11,7 +11,7 @@ from atklip.gui.qfluentwidgets.common import *
 from atklip.gui.qfluentwidgets.components.widgets.button import TransparentDropDownPushButton
 from atklip.gui.qfluentwidgets.components.widgets.command_bar import CommandBarView
 from atklip.gui.qfluentwidgets.components.widgets.menu import CheckableMenu, MenuIndicatorType
-
+from atklip.appmanager.setting import AppConfig
 if TYPE_CHECKING:
     from atklip.graphics.chart_component.viewchart import Chart
 
@@ -38,24 +38,39 @@ class FavoriteSettingMenu(CommandBarView):
       
         self.map_btn_drawtool_name:dict={}
         self.map_drawtool_btn:dict={}
+        self.list_favorites:List=[]
+        self.load_favorite_tools()
         self.resizeToSuitableWidth(self.moving_btn)
     
     def add_favorite_btn(self,infor):
-        tool,icon,tool_name,is_add = infor[0],infor[1],infor[2],infor[3]
+        title,icon,tool_name,is_add = infor[0],infor[1],infor[2],infor[3]
         if is_add:
             btn = Tradingview_Button(icon,self)
             btn.clicked.connect(self.sent_draw_sig_to_chart)
             self.addWidget(btn)
-            self.map_btn_drawtool_name[btn] = {"tool":tool,"name":tool_name}
-            self.map_drawtool_btn[tool] = btn
+            tool_infor = {"tool":title,"name":tool_name,"icon":icon.name}
+            self.map_btn_drawtool_name[btn] = tool_infor
+            self.map_drawtool_btn[title] = btn
         else:
-            btn = self.map_drawtool_btn.get(tool)
+            btn = self.map_drawtool_btn.get(title)
             if btn:
                 del self.map_btn_drawtool_name[btn]
-                del self.map_drawtool_btn[tool]
+                del self.map_drawtool_btn[title]
                 self.removeWidget(btn)
                 btn.deleteLater()
         self.resizeToSuitableWidth(self.moving_btn)
+    
+    def load_favorite_tools(self):
+        self.list_favorites = AppConfig.get_config_value(f"drawbar.favorite")
+        if self.list_favorites == None:
+            AppConfig.sig_set_single_data.emit((f"drawbar.favorite",[]))
+            self.list_favorites = AppConfig.get_config_value(f"drawbar.favorite")
+            return
+        if self.list_favorites != []:
+            for tool_infor in self.list_favorites:
+                title,icon,tool_name = tool_infor["tool"],tool_infor["icon"],tool_infor["name"]
+                btn_icon =  FIF.__getitem__(icon)
+                self.add_favorite_btn((title,btn_icon,tool_name,True))
     
     def sent_draw_sig_to_chart(self):
         btn = self.sender()

@@ -1,10 +1,7 @@
 from typing import TYPE_CHECKING
 from PySide6 import QtCore, QtGui
 from PySide6.QtCore import Signal, QObject, Qt
-from PySide6.QtGui import QPainterPath, QColor
-from atklip.graphics.pyqtgraph import LineSegmentROI
 from atklip.graphics.pyqtgraph.Point import Point
-import math
 
 from .roi import BaseHandle, SpecialROI,BasePolyLineROI, _PolyLineSegment
 from typing import TYPE_CHECKING
@@ -77,10 +74,11 @@ class TrendlinesROI(BasePolyLineROI):
         hover = False
         if not ev.exit: # and not self.boundingRect().contains(ev.pos()):
             hover = True
-            # self.setCursor(Qt.CursorShape.PointingHandCursor)
+            if not self.locked:
+                self.setCursor(Qt.CursorShape.PointingHandCursor)
         else:
             hover = False
-            # self.setCursor(Qt.CursorShape.CrossCursor)
+            self.setCursor(Qt.CursorShape.CrossCursor)
                 
         if not self.isSelected:
             if hover:
@@ -97,7 +95,12 @@ class TrendlinesROI(BasePolyLineROI):
 
     def objectName(self):
         return self.indicator_name
-    
+    def set_lock(self,btn):
+        print(btn,btn.isChecked())
+        if btn.isChecked():
+            self.locked_handle()
+        else:
+            self.unlocked_handle()
     def locked_handle(self):
         self.yoff = True
         self.xoff = True
@@ -164,8 +167,9 @@ class TrendlinesROI(BasePolyLineROI):
         styles =  {"pen":self.has["styles"]["pen"],
                     "width":self.has["styles"]["width"],
                     "style":self.has["styles"]["style"],
-                    "delete":self.has["styles"]["delete"],
+                    
                     "lock":self.has["styles"]["lock"],
+                    "delete":self.has["styles"]["delete"],
                     "setting":self.has["styles"]["setting"],}
         return styles
     
@@ -249,10 +253,21 @@ class TrendlinesROI(BasePolyLineROI):
             point = Point(pos_x, pos_y)
             pos = self.chart.vb.mapViewToScene(point)
             self.last_point = point
-            lasthandle = self.handles[-1]['item']
-            lasthandle.movePoint(pos)
+            # lasthandle = self.handles[-1]['item']
+            # lasthandle.movePoint(pos)
+            # self.movePoint(-1,pos)
             self.stateChanged()
 
+    def mouseClickEvent(self, ev):
+        if ev.button() == Qt.MouseButton.LeftButton:
+            # if not self.boundingRect().contains(ev.pos()): 
+            self.on_click.emit(self)
+            self.finished = True
+            self.drawtool.drawing_object =None
+            ev.accept()
+        ev.ignore()
+        super().mouseClickEvent(ev)
+    
     def addSegment(self, h1, h2, index=None):
         seg = _PolyLineSegment(handles=(h1, h2), pen=self.pen, hoverPen=self.hoverPen,
                                parent=self, movable=False)

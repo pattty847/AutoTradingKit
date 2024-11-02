@@ -1,9 +1,6 @@
 from PySide6 import QtCore, QtGui
 from PySide6.QtCore import Signal, QObject, Qt
-from PySide6.QtGui import QPainterPath, QColor
-from atklip.graphics.pyqtgraph import LineSegmentROI
 from atklip.graphics.pyqtgraph.Point import Point
-import math
 
 from .roi import BaseHandle, SpecialROI,BasePolyLineROI, _PolyLineSegment
 
@@ -97,7 +94,12 @@ class PathROI(BasePolyLineROI):
 
     def objectName(self):
         return self.indicator_name
-    
+    def set_lock(self,btn):
+        print(btn,btn.isChecked())
+        if btn.isChecked():
+            self.locked_handle()
+        else:
+            self.unlocked_handle()
     def locked_handle(self):
         self.yoff = True
         self.xoff = True
@@ -164,8 +166,9 @@ class PathROI(BasePolyLineROI):
         styles =  {"pen":self.has["styles"]["pen"],
                     "width":self.has["styles"]["width"],
                     "style":self.has["styles"]["style"],
-                    "delete":self.has["styles"]["delete"],
+                    
                     "lock":self.has["styles"]["lock"],
+                    "delete":self.has["styles"]["delete"],
                     "setting":self.has["styles"]["setting"],}
         return styles
     

@@ -3,7 +3,7 @@ from atklip.app_utils import functions as fn
 from PySide6.QtCore import Qt,QPointF
 from psygnal import Signal
 from PySide6.QtGui import QTransform,QPainter
-from PySide6.QtWidgets import QGraphicsPathItem,QGraphicsSceneHoverEvent
+from PySide6.QtWidgets import QGraphicsPathItem
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -48,6 +48,9 @@ class BaseArrowItem(QGraphicsPathItem):
         self.defaultOpts.update(opts)
         
         self.moving = False
+        self.yoff = False
+        self.xoff = False
+        self.locked = False
         self.cursorOffset = None
         self.startPosition = None
         self.drawtool:DrawTool = drawtool
@@ -81,25 +84,42 @@ class BaseArrowItem(QGraphicsPathItem):
             hover = False
             self.setCursor(Qt.CursorShape.CrossCursor)
     
-    def mouseDragEvent(self, ev):
-        if ev.button() == Qt.MouseButton.LeftButton:
-            if ev.isStart():
-                self.moving = True
-                self.cursorOffset = self.pos() - self.mapToParent(ev.buttonDownPos())
-                self.startPosition = self.pos()
-            ev.accept()
-
-            if not self.moving:
-                return
-            if self.chart.magnet_on:
-                pos_y = self.chart.hLine.getYPos()
-                self.setPos(QPointF((self.cursorOffset + self.mapToParent(ev.pos())).x(), pos_y))
-            else:
-                self.setPos(self.cursorOffset + self.mapToParent(ev.pos()))
-
-            if ev.isFinish():
-                self.moving = False
+    def set_lock(self,btn):
+        print(btn,btn.isChecked())
+        if btn.isChecked():
+            self.locked_handle()
+        else:
+            self.unlocked_handle()
             
+    def locked_handle(self):
+        self.yoff = True
+        self.xoff = True
+        self.locked = True
+
+    def unlocked_handle(self):
+        self.yoff = False
+        self.xoff =False
+        self.locked = False
+        
+    def mouseDragEvent(self, ev):
+        if not self.locked:
+            if ev.button() == Qt.MouseButton.LeftButton:
+                if ev.isStart():
+                    self.moving = True
+                    self.cursorOffset = self.pos() - self.mapToParent(ev.buttonDownPos())
+                    self.startPosition = self.pos()
+                ev.accept()
+
+                if not self.moving:
+                    return
+                if self.chart.magnet_on:
+                    pos_y = self.chart.hLine.getYPos()
+                    self.setPos(QPointF((self.cursorOffset + self.mapToParent(ev.pos())).x(), pos_y))
+                else:
+                    self.setPos(self.cursorOffset + self.mapToParent(ev.pos()))
+
+                if ev.isFinish():
+                    self.moving = False            
             
     def setObjectName(self,name):
         """Set the object name of the item."""
@@ -114,8 +134,8 @@ class BaseArrowItem(QGraphicsPathItem):
     
     def get_styles(self):
         styles =  {"brush":self.has["styles"]["brush"],
-                    "delete":self.has["styles"]["delete"],
                     "lock":self.has["styles"]["lock"],
+                    "delete":self.has["styles"]["delete"],
                     "setting":self.has["styles"]["setting"],}
         return styles
     

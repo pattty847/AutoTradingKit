@@ -1,6 +1,8 @@
 from PySide6 import QtCore, QtGui
-from PySide6.QtCore import Signal, QObject, Qt
+from PySide6.QtCore import Signal, QObject, Qt,QPointF
 from PySide6.QtGui import QColor
+
+from atklip.app_utils.functions import mkBrush, mkPen
 
 from .roi import SpecialROI, BaseHandle
 
@@ -30,6 +32,7 @@ class RotateRectangle(SpecialROI):
         self.indicator_name = None
         self.isSelected = False
         self.id = id
+        self.reverse = False
         
         self.has = {
             "x_axis_show":True,
@@ -40,7 +43,7 @@ class RotateRectangle(SpecialROI):
                     },
             "styles":{
                     'pen': pen,
-                    'brush': pen,
+                    'brush': (43, 106, 255, 40),
                     'width': 1,
                     'style': Qt.PenStyle.SolidLine,
                     "lock":True,
@@ -69,8 +72,7 @@ class RotateRectangle(SpecialROI):
 
         self.lastMousePos = pos
         self.finished = False
-        # self.on_click.connect(self.drawtool.show_popup_setting_tool)
-        # self.on_click.connect(self.get_pos_point)
+
 
     def selectedHandler(self, is_selected):
         if is_selected:
@@ -86,10 +88,11 @@ class RotateRectangle(SpecialROI):
         hover = False
         if not ev.exit: # and not self.boundingRect().contains(ev.pos()):
             hover = True
-            # self.setCursor(Qt.CursorShape.PointingHandCursor)
+            if not self.locked:
+                self.setCursor(Qt.CursorShape.PointingHandCursor)
         else:
             hover = False
-            # self.setCursor(Qt.CursorShape.CrossCursor)
+            self.setCursor(Qt.CursorShape.CrossCursor)
 
         
         if not self.isSelected:
@@ -131,7 +134,11 @@ class RotateRectangle(SpecialROI):
         if not self.finished:
             if self.drawtool.chart.magnet_on:
                 pos_x, pos_y = self.drawtool.get_position_crosshair()
-            self.state['size'] = [pos_x-self.state['pos'][0], pos_y-self.state['pos'][1]]
+            # self.state['size'] = [pos_x-self.state['pos'][0], pos_y-self.state['pos'][1]]
+            if self.reverse:
+                self.movePoint(0, QPointF(pos_x, pos_y))
+            else:
+                self.movePoint(-1, QPointF(pos_x, pos_y))
             self.stateChanged()
     
     def setObjectName(self, name):
@@ -148,8 +155,9 @@ class RotateRectangle(SpecialROI):
         styles =  {"pen":self.has["styles"]["pen"],
                     "width":self.has["styles"]["width"],
                     "style":self.has["styles"]["style"],
-                    "delete":self.has["styles"]["delete"],
+                    
                     "lock":self.has["styles"]["lock"],
+                    "delete":self.has["styles"]["delete"],
                     "setting":self.has["styles"]["setting"],}
         return styles
     
@@ -158,8 +166,9 @@ class RotateRectangle(SpecialROI):
     
     def update_styles(self, _input):
         _style = self.has["styles"][_input]
-        if _input == "pen" or _input == "width" or _input == "style":
-            self.setPen(color=self.has["styles"]["pen"], width=self.has["styles"]["width"],style=self.has["styles"]["style"])
+        self.update()
+        # if _input == "pen" or _input == "width" or _input == "style":
+        #     self.setPen(color=self.has["styles"]["pen"], width=self.has["styles"]["width"],style=self.has["styles"]["style"])
 
 
     def setVisible(self, visible):
@@ -194,7 +203,12 @@ class RotateRectangle(SpecialROI):
 
     def boundingRect(self):
         return QtCore.QRectF(0, 0, self.state['size'][0], self.state['size'][1]).normalized()
-    
+    def set_lock(self,btn):
+        print(btn,btn.isChecked())
+        if btn.isChecked():
+            self.locked_handle()
+        else:
+            self.unlocked_handle()
     def locked_handle(self):
         self.yoff = True
         self.xoff = True
@@ -222,8 +236,8 @@ class RotateRectangle(SpecialROI):
         p.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
 
         "Custom màu viền và nền ở đây...."
-        p.setPen(self.currentPen)
-        p.setBrush(QColor(255,152,0,40))
+        p.setPen(mkPen(color=self.has["styles"]["pen"], width=self.has["styles"]["width"],style=self.has["styles"]["style"]))
+        p.setBrush(mkBrush(self.has["styles"]["brush"]))
         p.translate(r.left(), r.top())
         p.scale(r.width(), r.height())
         #p.fillRect(r, QColor(255,152,0,40))
@@ -232,7 +246,7 @@ class RotateRectangle(SpecialROI):
     def mouseDragEvent(self, ev, axis=None, line=None):
         self.setSelected(True)
         if ev.button == Qt.KeyboardModifier.ShiftModifier:
-            return self.drawtool.vb.mouseDragEvent(ev, axis)
+            return self.drawtool.chart.vb.mouseDragEvent(ev, axis)
         if not self.locked:
             # r_out = self.boundingRect().adjusted(-4,-4,4,4)
             # r_in = self.boundingRect().adjusted(4,4,-4,-4)
@@ -246,13 +260,13 @@ class RotateRectangle(SpecialROI):
     
     def mouseClickEvent(self, ev):
         if ev.button() == Qt.MouseButton.LeftButton:
-            if not self.boundingRect().contains(ev.pos()):
-                ev.accept()
-                self.on_click.emit(self)
+            # if not self.boundingRect().contains(ev.pos()):
+            ev.accept()
+            self.on_click.emit(self)
             self.finished = True
             self.drawtool.drawing_object =None
         ev.ignore()
-    
+        super().mouseClickEvent(ev)
 
         
        

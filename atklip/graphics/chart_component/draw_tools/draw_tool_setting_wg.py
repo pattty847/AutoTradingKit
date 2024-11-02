@@ -1,29 +1,23 @@
 from typing import TYPE_CHECKING
 
-from atklip.gui.qfluentwidgets.components.container import HWIDGET,VWIDGET
-from atklip.gui.components import ScrollInterface,TextButton,MovingWidget,PivotInterface, MovingParentWG
+from atklip.gui.components import MovingParentWG
 from atklip.gui.qfluentwidgets.common import *
-from atklip.gui.components.setting_element import PeriodEdit,MultiDevEdit,PriceEdit,ColorEditDrawTool,WidthEditDrawTool,StyleEditDrawTool,\
-SourceEdit,TypeEdit,MaTypeEdit,MaIntervalEdit
+from atklip.gui.components.setting_element import ColorEditDrawTool,WidthEditDrawTool,StyleEditDrawTool
+from atklip.gui.qfluentwidgets.components.widgets.tool_tip import ToolTipFilter,ToolTipPosition
 
 from PySide6.QtWidgets import QWidget
-from PySide6.QtCore import QSize, Qt,QPointF
 
-from atklip.gui.qfluentwidgets.components.widgets import SubtitleLabel
-from atklip.gui.components._pushbutton import _PushButton
 from atklip.gui.qfluentwidgets.common import FluentIcon as FIF
 from atklip.gui.qfluentwidgets.common import *
-from atklip.gui.qfluentwidgets.components.widgets.button import TransparentDropDownPushButton
-from atklip.gui.qfluentwidgets.components.widgets.command_bar import CommandBar, CommandBarView
-from atklip.gui.qfluentwidgets.components.widgets.flyout import Flyout, FlyoutAnimationType
-from atklip.gui.qfluentwidgets.components.widgets.menu import CheckableMenu, MenuIndicatorType, RoundMenu
+from atklip.gui.qfluentwidgets.components.widgets.command_bar import CommandBarView
+from atklip.gui.qfluentwidgets.components.widgets.menu import CheckableMenu, MenuIndicatorType
 from atklip.gui.components import Tradingview_Button,Lock_Unlock_Button
 
 
 if TYPE_CHECKING:
     from atklip.graphics.chart_component.viewchart import Chart
 
-from PySide6.QtCore import Signal, Qt
+from PySide6.QtCore import Signal,QSize
 from PySide6.QtWidgets import QWidget
 
 
@@ -45,36 +39,47 @@ class PopUpSettingMenu(CommandBarView):
         self.hBoxLayout.insertWidget(0,self.moving_btn,0)
         
         inputs = self.tool.has.get("inputs")
-        styles = self.tool.has.get("styles")
+        styles = self.tool.get_styles()
                 
         if styles:
             for _input in list(styles.keys()):
                     if "pen" in _input:
                         pen = ColorEditDrawTool(self,self.tool, _input)
+                        pen.setToolTip("Change pen color")
                         self.add_btn(pen)
                     elif "brush" in _input:
                         brush = ColorEditDrawTool(self,self.tool, _input)
+                        brush.setToolTip("Change brush color")
                         self.add_btn(brush)
                         
                     elif "width" in _input:
                         width = WidthEditDrawTool(self,self.tool, _input)
+                        width.setToolTip("Change width line")
                         self.add_btn(width)
 
                     elif "style" in _input:
                         style = StyleEditDrawTool(self,self.tool, _input)
+                        style.setToolTip("Change style line")
                         self.add_btn(style)
                     
                     elif "lock" in _input:
                         if styles[_input] == True:
-                            lock = Lock_Unlock_Button(FIF.CYCLEBIN,self)
+                            lock = Lock_Unlock_Button(FIF.LOCK,self)
+                            lock.setChecked(self.tool.locked)
+                            lock.set_icon_color()
+                            lock.setToolTip("Lock object")
                             lock.setFixedSize(30,30)
-                            # delete.clicked.connect(self.delete_tool)
+                            lock.installEventFilter(ToolTipFilter(lock, 3000, ToolTipPosition.TOP))
+                            lock.clicked.connect(self.lock_tool)
                             self.add_btn(lock)
                     
                     elif "setting" in _input:
                         if styles[_input] == True:
                             setting = Tradingview_Button(FIF.SETTING,self)
                             setting.setFixedSize(30,30)
+                            setting.setIconSize(QSize(30,30))
+                            setting.setToolTip("Open setting object")
+                            setting.installEventFilter(ToolTipFilter(setting, 3000, ToolTipPosition.TOP))
                             # setting.clicked.connect(self.delete_tool)
                             self.add_btn(setting)
                         
@@ -82,10 +87,17 @@ class PopUpSettingMenu(CommandBarView):
                         if styles[_input] == True:
                             delete = Tradingview_Button(FIF.CYCLEBIN,self)
                             delete.setFixedSize(30,30)
+                            delete.setIconSize(QSize(30,30))
+                            delete.setToolTip("Delete object")
+                            delete.installEventFilter(ToolTipFilter(delete, 3000, ToolTipPosition.TOP))
                             delete.clicked.connect(self.delete_tool)
                             self.add_btn(delete)
 
         self.resizeToSuitableWidth(self.moving_btn)
+    
+    def lock_tool(self):
+        btn = self.sender()
+        self.tool.set_lock(btn)
     
     def delete_tool(self):
         self._parent.remove_item(self.tool)

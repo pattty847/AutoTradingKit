@@ -34,6 +34,7 @@ class Crosshair:
 
 
 class ViewSubPanel(PlotWidget):
+    mouse_clicked_signal = Signal(QEvent)
     crosshair_y_value_change = Signal(tuple)
     crosshair_x_value_change = Signal(tuple)
     mousepossiton_signal = Signal(tuple)
@@ -129,6 +130,9 @@ class ViewSubPanel(PlotWidget):
         
         self.Chart.crosshair_x_value_change.connect(slot=self.xAxis.change_value,type=Qt.ConnectionType.AutoConnection)
 
+        # self.mouse_clicked_signal.connect(self.Chart.mouse_clicked_signal)
+        # self.Chart.mouse_clicked_signal.connect(self.mouse_clicked_signal)
+        
         global_signal.sig_show_hide_cross.connect(self.show_hide_cross,Qt.ConnectionType.AutoConnection)
         
     def setup_indicator(self,indicator_data):
@@ -343,9 +347,10 @@ class ViewSubPanel(PlotWidget):
         #print(x,index,index_of_closest_value, closest_value)
         return ohlcv #index_of_closest_value, closest_value
     def mousePressEvent(self, ev):
-        super().mousePressEvent(ev)
         self.is_mouse_pressed =  True
-
+        # self.mouse_clicked_signal.emit(ev)
+        super().mousePressEvent(ev)
+        
     def mouseReleaseEvent(self, ev):
         super().mouseReleaseEvent(ev)
         self.is_mouse_pressed = False

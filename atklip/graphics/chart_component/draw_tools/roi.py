@@ -1,14 +1,11 @@
-import datetime as dt
 from math import atan2, cos, sin
-from operator import itemgetter
 
 import numpy as np
-import pytz
 from PySide6 import QtCore
-from PySide6.QtCore import Signal, QObject, QPointF, Qt, QRectF, QCoreApplication, QPoint
-from PySide6.QtGui import QPainter, QPainterPath, QColor, QTransform
-from PySide6.QtWidgets import QWidget, QMenu
-from atklip.graphics.pyqtgraph import functions as fn, LineSegmentROI, ROI, TextItem, TargetItem, mkPen, UIGraphicsItem, GraphicsObject
+from PySide6.QtCore import Signal, QPointF, Qt, QCoreApplication, QPoint
+from PySide6.QtGui import QPainter, QPainterPath, QTransform
+from PySide6.QtWidgets import QMenu
+from atklip.graphics.pyqtgraph import functions as fn, LineSegmentROI, ROI, UIGraphicsItem, GraphicsObject
 from atklip.graphics.pyqtgraph.Point import Point
 from atklip.graphics.pyqtgraph.graphicsItems.ROI import Handle
 

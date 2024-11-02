@@ -318,7 +318,7 @@ class ViewPlotWidget(PlotWidget):
     
     def mousePressEvent(self, ev):
         self.is_mouse_pressed =  True
-        self.mouse_clicked_signal.emit(ev)
+        # self.mouse_clicked_signal.emit(ev)
         super().mousePressEvent(ev)
         
     def mouseReleaseEvent(self, ev):

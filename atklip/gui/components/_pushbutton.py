@@ -3,6 +3,7 @@ from PySide6.QtGui import QIcon, QPainter, QColor
 from PySide6.QtWidgets import QPushButton, QWidget
 
 # from atklip.gui.qfluentwidgets.components.dialog_box.color_dialog import ColorDialog
+from atklip.app_utils.functions import mkColor
 from atklip.gui.qfluentwidgets.components.widgets import ToolButton,SplitDropButton,SplitWidgetBase,\
 CardWidget,RoundMenu,PushButton,PrimaryToolButton,ToolTipFilter,ToolTipPosition
 from atklip.gui.qfluentwidgets.common import *
@@ -293,8 +294,7 @@ class Color_Picker_Button(PrimaryToolButton):
         self.enableAlpha = enableAlpha
         self.setFixedSize(60, 32)
         self.setAttribute(Qt.WA_TranslucentBackground)
-
-        self.setColor(color)
+        self.color = self.setColor(color)
         self.setCursor(Qt.PointingHandCursor)
         self.clicked.connect(self.showFlyout)
         self.colorChanged.connect(self.setColor,Qt.ConnectionType.AutoConnection)
@@ -332,21 +332,24 @@ class Color_Picker_Button(PrimaryToolButton):
 
     def setColor(self, color):
         """ set color """
-        if isinstance(color,str):
-            self.color = QColor(color)
+        print(color,type(color))
+        self.color = None
+        if isinstance(color,str) or isinstance(color,tuple):
+            self.color = mkColor(color)
+        elif isinstance(color,QColor):
+            self.color = color
         self.update()
-
+        return self.color
     def paintEvent(self, e):
         painter = QPainter(self)
         painter.setRenderHints(QPainter.Antialiasing)
         pc = QColor(255, 255, 255, 10) if isDarkTheme() else QColor(234, 234, 234)
         painter.setPen(pc)
 
-        color = QColor(self.color)
         if not self.enableAlpha:
-            color.setAlpha(255)
+            self.color.setAlpha(255)
 
-        painter.setBrush(color)
+        painter.setBrush(self.color)
         painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 5, 5)
 
 

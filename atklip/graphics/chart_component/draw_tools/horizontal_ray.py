@@ -38,7 +38,6 @@ class HorizontalRayNoHandle(MyLineNoHandleROI):
         self.scaleSpeed = 1.01
         self.signal_visible.connect(self.setVisible)
         self.signal_delete.connect(self.deleteLater)
-        #super(LineSegmentROI).mouseDragEvent = self.mouseDragEvent
 
     def selectedHandler(self, is_selected):
         if is_selected:
@@ -127,9 +126,7 @@ class HorizontalRayNoHandle(MyLineNoHandleROI):
         #print(newState['pos'])
         
         self.setPos(newState['pos'], update=update, finish=finish)
-    # def mouseDragEvent(self, ev):
-    #     ev.ignore()
-        # return super().mouseDragEvent(ev)
+
     def mouseDragEvent(self, ev):
         
         print(self.dragMode)
@@ -363,7 +360,6 @@ class Horizontal_ray(CustomLineSegmentROI):
         self.signal_visible.connect(self.setVisible)
         self.signal_delete.connect(self.delete)
 
-        #super(LineSegmentROI).mouseDragEvent = self.mouseDragEvent
 
     def selectedHandler(self, is_selected):
         if is_selected:
@@ -379,10 +375,10 @@ class Horizontal_ray(CustomLineSegmentROI):
         hover = False
         if not ev.exit: # and not self.boundingRect().contains(ev.pos()):
             hover = True
-            # self.setCursor(Qt.CursorShape.PointingHandCursor)
+            self.setCursor(Qt.CursorShape.PointingHandCursor)
         else:
             hover = False
-            # self.setCursor(Qt.CursorShape.CrossCursor)
+            self.setCursor(Qt.CursorShape.CrossCursor)
                 
         if not self.isSelected:
             if hover:
@@ -417,8 +413,9 @@ class Horizontal_ray(CustomLineSegmentROI):
         styles =  {"pen":self.has["styles"]["pen"],
                     "width":self.has["styles"]["width"],
                     "style":self.has["styles"]["style"],
-                    "delete":self.has["styles"]["delete"],
+                    
                     "lock":self.has["styles"]["lock"],
+                    "delete":self.has["styles"]["delete"],
                     "setting":self.has["styles"]["setting"],}
         return styles
     
@@ -443,7 +440,12 @@ class Horizontal_ray(CustomLineSegmentROI):
         self.price_axis.kwargs["horizontal_ray"].remove(self.id)
         self.deleteLater()
 
-
+    def set_lock(self,btn):
+        print(btn,btn.isChecked())
+        if btn.isChecked():
+            self.locked_handle()
+        else:
+            self.unlocked_handle()
     def locked_handle(self):
         self.yoff = True
         self.xoff = True
@@ -525,9 +527,7 @@ class Horizontal_ray(CustomLineSegmentROI):
         #print(newState['pos'])
         
         self.setPos(newState['pos'], update=update, finish=finish)
-    # def mouseDragEvent(self, ev):
-    #     ev.ignore()
-        # return super().mouseDragEvent(ev)
+
     def mouseDragEvent(self, ev, axis=None):
 
         if ev.button == Qt.KeyboardModifier.ShiftModifier:

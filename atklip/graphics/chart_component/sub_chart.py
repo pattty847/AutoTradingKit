@@ -40,6 +40,7 @@ class Crosshair:
 
 
 class SubChart(PlotWidget):
+    mouse_clicked_signal = Signal(QEvent)
     crosshair_y_value_change = Signal(tuple)
     crosshair_x_value_change = Signal(tuple)
     mousepossiton_signal = Signal(tuple)

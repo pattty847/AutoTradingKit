@@ -1,17 +1,23 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'indicator_panel.ui'
+## Form generated from reading UI file 'indicator_panelSdWoJW.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.4.2
+## Created by: Qt User Interface Compiler version 6.4.3
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide6.QtCore import (QCoreApplication, QMetaObject, QSize, Qt)
-from PySide6.QtGui import (QFont, QIcon)
-from PySide6.QtWidgets import (QFrame, QHBoxLayout, QLabel,
-    QPushButton, QSizePolicy)
+from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
+    QMetaObject, QObject, QPoint, QRect,
+    QSize, QTime, QUrl, Qt)
+from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
+    QFont, QFontDatabase, QGradient, QIcon,
+    QImage, QKeySequence, QLinearGradient, QPainter,
+    QPalette, QPixmap, QRadialGradient, QTransform)
+from PySide6.QtWidgets import (QApplication, QFrame, QHBoxLayout, QLabel,
+    QPushButton, QSizePolicy, QWidget)
+import resource
 
 class Ui_Form(object):
     def setupUi(self, Form):
@@ -24,7 +30,7 @@ class Ui_Form(object):
 "	border: solid;\n"
 "    border-width: 0.5px;\n"
 "    border-radius: 5px;\n"
-"    border-color: #878787;\n"
+"    border-color: #474747;\n"
 "}\n"
 "\n"
 "QWidget:!hover {\n"
@@ -73,7 +79,7 @@ class Ui_Form(object):
 "\n"
 "QLabel {\n"
 "    background-color:transparent;\n"
-"	color: #d1d4dc;\n"
+"	color: white;\n"
 "    font: 12px;\n"
 "    font-family: Time Newroman;\n"
 "	border: none;\n"
@@ -82,7 +88,7 @@ class Ui_Form(object):
 "\n"
 "QLabel:hover{\n"
 "    background-color:transparent;\n"
-"	color: #d1d4dc;\n"
+"	color: white;\n"
 "    font: 12px;\n"
 "    font-family: Time Newroman;\n"
 "	border: none;\n"
@@ -90,7 +96,7 @@ class Ui_Form(object):
 "\n"
 "QLabel:!hover{\n"
 "    background-color:transparent;\n"
-"	color: #d1d4dc;\n"
+"	color: white;\n"
 "    font: 12px;\n"
 "    font-family: Time Newroman;\n"
 "	border: none;\n"

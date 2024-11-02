@@ -1,5 +1,5 @@
 import sys
-from atklip.gui.qfluentwidgets.common import setTheme,Theme
+from atklip.gui.qfluentwidgets.common import screen, setTheme,Theme
 from atklip.gui.qfluentwidgets.common.icon import *
 from atklip.gui.qfluentwidgets.components.dialog_box import MessageBox
 from atklip.gui.views.fluentwindow import WindowBase
@@ -11,6 +11,7 @@ class MainWindow(WindowBase):
     def __init__(self):
         self.isMicaEnabled = False
         super().__init__()
+
     def closeEvent(self, event: QCloseEvent) -> None:
         quit_msg = QCoreApplication.translate("MainWindow", u"To close window click button OK", None)   
         mgsBox = MessageBox("Quit Application?", quit_msg, self.window())
@@ -36,7 +37,7 @@ def main():
     app_icon = get_real_path("atklip/appdata")
     icon.addFile(f'{app_icon}/appico.ico',QSize(), QIcon.Normal, QIcon.Off)
     w.setWindowIcon(icon)
-    w.show()
+    # w.show()
     sys.exit(app.exec())
 
 if __name__ == '__main__':

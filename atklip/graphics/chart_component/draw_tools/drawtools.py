@@ -1,23 +1,24 @@
-from PySide6.QtCore import QObject,QEvent,QPoint,QPointF
+from PySide6.QtCore import QObject,QEvent,QPoint
 from typing import TYPE_CHECKING
 
 from atklip.app_utils import *
-from atklip.gui.qfluentwidgets.components.widgets.flyout import Flyout, FlyoutAnimationType
 
-from .roi import DEFAULTS_COLOR, DEFAULTS_FIBO,\
-SpecialROI, CustomLineSegmentROI
 from .TargetItem import TextBoxROI
 from .horizontal_line import Horizontal_line
-from .horizontal_ray import Horizontal_ray, HorizontalRayNoHandle
+from .horizontal_ray import Horizontal_ray
 from .brush_path import PathROI
 from .rectangle import Rectangle
 from .rotate_rectangle import RotateRectangle
 from .fibo_retracement_1 import FiboROI
 from .fibo_retracement_2 import FiboROI2
+from .risk_reward_ratio import RickRewardRatio
 from .trend_lines import TrendlinesROI
 from .vertical_line import Vertical_line
 from .polylines import RangePolyLine
 from .base_arrow import BaseArrowItem
+from .elip import Ellipse
+from .circle import Circle
+from .long_possiton import Longposition
 
 from .draw_tool_setting_wg import PopUpSettingMenu
 
@@ -157,6 +158,48 @@ class DrawTool(QObject):
         obj.on_click.connect(self.show_popup_menu)
         self.chart.sig_show_pop_up_draw_tool.emit(obj)
 
+    def draw_long_position(self, ev: QEvent):
+        # pos_x, pos_y = self.get_position_mouse_on_chart(ev)
+        pos_x, pos_y = self.get_position_crosshair()
+        yrange = self.chart.yAxis.range
+        xrange = self.chart.xAxis.range
+        
+        deltax = (xrange[1]-xrange[0])/6
+        deltay = (yrange[1]-yrange[0])/6
+        
+        obj =Longposition(pos=[pos_x, pos_y], size=[deltax, deltay], drawtool=self)
+    
+        self.chart.addItem(obj)
+        self.chart.drawtools.append(obj)
+        self.num_fibo += 1
+        module_name = "Longposition " + str(self.num_fibo)
+        obj.setObjectName(module_name)
+        self.drawing_object = obj
+        uid_obj = self.chart.objmanager.add(obj)
+        self.draw_object_name = "drawed_long_position"
+        obj.on_click.connect(self.show_popup_menu)
+        self.chart.sig_show_pop_up_draw_tool.emit(obj)
+    
+    
+    def draw_risk_reward_ratio(self, ev: QEvent):
+        # pos_x, pos_y = self.get_position_mouse_on_chart(ev)
+        pos_x, pos_y = self.get_position_crosshair()
+        obj =RickRewardRatio([pos_x, pos_y], [0, 0],invertible=True,movable=True, resizable=False, removable=True, pen=mkPen("green",width=1), 
+                     fibo_level=self.custom_fibonacci_levels, color_rect=self.custom_colors_rect, color_line=self.custom_colors_lines, 
+                     color_borders=self.custom_colors_borders,parent=self.chart.vb, drawtool=self)
+    
+        self.chart.addItem(obj)
+        self.chart.drawtools.append(obj)
+        self.num_fibo += 1
+        module_name = "Risk Reward Ratio " + str(self.num_fibo)
+        obj.setObjectName(module_name)
+        self.drawing_object = obj
+        uid_obj = self.chart.objmanager.add(obj)
+        self.draw_object_name = "drawed_risk_reward_ratio"
+        obj.on_click.connect(self.show_popup_menu)
+        self.chart.sig_show_pop_up_draw_tool.emit(obj)
+    
+    
     def draw_fibo_2(self, ev: QEvent):
         # pos_x, pos_y = self.get_position_mouse_on_chart(ev)
         pos_x, pos_y = self.get_position_crosshair()
@@ -215,6 +258,35 @@ class DrawTool(QObject):
         self.draw_object_name = "drawed_rotate_rectangle"
         obj.on_click.connect(self.show_popup_menu)
         self.chart.sig_show_pop_up_draw_tool.emit(obj)
+    
+    def draw_ellipse(self, ev: QEvent):
+        pos_x, pos_y = self.get_position_mouse_on_chart(ev)
+        obj =Ellipse([pos_x, pos_y], [0, 0],invertible=True,movable=True, resizable=False, removable=True, pen="#2962ff", drawtool=self)
+        self.chart.addItem(obj)
+        self.chart.drawtools.append(obj)
+        self.num_rectangle += 1
+        module_name = "Ellipse " + str(self.num_rectangle)
+        obj.setObjectName(module_name)
+        self.drawing_object = obj
+        uid_obj = self.chart.objmanager.add(obj)
+        self.draw_object_name = "drawed_ellipse"
+        obj.on_click.connect(self.show_popup_menu)
+        self.chart.sig_show_pop_up_draw_tool.emit(obj)
+    
+    def draw_circle(self, ev: QEvent):
+        pos_x, pos_y = self.get_position_mouse_on_chart(ev)
+        obj =Circle([pos_x, pos_y], [0, 0],invertible=True,movable=True, resizable=False, removable=True, pen="#2962ff", drawtool=self)
+        self.chart.addItem(obj)
+        self.chart.drawtools.append(obj)
+        self.num_rectangle += 1
+        module_name = "Circle " + str(self.num_rectangle)
+        obj.setObjectName(module_name)
+        self.drawing_object = obj
+        uid_obj = self.chart.objmanager.add(obj)
+        self.draw_object_name = "drawed_circle"
+        obj.on_click.connect(self.show_popup_menu)
+        self.chart.sig_show_pop_up_draw_tool.emit(obj)
+    
 
     def draw_text(self, ev: QEvent):
         pos_x, pos_y = self.get_position_mouse_on_chart(ev)

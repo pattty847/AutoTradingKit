@@ -8,7 +8,7 @@ SourceEdit,TypeEdit,MaTypeEdit,MaIntervalEdit
 
 if TYPE_CHECKING:
     from atklip.graphics.chart_component.viewchart import Chart
-    from atklip.graphics.chart_component.sub_panel_tool import ViewSubPanel
+    from atklip.graphics.chart_component.sub_panel_indicator import ViewSubPanel
 
 from PySide6.QtCore import Signal, Qt
 from PySide6.QtWidgets import QWidget

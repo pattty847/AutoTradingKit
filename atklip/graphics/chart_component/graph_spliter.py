@@ -14,7 +14,7 @@ from .proxy_signal import Signal_Proxy
 from atklip.graphics.chart_component.indicators import *
 from atklip.controls import IndicatorType
 from atklip.gui.qfluentwidgets.components.dialog_box import MessageBox
-from PySide6.QtCore import QCoreApplication,QSize
+from PySide6.QtCore import QCoreApplication,QSize,QEvent
 from PySide6.QtGui import QCloseEvent,QIcon
 from PySide6.QtWidgets import QApplication
 
@@ -152,6 +152,7 @@ class ViewSplitter(QFrame,Ui_Form):
 
 
 class GraphSplitter(ViewSplitter):
+    mouse_clicked_signal = Signal(QEvent)
     def __init__(self, parent: QWidget | None = ...) -> None:
         super().__init__(parent)
         self.sig_add_indicator_to_chart.connect(self.create_indicator,Qt.ConnectionType.QueuedConnection)
@@ -241,11 +242,14 @@ class GraphSplitter(ViewSplitter):
             slot=self.dateAxis.change_value,connect_type=Qt.ConnectionType.AutoConnection
         )
         
+        self.mouse_clicked_signal.connect(self.chart.mouse_clicked_signal)
+        
     def add_sub_panel(self,panel:ViewSubPanel|SubChart):
         self.listwidgets.append(panel)
         self.addWidget(panel)
         panel.setVisible(True)
         panel.sig_delete_sub_panel.connect(self.delete_panel)
+        self.mouse_clicked_signal.connect(panel.mouse_clicked_signal)
 
     def delete_panel(self,panel:ViewSubPanel|SubChart):
         self.listwidgets.remove(panel)
@@ -259,3 +263,6 @@ class GraphSplitter(ViewSplitter):
     def show_sub_panel(self,is_show:bool=True):
         if not self.is_started:
             self.is_started = True
+    def mousePressEvent(self, ev):
+        self.mouse_clicked_signal.emit(ev)
+        super().mousePressEvent(ev)

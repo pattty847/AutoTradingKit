@@ -185,7 +185,7 @@ facebook: [ATT (Auto Trading tools) | Facebook](https://www.facebook.com/groups/
 6) Update save fovarite layouts
 7) Update setting: change Light/Dark mode
 8) Update change style of draw tool like color, width, size, font
-9) Update Table Order and Possition of backtest and live trade
+9) Update Table Order and position of backtest and live trade
 10) Update login and manage account
 11) Build AI indicator
 12) Build AI Strategy

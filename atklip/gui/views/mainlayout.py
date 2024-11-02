@@ -6,6 +6,7 @@ from atklip.gui.qfluentwidgets.common import FluentStyleSheet
 from PySide6.QtWidgets import QFrame,QWidget
 from PySide6.QtCore import QPropertyAnimation,QEasingCurve, Signal, Qt,QEvent
 from atklip.gui.qfluentwidgets.common.icon import *
+from atklip.appmanager.setting import AppConfig
 
 
 if TYPE_CHECKING:
@@ -38,23 +39,22 @@ class MainWidget(QWidget,Ui_MainWidget):
         
         self.chartbox_splitter.chart.sig_show_pop_up_draw_tool.connect(self.drawbar.reset_drawbar)
         
-        
-        
-        
+        self.chartbox_splitter.chart.sig_reload_indicator_panel.connect(self.show_favorite_draw_btn)
         
         self.tool_name:str = None
         
         
-        "signal from TopBar"
+        
+        "signal from TopBar--------start"
         self.topbar.sig_change_symbol.connect(self.chartbox_splitter.chart.on_reset_exchange,Qt.ConnectionType.AutoConnection)
         self.topbar.sig_change_inteval.connect(self.chartbox_splitter.chart.on_change_inteval,Qt.ConnectionType.AutoConnection)
         self.topbar.sig_goto_date.connect(self.chartbox_splitter.chart.sig_goto_date,Qt.ConnectionType.AutoConnection)
         
         self.topbar.sig_add_indicator_to_chart.connect(self.chartbox_splitter.sig_add_indicator_to_chart,Qt.ConnectionType.AutoConnection)
-        "signal from TopBar"
+        "signal from TopBar-------end"
+        
         self.progress = LoadingProgress(self)
         self.chartbox_splitter.chart.sig_show_process.connect(self.progress.run_process,Qt.ConnectionType.AutoConnection)
-        # self.progress.run_process(True)
         
         self.topbar.mode.clicked.connect(self.chartbox_splitter.chart.change_mode)
         
@@ -63,6 +63,19 @@ class MainWidget(QWidget,Ui_MainWidget):
         self.topbar.setup_symbol_menu()
         FluentStyleSheet.SPLITTER.apply(self.chartbox_splitter)
 
+    def show_favorite_draw_btn(self):
+        "Drawbar ---------start"
+        "show favorite draw tools on chart when start"
+        favorite_draw_btn = AppConfig.get_config_value(f"drawbar.favorite_draw_btn")
+        if favorite_draw_btn == None:
+            AppConfig.sig_set_single_data.emit((f"drawbar.favorite_draw_btn",False))
+            favorite_draw_btn = AppConfig.get_config_value(f"drawbar.favorite_draw_btn")
+        if favorite_draw_btn:
+            self.drawbar.FAVORITE.splitToolButton.setChecked(True)
+            self.drawbar.FAVORITE.splitToolButton.change_status_favorite_btn()
+            self.drawbar.FAVORITE.add_remove_favorite_wg()
+        "Drawbar ---------end"
+    
     def draw_tool(self,tool_infor):
         current_tool,is_enabled,self.tool_name = tool_infor[0],tool_infor[1],tool_infor[2]# "draw_trenlines"
         print(current_tool,is_enabled,self.tool_name)

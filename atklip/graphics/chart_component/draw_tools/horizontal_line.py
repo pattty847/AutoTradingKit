@@ -1,8 +1,7 @@
 from atklip.graphics.pyqtgraph import InfiniteLine
 from atklip.graphics.pyqtgraph import functions as fn
 from PySide6 import QtCore
-from PySide6.QtGui import QColor
-from PySide6.QtCore import Signal,QObject,Qt,QPointF
+from PySide6.QtCore import Signal,Qt,QPointF
 
 
 from typing import TYPE_CHECKING
@@ -77,8 +76,9 @@ class Horizontal_line(InfiniteLine):
         styles =  {"pen":self.has["styles"]["pen"],
                     "width":self.has["styles"]["width"],
                     "style":self.has["styles"]["style"],
-                    "delete":self.has["styles"]["delete"],
+                    
                     "lock":self.has["styles"]["lock"],
+                    "delete":self.has["styles"]["delete"],
                     "setting":self.has["styles"]["setting"],}
         return styles
     
@@ -138,7 +138,22 @@ class Horizontal_line(InfiniteLine):
         elif ev.button() == Qt.MouseButton.LeftButton:
             
             self.on_click.emit(self)
-            
+    def set_lock(self,btn):
+        print(btn,btn.isChecked())
+        if btn.isChecked():
+            self.locked_handle()
+        else:
+            self.unlocked_handle()
+    def locked_handle(self):
+        self.yoff = True
+        self.xoff = True
+        self.locked = True
+
+    def unlocked_handle(self):
+        self.yoff = False
+        self.xoff =False
+        self.locked = False
+    
     def mouseDragEvent(self, ev):
         if self.movable and not self.locked and ev.button() == QtCore.Qt.MouseButton.LeftButton:
             if ev.isStart():
@@ -163,10 +178,10 @@ class Horizontal_line(InfiniteLine):
     def hoverEvent(self, ev):
         if not ev.exit: # and not self.boundingRect().contains(ev.pos()):
             hover = True
-            # self.setCursor(Qt.CursorShape.PointingHandCursor)
+            self.setCursor(Qt.CursorShape.PointingHandCursor)
         else:
             hover = False
-            # self.setCursor(Qt.CursorShape.CrossCursor)
+            self.setCursor(Qt.CursorShape.CrossCursor)
         
         if not self.isSelected:
             if (not ev.isExit()) and self.movable and ev.acceptDrags(QtCore.Qt.MouseButton.LeftButton):

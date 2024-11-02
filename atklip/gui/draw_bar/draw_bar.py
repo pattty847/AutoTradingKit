@@ -13,6 +13,7 @@ from atklip.gui.draw_bar.draw_measure import *
 from atklip.gui.draw_bar.draw_recirclebin import *
 from atklip.gui.draw_bar.draw_zoom import *
 from atklip.gui.draw_bar.draw_favorite import *
+from atklip.gui.draw_bar.draw_lock import *
 
 from atklip.gui.components._pushbutton import Tradingview_Button,ShowmenuButton
 
@@ -49,17 +50,21 @@ class DRAW_BAR(QFrame,Ui_draw_bar):
         self.TEXTS = TEXTS(self,self.sig_draw_object_name,self.sig_add_to_favorite)
         self.RECIRCLEBIN = RECIRCLEBIN(self,self.sig_delete_all)
         self.FAVORITE = FAVORITE(self.parent,self.sig_add_to_favorite,self.sig_draw_object_name)
+        self.MAGNET = MAGNET(self.parent,self.sig_draw_object_name)
+        self.LOCK = LOCK(self.parent,self.sig_draw_object_name)
         
         self.add_item(self.LINES)
         self.add_item(self.FIBONACCI)
         self.add_item(self.PROJECTS)
         self.add_item(self.BRUSHS)
         self.add_item(self.TEXTS)
-        # self.addSeparator()
+        self.addSeparator()
         # self.add_item(MEASURE(self))
         #self.addSeparator()
         # self.add_item(ZOOM(self))
-        # self.add_item(MAGNET(self))
+        self.add_btn(self.MAGNET)
+        self.add_btn(self.LOCK)
+        # self.add_item(EYES(self))
         # self.add_item(EYES(self))
         self.addSeparator()
         self.add_item(self.RECIRCLEBIN)
@@ -86,7 +91,11 @@ class DRAW_BAR(QFrame,Ui_draw_bar):
     def add_item(self,item):
         self.items.append(item)
         self._draw_layout.addWidget(item)
-        
+    
+    def add_btn(self,wg):
+        self._draw_layout.addWidget(wg)
+    
+    
     def uncheck_items(self,_item:Tradingview_Button|ShowmenuButton):
         
         print(_item)

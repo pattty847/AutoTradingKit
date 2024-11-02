@@ -7,6 +7,7 @@ from atklip.gui.qfluentwidgets.components import IconWidget,BodyLabel,HBoxLayout
 
 from atklip.gui.components._pushbutton import Favorite_Button,CircleICon,Help_Button,Candle_Button
 from atklip.controls import IndicatorType,PD_MAType
+from atklip.appmanager.setting import AppConfig
 
 if TYPE_CHECKING:  # pragma
     from atklip.gui.top_bar import IntervalButton
@@ -44,10 +45,15 @@ class Card_Item(CardWidget):
         self.btn_fovarite.setFixedSize(20, 20)
         self.btn_fovarite.clicked.connect(self.onbtn_fovariteClicked)
         self.clicked.connect(self.on_clicked)
-        
         self.setObjectName(f"{_type}_{title}")
         
-        # self.signal_infor.connect(self.parent.set_current_tool)
+        self.list_favorites = AppConfig.get_config_value(f"drawbar.favorite")
+        if self.list_favorites:
+            for in_for in self.list_favorites:
+                old_title = in_for["tool"]
+                if old_title == title:
+                    self.btn_fovarite.setChecked(True)
+                    self.btn_fovarite.set_icon_color()
         
         if self.btn_fovarite.isChecked():
             self.btn_fovarite.show()
@@ -60,14 +66,9 @@ class Card_Item(CardWidget):
     def getObjectname(self) -> str:
         return self.ob_name
     def onbtn_fovariteClicked(self):
-        if self.btn_fovarite.isChecked():
-            self.parent.favorite_infor((self,self.icon,True))
-        else:
-            self.parent.favorite_infor((self,self.icon,False))
-        #self.parent.splitToolButton.add_remove_to_favorites(self.icon)
+        self.parent.favorite_infor((self,self.icon,self.btn_fovarite.isChecked()))
     def on_clicked(self):
         self.parent.set_current_tool((self,self.icon))
-        # self.signal_infor.emit((self,self.icon))
     
     def enterEvent(self, event):
         self.btn_fovarite.show()
@@ -81,7 +82,6 @@ class Card_Item(CardWidget):
 
 
 class Symbol_Item(CardWidget): 
-    #sig_add_to_favorite_menu = Signal(tuple)
     """ App card """
     def __init__(self,sig_add_remove_favorite,sig_change_symbol, symbol:str, exchange:str, parent=None):
         super().__init__(parent)

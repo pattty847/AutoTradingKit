@@ -48,18 +48,21 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
         self.tabBar.tabCloseRequested.connect(self.onTabCloseRequested)
         qconfig.themeChangedFinished.connect(self._onThemeChangedFinished)
         FluentStyleSheet.FLUENT_WINDOW.apply(self)
-        self.initWindow()
         self.onTabAddRequested()
+        self.initWindow()
+        
 
     def initWindow(self):
-        desktop = screen.getCurrentScreenGeometry()
+        self.resize(1000, 800)
+        # self.setMinimumWidth(1000)
+        desktop = QApplication.screens()[0].availableGeometry()
         w, h = desktop.width(), desktop.height()
-        _w, _h = 900, 800
-        # self.resize(_w, _h)
-        self.move(int(w/2 - _w/2),int(h/2 - _h/2))
-        # self.setGeometry(int(w/2 - _w/2),int(h/2 - _h/2),_w,_h)
-        self.resize(_w, _h)
-
+        self.move(w//2 - self.width()//2, h//2 - self.height()//2)
+        self.resize(self.width(), self.height())
+        self.move(w//2 - self.width()//2, h//2 - self.height()//2)
+        self.show()
+        QApplication.processEvents()
+    
 
     def load_pre_config(self):
         curent_tab = AppConfig.get_config_value("profiles.current_tab")
@@ -80,6 +83,7 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
         super().resizeEvent(e)
         self.titleBar.resize(self.width(), self.titleBar.height())
         self.stackedWidget.resize(self.width(), self.height() - 45)
+        self.resize(self.width(),self.height())
         interface = self.stackedWidget.currentWidget()
         if isinstance(interface,MainWidget):
             if interface.progress.isVisible():
@@ -89,7 +93,7 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
         """ add sub interface """
         self.stackedWidget.addWidget(interface)
         interface.progress.run_process(True)
-        self.stackedWidget.resize(self.width(), self.height() - 45)
+        self.resize(self.width(), self.height() - 45)
         interface.resize(self.width(), self.height())
         
 

@@ -1,14 +1,15 @@
 from typing import List
 from PySide6.QtCore import Qt, QRectF, QPointF, Signal
-from PySide6.QtGui import QPainter, QColor, QPainterPath
+from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import QGraphicsItem
-from pyqtgraph import PolyLineROI, TextItem, Point, ArrowItem, mkPen,mkBrush
+from pyqtgraph import TextItem, Point, ArrowItem, mkPen,mkBrush
+
+from atklip.app_utils.functions import mkColor
 
 draw_line_color = '#2962ff'
 epoch_period = 1e30
 
 from .roi import BaseHandle, SpecialROI, _FiboLineSegment
-from .base_textitem import BaseTextItem
 from atklip.app_utils import covert_time_to_sec,percent_caculator,divide_with_remainder
 
 
@@ -67,7 +68,7 @@ class RangePolyLine(SpecialROI):     # for date price range
                     },
             "styles":{
                     'pen': pen,
-                    'brush': pen,
+                    'brush': (43, 106, 255, 40),
                     'width': 1,
                     'style': Qt.PenStyle.SolidLine,
                     "lock":True,
@@ -108,10 +109,12 @@ class RangePolyLine(SpecialROI):     # for date price range
     
     def get_styles(self):
         styles =  {"pen":self.has["styles"]["pen"],
+                    "brush":self.has["styles"]["brush"],
                     "width":self.has["styles"]["width"],
                     "style":self.has["styles"]["style"],
-                    "delete":self.has["styles"]["delete"],
+                    
                     "lock":self.has["styles"]["lock"],
+                    "delete":self.has["styles"]["delete"],
                     "setting":self.has["styles"]["setting"],}
         return styles
     
@@ -120,8 +123,9 @@ class RangePolyLine(SpecialROI):     # for date price range
     
     def update_styles(self, _input):
         _style = self.has["styles"][_input]
-        if _input == "pen" or _input == "width" or _input == "style":
-            self.setPen(color=self.has["styles"]["pen"], width=self.has["styles"]["width"],style=self.has["styles"]["style"])
+        self.update()
+        # if _input == "pen" or _input == "width" or _input == "style":
+        #     self.setPen(color=self.has["styles"]["pen"], width=self.has["styles"]["width"],style=self.has["styles"]["style"])
 
     
     
@@ -144,10 +148,6 @@ class RangePolyLine(SpecialROI):     # for date price range
             # h['item'].setDeletable(True)
             # h['item'].setAcceptedMouseButtons(h['item'].acceptedMouseButtons() | Qt.MouseButton.LeftButton) ## have these handles take left clicks too, so that handles cannot be added on top of other handles
     
-    def change_size_handle(self, size):
-        for handle in self.endpoints:
-            handle.change_size_handle(size)
-    
     def selectedHandler(self, is_selected):
         if is_selected:
             self.isSelected = True
@@ -168,13 +168,37 @@ class RangePolyLine(SpecialROI):     # for date price range
         else:
             [h['item'].hide() for h in self.handles]
             [h.hide() for h in self.segments]
+    def set_lock(self,btn):
+        print(btn,btn.isChecked())
+        if btn.isChecked():
+            self.locked_handle()
+        else:
+            self.unlocked_handle()
+    
+    def locked_handle(self):
+        self.yoff = True
+        self.xoff = True
+        self.locked = True
+        self.change_size_handle(2)
 
+    def unlocked_handle(self):
+        self.yoff = False
+        self.xoff =False
+        self.locked = False
+        self.change_size_handle(4)
+    
+    def change_size_handle(self, size):
+        for handle in self.endpoints:
+            handle.change_size_handle(size)
     def hoverEvent(self, ev):
         hover = False
-        if ev.exit:
-            hover = False
-        else:
+        if not ev.exit: # and not self.boundingRect().contains(ev.pos()):
             hover = True
+            if not self.locked:
+                self.setCursor(Qt.CursorShape.PointingHandCursor)
+        else:
+            hover = False
+            self.setCursor(Qt.CursorShape.CrossCursor)
                 
         if not self.isSelected:
             if hover:
@@ -208,12 +232,13 @@ class RangePolyLine(SpecialROI):     # for date price range
 
     def mouseClickEvent(self, ev):
         if ev.button() == Qt.MouseButton.LeftButton:
-            if not self.boundingRect().contains(ev.pos()):
-                ev.accept()
-                self.on_click.emit(self)
+            # if not self.boundingRect().contains(ev.pos()):
+            ev.accept()
+            self.on_click.emit(self)
             self.finished = True
             self.drawtool.drawing_object =None
         ev.ignore()
+        super().mouseClickEvent(ev)
     
     def objectName(self):
         return self.indicator_name
@@ -361,7 +386,7 @@ class RangePolyLine(SpecialROI):     # for date price range
     
     def paint(self, p: QPainter, *args):
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
-        p.setPen(mkPen(draw_line_color,width=1))
+        p.setPen(mkPen(color=self.has["styles"]["pen"], width=self.has["styles"]["width"],style=self.has["styles"]["style"]))
         if self.handles:
             h0 = self.handles[0]['item'].pos()
             h1 = self.handles[1]['item'].pos()
@@ -369,8 +394,8 @@ class RangePolyLine(SpecialROI):     # for date price range
             p.drawLine(QPointF(h1.x(), h1.y() - diff.y() /2), QPointF(h0.x(), h1.y() - diff.y() /2))
             p.drawLine(QPointF(h1.x() - diff.x() /2, h1.y()), QPointF(h1.x() - diff.x() /2, h0.y()))
             # p.setPen(QColor(252, 163, 38, 40))
-            p.setBrush(QColor(43, 106, 255, 40))
-            p.fillRect(QRectF(h1,h0),QColor(43, 106, 255, 40))
+            p.setBrush(mkBrush(self.has["styles"]["brush"]))
+            p.fillRect(QRectF(h1,h0),mkColor(self.has["styles"]["brush"]))
             self.update_arrows()
             self.update_text()
 

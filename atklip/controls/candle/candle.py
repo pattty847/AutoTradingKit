@@ -347,9 +347,10 @@ class JAPAN_CANDLE(QObject):
             _time = last_candle.time
             if _time == new_candle.time:
                 if new_candle.close != last_candle.close or\
-                                        new_candle.high != last_candle.high or\
-                                        new_candle.low != last_candle.low or\
-                                        new_candle.open != last_candle.open:
+                    new_candle.high != last_candle.high or\
+                    new_candle.low != last_candle.low or\
+                    new_candle.open != last_candle.open:
+                        
                     last_candle.open = new_candle.open
                     last_candle.high = new_candle.high
                     last_candle.low = new_candle.low

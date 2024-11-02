@@ -43,9 +43,16 @@ class FiboROI2(SpecialROI):
         #self.generate_lines()
         self.id = None
         self.has = {
-            "name": "rectangle",
-            "type": "drawtool",
-            "id": id
+            "x_axis_show":False,
+            "name": "fibo retracements",
+            "type": "fibo_1",
+            "id": id,
+            "inputs":{
+                    },
+            "styles":{
+                    "lock":True,
+                    "setting": True,
+                    "delete":True,}
         }
         self.drawtool:DrawTool = drawtool
         self.chart:Chart = self.drawtool.chart  # plot mapchart
@@ -128,6 +135,24 @@ class FiboROI2(SpecialROI):
         self.drawed = False
         # self.on_click.connect(self.chart.show_popup_setting_tool)
 
+    
+    def get_styles(self):
+        styles =  {
+                    "lock":self.has["styles"]["lock"],
+                    "delete":self.has["styles"]["delete"],
+                    "setting":self.has["styles"]["setting"],}
+        return styles
+    
+    def update_inputs(self,_input,_source):
+        is_update = False
+    
+    def update_styles(self, _input):
+        _style = self.has["styles"][_input]
+        self.update()
+        # if _input == "pen" or _input == "width" or _input == "style":
+        #     self.setPen(color=self.has["styles"]["pen"], width=self.has["styles"]["width"],style=self.has["styles"]["style"])
+
+    
     def selectedHandler(self, is_selected):
         if is_selected:
             self.isSelected = True
@@ -151,10 +176,13 @@ class FiboROI2(SpecialROI):
 
     def hoverEvent(self, ev: QtCore.QEvent):
         hover = False
-        if ev.exit:
-            hover = False
-        else:
+        if not ev.exit: # and not self.boundingRect().contains(ev.pos()):
             hover = True
+            if not self.locked:
+                self.setCursor(Qt.CursorShape.PointingHandCursor)
+        else:
+            hover = False
+            self.setCursor(Qt.CursorShape.CrossCursor)
                 
         if not self.isSelected:
             if hover:
@@ -396,7 +424,13 @@ class FiboROI2(SpecialROI):
         # print(688, "checking point", h1_pre_pos, self.handles[1]["item"].pos(), h0_pre_pos, self.handles[0]["item"].pos(), first_utc, second_utc)
 
         self.draw_rec.emit()
-
+    def set_lock(self,btn):
+        print(btn,btn.isChecked())
+        if btn.isChecked():
+            self.locked_handle()
+        else:
+            self.unlocked_handle()
+            
     def locked_handle(self):
         self.yoff = True
         self.xoff = True

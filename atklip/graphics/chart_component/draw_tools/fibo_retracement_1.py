@@ -1,13 +1,8 @@
-import datetime as dt
-from operator import itemgetter
-import random
 
-import pytz
 from PySide6 import QtCore, QtWidgets
 from PySide6.QtCore import Signal, QPointF, Qt, QRectF, QCoreApplication
-from PySide6.QtGui import QPainter, QColor,QTextItem
-from PySide6.QtWidgets import QWidget
-from atklip.graphics.pyqtgraph import TextItem, mkPen
+from PySide6.QtGui import QPainter, QColor
+from atklip.graphics.pyqtgraph import mkPen
 from atklip.graphics.pyqtgraph.Point import Point
 
 from .roi import SpecialROI, BaseHandle, _FiboLineSegment
@@ -44,9 +39,16 @@ class FiboROI(SpecialROI):
         #self.generate_lines()
         self.id = None
         self.has = {
-            "name": "rectangle",
-            "type": "drawtool",
-            "id": id
+            "x_axis_show":False,
+            "name": "fibo retracements",
+            "type": "fibo_1",
+            "id": id,
+            "inputs":{
+                    },
+            "styles":{
+                    "lock":True,
+                    "setting": True,
+                    "delete":True,}
         }
         self.drawtool:DrawTool = drawtool
         self.chart:Chart = self.drawtool.chart  # plot mapchart
@@ -121,6 +123,25 @@ class FiboROI(SpecialROI):
         self.drawed = False
         # self.on_click.connect(self.chart.show_popup_setting_tool)
 
+    def get_inputs(self):
+        inputs =  {}
+        return inputs
+    
+    def get_styles(self):
+        styles =  {
+                    "lock":self.has["styles"]["lock"],
+                    "delete":self.has["styles"]["delete"],
+                    "setting":self.has["styles"]["setting"],}
+        return styles
+    
+    def update_inputs(self,_input,_source):
+        is_update = False
+    
+    def update_styles(self, _input):
+        _style = self.has["styles"][_input]
+        self.update()
+
+
     def selectedHandler(self, is_selected):
         if is_selected:
             self.isSelected = True
@@ -144,10 +165,15 @@ class FiboROI(SpecialROI):
 
     def hoverEvent(self, ev: QtCore.QEvent):
         hover = False
-        if ev.exit:
-            hover = False
-        else:
+        
+        if not ev.exit: # and not self.boundingRect().contains(ev.pos()):
             hover = True
+            if not self.locked:
+                self.setCursor(Qt.CursorShape.PointingHandCursor)
+        else:
+            hover = False
+            self.setCursor(Qt.CursorShape.CrossCursor)
+        
                 
         if not self.isSelected:
             if hover:
@@ -299,7 +325,13 @@ class FiboROI(SpecialROI):
             self.chart.drawtool.drawing_object =None
         self.on_click.emit(self)
 
-
+    def set_lock(self,btn):
+        print(btn,btn.isChecked())
+        if btn.isChecked():
+            self.locked_handle()
+        else:
+            self.unlocked_handle()
+            
     def locked_handle(self):
         self.yoff = True
         self.xoff = True

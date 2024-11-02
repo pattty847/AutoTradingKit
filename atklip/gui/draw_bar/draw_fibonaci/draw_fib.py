@@ -5,7 +5,7 @@ from PySide6.QtWidgets import QWidget, QFrame,QHBoxLayout
 from atklip.gui.qfluentwidgets.components import RoundMenu,TitleLabel
 from atklip.gui.components import ShowmenuButton,Card_Item
 from atklip.gui import FluentIcon as FIF
-# from atklip.gui.draw_bar import *
+from atklip.appmanager.setting import AppConfig
 from atklip.gui.qfluentwidgets.common import *
 
 class FIBONACCI(QFrame):
@@ -42,6 +42,7 @@ class FIBONACCI(QFrame):
         self.menu.addWidget(line_header_wg)
         self.fib_retracement = Card_Item(FIF.FIB_RETRACEMENT,"Fib Retracement", 'FIBONACCI',self)
         self.fib_retracement_2 = Card_Item(FIF.FIB_RETRACEMENT,"Fib Retracement 2", 'FIBONACCI',self)
+        self.risk_reward_ratio = Card_Item(FIF.FIB_RETRACEMENT,"Risk Reward Ratio", 'FIBONACCI',self)
         
         # self.fib_trend_base = Card_Item(FIF.FIB_TREND_BASE,"Trend-Based Fib Extension", 'FIBONACCI',self)
         # self.fib_chanel = Card_Item(FIF.FIB_CHANEL,"Fib Chanel", 'FIBONACCI',self)
@@ -61,6 +62,7 @@ class FIBONACCI(QFrame):
         
         self.menu.addWidget(self.fib_retracement)
         self.menu.addWidget(self.fib_retracement_2)
+        self.menu.addWidget(self.risk_reward_ratio)
         
         # self.menu.addWidget(self.fib_trend_base)
         # self.menu.addWidget(self.fib_chanel)
@@ -103,12 +105,23 @@ class FIBONACCI(QFrame):
         self.map_btn_name:dict = {
             self.fib_retracement:"draw_fib_retracement",
             self.fib_retracement_2:"draw_fib_retracement_2",
+            self.risk_reward_ratio:"draw_risk_reward_ratio"
         }
         #self.splitToolButton.dropButton.hide()
     
     def favorite_infor(self,tool_infor):
         tool,icon,is_add = tool_infor[0],tool_infor[1],tool_infor[2]
-        self.sig_add_to_favorite.emit((tool,icon,self.map_btn_name[tool],is_add))
+        self.sig_add_to_favorite.emit((tool.title,icon,self.map_btn_name[tool],is_add))
+        
+        self.list_favorites:List = AppConfig.get_config_value(f"drawbar.favorite",[])
+        tool_infor = {"tool":tool.title,"name":self.map_btn_name[tool],"icon":icon.name}
+        if is_add:
+            if tool_infor not in self.list_favorites:
+                self.list_favorites.append(tool_infor)
+        else:
+            if tool_infor in self.list_favorites:
+                self.list_favorites.remove(tool_infor)
+        AppConfig.sig_set_single_data.emit((f"drawbar.favorite",self.list_favorites))
     
     def drawing(self):
         self.sig_draw_object_name.emit((self.current_tool,self.is_enabled,self.map_btn_name[self.current_tool])) 

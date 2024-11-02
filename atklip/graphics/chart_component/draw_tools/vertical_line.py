@@ -42,6 +42,8 @@ class Vertical_line(InfiniteLine):
                     "delete":True,}
         }
         self.change_pen_signal.connect(self.chart.xAxis.change_value)
+        self.yoff = False
+        self.xoff =False
         self.locked = False
         self.color = "#2962ff"
         self.width = 1
@@ -74,8 +76,9 @@ class Vertical_line(InfiniteLine):
         styles =  {"pen":self.has["styles"]["pen"],
                     "width":self.has["styles"]["width"],
                     "style":self.has["styles"]["style"],
-                    "delete":self.has["styles"]["delete"],
+                    
                     "lock":self.has["styles"]["lock"],
+                    "delete":self.has["styles"]["delete"],
                     "setting":self.has["styles"]["setting"],}
         return styles
     
@@ -164,7 +167,23 @@ class Vertical_line(InfiniteLine):
             else:
                 self.setMouseHover(False)
                 self.clearMarkers()
+    def set_lock(self,btn):
+        print(btn,btn.isChecked())
+        if btn.isChecked():
+            self.locked_handle()
+        else:
+            self.unlocked_handle()
+    
+    def locked_handle(self):
+        self.yoff = True
+        self.xoff = True
+        self.locked = True
 
+    def unlocked_handle(self):
+        self.yoff = False
+        self.xoff =False
+        self.locked = False
+    
     def setMouseHover(self, hover):
         ## Inform the item that the mouse is (not) hovering over it
         if self.mouseHovering == hover:

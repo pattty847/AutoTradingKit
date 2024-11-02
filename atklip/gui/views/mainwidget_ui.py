@@ -15,12 +15,11 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QFrame, QHBoxLayout, QLayout,
-    QSizePolicy, QSplitter, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QApplication, QFrame, QHBoxLayout, QSizePolicy,
+    QVBoxLayout, QWidget)
 
 from atklip.graphics.chart_component.graph_spliter import GraphSplitter
 from atklip.gui.draw_bar.draw_bar import DRAW_BAR
-from atklip.gui.qfluentwidgets.components.container.vspliter import VSplitter
 from atklip.gui.right_bar.right_bar import RIGHT_BAR
 from atklip.gui.top_bar.top_bar import TopBar
 
@@ -29,7 +28,7 @@ class Ui_MainWidget(object):
         if not MainWidget.objectName():
             MainWidget.setObjectName(u"MainWidget")
         MainWidget.setWindowModality(Qt.NonModal)
-        MainWidget.resize(941, 657)
+        MainWidget.resize(1130, 757)
         sizePolicy = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -113,6 +112,7 @@ class Ui_MainWidget(object):
         self.drawbar.setObjectName(u"drawbar")
         sizePolicy.setHeightForWidth(self.drawbar.sizePolicy().hasHeightForWidth())
         self.drawbar.setSizePolicy(sizePolicy)
+        self.drawbar.setMinimumSize(QSize(60, 0))
         self.drawbar.setMaximumSize(QSize(60, 16777215))
         self.drawbar.setFrameShape(QFrame.NoFrame)
 
@@ -129,60 +129,44 @@ class Ui_MainWidget(object):
 
         self.chartview = QFrame(MainWidget)
         self.chartview.setObjectName(u"chartview")
-        self.chartview.setMinimumSize(QSize(0, 600))
+        sizePolicy.setHeightForWidth(self.chartview.sizePolicy().hasHeightForWidth())
+        self.chartview.setSizePolicy(sizePolicy)
+        self.chartview.setMinimumSize(QSize(1000, 700))
         self.chartview.setStyleSheet(u"background-color: rgb(71, 71, 71);")
         self.chartview.setFrameShape(QFrame.NoFrame)
-        self.verticalLayout_2 = QVBoxLayout(self.chartview)
-        self.verticalLayout_2.setSpacing(2)
-        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
-        self.verticalLayout_2.setSizeConstraint(QLayout.SetDefaultConstraint)
-        self.verticalLayout_2.setContentsMargins(0, 0, 0, 0)
-        self.splitter_2 = QSplitter(self.chartview)
-        self.splitter_2.setObjectName(u"splitter_2")
-        sizePolicy.setHeightForWidth(self.splitter_2.sizePolicy().hasHeightForWidth())
-        self.splitter_2.setSizePolicy(sizePolicy)
-        self.splitter_2.setHandleWidth(2)
-        self.splitter = VSplitter(self.splitter_2)
-        self.splitter.setObjectName(u"splitter")
-        sizePolicy.setHeightForWidth(self.splitter.sizePolicy().hasHeightForWidth())
-        self.splitter.setSizePolicy(sizePolicy)
-        self.splitter.setFrameShape(QFrame.NoFrame)
-        self.splitter.setOpaqueResize(True)
-        self.splitter.setHandleWidth(5)
-        self.splitter.setChildrenCollapsible(True)
-        self.chartframe = QFrame(self.splitter)
+        self.horizontalLayout_3 = QHBoxLayout(self.chartview)
+        self.horizontalLayout_3.setSpacing(0)
+        self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
+        self.horizontalLayout_3.setContentsMargins(0, 0, 0, 0)
+        self.chartframe = QFrame(self.chartview)
         self.chartframe.setObjectName(u"chartframe")
-        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
-        sizePolicy1.setHorizontalStretch(0)
-        sizePolicy1.setVerticalStretch(0)
-        sizePolicy1.setHeightForWidth(self.chartframe.sizePolicy().hasHeightForWidth())
-        self.chartframe.setSizePolicy(sizePolicy1)
-        self.chartframe.setMinimumSize(QSize(0, 0))
+        sizePolicy.setHeightForWidth(self.chartframe.sizePolicy().hasHeightForWidth())
+        self.chartframe.setSizePolicy(sizePolicy)
+        self.chartframe.setMinimumSize(QSize(800, 600))
         self.chartframe.setStyleSheet(u"background-color: rgb(22, 22, 22);")
         self.chartframe.setFrameShape(QFrame.NoFrame)
-        self.verticalLayout_6 = QVBoxLayout(self.chartframe)
-        self.verticalLayout_6.setSpacing(0)
-        self.verticalLayout_6.setObjectName(u"verticalLayout_6")
-        self.verticalLayout_6.setContentsMargins(0, 0, 0, 0)
+        self.verticalLayout_2 = QVBoxLayout(self.chartframe)
+        self.verticalLayout_2.setSpacing(0)
+        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
+        self.verticalLayout_2.setContentsMargins(0, 0, 0, 0)
         self.chartbox_splitter = GraphSplitter(self.chartframe)
         self.chartbox_splitter.setObjectName(u"chartbox_splitter")
-        sizePolicy1.setHeightForWidth(self.chartbox_splitter.sizePolicy().hasHeightForWidth())
-        self.chartbox_splitter.setSizePolicy(sizePolicy1)
+        sizePolicy.setHeightForWidth(self.chartbox_splitter.sizePolicy().hasHeightForWidth())
+        self.chartbox_splitter.setSizePolicy(sizePolicy)
+        self.chartbox_splitter.setMinimumSize(QSize(800, 600))
 
-        self.verticalLayout_6.addWidget(self.chartbox_splitter)
+        self.verticalLayout_2.addWidget(self.chartbox_splitter)
 
-        self.splitter.addWidget(self.chartframe)
-        self.tradebox = QFrame(self.splitter)
-        self.tradebox.setObjectName(u"tradebox")
-        sizePolicy.setHeightForWidth(self.tradebox.sizePolicy().hasHeightForWidth())
-        self.tradebox.setSizePolicy(sizePolicy)
-        self.tradebox.setMaximumSize(QSize(16777215, 0))
-        self.tradebox.setStyleSheet(u"background-color: rgb(22, 22, 22);\n"
-"background-color: rgb(72, 72, 72);")
-        self.tradebox.setFrameShape(QFrame.NoFrame)
-        self.splitter.addWidget(self.tradebox)
-        self.splitter_2.addWidget(self.splitter)
-        self.rightview = QFrame(self.splitter_2)
+        self.bottom = QWidget(self.chartframe)
+        self.bottom.setObjectName(u"bottom")
+        self.bottom.setMaximumSize(QSize(16777215, 0))
+
+        self.verticalLayout_2.addWidget(self.bottom)
+
+
+        self.horizontalLayout_3.addWidget(self.chartframe)
+
+        self.rightview = QFrame(self.chartview)
         self.rightview.setObjectName(u"rightview")
         sizePolicy.setHeightForWidth(self.rightview.sizePolicy().hasHeightForWidth())
         self.rightview.setSizePolicy(sizePolicy)
@@ -191,9 +175,8 @@ class Ui_MainWidget(object):
         self.rightview.setStyleSheet(u"background-color: rgb(22, 22, 22);\n"
 "background-color: rgb(72, 72, 72);")
         self.rightview.setFrameShape(QFrame.NoFrame)
-        self.splitter_2.addWidget(self.rightview)
 
-        self.verticalLayout_2.addWidget(self.splitter_2)
+        self.horizontalLayout_3.addWidget(self.rightview)
 
 
         self.horizontalLayout.addWidget(self.chartview)
@@ -202,6 +185,7 @@ class Ui_MainWidget(object):
         self.rightbar.setObjectName(u"rightbar")
         sizePolicy.setHeightForWidth(self.rightbar.sizePolicy().hasHeightForWidth())
         self.rightbar.setSizePolicy(sizePolicy)
+        self.rightbar.setMinimumSize(QSize(60, 0))
         self.rightbar.setMaximumSize(QSize(60, 16777215))
         self.rightbar.setStyleSheet(u"background-color: rgb(255, 85, 0);\n"
 "background-color: rgb(33, 33, 33);")
