@@ -312,7 +312,7 @@ class MACD(QObject):
             return macd,histogram,signalma
         except:
             return Series([]),Series([]),Series([])
-    def caculate(self,df: pd.DataFrame):
+    def calculate(self,df: pd.DataFrame):
         INDICATOR = macd(close=df[self.source],
                         fast=self.fast_period,
                         slow=self.slow_period,
@@ -328,7 +328,7 @@ class MACD(QObject):
         
         df:pd.DataFrame = self._candles.get_df()
         
-        macd_data,histogram,signalma = self.caculate(df)
+        macd_data,histogram,signalma = self.calculate(df)
         _len = min([len(histogram),len(macd_data),len(signalma)])
         _index = df["index"]
         self.df = pd.DataFrame({
@@ -356,7 +356,7 @@ class MACD(QObject):
         _pre_len = len(self.df)
         df:pd.DataFrame = self._candles.get_df().iloc[:-1*_pre_len]
         
-        macd_data,histogram,signalma = self.caculate(df)
+        macd_data,histogram,signalma = self.calculate(df)
 
         _len = min([len(histogram),len(macd_data),len(signalma)])
         
@@ -389,7 +389,7 @@ class MACD(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.slow_period*5)
                     
-            macd_data,histogram,signalma = self.caculate(df)
+            macd_data,histogram,signalma = self.calculate(df)
             
             new_frame = pd.DataFrame({
                                     'index':[new_candle.index],
@@ -412,7 +412,7 @@ class MACD(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.slow_period*5)
                     
-            macd_data,histogram,signalma = self.caculate(df)
+            macd_data,histogram,signalma = self.calculate(df)
                     
             self.df.iloc[-1] = [new_candle.index,macd_data.iloc[-1],histogram.iloc[-1],signalma.iloc[-1]]
                     

@@ -284,7 +284,7 @@ class STOCH(QObject):
         signalma = INDICATOR[signalma_name].dropna().round(4)
         return stoch_,signalma
     
-    def caculate(self,df: pd.DataFrame):
+    def calculate(self,df: pd.DataFrame):
         INDICATOR = stoch(high=df["high"],
                         low=df["low"],
                         close=df["close"],
@@ -302,7 +302,7 @@ class STOCH(QObject):
         
         df:pd.DataFrame = self._candles.get_df()
         
-        stoch_, signalma = self.caculate(df)
+        stoch_, signalma = self.calculate(df)
         
         _index = df["index"]
         
@@ -333,7 +333,7 @@ class STOCH(QObject):
         _pre_len = len(self.df)
         df:pd.DataFrame = self._candles.get_df().iloc[:-1*_pre_len]
         
-        stoch_, signalma = self.caculate(df)
+        stoch_, signalma = self.calculate(df)
         
         _len = min([len(stoch_),len(signalma)])
         _index = df["index"].tail(_len)
@@ -369,7 +369,7 @@ class STOCH(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.k_period*5)
                     
-            stoch_, signalma = self.caculate(df)
+            stoch_, signalma = self.calculate(df)
             
             new_frame = pd.DataFrame({
                                     'index':[new_candle.index],
@@ -392,7 +392,7 @@ class STOCH(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.k_period*5)
                     
-            stoch_, signalma = self.caculate(df)
+            stoch_, signalma = self.calculate(df)
                     
             self.df.iloc[-1] = [new_candle.index,stoch_.iloc[-1],signalma.iloc[-1]]
                     

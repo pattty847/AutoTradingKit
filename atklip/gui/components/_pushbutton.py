@@ -332,7 +332,6 @@ class Color_Picker_Button(PrimaryToolButton):
 
     def setColor(self, color):
         """ set color """
-        print(color,type(color))
         self.color = None
         if isinstance(color,str) or isinstance(color,tuple):
             self.color = mkColor(color)

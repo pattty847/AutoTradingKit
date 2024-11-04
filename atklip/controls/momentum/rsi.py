@@ -270,7 +270,7 @@ class RSI(QObject):
                     roc_name = name
             y_data = INDICATOR[roc_name]
         return y_data
-    def caculate(self,df: pd.DataFrame):
+    def calculate(self,df: pd.DataFrame):
         INDICATOR = rsi(close=df[self.source],
                                     length=self.length,
                                     mamode=self.ma_type,
@@ -284,7 +284,7 @@ class RSI(QObject):
         
         df:pd.DataFrame = self._candles.get_df()
         
-        data = self.caculate(df)
+        data = self.calculate(df)
         
         _len = len(data)
         _index = df["index"].tail(_len)
@@ -309,7 +309,7 @@ class RSI(QObject):
         _pre_len = len(self.df)
         df:pd.DataFrame = self._candles.get_df().iloc[:-1*_pre_len]
         
-        data = self.caculate(df)
+        data = self.calculate(df)
         
         _len = len(data)
         _index = df["index"].tail(_len)
@@ -339,7 +339,7 @@ class RSI(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.length*5)
                     
-            data = self.caculate(df)
+            data = self.calculate(df)
             
             new_frame = pd.DataFrame({
                                     'index':[new_candle.index],
@@ -359,7 +359,7 @@ class RSI(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.length*5)
                     
-            data = self.caculate(df)
+            data = self.calculate(df)
                     
             self.df.iloc[-1] = [new_candle.index,data.iloc[-1]]
                     

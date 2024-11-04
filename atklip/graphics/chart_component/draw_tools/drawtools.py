@@ -19,6 +19,7 @@ from .base_arrow import BaseArrowItem
 from .elip import Ellipse
 from .circle import Circle
 from .long_possiton import Longposition
+from .short_possiton import Shortposition
 
 from .draw_tool_setting_wg import PopUpSettingMenu
 
@@ -177,6 +178,28 @@ class DrawTool(QObject):
         self.drawing_object = obj
         uid_obj = self.chart.objmanager.add(obj)
         self.draw_object_name = "drawed_long_position"
+        obj.on_click.connect(self.show_popup_menu)
+        self.chart.sig_show_pop_up_draw_tool.emit(obj)
+    
+    def draw_short_position(self, ev: QEvent):
+        # pos_x, pos_y = self.get_position_mouse_on_chart(ev)
+        pos_x, pos_y = self.get_position_crosshair()
+        yrange = self.chart.yAxis.range
+        xrange = self.chart.xAxis.range
+        
+        deltax = (xrange[1]-xrange[0])/6
+        deltay = (yrange[1]-yrange[0])/6
+        
+        obj =Shortposition(pos=[pos_x, pos_y], size=[deltax, deltay], drawtool=self)
+    
+        self.chart.addItem(obj)
+        self.chart.drawtools.append(obj)
+        self.num_fibo += 1
+        module_name = "Shortposition " + str(self.num_fibo)
+        obj.setObjectName(module_name)
+        self.drawing_object = obj
+        uid_obj = self.chart.objmanager.add(obj)
+        self.draw_object_name = "drawed_short_position"
         obj.on_click.connect(self.show_popup_menu)
         self.chart.sig_show_pop_up_draw_tool.emit(obj)
     

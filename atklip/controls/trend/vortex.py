@@ -234,7 +234,7 @@ class VORTEX(QObject):
         
         return vortex_,signalma
     
-    def caculate(self,df: pd.DataFrame):
+    def calculate(self,df: pd.DataFrame):
         INDICATOR = vortex(high=df["high"],
                             low=df["low"],
                             close=df["close"],
@@ -249,7 +249,7 @@ class VORTEX(QObject):
         self.is_genering = True
         self.df = pd.DataFrame([])
         df:pd.DataFrame = self._candles.get_df()
-        vortex_,signalma = self.caculate(df)
+        vortex_,signalma = self.calculate(df)
         _index = df["index"]
         
         _len = min([len(vortex_),len(signalma)])
@@ -275,7 +275,7 @@ class VORTEX(QObject):
         _pre_len = len(self.df)
         df:pd.DataFrame = self._candles.get_df().iloc[:-1*_pre_len]
         
-        vortex_,signalma = self.caculate(df)
+        vortex_,signalma = self.calculate(df)
         _index = df["index"]
         
         _len = min([len(vortex_),len(signalma)])
@@ -308,7 +308,7 @@ class VORTEX(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.period*5)
                     
-            vortex_,signalma = self.caculate(df)
+            vortex_,signalma = self.calculate(df)
             
             new_frame = pd.DataFrame({
                                     'index':[new_candle.index],
@@ -328,7 +328,7 @@ class VORTEX(QObject):
         self.is_current_update = False
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.period*5)
-            vortex_,signalma = self.caculate(df)
+            vortex_,signalma = self.calculate(df)
             self.df.iloc[-1] = [new_candle.index,vortex_.iloc[-1],signalma.iloc[-1]]
             self.xdata,self.vortex_, self.signalma = self.df["index"].to_list(),self.df["vortex"].to_list(),self.df["signalma"].to_list()
             self.sig_update_candle.emit()

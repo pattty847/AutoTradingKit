@@ -73,58 +73,55 @@ class BasicMenu(ScrollInterface):
     def name(self):
         return self.objectName()
     def setup_setting_tool(self):
+        """_summary_
+        {"capital":self.has["inputs"]["capital"],
+                   "loss_capital":self.has["inputs"]["loss_capital"],
+                    "proportion_closed":self.has["inputs"]["proportion_closed"],
+                    "is_risk":self.has["inputs"]["is_risk"],
+                    "risk_percentage":self.has["inputs"]["risk_percentage"],
+                    "leverage":self.has["inputs"]["leverage"],
+                    "taker_fee":self.has["inputs"]["taker_fee"],
+                    "maker_fee":self.has["inputs"]["maker_fee"],
+                    }
+        """
         _name = self.name()
-        _y_axis_show = self.tool.has["y_axis_show"]
         if _name == "input":
             _inputs = self.tool.get_inputs()
             for _input in list(_inputs.keys()):
-                if _input == "source":
-                    source = SourceEdit(self,self.tool, _input,self.chart.sources)
-                    source.set_name(_input)
-                    self.sig_add_tool.emit(source)
-                elif _input == "type":
-                    if isinstance(_input,str):
-                        type_tool = TypeEdit(self,self.tool, _input)
-                        type_tool.set_name(_input)
-                        
-                        self.sig_add_tool.emit(type_tool)
-                elif "period" in _input:
-                    period = PeriodEdit(self,self.tool, _input)
-                    period.set_name(_input)
-                    self.sig_add_tool.emit(period)
-                elif "length" in _input:
-                    length = PeriodEdit(self,self.tool, _input)
-                    length.set_name(_input)
-                    self.sig_add_tool.emit(length)
-                elif "legs" in _input:
-                    length = PeriodEdit(self,self.tool, _input)
-                    length.set_name(_input)
-                    self.sig_add_tool.emit(length)
-                elif "value" in _input:
+                if "capital" in _input:
                     value = PriceEdit(self,self.tool, _input)
                     value.set_name(_input)
                     self.sig_add_tool.emit(value)
                 
-                elif "ma_type" in _input:
-                    ma_type = MaTypeEdit(self,self.tool, _input)
-                    ma_type.set_name(_input)
-                    self.sig_add_tool.emit(ma_type)
-                elif "interval" in _input:
-                    interval = MaIntervalEdit(self,self.tool, _input)
-                    interval.set_name(_input)
-                    self.sig_add_tool.emit(interval)
-                elif "show" in _input:
-                    pass
-                elif "tool_type" in _input:
-                    pass
-                elif "price" in _input:
-                    price = PriceEdit(self,self.tool, _input)
-                    price.set_name(_input)
-                    self.sig_add_tool.emit(price)
-                else:
-                    period = MultiDevEdit(self._parent,self.tool,_input)
+                elif "loss_capital" in _input:
+                    value = PriceEdit(self,self.tool, _input)
+                    value.set_name(_input)
+                    self.sig_add_tool.emit(value)
+                elif "proportion_closed" in _input:
+                    value = PriceEdit(self,self.tool, _input)
+                    value.set_name(_input)
+                    self.sig_add_tool.emit(value)
+                elif "risk_percentage" in _input:
+                    value = PriceEdit(self,self.tool, _input)
+                    value.set_name(_input)
+                    self.sig_add_tool.emit(value)
+                elif "leverage" in _input:
+                    value = PriceEdit(self,self.tool, _input)
+                    value.set_name(_input)
+                    self.sig_add_tool.emit(value)
+                elif "taker_fee" in _input:
+                    period = PriceEdit(self._parent,self.tool,_input)
                     period.set_name(_input)
                     self.sig_add_tool.emit(period)
+                elif "maker_fee" in _input:
+                    period = PriceEdit(self._parent,self.tool,_input)
+                    period.set_name(_input)
+                    self.sig_add_tool.emit(period)
+                elif "legs" in _input:
+                    length = PeriodEdit(self,self.tool, _input)
+                    length.set_name(_input)
+                    self.sig_add_tool.emit(length)
+           
         elif _name == "style":
             _inputs = self.tool.get_styles()
             for _input in list(_inputs.keys()):
@@ -150,6 +147,9 @@ class BasicMenu(ScrollInterface):
     def add_Widget(self,widget):
         self.addWidget(widget, alignment=Qt.AlignmentFlag.AlignTop)
         _height = self.height() + widget.height()+10
+        # _width = self.width()
+        # if _width < widget.width():
+        #     self.setFixedWidth(_width)
         self.setFixedHeight(_height)
     def remove_Widget(self,widget):
         self.removeWidget(widget)
@@ -159,7 +159,8 @@ class BasicMenu(ScrollInterface):
 class SettingWidget(PivotInterface):
     def __init__(self,parent:QWidget=None,tool=None,chart=None):
         super(SettingWidget, self).__init__(parent)
-        self.setFixedWidth(300)
+        self.w = 320
+        self.setFixedWidth(self.w)
         self.tool = tool
         self.chart:Chart|ViewSubPanel = chart
         self.setup_setting_tool()
@@ -170,10 +171,20 @@ class SettingWidget(PivotInterface):
         
         if _inputs != {}:
             self.input_widget = BasicMenu("input",self,self.tool,self.chart)
+            width = self.input_widget.width()
+            if self.w < width:
+                self.w = width
+                self.setFixedWidth(width)
+                
             self.addSubInterface(self.input_widget, 'Inputs', self.tr('Inputs'))
 
         if _styles!= {}:
             self.style_widget = BasicMenu("style",self,self.tool,self.chart)
+            width = self.style_widget.width()
+            if self.w < width:
+                self.w = width
+                self.setFixedWidth(width)
+            
             self.addSubInterface(self.style_widget, 'Styles', self.tr('Styles'))
             if _inputs == {}:
                 _height_style_widget = self.style_widget.height() 
@@ -200,7 +211,7 @@ class DrawSettingMenu(MovingWidget):
         super(DrawSettingMenu, self).__init__(parent,f"Setting {tool.has["name"]}")
         self.title.btn_close.clicked.connect(self.deleteLater,Qt.ConnectionType.AutoConnection)
         "change title"
-        tool.sig_change_tool_name.connect(self.change_title,Qt.ConnectionType.AutoConnection)
+        # tool.sig_change_tool_name.connect(self.change_title,Qt.ConnectionType.AutoConnection)
         
         self.chart:Chart|ViewSubPanel = chart
         
@@ -222,7 +233,7 @@ class DrawSettingMenu(MovingWidget):
         
         self.resize(self.w,_height)
         
-        FluentStyleSheet.toolMENU.apply(self)
+        FluentStyleSheet.INDICATORMENU.apply(self)
     
     def delete(self,ev):
         try:

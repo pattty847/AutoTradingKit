@@ -1,135 +1,145 @@
-# Copyright (C) 2022 The Qt Company Ltd.
-# SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+import vectorbt as vbt
+import pandas as pd
+import numpy as np
+import talib
+import datetime as dt
+import json
+import requests
+URL = 'https://api.binance.com/api/v3/klines'
+ 
+intervals_to_secs = {
+    '1m':60,
+    '3m':180,
+    '5m':300,
+    '15m':900,
+    '30m':1800,
+    '1h':3600,
+    '2h':7200,
+    '4h':14400,
+    '6h':21600,
+    '8h':28800,
+    '12h':43200,
+    '1d':86400,
+    '3d':259200,
+    '1w':604800,
+    '1M':2592000
+}
+ 
+def download_kline_data(start: dt.datetime, end:dt.datetime ,ticker:str, interval:str)-> pd.DataFrame:
+    start = int(start.timestamp()*1000)
+    end = int(end.timestamp()*1000)
+    full_data = pd.DataFrame()
+     
+    while start < end:
+        par = {'symbol': ticker, 'interval': interval, 'startTime': str(start), 'endTime': str(end), 'limit':1000}
+        data = pd.DataFrame(json.loads(requests.get(URL, params= par).text))
+ 
+        data.index = [dt.datetime.fromtimestamp(x/1000.0) for x in data.iloc[:,0]]
+        data=data.astype(float)
+        full_data = pd.concat([full_data,data])
+         
+        start+=intervals_to_secs[interval]*1000*1000
+         
+    full_data.columns = ['Datetime', 'Open', 'High', 'Low', 'Close', 'Volume','Close_time', 'Qav', 'Num_trades','Taker_base_vol', 'Taker_quote_vol', 'Ignore']
+     
+    return full_data
 
-from PySide6.QtCore import (Qt, QObject, Signal, Slot)
-from PySide6.QtGui import (QColor, QFont, QPalette)
-from PySide6.QtWidgets import (QApplication, QGridLayout, QLabel, QMainWindow, QVBoxLayout, QWidget)
+# UT Bot Parameters
+SENSITIVITY = 1
+ATR_PERIOD = 10
+ 
+# Ticker and timeframe
+TICKER = "BTCUSDT"
+INTERVAL = "5m"
+ 
+# Backtest start/end date
+START = dt.datetime(2024,10,25)
+END   = dt.datetime.now()
 
-import PySide6.QtAsyncio as QtAsyncio
+	
+# Get data from Binance
+pd_data = download_kline_data(START, END, TICKER, INTERVAL)
+pd_data["xATR"] = talib.ATR(pd_data["High"], pd_data["Low"], pd_data["Close"], timeperiod=ATR_PERIOD)
+pd_data["nLoss"] = SENSITIVITY * pd_data["xATR"]
+ 
+#Drop all rows that have nan, X first depending on the ATR preiod for the moving average
+pd_data = pd_data.dropna()
+pd_data = pd_data.reset_index()
 
-import asyncio
-import sys
-from random import randint
+# Compute ATR And nLoss variable
+pd_data["xATR"] = talib.ATR(pd_data["High"], pd_data["Low"], pd_data["Close"], timeperiod=ATR_PERIOD)
+pd_data["nLoss"] = SENSITIVITY * pd_data["xATR"]
+ 
+#Drop all rows that have nan, X first depending on the ATR preiod for the moving average
+pd_data = pd_data.dropna()
+pd_data = pd_data.reset_index()
 
+# Function to compute ATRTrailingStop
+def xATRTrailingStop_func(close, prev_close, prev_atr, nloss):
+    if close > prev_atr and prev_close > prev_atr:
+        return max(prev_atr, close - nloss)
+    elif close < prev_atr and prev_close < prev_atr:
+        return min(prev_atr, close + nloss)
+    elif close > prev_atr:
+        return close - nloss
+    else:
+        return close + nloss
+ 
+# # Filling ATRTrailingStop Variable
+# pd_data["ATRTrailingStop"] = [0.0] + [np.nan for i in range(len(pd_data) - 1)]
 
-class MainWindow(QMainWindow):
+pd_data["ATRTrailingStop"] = np.nan
+pd_data.loc[0, "ATRTrailingStop"] = 0.0  # Set the first value
 
-    set_num = Signal(int, QColor)
+for i in range(1, len(pd_data)):
+    pd_data.loc[i, "ATRTrailingStop"] = xATRTrailingStop_func(
+        pd_data.loc[i, "Close"],
+        pd_data.loc[i - 1, "Close"],
+        pd_data.loc[i - 1, "ATRTrailingStop"],
+        pd_data.loc[i, "nLoss"],
+    )
 
-    def __init__(self, rows, cols):
-        super().__init__()
+# def xATRTrailingStop(row):
+#     """Calculate the ATR trailing stop based on the current and previous row."""
+#     if row['Close'] > row['Prev_ATR'] and row['Prev_Close'] > row['Prev_ATR']:
+#         return max(row['Prev_ATR'], row['Close'] - row['nLoss'])
+#     elif row['Close'] < row['Prev_ATR'] and row['Prev_Close'] < row['Prev_ATR']:
+#         return min(row['Prev_ATR'], row['Close'] + row['nLoss'])
+#     elif row['Close'] > row['Prev_ATR']:
+#         return row['Close'] - row['nLoss']
+#     else:
+#         return row['Close'] + row['nLoss']
 
-        self.rows = rows
-        self.cols = cols
+# def calculate_atr_trailing_stop(pd_data: pd.DataFrame) -> pd.DataFrame:
+#     """Fill the ATRTrailingStop column in the DataFrame."""
+#     # Initialize the ATRTrailingStop column
+#     pd_data["ATRTrailingStop"] = np.nan
+#     pd_data.loc[0, "ATRTrailingStop"] = 0.0  # Set the first value
 
-        widget_central = QWidget()
-        self.setCentralWidget(widget_central)
+#     # Create previous columns for calculations
+#     pd_data['Prev_Close'] = pd_data['Close'].shift(1)
+#     pd_data['Prev_ATR'] = pd_data['ATRTrailingStop'].shift(1)
 
-        layout_outer = QVBoxLayout(widget_central)
+#     # Apply the trailing stop calculation
+#     pd_data['ATRTrailingStop'] = pd_data.apply(xATRTrailingStop, axis=1)
 
-        self.widget_outer_text = QLabel()
-        font = QFont()
-        font.setPointSize(14)
-        self.widget_outer_text.setFont(font)
-        layout_outer.addWidget(self.widget_outer_text, alignment=Qt.AlignmentFlag.AlignCenter)
+#     # Drop the temporary columns
+#     pd_data.drop(columns=['Prev_Close', 'Prev_ATR'], inplace=True)
 
-        widget_inner_grid = QWidget()
-        layout_outer.addWidget(widget_inner_grid, alignment=Qt.AlignmentFlag.AlignCenter)
+#     return pd_data
 
-        self.layout_inner_grid = QGridLayout(widget_inner_grid)
-        k = 1
-        for i in range(self.rows):
-            for j in range(self.cols):
-                box = QLabel(f"{k}")
-                self.layout_inner_grid.addWidget(box, i, j, Qt.AlignmentFlag.AlignCenter)
-                k += 1
+# # Giả sử pd_data đã được định nghĩa và chứa các cột cần thiết
+# pd_data = calculate_atr_trailing_stop(pd_data)
 
-        self.set_num.connect(self.set_num_handler)
-
-    @Slot(int, QColor)
-    def set_num_handler(self, i, color):
-        row = int((i - 1) / self.cols)
-        col = (i - 1) - (row * self.cols)
-        widget = self.layout_inner_grid.itemAtPosition(row, col).widget()
-
-        font = QFont()
-        font.setWeight(QFont.Bold)
-        palette = QPalette()
-        palette.setColor(QPalette.WindowText, color)
-        widget.setFont(font)
-        widget.setPalette(palette)
-
-
-class Eratosthenes(QObject):
-
-    """ This Sieve of Eratosthenes runs on a configurable tick (default
-        0.1 seconds). At each tick, a new subroutine will be created
-        that will check multiples of the next prime number. Each of
-        these subroutines also operates on the same tick. """
-
-    def __init__(self, num, window, tick=0.1):
-        super().__init__()
-        self.num = num
-        self.sieve = [True] * self.num
-        self.base = 0
-        self.window = window
-        self.tick = tick
-        self.coroutines = []
-        self.done = False
-        self.loop = None
-
-    def get_tick(self):
-        return self.loop.time() + self.tick
-
-    async def start(self):
-        self.loop = asyncio.get_event_loop()
-        asyncio.create_task(self.update_text())
-        while self.base <= self.num / 2:
-            await asyncio.sleep(self.tick)
-            for i in range(self.base + 1, self.num):
-                if self.sieve[i]:
-                    self.base = i
-                    break
-            asyncio.create_task(self.mark_number(self.base + 1))
-        while sum(self.coroutines) > 0:
-            await asyncio.sleep(self.tick)
-        self.done = True
-        print("DONE")
-
-    async def mark_number(self, base):
-        id = len(self.coroutines)
-        self.coroutines.append(1)
-        color = QColor(randint(64, 192), randint(64, 192), randint(64, 192))
-        for i in range(2 * base, self.num + 1, base):
-            if self.sieve[i - 1]:
-                self.sieve[i - 1] = False
-                self.window.set_num.emit(i, color)
-            await asyncio.sleep(self.tick)
-        self.coroutines[id] = 0
-
-    async def update_text(self):
-        while not self.done:
-            await asyncio.sleep(self.tick)
-            if int(self.loop.time() + self.tick) % 2:
-                text = "⚙️ ...Calculating prime numbers... ⚙️"
-            else:
-                text = "👩‍💻 ...Hacking the universe... 👩‍💻"
-            self.window.widget_outer_text.setText(text)
-
-        self.window.widget_outer_text.setText(
-            "🥳 Congratulations! You found all the prime numbers and solved mathematics. 🥳"
-        )
+# Calculating signals
+ema = vbt.MA.run(pd_data["Close"], 1, short_name='EMA', ewm=True)
+ 
+pd_data["Above"] = ema.ma_crossed_above(pd_data["ATRTrailingStop"])
+pd_data["Below"] = ema.ma_crossed_below(pd_data["ATRTrailingStop"])
+ 
+pd_data["Buy"] = (pd_data["Close"] > pd_data["ATRTrailingStop"]) & (pd_data["Above"]==True)
+pd_data["Sell"] = (pd_data["Close"] < pd_data["ATRTrailingStop"]) & (pd_data["Below"]==True)
 
 
-if __name__ == "__main__":
-    rows = 40
-    cols = 40
-    num = rows * cols
+print(pd_data.loc[(pd_data["Buy"]==True)| ( pd_data["Sell"]==True)])
 
-    app = QApplication(sys.argv)
-    main_window = MainWindow(rows, cols)
-    eratosthenes = Eratosthenes(num, main_window)
-
-    main_window.show()
-
-    QtAsyncio.run(eratosthenes.start())

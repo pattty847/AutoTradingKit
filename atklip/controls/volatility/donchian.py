@@ -232,7 +232,7 @@ class DONCHIAN(QObject):
         cb = INDICATOR[mid_name].dropna().round(4)
         ub = INDICATOR[upper_name].dropna().round(4)
         return lb,cb,ub
-    def caculate(self,df: pd.DataFrame):
+    def calculate(self,df: pd.DataFrame):
         INDICATOR = donchian(high=df["high"],
                             low=df["low"],
                             lower_length=self.lower_length,
@@ -246,7 +246,7 @@ class DONCHIAN(QObject):
         self.df = pd.DataFrame([])
         
         df:pd.DataFrame = self._candles.get_df()
-        lb,cb,ub = self.caculate(df)
+        lb,cb,ub = self.calculate(df)
 
         _len = min([len(lb),len(cb),len(ub)])
         _index = df["index"].tail(_len)
@@ -273,7 +273,7 @@ class DONCHIAN(QObject):
         _pre_len = len(self.df)
         df:pd.DataFrame = self._candles.get_df().iloc[:-1*_pre_len]
         
-        lb,cb,ub = self.caculate(df)
+        lb,cb,ub = self.calculate(df)
 
         _len = min([len(lb),len(cb),len(ub)])
         _index = df["index"].tail(_len)
@@ -308,7 +308,7 @@ class DONCHIAN(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.upper_length*5)
                     
-            lb,cb,ub = self.caculate(df)
+            lb,cb,ub = self.calculate(df)
  
             new_frame = pd.DataFrame({
                                     'index':[new_candle.index],
@@ -332,7 +332,7 @@ class DONCHIAN(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.upper_length*5)
                     
-            lb,cb,ub = self.caculate(df)
+            lb,cb,ub = self.calculate(df)
 
             self.df.iloc[-1] = [new_candle.index,lb.iloc[-1],cb.iloc[-1],ub.iloc[-1]]
                     

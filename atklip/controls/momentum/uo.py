@@ -266,7 +266,7 @@ class UO(QObject):
             data = INDICATOR[uo_name].dropna().round(4)
         return data
     
-    def caculate(self,df: pd.DataFrame):
+    def calculate(self,df: pd.DataFrame):
         INDICATOR = uo(high=df["high"],
                     low=df["low"],
                     close=df["close"],
@@ -286,7 +286,7 @@ class UO(QObject):
         self.is_genering = True
         self.df = pd.DataFrame([])
         df:pd.DataFrame = self._candles.get_df()
-        data = self.caculate(df)
+        data = self.calculate(df)
         
         _len = len(data)
         _index = df["index"].tail(_len)
@@ -309,7 +309,7 @@ class UO(QObject):
         _pre_len = len(self.df)
         df:pd.DataFrame = self._candles.get_df().iloc[:-1*_pre_len]
         
-        data = self.caculate(df)
+        data = self.calculate(df)
         
         _len = len(data)
         _index = df["index"].tail(_len)
@@ -338,7 +338,7 @@ class UO(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.slow_period*5)
                     
-            data = self.caculate(df)
+            data = self.calculate(df)
             
             new_frame = pd.DataFrame({
                                     'index':[new_candle.index],
@@ -357,7 +357,7 @@ class UO(QObject):
         self.is_current_update = False
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.slow_period*5)
-            data = self.caculate(df)
+            data = self.calculate(df)
             self.df.iloc[-1] = [new_candle.index,data.iloc[-1]]
             self.xdata,self.data  = self.df["index"].to_list(),self.df["data"].to_list()
             self.sig_update_candle.emit()

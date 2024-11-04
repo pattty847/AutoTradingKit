@@ -283,7 +283,7 @@ class SuperTrend(QObject):
             return SUPERTt,SUPERTd,SUPERTl,SUPERTs
         except:
             return Series([]),Series([]),Series([])
-    def caculate(self,df: pd.DataFrame):
+    def calculate(self,df: pd.DataFrame):
         INDICATOR = supertrend(high=df["high"], 
                                 low=df["low"], 
                                 close=df["close"],
@@ -301,7 +301,7 @@ class SuperTrend(QObject):
         
         df:pd.DataFrame = self._candles.get_df()
         
-        SUPERTt,SUPERTd,SUPERTl,SUPERTs = self.caculate(df)
+        SUPERTt,SUPERTd,SUPERTl,SUPERTs = self.calculate(df)
         _len = min([len(SUPERTt),len(SUPERTd),len(SUPERTl),len(SUPERTs)])
         _index = df["index"]
         self.df = pd.DataFrame({
@@ -330,7 +330,7 @@ class SuperTrend(QObject):
         _pre_len = len(self.df)
         df:pd.DataFrame = self._candles.get_df().iloc[:-1*_pre_len]
         
-        SUPERTt,SUPERTd,SUPERTl,SUPERTs = self.caculate(df)
+        SUPERTt,SUPERTd,SUPERTl,SUPERTs = self.calculate(df)
         _len = min([len(SUPERTt),len(SUPERTd),len(SUPERTl),len(SUPERTs)])
         _index = df["index"]
         _df = pd.DataFrame({
@@ -363,7 +363,7 @@ class SuperTrend(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.slow_period*5)
                     
-            macd_data,histogram,signalma = self.caculate(df)
+            macd_data,histogram,signalma = self.calculate(df)
             
             new_frame = pd.DataFrame({
                                     'index':[new_candle.index],
@@ -386,7 +386,7 @@ class SuperTrend(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.slow_period*5)
                     
-            macd_data,histogram,signalma = self.caculate(df)
+            macd_data,histogram,signalma = self.calculate(df)
                     
             self.df.iloc[-1] = [new_candle.index,macd_data.iloc[-1],histogram.iloc[-1],signalma.iloc[-1]]
                     

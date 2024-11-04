@@ -198,13 +198,17 @@ class PeriodEdit(IntEdit):
 class FloatEdit(QWidget,DoubleValue):
     def __init__(self,parent:QWidget=None,indicator=None, _input=None):
         super(FloatEdit,self).__init__(parent)
+        self.setupUi(self)
+        self.value.setDecimals(2)
+        self.value.setMinimum(0.00)
+        self.value.setSingleStep(0.01)
         self._parent = parent
         self.indicator = indicator
         self._input = _input
-        self.setupUi(self)
-        self.value.setRange(0.1,1000)
-        self.value.setSingleStep(0.1)
+        self.value.setRange(-1000000000,1000000000)
+        # self.value.setSingleStep(0.1)
         self.setFixedHeight(35)
+        self.value.setFixedWidth(150)
     def set_name(self,name):
         self.tittle.setText(name)
 
@@ -229,7 +233,7 @@ class MultiDevEdit(FloatEdit):
 
     def change_price(self,price):
         """ "open","high","low","close" """
-        price = round(price,2)
+        self.indicator.has["inputs"][self._input] = price
         self.indicator.update_inputs(self._input,price)
 
 
@@ -240,7 +244,9 @@ class PriceEdit(FloatEdit):
         self.setFixedHeight(35)
         _inputs = self.indicator.get_inputs()
         
-        if _input in ["price_high","price_low","fast_w_value","medium_w_value","slow_w_value"]:
+        if _input in ["price_high","price_low","fast_w_value","medium_w_value","slow_w_value",
+                      "capital","loss_capital","proportion_closed","risk_percentage","leverage","taker_fee",
+                      "maker_fee"]:
             _value = _inputs.get(_input)
             if _value != None:
                 self.set_value(_value)
@@ -249,6 +255,7 @@ class PriceEdit(FloatEdit):
 
     def change_price(self,price):
         """ "open","high","low","close" """
+        self.indicator.has["inputs"][self._input] = price
         self.indicator.update_inputs(self._input,price)
 
      
@@ -379,7 +386,6 @@ class ColorEditDrawTool(Color_Picker_Button):
         self.indicator.update_styles(self._input)
     def load_color(self):
         _color = self.indicator.has["styles"].get(self._input)
-        print(_color)
         if isinstance(_color,QBrush):
             _color = _color.color()
         self.setColor(_color)

@@ -11,11 +11,13 @@ def round_(v):
     return np.floor(v+0.5)
 
 def convert_precision(number):
+    if "1e" in number:
+        return int(number[-2:])
+    if isinstance(number,str):
+        number = float(number)
     if number >= 1:
         return int(number)
     number = f"{number}"
-    if "1e" in number:
-        return int(number[-2:])
     decimal_part = number.split('.')[1]  
     return len(decimal_part)
 
@@ -38,6 +40,7 @@ def getspecialvalues(_type,last_candle:List):
         return last_candle[-1].index, last_candle[-1].volume
     else:
         return None,None
+    
 def mouse_clicked(vb, ev):
     if ev.button() == 8: # back
         vb.pan_x(percent=-30)
@@ -156,3 +159,114 @@ def timestamptodate(timestamp):
     from datetime import datetime
     return datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S")
 
+
+def calculate_pl_with_fees(entry_price: float, exit_price: float, 
+                           capital=1000, proportion_closed=1, 
+                           leverage: int=1, taker_fee: float=0, 
+                           maker_fee: float=0, order_type: str="market",
+                           is_stop_loss=False):
+    """_summary_
+    Args:
+        entry_price (float): _description_
+        exit_price (float): _description_
+        capital (int, optional): _description_. Defaults to 1000.
+        leverage (int, optional): _description_. Defaults to 5.
+        proportion_closed (int, optional): _description_. Defaults to 1.
+        taker_fee (float, optional): fee for market order. Defaults to 0.05.
+        maker_fee (float, optional): fee for litmit order. Defaults to 0.02.
+        order_type (str, optional): limit or market. Defaults to "market".
+        is_stop_loss (bool, optional): if Fasle: calculate profit if True: calculate stop loss. Defaults to False.
+    Returns:
+        _type_: _description_
+    """
+    taker_fee = taker_fee/100
+    maker_fee = maker_fee/100
+    total_position_value = capital * leverage
+    close_fee = 0
+    if order_type == "market":
+        open_fee = total_position_value * taker_fee
+        if is_stop_loss:
+            close_fee = total_position_value *taker_fee* proportion_closed
+    else:
+        open_fee = total_position_value * maker_fee
+        if is_stop_loss:
+            close_fee = total_position_value *maker_fee* proportion_closed
+
+    price_difference = abs(entry_price - exit_price)
+        
+    percent_change = price_difference / entry_price
+    leverage_gain = percent_change * leverage
+    capital_gain = leverage_gain * capital * proportion_closed
+    pl = capital_gain - open_fee * proportion_closed - close_fee
+    return round(pl, 2)
+
+def calculate_recommended_capital_base_on_risk(entry_price: float, stop_loss_price: float, 
+                                  total_capital: float=1000, risk_percentage: float=2, 
+                                  leverage: int=1, taker_fee: float=0, maker_fee: float=0, 
+                                  order_type: str="market"):
+    """_summary_
+
+    Args:
+        entry_price (float): _description_
+        stop_loss_price (float): _description_
+        total_capital (float, optional): total balance. Defaults to 1000.
+        risk_percentage (float, optional): _description_. Defaults to 2.
+        leverage (int, optional): _description_. Defaults to 5.
+        taker_fee (float, optional): _description_. Defaults to 0.05.
+        maker_fee (float, optional): _description_. Defaults to 0.02.
+        order_type (str, optional): _description_. Defaults to "market".
+
+    Returns:
+        _type_: _description_
+    """
+    taker_fee = taker_fee/100
+    maker_fee = maker_fee/100
+    capital_to_risk = total_capital * (risk_percentage / 100)
+    price_difference = abs(entry_price - stop_loss_price)
+    percent_change_sl = price_difference / entry_price
+    leveraged_loss_per_unit = percent_change_sl * leverage
+    
+    if order_type == "market":
+        total_taker_fee = entry_price * leverage * taker_fee * 2
+    else:
+        total_taker_fee = entry_price * leverage * maker_fee * 2
+    
+    effective_loss_per_unit = leveraged_loss_per_unit + (total_taker_fee / (entry_price * leverage))
+    recommended_capital = capital_to_risk / effective_loss_per_unit
+    return round(recommended_capital, 2)
+
+
+def calculate_recommended_capital_base_on_loss_capital(entry_price: float, stop_loss_price: float, 
+                                                        loss_capital: float=1000, 
+                                                        leverage: int=1, taker_fee: float=0, 
+                                                        maker_fee: float=0, order_type: str="market"):
+    """_summary_
+
+    Args:
+        entry_price (float): _description_
+        stop_loss_price (float): _description_
+        loss_capital (float, optional): _description_. Defaults to 1000.
+        leverage (int, optional): _description_. Defaults to 5.
+        taker_fee (float, optional): _description_. Defaults to 0.05.
+        maker_fee (float, optional): _description_. Defaults to 0.02.
+        order_type (str, optional): _description_. Defaults to "market".
+
+    Returns:
+        _type_: _description_
+    """
+    taker_fee = taker_fee/100
+    maker_fee = maker_fee/100
+    price_difference = abs(entry_price - stop_loss_price)
+    percent_change_sl = price_difference / entry_price
+    leveraged_loss_per_unit = percent_change_sl * leverage
+    
+    if order_type == "market":
+        total_taker_fee = entry_price * leverage * taker_fee * 2
+    else:
+        total_taker_fee = entry_price * leverage * maker_fee * 2
+    
+    effective_loss_per_unit = leveraged_loss_per_unit + (total_taker_fee / (entry_price * leverage))
+    
+    # Tính số vốn khuyến nghị dựa trên số vốn có thể mất
+    recommended_capital = loss_capital / effective_loss_per_unit
+    return round(recommended_capital, 2)

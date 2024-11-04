@@ -255,7 +255,7 @@ class TRIX(QObject):
         
         return trix_,signalma
     
-    def caculate(self,df: pd.DataFrame):
+    def calculate(self,df: pd.DataFrame):
         INDICATOR = trix(close=df[self.source],
                             length=self.length_period,
                             signal = self.signal_period,
@@ -272,7 +272,7 @@ class TRIX(QObject):
         
         df:pd.DataFrame = self._candles.get_df()
         
-        trix_, signalma = self.caculate(df)
+        trix_, signalma = self.calculate(df)
         
         _len = min([len(trix_),len(signalma)])
         _index = df["index"].tail(_len)
@@ -300,7 +300,7 @@ class TRIX(QObject):
         _pre_len = len(self.df)
         df:pd.DataFrame = self._candles.get_df().iloc[:-1*_pre_len]
         
-        trix_, signalma = self.caculate(df)
+        trix_, signalma = self.calculate(df)
         
         _len = min([len(trix_),len(signalma)])
         _index = df["index"].tail(_len)
@@ -334,7 +334,7 @@ class TRIX(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.length_period*5)
                     
-            trix_, signalma = self.caculate(df)
+            trix_, signalma = self.calculate(df)
             
             new_frame = pd.DataFrame({
                                     'index':[new_candle.index],
@@ -357,7 +357,7 @@ class TRIX(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.length_period*5)
                     
-            trix_, signalma = self.caculate(df)
+            trix_, signalma = self.calculate(df)
                     
             self.df.iloc[-1] = [new_candle.index,trix_.iloc[-1],signalma.iloc[-1]]
                     

@@ -271,7 +271,7 @@ class TSI(QObject):
         signalma = INDICATOR[signalma_name].dropna().round(4)
         return tsi_,signalma
     
-    def caculate(self,df: pd.DataFrame):
+    def calculate(self,df: pd.DataFrame):
         INDICATOR = tsi(close=df[self.source],
                         fast=self.fast_period,
                         slow=self.slow_period,
@@ -289,7 +289,7 @@ class TSI(QObject):
         
         df:pd.DataFrame = self._candles.get_df()
         
-        tsi_, signalma = self.caculate(df)
+        tsi_, signalma = self.calculate(df)
         
         _len = min([len(tsi_),len(signalma)])
         _index = df["index"].tail(_len)
@@ -318,7 +318,7 @@ class TSI(QObject):
         _pre_len = len(self.df)
         df:pd.DataFrame = self._candles.get_df().iloc[:-1*_pre_len]
         
-        tsi_, signalma = self.caculate(df)
+        tsi_, signalma = self.calculate(df)
         
         _len = min([len(tsi_),len(signalma)])
         _index = df["index"].tail(_len)
@@ -353,7 +353,7 @@ class TSI(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.slow_period*5)
                     
-            tsi_, signalma = self.caculate(df)
+            tsi_, signalma = self.calculate(df)
             
             new_frame = pd.DataFrame({
                                     'index':[new_candle.index],
@@ -376,7 +376,7 @@ class TSI(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.slow_period*5)
                     
-            tsi_, signalma = self.caculate(df)
+            tsi_, signalma = self.calculate(df)
                     
             self.df.iloc[-1] = [new_candle.index,tsi_.iloc[-1],signalma.iloc[-1]]
                     

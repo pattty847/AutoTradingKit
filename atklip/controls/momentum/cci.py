@@ -228,7 +228,7 @@ class CCI(QObject):
             y_data = INDICATOR[roc_name]
         return y_data
     
-    def caculate(self,df: pd.DataFrame):
+    def calculate(self,df: pd.DataFrame):
         INDICATOR = cci(high=df["high"],
                         low=df["low"],
                         close=df["close"],
@@ -243,7 +243,7 @@ class CCI(QObject):
         
         df:pd.DataFrame = self._candles.get_df()
         
-        data = self.caculate(df)
+        data = self.calculate(df)
         
         _len = len(data)
         _index = df["index"].tail(_len)
@@ -268,7 +268,7 @@ class CCI(QObject):
         _pre_len = len(self.df)
         df:pd.DataFrame = self._candles.get_df().iloc[:-1*_pre_len]
         
-        data = self.caculate(df)
+        data = self.calculate(df)
         
         _len = len(data)
         _index = df["index"].tail(_len)
@@ -298,7 +298,7 @@ class CCI(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.length*5)
                     
-            data = self.caculate(df)
+            data = self.calculate(df)
             
             new_frame = pd.DataFrame({
                                     'index':[new_candle.index],
@@ -318,7 +318,7 @@ class CCI(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.length*5)
                     
-            data = self.caculate(df)
+            data = self.calculate(df)
                     
             self.df.iloc[-1] = [new_candle.index,data.iloc[-1]]
                     

@@ -22,6 +22,7 @@ class PivotItem(PushButton):
         self.isSelected = False
         self.setProperty('isSelected', False)
         self.clicked.connect(lambda: self.itemClicked.emit(True))
+        self.setAttribute(Qt.WA_LayoutUsesWidgetRect)
 
         FluentStyleSheet.PIVOT.apply(self)
         setFont(self, 18)
@@ -168,6 +169,9 @@ class Pivot(QWidget):
         qrouter.remove(routeKey)
         item.deleteLater()
 
+        if not self.items:
+            self._currentRouteKey = None
+
     def clear(self):
         """ clear all navigation items """
         for k, w in self.items.items():
@@ -176,6 +180,7 @@ class Pivot(QWidget):
             w.deleteLater()
 
         self.items.clear()
+        self._currentRouteKey = None
 
     def currentItem(self):
         """ Returns the current selected item """

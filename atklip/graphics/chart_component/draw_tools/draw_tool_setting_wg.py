@@ -13,7 +13,7 @@ from atklip.gui.qfluentwidgets.components.widgets.command_bar import CommandBarV
 from atklip.gui.qfluentwidgets.components.widgets.menu import CheckableMenu, MenuIndicatorType
 from atklip.gui.components import Tradingview_Button,Lock_Unlock_Button
 
-
+from .draw_setting_wg import DrawSettingMenu
 if TYPE_CHECKING:
     from atklip.graphics.chart_component.viewchart import Chart
 
@@ -25,7 +25,7 @@ class PopUpSettingMenu(CommandBarView):
     sig_mouse_move = Signal(tuple)
     def __init__(self, parent:QWidget=None, tool=None):
         super().__init__(parent)
-        self._parent = parent
+        self.chart:Chart = parent
         self.tool = tool
         self.setContentsMargins(0, 0, 0, 0)
         self.hBoxLayout.setContentsMargins(0, 0, 0, 0)
@@ -34,11 +34,12 @@ class PopUpSettingMenu(CommandBarView):
         self.hBoxLayout.setSpacing(0)
         self.bar.setSpacing(0)
                        
-        self.moving_btn = MovingParentWG(self._parent,self)
+        self.moving_btn = MovingParentWG(self.chart,self)
         self.moving_btn.setFixedSize(30,30)
         self.hBoxLayout.insertWidget(0,self.moving_btn,0)
         
-        inputs = self.tool.has.get("inputs")
+        self._menu = None
+        
         styles = self.tool.get_styles()
                 
         if styles:
@@ -80,7 +81,7 @@ class PopUpSettingMenu(CommandBarView):
                             setting.setIconSize(QSize(30,30))
                             setting.setToolTip("Open setting object")
                             setting.installEventFilter(ToolTipFilter(setting, 3000, ToolTipPosition.TOP))
-                            # setting.clicked.connect(self.delete_tool)
+                            setting.clicked.connect(self.open_tool_setting_menu)
                             self.add_btn(setting)
                         
                     elif "delete" in _input:
@@ -95,12 +96,36 @@ class PopUpSettingMenu(CommandBarView):
 
         self.resizeToSuitableWidth(self.moving_btn)
     
+    def open_tool_setting_menu(self):
+        if self._menu is None:
+            self._menu = DrawSettingMenu(self.tool,self.chart.mainwindow,self.chart)
+            _x = self.chart.width()
+            _y = self.chart.height()
+            x = (_x-self._menu.width())/2
+            y = (_y-self._menu.height())/3
+            self._menu.move(QPoint(x, y))
+            self._menu.show()
+        else:
+            try:
+                self._menu.deleteLater()
+                self._menu = None
+            except RuntimeError:
+                self._menu = DrawSettingMenu(self.tool,self.chart.mainwindow,self.chart)
+                _x = self.chart.width()
+                _y = self.chart.height()
+                x = (_x-self._menu.width())/2
+                y = (_y-self._menu.height())/3
+                self._menu.move(QPoint(x, y))
+                self._menu.show()
+        # self.chart.prepareGeometryChange()
+        
+    
     def lock_tool(self):
         btn = self.sender()
         self.tool.set_lock(btn)
     
     def delete_tool(self):
-        self._parent.remove_item(self.tool)
+        self.chart.remove_item(self.tool)
         self.deleteLater()
     
     def add_btn(self,btn):

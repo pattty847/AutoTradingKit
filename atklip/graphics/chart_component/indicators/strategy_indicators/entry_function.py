@@ -280,7 +280,7 @@ class MACD(QObject):
         histogram = INDICATOR[histogram_name]
         signalma = INDICATOR[signalma_name]
         return macd,histogram,signalma
-    def caculate(self,df: pd.DataFrame):
+    def calculate(self,df: pd.DataFrame):
         INDICATOR = macd(close=df[self.source],
                         fast=self.fast_period,
                         slow=self.slow_period,
@@ -295,7 +295,7 @@ class MACD(QObject):
         df:pd.DataFrame = self._candles.get_df()
         
         _index = df["index"]
-        macd_data,histogram,signalma = self.caculate(df)
+        macd_data,histogram,signalma = self.calculate(df)
 
         self.df = pd.DataFrame({
                             'index':_index,
@@ -318,7 +318,7 @@ class MACD(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.slow_period*5)
                     
-            macd_data,histogram,signalma = self.caculate(df)
+            macd_data,histogram,signalma = self.calculate(df)
             
             new_frame = pd.DataFrame({
                                     'index':[new_candle.index],
@@ -339,7 +339,7 @@ class MACD(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.slow_period*5)
                     
-            macd_data,histogram,signalma = self.caculate(df)
+            macd_data,histogram,signalma = self.calculate(df)
                     
             self.df.iloc[-1] = [new_candle.index,macd_data.iloc[-1],histogram.iloc[-1],signalma.iloc[-1]]
                     

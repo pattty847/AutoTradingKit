@@ -237,7 +237,7 @@ class ROC(QObject):
                     roc_name = name
             y_data = INDICATOR[roc_name]
         return y_data
-    def caculate(self,df: pd.DataFrame):
+    def calculate(self,df: pd.DataFrame):
         INDICATOR = roc(close=df[self.source],length=self.length,offset=self.offset).dropna().round(4)
         return self.paire_data(INDICATOR)
     def fisrt_gen_data(self):
@@ -247,7 +247,7 @@ class ROC(QObject):
         
         df:pd.DataFrame = self._candles.get_df()
         
-        data = self.caculate(df)
+        data = self.calculate(df)
         
         _len = len(data)
         _index = df["index"].tail(_len)
@@ -273,7 +273,7 @@ class ROC(QObject):
         _pre_len = len(self.df)
         df:pd.DataFrame = self._candles.get_df().iloc[:-1*_pre_len]
         
-        data = self.caculate(df)
+        data = self.calculate(df)
         
         _len = len(data)
         _index = df["index"].tail(_len)
@@ -306,7 +306,7 @@ class ROC(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.length*5)
                     
-            data = self.caculate(df)
+            data = self.calculate(df)
             
             new_frame = pd.DataFrame({
                                     'index':[new_candle.index],
@@ -326,7 +326,7 @@ class ROC(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.length*5)
                     
-            data = self.caculate(df)
+            data = self.calculate(df)
                     
             self.df.iloc[-1] = [new_candle.index,data.iloc[-1]]
                     

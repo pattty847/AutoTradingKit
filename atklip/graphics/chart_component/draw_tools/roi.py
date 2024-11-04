@@ -362,6 +362,8 @@ class SpecialROI(ROI):
 
     def __init__(self, *args, **kwargs):
         ROI.__init__(self, *args, **kwargs)
+        self.setFlag(self.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
+        self.setFlag(self.GraphicsItemFlag.ItemSendsGeometryChanges,False)
         self.handleSize = 5
         self.yoff = False
         self.xoff = False

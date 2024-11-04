@@ -32,7 +32,7 @@ def _draw_line_segment_text(interval,precision,pos0, pos1):
     
     # ysc = polyline.vb.yscale
     if diff.y() >= 0:
-        percent = percent_caculator(pos1.y(), pos0.y())
+        percent = percent_caculator(pos0.y(), pos1.y())
     else:
         percent = -percent_caculator(pos0.y(), pos1.y())
     return round(diff.y(),precision), percent,fsecs,_text #f'{diff.y()} ({percent}%) \n{fsecs} bars {ts}'
@@ -255,31 +255,32 @@ class RangePolyLine(SpecialROI):     # for date price range
             lasthandle.movePoint(pos)
             self.stateChanged()
     
-    
-    def updatePos(self,pointf):
-        # update text position to obey anchor
-        r = self.textItem.boundingRect()
-        tl = self.textItem.mapToParent(r.topLeft())
-        br = self.textItem.mapToParent(r.bottomRight())
-        offset = (br - tl) * self.anchor
-        p = self.parentItem()
-        if p is not None:
-            # prb = p.boundingRect()
-            # x,y,w,h = prb.x(),prb.y(),prb.width(),prb.height()
-            # _x = -offset.x() + x
-            mapFromParent = self.mapFromParent(pointf)
-            _x = -offset.x() + mapFromParent.x()
-            _y = mapFromParent.y()-r.height()/2
-            pos = Point(_x,_y)
-            self.textItem.setPos(pos)
+    # def updatePos(self,pointf):
+    #     # update text position to obey anchor
+    #     r = self.textItem.boundingRect()
+    #     tl = self.textItem.mapToParent(r.topLeft())
+    #     br = self.textItem.mapToParent(r.bottomRight())
+    #     offset = (br - tl) * self.anchor
+    #     p = self.parentItem()
+    #     if p is not None:
+    #         # prb = p.boundingRect()
+    #         # x,y,w,h = prb.x(),prb.y(),prb.width(),prb.height()
+    #         # _x = -offset.x() + x
+    #         mapFromParent = self.mapFromParent(pointf)
+    #         _x = -offset.x() + mapFromParent.x()
+    #         _y = mapFromParent.y()-r.height()/2
+    #         pos = Point(_x,_y)
+    #         self.textItem.setPos(pos)
     
     def update_text(self):
         h0 = self.handles[0]['item'].pos()
         h1 = self.handles[1]['item'].pos()
         diff = h1 - h0
-        point0 = self.mapFromParent(Point(h0))
-        point1 = self.mapFromParent(Point(h1))
-
+        # point0 = self.mapFromParent(Point(h0))
+        # point1 = self.mapFromParent(Point(h1))
+        point0 = self.mapToParent(Point(h0))
+        point1 = self.mapToParent(Point(h1))
+        
         diff_y, percent,fsecs,ts = _draw_line_segment_text(self.chart.interval,self.chart._precision,point0, point1)
         
         if diff.y() < 0:
@@ -287,7 +288,7 @@ class RangePolyLine(SpecialROI):     # for date price range
         else:
             self.textitem.setAnchor((1,1))
         
-        html=f"""<div style="text-align: center"><span style="color: #FFF; font-size: 11pt;">{diff_y} ({percent}%)</span><br><span style="color: #FFF; font-size: 11pt;">{fsecs} bars, {ts}</span></div>"""
+        html=f"""<div style="text-align: center"><span style="color: #d1d4dc; font-size: 11pt;">{diff_y} ({percent}%)</span><br><span style="color: #d1d4dc; font-size: 11pt;">{fsecs} bars, {ts}</span></div>"""
         
         self.textitem.setHtml(html)
         

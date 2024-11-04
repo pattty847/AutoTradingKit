@@ -364,7 +364,7 @@ class STC(QObject):
         stoch = INDICATOR[stoch_name].dropna().round(4)
         return stc_,macd,stoch
     
-    def caculate(self,df: pd.DataFrame):
+    def calculate(self,df: pd.DataFrame):
         INDICATOR = stc(close= df[self.source],
                         tclength= self.tclength,
                         fast = self.fast,
@@ -382,7 +382,7 @@ class STC(QObject):
         
         df:pd.DataFrame = self._candles.get_df()
         
-        stc_,macd,stoch = self.caculate(df)
+        stc_,macd,stoch = self.calculate(df)
         
         _len = min([len(stc_),len(macd),len(stoch)])
         _index = df["index"].tail(_len)
@@ -407,7 +407,7 @@ class STC(QObject):
         self.is_histocric_load = False
         _pre_len = len(self.df)
         df:pd.DataFrame = self._candles.get_df().iloc[:-1*_pre_len]
-        stc_,macd,stoch = self.caculate(df)
+        stc_,macd,stoch = self.calculate(df)
         
         _len = min([len(stc_),len(macd),len(stoch)])
         _index = df["index"].tail(_len)
@@ -439,7 +439,7 @@ class STC(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.slow*5)
                     
-            stc_,macd,stoch = self.caculate(df)
+            stc_,macd,stoch = self.calculate(df)
             
             new_frame = pd.DataFrame({
                                     'index':[new_candle.index],
@@ -461,7 +461,7 @@ class STC(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.slow*5)
                     
-            stc_,macd,stoch = self.caculate(df)
+            stc_,macd,stoch = self.calculate(df)
                     
             self.df.iloc[-1] = [new_candle.index,stc_.iloc[-1],macd.iloc[-1],stoch.iloc[-1]]
                     

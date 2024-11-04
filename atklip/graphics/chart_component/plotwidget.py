@@ -83,7 +83,8 @@ class ViewPlotWidget(PlotWidget):
         self.drawtools:List = []
         
         self.is_living = False
-        self._precision = 3
+        self._precision = 2
+        self.quanty_precision = 3
         
         self.jp_candle = JAPAN_CANDLE(self)
         
@@ -143,8 +144,9 @@ class ViewPlotWidget(PlotWidget):
 
         global_signal.sig_show_hide_cross.connect(self.show_hide_cross,Qt.ConnectionType.AutoConnection)
 
-    def set_precision(self,precision):
+    def set_precision(self,precision,quanty_precision):
         self._precision = precision
+        self.quanty_precision= quanty_precision
     
     def get_precision(self):
         return self._precision

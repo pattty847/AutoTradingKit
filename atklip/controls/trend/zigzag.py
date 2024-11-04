@@ -363,7 +363,7 @@ class OLD_ZIGZAG(QObject):
         zz_index = INDICATOR["index"]#.dropna()
         return zz_index,zz_swing,zz_value,zz_dev
     
-    def caculate(self,df: pd.DataFrame,_index: pd.Series):
+    def calculate(self,df: pd.DataFrame,_index: pd.Series):
         
         INDICATOR = zigzag(high=df["high"],
                             low=df["low"],
@@ -382,7 +382,7 @@ class OLD_ZIGZAG(QObject):
         df:pd.DataFrame = self._candles.get_df()
         
         _index = df["index"]
-        zz_index,zz_swing,zz_value,zz_dev = self.caculate(df,_index)
+        zz_index,zz_swing,zz_value,zz_dev = self.calculate(df,_index)
 
         self.df = pd.DataFrame({
                             'index':zz_index,
@@ -409,7 +409,7 @@ class OLD_ZIGZAG(QObject):
         
         
         _index = df["index"]
-        zz_index,zz_swing,zz_value,zz_dev = self.caculate(df,_index)
+        zz_index,zz_swing,zz_value,zz_dev = self.calculate(df,_index)
         
         self.df = pd.DataFrame({
                             'index':zz_index,
@@ -436,7 +436,7 @@ class OLD_ZIGZAG(QObject):
             df:pd.DataFrame = self._candles.get_df()
             
             _index = df["index"]
-            zz_index,zz_swing,zz_value,zz_dev = self.caculate(df,_index)
+            zz_index,zz_swing,zz_value,zz_dev = self.calculate(df,_index)
             
             new_frame = pd.DataFrame({
                                     'index':[new_candle.index],
@@ -460,7 +460,7 @@ class OLD_ZIGZAG(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df()
             _index = df["index"]
-            zz_index,zz_swing,zz_value,zz_dev = self.caculate(df,_index)
+            zz_index,zz_swing,zz_value,zz_dev = self.calculate(df,_index)
             
             self.df.iloc[-1] = [new_candle.index,zz_swing.iloc[-1],zz_value.iloc[-1],zz_dev.iloc[-1]]
             
@@ -678,7 +678,7 @@ class ZIGZAG(QObject):
             y_data = [x[1] for x in list_zizgzag]  
         return x_data,y_data
     
-    def caculate(self,list_zizgzag, candles: List[OHLCV],process:str=""):
+    def calculate(self,list_zizgzag, candles: List[OHLCV],process:str=""):
         
         if process == "add" or process == "update":
             self.list_zizgzag = update_zz(list_zizgzag=list_zizgzag,
@@ -702,7 +702,7 @@ class ZIGZAG(QObject):
         self.is_genering = True
         self.df = pd.DataFrame([])
         
-        self.x_data,self.y_data = self.caculate([],self._candles.candles)
+        self.x_data,self.y_data = self.calculate([],self._candles.candles)
 
         self.is_genering = False
         if self.first_gen == False:
@@ -712,7 +712,7 @@ class ZIGZAG(QObject):
     
     def add_historic(self,_len:int):
         self.is_genering = True
-        self.x_data,self.y_data = self.caculate(self.list_zizgzag,self._candles.candles,"load")
+        self.x_data,self.y_data = self.calculate(self.list_zizgzag,self._candles.candles,"load")
         self.is_genering = False
         if self.first_gen == False:
             self.first_gen = True
@@ -722,12 +722,12 @@ class ZIGZAG(QObject):
     def add(self,new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]
         if (self.first_gen == True) and (self.is_genering == False):
-            self.x_data,self.y_data = self.caculate(self.list_zizgzag,self._candles.candles,"add")
+            self.x_data,self.y_data = self.calculate(self.list_zizgzag,self._candles.candles,"add")
             self.sig_add_candle.emit()
         
     def update(self, new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]
         if (self.first_gen == True) and (self.is_genering == False):
-            self.x_data,self.y_data = self.caculate(self.list_zizgzag,self._candles.candles,"update")
+            self.x_data,self.y_data = self.calculate(self.list_zizgzag,self._candles.candles,"update")
             self.sig_update_candle.emit()
 

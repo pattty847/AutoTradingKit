@@ -360,8 +360,9 @@ class Chart(ViewPlotWidget):
         """
         market = exchange.market(self.symbol)
         #print(market)
-        _precision = convert_precision(market['precision']['price'])
-        self.set_precision(_precision)
+        _precision = convert_precision(market['info']['pricePrecision'])
+        quanty_precision = convert_precision(market['info']['quantityPrecision'])
+        self.set_precision(_precision,quanty_precision)
         #print("self._precision", self._precision)
 
     def get_candle(self,_type:str="japan"):
@@ -455,6 +456,9 @@ class Chart(ViewPlotWidget):
             
             elif self.drawtool.draw_object_name ==  "draw_long_position":
                 self.drawtool.draw_long_position(ev)  
+            elif self.drawtool.draw_object_name ==  "draw_short_position":
+                self.drawtool.draw_short_position(ev)      
+            
             elif self.drawtool.draw_object_name ==  "draw_rectangle":
                 self.drawtool.draw_rectangle(ev)
             elif self.drawtool.draw_object_name ==  "draw_rotate_rectangle":

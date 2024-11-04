@@ -267,7 +267,7 @@ class STOCHRSI(QObject):
         signalma = INDICATOR[signalma_name].dropna().round(4)
         return stochrsi_,signalma
     
-    def caculate(self,df: pd.DataFrame):
+    def calculate(self,df: pd.DataFrame):
         INDICATOR = stochrsi(close=df[self.source],
                             length=self.period,
                             rsi_length=self.rsi_period,
@@ -284,7 +284,7 @@ class STOCHRSI(QObject):
         
         df:pd.DataFrame = self._candles.get_df()
         
-        stochrsi_, signalma = self.caculate(df)
+        stochrsi_, signalma = self.calculate(df)
         
         _len = min([len(stochrsi_),len(signalma)])
         _index = df["index"].tail(_len)
@@ -314,7 +314,7 @@ class STOCHRSI(QObject):
         df:pd.DataFrame = self._candles.get_df().iloc[:-1*_pre_len]
         
         
-        stochrsi_, signalma = self.caculate(df)
+        stochrsi_, signalma = self.calculate(df)
         
         _len = min([len(stochrsi_),len(signalma)])
         _index = df["index"].tail(_len)
@@ -349,7 +349,7 @@ class STOCHRSI(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.rsi_period*5)
                     
-            stochrsi_, signalma = self.caculate(df)
+            stochrsi_, signalma = self.calculate(df)
             
             new_frame = pd.DataFrame({
                                     'index':[new_candle.index],
@@ -372,7 +372,7 @@ class STOCHRSI(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.rsi_period*5)
                     
-            stochrsi_, signalma = self.caculate(df)
+            stochrsi_, signalma = self.calculate(df)
                     
             self.df.iloc[-1] = [new_candle.index,stochrsi_.iloc[-1],signalma.iloc[-1]]
                     
