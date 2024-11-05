@@ -1,4 +1,5 @@
 
+from dataclasses import dataclass
 from PySide6 import QtCore, QtWidgets
 from PySide6.QtCore import Signal, QPointF, Qt, QRectF, QCoreApplication
 from PySide6.QtGui import QPainter, QColor
@@ -7,40 +8,29 @@ from atklip.graphics.pyqtgraph.Point import Point
 
 from .roi import SpecialROI, BaseHandle, _FiboLineSegment
 from .base_textitem import BaseTextItem
-from atklip.app_utils.calculate import cal_line_price_fibo
-map_rr_fibo = {1:"R", 0.9:"Entry",0.8:"1R",0.7:"2R",0.6:"3R",0.5:"4R",0.4:"5R",0.3:"6R",0.2:"7R",0.1:"8R",0:"9R"}
-DEFAULTS_FIBO = list(map_rr_fibo.keys())
-DEFAULTS_COLOR = [(120,123,134,200),
-                  (242,54,69,200),
-                  (255,152,0,200),
-                  (76,175,80,200),
-                  (8,153,129,200),
-                  (0,188,212,200),
-                  (120,123,134,200),
-                  (41, 98, 255,200),
-                  (242, 54, 69, 200),
-                  (156,39,176,200),
-                  (233, 30, 99,200),
-                  (206,147,216,200),
-                  (159,168,218,200),
-                  (255,204,128,200),
-                  (229,115,115,200),
-                  (244,142,177,200),
-                  (66, 135, 245,200), 
-                  (66, 135, 245,200), 
-                  (66, 135, 245,200), 
-                  (66, 135, 245,200), 
-                  (66, 135, 245,200), 
-                  (66, 135, 245,200)]
+from atklip.app_utils import cal_line_price_fibo, calculate_pl_with_fees, calculate_recommended_capital_base_on_loss_capital,calculate_recommended_capital_base_on_risk
+
+
 LEFT_FAR_TIMESTAMP = 1562990041
 RIGHT_FAR_TIMESTAMP = 1783728000
-translate = QCoreApplication.translate
 
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, List
 if TYPE_CHECKING:
     from atklip.graphics.chart_component.viewchart import Chart
     from atklip.graphics.chart_component.draw_tools.drawtools import DrawTool
+
+
+@dataclass
+class Line:
+    text: str
+    percent:int =  100
+    price: float
+    item: object
+    color: tuple|str
+    brush: tuple|str
+    level: float
+    show: bool
 
 class RickRewardRatio(SpecialROI):
     on_click = Signal(object)
@@ -58,6 +48,32 @@ class RickRewardRatio(SpecialROI):
         super().__init__(pos, size, angle, invertible, maxBounds, snapSize, scaleSnap, translateSnap, rotateSnap, parent, pen, hoverPen, handlePen, handleHoverPen, movable, rotatable, resizable, removable, aspectLocked)
         #self.generate_lines()
         self.id = None
+        self.map_rr_fibo = {1:"R", 0.9:"Entry",0.8:"1R",0.7:"2R",0.6:"3R",0.5:"4R",0.4:"5R",0.3:"6R",0.2:"7R",0.1:"8R",0:"9R"}
+        self.DEFAULTS_FIBO = list(self.map_rr_fibo.keys())
+        self.DEFAULTS_COLOR = [(180, 0, 0, 255),
+                        (180, 0, 0, 255),
+                        (0, 180, 90, 255),
+                        (0, 180, 90, 255),
+                        (0, 180, 90, 255),
+                        (0, 180, 90, 255),
+                        (0, 180, 90, 255),
+                        (0, 180, 90, 255),
+                        (0, 180, 90, 255),
+                        (0, 180, 90, 255),
+                        (0, 180, 90, 255),
+                        (0, 180, 90, 255),
+                        (0, 180, 90, 255),
+                        (0, 180, 90, 255),
+                        (229,115,115,200),
+                        (244,142,177,200),
+                        (66, 135, 245,200), 
+                        (66, 135, 245,200), 
+                        (66, 135, 245,200), 
+                        (66, 135, 245,200), 
+                        (66, 135, 245,200), 
+                        (66, 135, 245,200)]
+
+
         self.has = {
             "x_axis_show":False,
             "name": "fibo retracements",
@@ -102,25 +118,25 @@ class RickRewardRatio(SpecialROI):
         # self.installEventFilter(self)
         self.temp_config = {}
         self.list_lines = []
-        self.fibonacci_levels = DEFAULTS_FIBO 
+        self.fibonacci_levels = self.DEFAULTS_FIBO 
         self.colors_rect = [] 
-        rect_colors =      [QColor(242,54,69,40),
-                            QColor(242,54,69,40),
-                            QColor(255,152,0,40),
-                            QColor(76,175,80,40),
-                            QColor(8,153,129,40),
-                            QColor(0,188,212,40),
-                            QColor(120,123,134,40),
-                            QColor(41, 98, 255,40),
-                            QColor(242, 54, 69,40),
-                            QColor(156,39,176,40),
-                            QColor(233, 30, 99,40),
+        rect_colors =      [QColor(180, 0, 0, 60),
+                            QColor(0, 180, 90, 60),
+                            QColor(0, 180, 90, 60),
+                            QColor(0, 180, 90, 60),
+                            QColor(0, 180, 90, 60),
+                            QColor(0, 180, 90, 60),
+                            QColor(0, 180, 90, 60),
+                            QColor(0, 180, 90, 60),
+                            QColor(0, 180, 90, 60),
+                            QColor(0, 180, 90, 60),
+                            QColor(0, 180, 90, 60),
                             QColor(61,90,254,40),
                             QColor(230,81,0,40),
                             QColor(255,23,68,40),
                             QColor(255,64,129,40),
                             QColor(170,0,255,40)]
-        self.colors_lines = [] #DEFAULTS_COLOR
+        self.colors_lines = [] 
         self.colors_borders = [(120,123,134,0),
                                (242,54,69,0),
                                (255,152,0,0),
@@ -144,28 +160,43 @@ class RickRewardRatio(SpecialROI):
                                (66, 135, 245,0), 
                                (66, 135, 245,0)]
         
-        if fibo_level:
-            self.fibonacci_levels = fibo_level
-        if color_line:
-            self.colors_lines = color_line
-        if color_borders:
-            self.colors_borders = color_borders
-        if color_rect:
-            self.colors_rect = color_rect
+
         self.counts = len(self.fibonacci_levels)
 
         while self.counts > len(self.colors_lines):
-            self.colors_lines.append(DEFAULTS_COLOR[len(self.colors_lines)])
+            self.colors_lines.append(self.DEFAULTS_COLOR[len(self.colors_lines)])
         if self.counts > len(self.colors_borders):
             self.colors_borders = self.colors_lines
         while self.counts > len(self.colors_rect):
             adding = rect_colors[len(self.colors_rect)]
             self.colors_rect.append(adding)
-        for i in range(self.counts):
-            target = BaseTextItem("", anchor=(1, 0))
-            self.list_lines.append(target)
-            target.setParentItem(self)
+
         
+        
+        self.map_line_price_color:Dict[str:Line]
+        self.map_line_price_color = {
+            "R": Line("",100,0,BaseTextItem("", anchor=(1, 0)),(180, 0, 0, 255),QColor(180, 0, 0, 60),0,True),
+            "Entry": Line("",100,0,BaseTextItem("", anchor=(1, 0)),(180, 0, 0, 255),QColor(180, 0, 0, 60),0.1,True),
+            "1R": Line("",100,0,BaseTextItem("", anchor=(1, 0)),(180, 0, 0, 255),QColor(180, 0, 0, 60),0.2,True),
+            "2R": Line("",100,0,BaseTextItem("", anchor=(1, 0)),(180, 0, 0, 255),QColor(180, 0, 0, 60),0.3,True),
+            "3R": Line("",100,0,BaseTextItem("", anchor=(1, 0)),(180, 0, 0, 255),QColor(180, 0, 0, 60),0.4,True),
+            "4R": Line("",100,0,BaseTextItem("", anchor=(1, 0)),(180, 0, 0, 255),QColor(180, 0, 0, 60),0.5,True),
+            "5R": Line("",100,0,BaseTextItem("", anchor=(1, 0)),(180, 0, 0, 255),QColor(180, 0, 0, 60),0.6,True),
+            "6R": Line("",100,0,BaseTextItem("", anchor=(1, 0)),(180, 0, 0, 255),QColor(180, 0, 0, 60),0.7,True),
+            "7R": Line("",100,0,BaseTextItem("", anchor=(1, 0)),(180, 0, 0, 255),QColor(180, 0, 0, 60),0.8,True),
+            "8R": Line("",100,0,BaseTextItem("", anchor=(1, 0)),(180, 0, 0, 255),QColor(180, 0, 0, 60),0.9,True),
+            "9R": Line("",100,0,BaseTextItem("", anchor=(1, 0)),(180, 0, 0, 255),QColor(180, 0, 0, 60),1,True),
+        }
+
+        for key in list(self.map_line_price_color.keys()):
+            self.map_line_price_color[key].item.setParentItem(self)
+
+
+        self.colors_lines.reverse()
+        self.colors_rect.reverse()
+
+        
+
         try:
             self.addSegment(self.handles[0]['item'], self.handles[1]['item'])
         except:
@@ -261,18 +292,18 @@ class RickRewardRatio(SpecialROI):
     def update_text_percentage(self, data):
         i, price, x, direct = data[0], data[1], data[2], data[3]
         pointf = self.mapFromParent(Point(x,price))
-        # y_line_pointf = mapFromParent.y()
-        # x_line_pointf = mapFromParent.x()
+        if i == 0:
+            print(i, price,x)
         text:BaseTextItem = self.list_lines[i]
         text.updatePos(pointf)
         if direct == 1:
             text.percent = self.fibonacci_levels[i]
             text.setColor(self.colors_lines[self.counts - i - 1])
-            text.setText(f"{map_rr_fibo[text.percent]} ({str(price)})  ")
+            text.setText(f"{self.map_rr_fibo[text.percent]} ({str(price)})  ")
         else:
             text.percent = self.fibonacci_levels[self.counts - i - 1] 
             text.setColor(self.colors_lines[i])
-            text.setText(f"{map_rr_fibo[text.percent]} ({str(price)})  ")
+            text.setText(f"{self.map_rr_fibo[text.percent]} ({str(price)})  ")
 
 
     def setPoint(self,pos_x, pos_y):
