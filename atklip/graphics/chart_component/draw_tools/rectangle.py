@@ -85,8 +85,9 @@ class Rectangle(SpecialROI):
             if not self.locked:
                 self.setCursor(Qt.CursorShape.PointingHandCursor)
         else:
-            hover = False
-            self.setCursor(Qt.CursorShape.CrossCursor)
+            if not self.isMoving:
+                hover = False
+                self.setCursor(Qt.CursorShape.CrossCursor)
                 
         if not self.isSelected:
             if hover:

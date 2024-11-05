@@ -197,8 +197,9 @@ class RangePolyLine(SpecialROI):     # for date price range
             if not self.locked:
                 self.setCursor(Qt.CursorShape.PointingHandCursor)
         else:
-            hover = False
-            self.setCursor(Qt.CursorShape.CrossCursor)
+            if not self.isMoving:
+                hover = False
+                self.setCursor(Qt.CursorShape.CrossCursor)
                 
         if not self.isSelected:
             if hover:
@@ -288,7 +289,7 @@ class RangePolyLine(SpecialROI):     # for date price range
         else:
             self.textitem.setAnchor((1,1))
         
-        html=f"""<div style="text-align: center"><span style="color: #d1d4dc; font-size: 11pt;">{diff_y} ({percent}%)</span><br><span style="color: #d1d4dc; font-size: 11pt;">{fsecs} bars, {ts}</span></div>"""
+        html=f"""<div style="text-align: center"><span style="color: #d1d4dc; font-size: 10pt;">{diff_y} ({percent}%)</span><br><span style="color: #d1d4dc; font-size: 10pt;">{fsecs} bars, {ts}</span></div>"""
         
         self.textitem.setHtml(html)
         

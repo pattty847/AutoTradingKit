@@ -377,8 +377,9 @@ class Horizontal_ray(CustomLineSegmentROI):
             hover = True
             self.setCursor(Qt.CursorShape.PointingHandCursor)
         else:
-            hover = False
-            self.setCursor(Qt.CursorShape.CrossCursor)
+            if not self.isMoving:
+                hover = False
+                self.setCursor(Qt.CursorShape.CrossCursor)
                 
         if not self.isSelected:
             if hover:

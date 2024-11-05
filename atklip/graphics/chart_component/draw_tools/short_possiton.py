@@ -1,9 +1,10 @@
 
-from PySide6.QtCore import Signal, Qt,QRectF,QPointF
+from PySide6.QtCore import Signal, Qt,QRectF,QPointF,QEvent
 from PySide6.QtGui import QPainter
 from atklip.app_utils.functions import mkBrush, mkPen
 from atklip.graphics.pyqtgraph.Point import Point
 from atklip.graphics.pyqtgraph.graphicsItems.TextItem import TextItem
+from atklip.app_utils import percent_caculator, calculate_pl_with_fees,calculate_recommended_capital_base_on_risk,calculate_recommended_capital_base_on_loss_capital
 
 from .base_rectangle import BaseRect
 from typing import TYPE_CHECKING
@@ -22,11 +23,20 @@ class Shortposition(BaseRect):
         self.chart:Chart = self.drawtool.chart
         
         self.has = {
-            "x_axis_show":True,
-            "name": "rectangle",
-            "type": "drawtool",
+            "y_axis_show":False,
+            "name": "Short Position",
+            "type": "Shortposition",
             "id": id,
             "inputs":{
+                "capital": 1000,
+                "proportion_closed":1,
+                "is_risk":False,
+                "risk_percentage":2,
+                "loss_capital":100,
+                "leverage":10, #5
+                "taker_fee":0.05, #0.05
+                "maker_fee":0.02, #0.02
+                "order_type":"market"
                     },
             "styles":{
                     'pen': None,
@@ -34,13 +44,13 @@ class Shortposition(BaseRect):
                     'above_brush': mkBrush((180, 0, 0, 60)),
                     'under_brush': mkBrush((0, 180, 90, 60)),
                     "lock":True,
-                    "setting": False,
+                    "setting": True,
                     "delete":True,}
         }
         
-        right_handle = self.addScaleHandle([1, 0], [0, 0], lockAspect=True)
+        self.center_handle = self.addScaleHandle([1, 0], [0, 0], lockAspect=True)
         self.addTranslateHandle([0, 0], [1, 0])
-        self.addScaleHandle([0, 1], [0, 0], lockAspect=True)
+        self.up_handle = self.addScaleHandle([0, 1], [0, 0], lockAspect=True)
         
         self.under_part = BaseRect([0,-self.size().y()], size,is_short=True)
         self.under_part.setParentItem(self)
@@ -48,8 +58,10 @@ class Shortposition(BaseRect):
         self.under_part.mouseDragEvent = self.mouseDragEvent
         self.under_part.mouseClickEvent = self.mouseClickEvent
         self.under_part.mouseReleaseEvent = self.mouseReleaseEvent
-        self.under_part.addScaleHandle([1, 0], [0, 0], lockAspect=True,item=right_handle)
-        self.under_part.addScaleHandle([0, 0], [0, 1], lockAspect=True)
+        self.under_part.hoverEvent = self.hoverEvent
+        
+        self.under_part.addScaleHandle([1, 0], [0, 0], lockAspect=True,item=self.center_handle)
+        self.under_handle=self.under_part.addScaleHandle([0, 0], [0, 1], lockAspect=True)
         
         
         self.textitem_up = TextItem("",color="#FFF")
@@ -69,19 +81,99 @@ class Shortposition(BaseRect):
         h0 = self.handles[0]['item'].pos()
         h1 = self.handles[2]['item'].pos()
         diff = h1 - h0
-        point0 = self.mapFromParent(Point(h0))
-        point1 = self.mapFromParent(Point(h1))
 
+        h0_under_part = self.under_part.handles[0]['item'].pos()
+        h1_under_part = self.under_part.handles[1]['item'].pos()
+        diff_under_part = h1_under_part - h0_under_part
+
+        point0_ = self.mapToParent(Point(h0))
+        point1_ = self.mapToParent(Point(h1))
+        point0_under_part_ = self.mapToParent(self.under_part.mapToParent(Point(h0_under_part)))
+        # point1_under_part_ = self.mapToParent(self.under_part.mapToParent(Point(h1_under_part)))
         
-        diff_y, percent,fsecs,ts = "244324",3423424,4324324,4234234
+        stop_loss_price = round(point1_.y(),self.chart._precision)
+        exit_price = round(point0_under_part_.y(),self.chart._precision)
+        entry_price = round(point0_.y(),self.chart._precision)
+                
+        if exit_price == entry_price or stop_loss_price == entry_price:
+            return
+        profit_percent = percent_caculator(entry_price,exit_price)
+        stoploss_percent = percent_caculator(entry_price,stop_loss_price)
+        RR = 0
+        if stoploss_percent != 0:
+            RR = round(profit_percent/stoploss_percent,2)
+            
+        if self.has["inputs"]["is_risk"]:
+            recom_capital = calculate_recommended_capital_base_on_risk(entry_price=entry_price,stop_loss_price=stop_loss_price,
+                                            total_capital=self.has["inputs"]["capital"],
+                                            risk_percentage=self.has["inputs"]["risk_percentage"],
+                                            leverage=self.has["inputs"]["leverage"],
+                                            taker_fee=self.has["inputs"]["taker_fee"],
+                                            maker_fee=self.has["inputs"]["maker_fee"],
+                                            order_type=self.has["inputs"]["order_type"],
+                                            )
+        else:
+            recom_capital = calculate_recommended_capital_base_on_loss_capital(entry_price=entry_price,stop_loss_price=stop_loss_price,
+                                          loss_capital=self.has["inputs"]["loss_capital"],
+                                          leverage=self.has["inputs"]["leverage"],
+                                          taker_fee=self.has["inputs"]["taker_fee"],
+                                          maker_fee=self.has["inputs"]["maker_fee"],
+                                          order_type=self.has["inputs"]["order_type"],
+                                          )
         
+        recom_capital = round(recom_capital,self.chart._precision)
         
-        html=f"""<div style="text-align: center"><span style="color: #d1d4dc; font-size: 11pt;">{diff_y} ({percent}%)</span><br><span style="color: #d1d4dc; font-size: 11pt;">{fsecs} bars, {ts}</span></div>"""
+        stoploss = calculate_pl_with_fees(entry_price=entry_price,exit_price=stop_loss_price,
+                                          capital=recom_capital,
+                                          proportion_closed=self.has["inputs"]["proportion_closed"],
+                                          leverage=self.has["inputs"]["leverage"],
+                                          taker_fee=self.has["inputs"]["taker_fee"],
+                                          maker_fee=self.has["inputs"]["maker_fee"],
+                                          order_type=self.has["inputs"]["order_type"],
+                                          is_stop_loss=True
+                                          )
         
+        profit = calculate_pl_with_fees(entry_price=entry_price,exit_price=exit_price,
+                                          capital=recom_capital,
+                                          proportion_closed=self.has["inputs"]["proportion_closed"],
+                                          leverage=self.has["inputs"]["leverage"],
+                                          taker_fee=self.has["inputs"]["taker_fee"],
+                                          maker_fee=self.has["inputs"]["maker_fee"],
+                                          order_type=self.has["inputs"]["order_type"],
+                                          is_stop_loss=False
+                                          )
         
-        self.textitem_up.setHtml(html)
-        self.textitem_center.setHtml(html)
-        self.textitem_under.setHtml(html)
+        profit = round(profit,2)
+        stoploss = round(stoploss,2)
+        
+        profit_amount = self.has["inputs"]["capital"] + profit
+        stoploss_amount = self.has["inputs"]["capital"] - stoploss
+        
+        recom_quanty = round(recom_capital/entry_price, self.chart.quanty_precision)
+        
+        html_under = f"""
+                <div style="text-align: center; border-radius: 5px solid #d1d4dc;">
+                    <span style="color: #d1d4dc; font-size: 10pt;">Target {exit_price} ({profit_percent}%), Amount {profit_amount}</span>
+                </div>
+                """
+        
+        html_center = f"""
+                <div style="text-align: center; border-radius: 5px solid #d1d4dc;">
+                    <span style="color: #d1d4dc; font-size: 10pt;">Entry {entry_price}, Qty {recom_quanty}</span>
+                    <br>
+                    <span style="color: #d1d4dc; font-size: 10pt;">R/R Ratio {RR}, Recom Capital {recom_capital}</span>
+                </div>
+                """
+                
+        html_up = f"""
+                <div style="text-align: center; border-radius: 5px solid #d1d4dc;">
+                    <span style="color: #d1d4dc; font-size: 10pt;">Stop {stop_loss_price} ({stoploss_percent}%), Amount {stoploss_amount}</span>
+                </div>
+                """
+        
+        self.textitem_up.setHtml(html_up)
+        self.textitem_center.setHtml(html_center)
+        self.textitem_under.setHtml(html_under)
 
         r = self.textitem_up.textItem.boundingRect()
         tl = self.textitem_up.textItem.mapToParent(r.topLeft())
@@ -105,17 +197,13 @@ class Shortposition(BaseRect):
         self.textitem_center.setPos(Point(_x,_y))
         
         
-        h0 = self.under_part.handles[0]['item'].pos()
-        h1 = self.under_part.handles[1]['item'].pos()
-        diff = h1 - h0
-        point0 = self.mapFromParent(Point(h0))
-        point1 = self.mapFromParent(Point(h1))
+        
                  
         r = self.textitem_under.textItem.boundingRect()
         tl = self.textitem_under.textItem.mapToParent(r.topLeft())
         br = self.textitem_under.textItem.mapToParent(r.bottomRight())
         offset = (br - tl) * self.textitem_under.anchor
-        _pointf = Point(h1.x() - diff.x()/2, h1.y())
+        _pointf = Point(h1_under_part.x() - diff_under_part.x()/2, h1_under_part.y())
         _x = _pointf.x() +r.width()/2
         _y = _pointf.y() - offset.y()/2
         self.textitem_under.setPos(Point(_x,_y))
@@ -128,7 +216,15 @@ class Shortposition(BaseRect):
         self.update()
     
     def get_inputs(self):
-        inputs =  {}
+        inputs =  {"capital":self.has["inputs"]["capital"],
+                   "loss_capital":self.has["inputs"]["loss_capital"],
+                    "proportion_closed":self.has["inputs"]["proportion_closed"],
+                    "is_risk":self.has["inputs"]["is_risk"],
+                    "risk_percentage":self.has["inputs"]["risk_percentage"],
+                    "leverage":self.has["inputs"]["leverage"],
+                    "taker_fee":self.has["inputs"]["taker_fee"],
+                    "maker_fee":self.has["inputs"]["maker_fee"],
+                    }
         return inputs
     
     def get_styles(self):
@@ -139,13 +235,37 @@ class Shortposition(BaseRect):
                     "setting":self.has["styles"]["setting"],}
         return styles
     
-    def update_inputs(self,_input,_source):
-        is_update = False
+    def update_inputs(self,_input=None,_source=None):
+        # _input = self.has["inputs"][_input]
+        self.update()
     
     def update_styles(self, _input):
         _style = self.has["styles"][_input]
         self.setbrushs() 
 
+    def hoverEvent(self, ev: QEvent):
+        hover = False
+        if not ev.exit: # and not self.boundingRect().contains(ev.pos()):
+            hover = True
+            if not self.locked:
+                self.setCursor(Qt.CursorShape.PointingHandCursor)
+            self.textitem_up.setVisible(True)
+            self.textitem_center.setVisible(True)
+            self.textitem_under.setVisible(True)
+            handles = self.handles + self.under_part.handles
+            for handle in handles:
+                handle['item'].setVisible(True)
+        else:
+            if not self.isMoving or not self.isSelected:
+                hover = False
+                self.setCursor(Qt.CursorShape.CrossCursor)
+                self.textitem_up.setVisible(False)
+                self.textitem_center.setVisible(False)
+                self.textitem_under.setVisible(False)
+                handles = self.handles + self.under_part.handles
+                for handle in handles:
+                    handle['item'].setVisible(False)
+    
     def mouseClickEvent(self, ev):
         super().mouseClickEvent(ev)
         if ev.button() == Qt.MouseButton.LeftButton:

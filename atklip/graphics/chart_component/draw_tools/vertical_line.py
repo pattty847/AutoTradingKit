@@ -165,8 +165,9 @@ class Vertical_line(InfiniteLine):
                 self.setMouseHover(True)
                 self.addMarker('o', size=6)
             else:
-                self.setMouseHover(False)
-                self.clearMarkers()
+                if not self.isMoving:
+                    self.setMouseHover(False)
+                    self.clearMarkers()
     def set_lock(self,btn):
         print(btn,btn.isChecked())
         if btn.isChecked():

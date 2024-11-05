@@ -258,14 +258,15 @@ class Longposition(BaseRect):
             for handle in handles:
                 handle['item'].setVisible(True)
         else:
-            hover = False
-            self.setCursor(Qt.CursorShape.CrossCursor)
-            self.textitem_up.setVisible(False)
-            self.textitem_center.setVisible(False)
-            self.textitem_under.setVisible(False)
-            handles = self.handles + self.under_part.handles
-            for handle in handles:
-                handle['item'].setVisible(False)
+            if not self.isMoving or not self.isSelected:
+                hover = False
+                self.setCursor(Qt.CursorShape.CrossCursor)
+                self.textitem_up.setVisible(False)
+                self.textitem_center.setVisible(False)
+                self.textitem_under.setVisible(False)
+                handles = self.handles + self.under_part.handles
+                for handle in handles:
+                    handle['item'].setVisible(False)
     
     def mouseClickEvent(self, ev):
         super().mouseClickEvent(ev)
