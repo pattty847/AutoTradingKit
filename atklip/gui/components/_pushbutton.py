@@ -105,6 +105,96 @@ class BasePushButton(QPushButton):
         super().leaveEvent(event)
 
 
+
+class IconTextChangeButton(QPushButton):
+    """ Transparent push button
+    Constructors
+    ------------
+    * TransparentPushButton(`parent`: QWidget = None)
+    * TransparentPushButton(`text`: str, `parent`: QWidget = None, `icon`: QIcon | str | FluentIconBase = None)
+    * TransparentPushButton(`icon`: QIcon | FluentIcon, `text`: str, `parent`: QWidget = None)
+    """
+    def __init__(self, icon:FluentIcon=None, text:str="", parent: QWidget=None):
+        if text == "":
+            super().__init__(parent=parent)
+        else:
+            super().__init__(text=text, parent=parent)
+        self.setCheckable(True)
+        self.setChecked(False)
+        self._icon = icon
+        # self.setIcon(icon)
+        # color = self.get_color()
+        # self.set_stylesheet(color)
+        self.set_icon_color()
+        self.clicked.connect(self.set_icon_color)
+        self.setFixedHeight(35)
+        self.setMinimumWidth(100)
+        self.setMaximumWidth(130)
+        # self.setContentsMargins(0,0,0,0)
+    
+    def setIcon(self,icon: FluentIcon|str|QIcon):
+        if isinstance(icon,FluentIcon):
+            icon = QIcon(icon.path())
+        elif isinstance(icon,str):
+            icon = QIcon(icon)
+        super().setIcon(icon)
+    
+    def set_text(self,text,color):
+        self.setText(text)
+        self.set_stylesheet(color)
+    def title(self):
+        return self.text()
+    def set_stylesheet(self,color):
+        self.setStyleSheet(f"""QPushButton {{
+                            background-color: transparent;
+                            border: none;
+                            border-radius: 4px;
+                            color: {color};
+                            font: 15px 'Segoe UI', 'Microsoft YaHei', 'PingFang SC';
+                            
+                        }}""")
+    
+    def set_icon_color(self):
+        if self._icon:
+            if self.isChecked():
+                _icon = change_svg_color(self._icon.value,"#0055ff")
+                print(_icon)
+                self.setIcon(QIcon(_icon))
+            else:
+                if isDarkTheme():
+                    self.setIcon(self._icon.path(Theme.DARK))
+                else:
+                    self.setIcon(self._icon.path(Theme.LIGHT))
+        if self.text():
+            color = self.get_color()
+            self.set_stylesheet(color)
+            
+    def get_color(self):
+        if self.isChecked():
+            color = "#0055ff"
+        else:
+            color = "#d1d4dc" if isDarkTheme() else  "#161616"
+        return color
+    
+    def enterEvent(self, event):
+        background_color = "rgba(255, 255, 255, 0.0837)" if isDarkTheme() else "#9b9b9b"
+        color = self.get_color()
+        self.setStyleSheet(f"""QPushButton {{
+            background-color: {background_color};
+            border: none;
+            border-radius: 4px;
+            color: {color};
+            font: 15px 'Segoe UI', 'Microsoft YaHei', 'PingFang SC';
+            
+            }}""")
+        super().enterEvent(event)
+    def leaveEvent(self, event):
+        color = self.get_color()
+        self.set_stylesheet(color)
+        super().leaveEvent(event)
+
+
+
 class _SplitDropButton(SplitDropButton):
     def __init__(self, parent=None):
         super().__init__(parent)

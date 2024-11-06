@@ -40,7 +40,7 @@ class TopBar(QFrame,TopFrame):
         
         self.replay = ReplayButton(FIF.REPLAY,"Replay",self._parent)
         
-        self.mode = ModeButton("Off Trading",self._parent)
+        self.mode = ModeButton("Live Trading",self._parent)
         
         self.LayoutButton = LayoutButton(self._parent)
 

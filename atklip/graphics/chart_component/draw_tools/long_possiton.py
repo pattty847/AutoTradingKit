@@ -21,7 +21,6 @@ class Longposition(BaseRect):
 
         self.drawtool:DrawTool = drawtool
         self.chart:Chart = self.drawtool.chart
-        self.chart.mouse_clicked_signal.connect(self.set_seclected)
         self.has = {
             "y_axis_show":False,
             "name": "Long Position",

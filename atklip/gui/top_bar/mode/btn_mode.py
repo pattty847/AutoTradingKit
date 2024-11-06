@@ -8,7 +8,7 @@ from atklip.gui.qfluentwidgets.common import isDarkTheme
 from atklip.gui.qfluentwidgets.components import HWIDGET
 from atklip.gui.components import StreamingMode
 
-
+from atklip.gui.components._pushbutton import IconTextChangeButton
 
 class _PushButton(QPushButton):
     """ Transparent push button
@@ -72,15 +72,14 @@ class _PushButton(QPushButton):
 
 class ModeButton(HWIDGET):
     clicked = Signal()
-    def __init__(self,name="treamingmode",parent:QWidget=None):
-        super().__init__(parent,name)
+    def __init__(self,text="Live Trading",parent:QWidget=None):
+        super().__init__(parent)
         self.setContentsMargins(0,0,0,0)
         self.setFixedHeight(35)
         self.label = StreamingMode(self)
-        self.btn = _PushButton(self)
+        self.btn = IconTextChangeButton(text=text,parent=self)
         self.addWidget(self.btn)
         self.addWidget(self.label)
-        self.set_text(name)
         self._is_live = False
         self.btn.clicked.connect(self.on_clicked)
     
@@ -97,9 +96,7 @@ class ModeButton(HWIDGET):
     def on_clicked(self)->None:
         self.clicked.emit()
         if self.is_live:
-            self.set_text("Live Trading")
             self.is_live = False
         else:
-            self.set_text("Off Trading")
             self.is_live = True
         self.label.start()
