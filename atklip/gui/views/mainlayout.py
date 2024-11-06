@@ -53,6 +53,8 @@ class MainWidget(QWidget,Ui_MainWidget):
         self.topbar.sig_add_indicator_to_chart.connect(self.chartbox_splitter.sig_add_indicator_to_chart,Qt.ConnectionType.AutoConnection)
         "signal from TopBar-------end"
         
+        self.topbar.replay.clicked.connect(self.chartbox_splitter.chart.set_replay_mode)
+        
         self.progress = LoadingProgress(self)
         self.chartbox_splitter.chart.sig_show_process.connect(self.progress.run_process,Qt.ConnectionType.AutoConnection)
         

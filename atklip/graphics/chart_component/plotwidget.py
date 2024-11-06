@@ -15,10 +15,13 @@ from atklip.controls.candle import SMOOTH_CANDLE, JAPAN_CANDLE
 
 from .globarvar import global_signal
 from .proxy_signal import Signal_Proxy
-from atklip.graphics.chart_component.base_items import CandleStick, PriceLine
+from atklip.graphics.chart_component.base_items import PriceLine
 from atklip.graphics.chart_component.indicator_panel import IndicatorContainer
 from atklip.app_utils import *
 from atklip.graphics.chart_component.draw_tools import DrawTool
+
+from atklip.graphics.chart_component.base_items.replay_cut import ReplayObject
+
 if TYPE_CHECKING:
     from .viewbox import PlotViewBox
     from .axisitem import CustomDateAxisItem, CustomPriceAxisItem
@@ -124,7 +127,6 @@ class ViewPlotWidget(PlotWidget):
         self.yAxis.setWidth(60)
         self.xAxis.hide()
         
-        self.timedata, self.data = [], []
         self.vb:PlotViewBox = self.getViewBox()
         self.lastMousePositon = None
         self.nearest_value = None
@@ -135,15 +137,34 @@ class ViewPlotWidget(PlotWidget):
         self.stop_replay_enabled = False
         self.is_running_replay = False
         self.is_cutting_replay = False
-        self.is_get_old_zigzag_base = False
 
         self.drawtool = DrawTool(self)
+        
+        self.replay_obj:ReplayObject =None
         
         Signal_Proxy(signal=self.sig_add_item,slot=self.add_item,connect_type=Qt.ConnectionType.QueuedConnection)
         Signal_Proxy(signal=self.sig_remove_item,slot=self.remove_item,connect_type=Qt.ConnectionType.QueuedConnection)
 
         global_signal.sig_show_hide_cross.connect(self.show_hide_cross,Qt.ConnectionType.AutoConnection)
 
+    def set_replay_mode(self):
+        btn = self.sender()
+        
+        print(btn,btn.isChecked())
+        
+        if btn.isChecked():
+            self.replay_obj = ReplayObject(self)
+            self.add_item(self.replay_obj)
+            self.mode_replay = True
+            # self.drawtool.drawing_object = self.replay_obj
+        else:
+            if isinstance(self.replay_obj,ReplayObject):
+                self.mode_replay = False
+                # self.drawtool.drawing_object = None
+                self.remove_item(self.replay_obj)
+                self.replay_obj = None
+        
+    
     def set_precision(self,precision,quanty_precision):
         self._precision = precision
         self.quanty_precision= quanty_precision
@@ -291,7 +312,6 @@ class ViewPlotWidget(PlotWidget):
 
         self.crosshair_x_value_change.emit(("#363a45",None))
         self.crosshair_y_value_change.emit(("#363a45",None))
-
         if self.crosshair_enabled:
             self.hide_crosshair()
         super().leaveEvent(ev)

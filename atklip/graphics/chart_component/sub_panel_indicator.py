@@ -104,7 +104,6 @@ class ViewSubPanel(PlotWidget):
         self.yAxis.setWidth(60)
         self.xAxis.hide()
         
-        self.timedata, self.data = [], []
         self.vb:PlotViewBox = self.getViewBox()
 
         self.lastMousePositon = None

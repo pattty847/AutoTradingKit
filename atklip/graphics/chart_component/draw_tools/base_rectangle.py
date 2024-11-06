@@ -78,7 +78,7 @@ class BaseRect(ROI):
             # if not self.boundingRect().contains(ev.pos()): 
             self.on_click.emit(self)
             self.finished = True
-
+            self.setSelected(True)
             ev.accept()
         ev.ignore()
         super().mouseClickEvent(ev)
@@ -86,7 +86,7 @@ class BaseRect(ROI):
     def mouseReleaseEvent(self, ev):
         if ev.button() == Qt.MouseButton.LeftButton:
             # if not self.boundingRect().contains(ev.pos()): 
-            self.on_click.emit(self)
+            # self.on_click.emit(self)
             self.finished = True
             ev.accept()
         ev.ignore()        

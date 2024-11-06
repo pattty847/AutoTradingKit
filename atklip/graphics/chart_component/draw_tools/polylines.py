@@ -387,7 +387,6 @@ class RangePolyLine(SpecialROI):     # for date price range
                 self.update()
     
     def paint(self, p: QPainter, *args):
-        p.setRenderHint(QPainter.RenderHint.Antialiasing)
         p.setPen(mkPen(color=self.has["styles"]["pen"], width=self.has["styles"]["width"],style=self.has["styles"]["style"]))
         if self.handles:
             h0 = self.handles[0]['item'].pos()

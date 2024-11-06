@@ -30,8 +30,8 @@ class Shortposition(BaseRect):
             "inputs":{
                 "capital": 1000,
                 "proportion_closed":1,
-                "is_risk":False,
-                "risk_percentage":2,
+                "is_risk":True,
+                "risk_percentage":1,
                 "loss_capital":100,
                 "leverage":10, #5
                 "taker_fee":0.05, #0.05
@@ -91,9 +91,9 @@ class Shortposition(BaseRect):
         point0_under_part_ = self.mapToParent(self.under_part.mapToParent(Point(h0_under_part)))
         # point1_under_part_ = self.mapToParent(self.under_part.mapToParent(Point(h1_under_part)))
         
-        stop_loss_price = round(point1_.y(),self.chart._precision)
-        exit_price = round(point0_under_part_.y(),self.chart._precision)
-        entry_price = round(point0_.y(),self.chart._precision)
+        stop_loss_price = point1_.y()
+        exit_price = point0_under_part_.y()
+        entry_price = point0_.y()
                 
         if exit_price == entry_price or stop_loss_price == entry_price:
             return
@@ -101,7 +101,7 @@ class Shortposition(BaseRect):
         stoploss_percent = percent_caculator(entry_price,stop_loss_price)
         RR = 0
         if stoploss_percent != 0:
-            RR = round(profit_percent/stoploss_percent,2)
+            RR = profit_percent/stoploss_percent
             
         if self.has["inputs"]["is_risk"]:
             recom_capital = calculate_recommended_capital_base_on_risk(entry_price=entry_price,stop_loss_price=stop_loss_price,
@@ -121,7 +121,7 @@ class Shortposition(BaseRect):
                                           order_type=self.has["inputs"]["order_type"],
                                           )
         
-        recom_capital = round(recom_capital,self.chart._precision)
+        recom_capital = recom_capital
         
         stoploss = calculate_pl_with_fees(entry_price=entry_price,exit_price=stop_loss_price,
                                           capital=recom_capital,
@@ -143,31 +143,32 @@ class Shortposition(BaseRect):
                                           is_stop_loss=False
                                           )
         
-        profit = round(profit,2)
-        stoploss = round(stoploss,2)
         
-        profit_amount = self.has["inputs"]["capital"] + profit
-        stoploss_amount = self.has["inputs"]["capital"] - stoploss
+        profit_amount = profit
+        stoploss_amount = stoploss
         
-        recom_quanty = round(recom_capital/entry_price, self.chart.quanty_precision)
+        recom_quanty = recom_capital/entry_price
+        
+        qty_precision = f".{self.chart.quanty_precision}f"
+        price_precision = f".{self.chart._precision}f"
         
         html_under = f"""
                 <div style="text-align: center; border-radius: 5px solid #d1d4dc;">
-                    <span style="color: #d1d4dc; font-size: 10pt;">Target {exit_price} ({profit_percent}%), Amount {profit_amount}</span>
+                    <span style="color: #d1d4dc; font-size: 10pt;">Target {exit_price:{price_precision}} ({profit_percent:.2f}%), Amount {profit_amount:.2f}$</span>
                 </div>
                 """
         
         html_center = f"""
                 <div style="text-align: center; border-radius: 5px solid #d1d4dc;">
-                    <span style="color: #d1d4dc; font-size: 10pt;">Entry {entry_price}, Qty {recom_quanty}</span>
+                    <span style="color: #d1d4dc; font-size: 10pt;">Entry {entry_price:{price_precision}}, Qty {recom_quanty:{qty_precision}}</span>
                     <br>
-                    <span style="color: #d1d4dc; font-size: 10pt;">R/R Ratio {RR}, Recom Capital {recom_capital}</span>
+                    <span style="color: #d1d4dc; font-size: 10pt;">R/R Ratio {RR:.2f}, Recom Capital {recom_capital:.2f}$</span>
                 </div>
                 """
                 
         html_up = f"""
                 <div style="text-align: center; border-radius: 5px solid #d1d4dc;">
-                    <span style="color: #d1d4dc; font-size: 10pt;">Stop {stop_loss_price} ({stoploss_percent}%), Amount {stoploss_amount}</span>
+                    <span style="color: #d1d4dc; font-size: 10pt;">Stop {stop_loss_price:{price_precision}} ({stoploss_percent:.2f}%), Amount -{stoploss_amount:.2f}$</span>
                 </div>
                 """
         
@@ -256,15 +257,15 @@ class Shortposition(BaseRect):
             for handle in handles:
                 handle['item'].setVisible(True)
         else:
-            if not self.isMoving or not self.isSelected:
-                hover = False
-                self.setCursor(Qt.CursorShape.CrossCursor)
-                self.textitem_up.setVisible(False)
-                self.textitem_center.setVisible(False)
-                self.textitem_under.setVisible(False)
-                handles = self.handles + self.under_part.handles
-                for handle in handles:
-                    handle['item'].setVisible(False)
+            # if not self.isMoving or not self.isSelected:
+            hover = False
+            self.setCursor(Qt.CursorShape.CrossCursor)
+            # self.textitem_up.setVisible(False)
+            # self.textitem_center.setVisible(False)
+            # self.textitem_under.setVisible(False)
+            handles = self.handles + self.under_part.handles
+            for handle in handles:
+                handle['item'].setVisible(False)
     
     def mouseClickEvent(self, ev):
         super().mouseClickEvent(ev)

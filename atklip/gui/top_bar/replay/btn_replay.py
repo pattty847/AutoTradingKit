@@ -16,6 +16,9 @@ class _PushButton(QPushButton):
     """
     def __init__(self, icon, text, parent):
         super().__init__(icon=icon, text=text, parent=parent)
+        
+        self.setCheckable(True)
+        self.setChecked(False)
         if self.isChecked():
             color = "#0055ff"
         else:
@@ -67,13 +70,10 @@ class _PushButton(QPushButton):
         super().leaveEvent(event)
 
 class ReplayButton(_PushButton):
-    def __init__(self, sig_replay,icon, text, parent):
+    def __init__(self,icon, text, parent):
         _icon = QIcon(icon.path())
         super().__init__(_icon, text, parent)
         self.setIconSize(QSize(30, 30))
-
-        self.clicked.connect(self.on_clicked)
-    
         
     def set_text(self, text:Union[None,str])->None:
         if isinstance(text, str):
@@ -86,6 +86,3 @@ class ReplayButton(_PushButton):
         self._symbol = symbol
         self.setText(symbol)
         self.setIcon(icon)
-    def on_clicked(self)->None:
-        #self.clicked.emit(self._symbol)
-        print(self.sender())
