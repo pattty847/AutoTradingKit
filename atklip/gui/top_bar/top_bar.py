@@ -26,7 +26,6 @@ class TopBar(QFrame,TopFrame):
     sig_change_inteval = Signal(tuple)
     sig_goto_date = Signal(tuple)
     sig_add_indicator_to_chart = Signal(tuple)
-    sig_replay =  Signal(bool)
     def __init__(self, parent=None):
         super().__init__(parent)
         self._parent:MainWidget = self.parent()
@@ -39,9 +38,9 @@ class TopBar(QFrame,TopFrame):
         self.interval = IntervalButton(self._parent,self.sig_change_inteval)
         self.indicator = IndicatorButton(self.sig_add_indicator_to_chart,self._parent)
         
-        self.replay = ReplayButton(self.sig_replay,FIF.REPLAY,"Replay",self._parent)
+        self.replay = ReplayButton(FIF.REPLAY,"Replay",self._parent)
         
-        self.mode = ModeButton("Off Trading",self._parent)
+        self.mode = ModeButton("Live Trading",self._parent)
         
         self.LayoutButton = LayoutButton(self._parent)
 

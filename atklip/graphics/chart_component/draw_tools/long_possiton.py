@@ -1,5 +1,5 @@
 
-from PySide6.QtCore import Signal, Qt,QRectF,QPointF,QEvent
+from PySide6.QtCore import Signal, Qt,QRectF,QPointF,QEvent,QPoint
 from PySide6.QtGui import QPainter
 from atklip.app_utils.functions import mkBrush, mkPen
 from atklip.graphics.pyqtgraph.Point import Point
@@ -21,7 +21,6 @@ class Longposition(BaseRect):
 
         self.drawtool:DrawTool = drawtool
         self.chart:Chart = self.drawtool.chart
-        
         self.has = {
             "y_axis_show":False,
             "name": "Long Position",
@@ -30,8 +29,8 @@ class Longposition(BaseRect):
             "inputs":{
                 "capital": 1000,
                 "proportion_closed":1,
-                "is_risk":False,
-                "risk_percentage":2,
+                "is_risk":True,
+                "risk_percentage":1,
                 "loss_capital":100,
                 "leverage":10, #5
                 "taker_fee":0.05, #0.05
@@ -77,6 +76,13 @@ class Longposition(BaseRect):
         
         self.setbrushs()
     
+    def set_seclected(self,ev):
+        try:
+            ev_pos = ev.position()
+        except:
+            ev_pos = ev.pos()
+        
+        
     def update_text(self):
         h0 = self.handles[0]['item'].pos()
         h1 = self.handles[2]['item'].pos()
@@ -91,9 +97,9 @@ class Longposition(BaseRect):
         point0_under_part_ = self.mapToParent(self.under_part.mapToParent(Point(h0_under_part)))
         # point1_under_part_ = self.mapToParent(self.under_part.mapToParent(Point(h1_under_part)))
         
-        exit_price = round(point1_.y(),self.chart._precision)
-        stop_loss_price = round(point0_under_part_.y(),self.chart._precision)
-        entry_price = round(point0_.y(),self.chart._precision)
+        exit_price = point1_.y()
+        stop_loss_price = point0_under_part_.y()
+        entry_price = point0_.y()
                 
         if exit_price == entry_price or stop_loss_price == entry_price:
             return
@@ -101,7 +107,7 @@ class Longposition(BaseRect):
         stoploss_percent = percent_caculator(entry_price,stop_loss_price)
         RR = 0
         if stoploss_percent != 0:
-            RR = round(profit_percent/stoploss_percent,2)
+            RR = profit_percent/stoploss_percent
             
         
         
@@ -122,9 +128,7 @@ class Longposition(BaseRect):
                                           maker_fee=self.has["inputs"]["maker_fee"],
                                           order_type=self.has["inputs"]["order_type"],
                                           )
-        
-        recom_capital = round(recom_capital,self.chart._precision)
-        
+                
         stoploss = calculate_pl_with_fees(entry_price=entry_price,exit_price=stop_loss_price,
                                           capital=recom_capital,
                                           proportion_closed=self.has["inputs"]["proportion_closed"],
@@ -145,31 +149,34 @@ class Longposition(BaseRect):
                                           is_stop_loss=False
                                           )
         
-        profit = round(profit,2)
-        stoploss = round(stoploss,2)
+        profit = profit
+        stoploss = stoploss
         
-        profit_amount = self.has["inputs"]["capital"] + profit
-        stoploss_amount = self.has["inputs"]["capital"] - stoploss
+        profit_amount = profit
+        stoploss_amount = stoploss
         
-        recom_quanty = round(recom_capital/entry_price, self.chart.quanty_precision)
+        recom_quanty = recom_capital/entry_price
+        
+        qty_precision = f".{self.chart.quanty_precision}f"
+        price_precision = f".{self.chart._precision}f"
         
         html_up = f"""
                 <div style="text-align: center; border-radius: 5px solid #d1d4dc;">
-                    <span style="color: #d1d4dc; font-size: 10pt;">Target {exit_price} ({profit_percent}%), Amount {profit_amount}</span>
+                    <span style="color: #d1d4dc; font-size: 10pt;">Target {exit_price:{price_precision}} ({profit_percent:.2f}%), Amount {profit_amount:.2f}$</span>
                 </div>
                 """
         
         html_center = f"""
                 <div style="text-align: center; border-radius: 5px solid #d1d4dc;">
-                    <span style="color: #d1d4dc; font-size: 10pt;">Entry {entry_price}, Qty {recom_quanty}</span>
+                    <span style="color: #d1d4dc; font-size: 10pt;">Entry {entry_price:{price_precision}}, Qty {recom_quanty:{qty_precision}}</span>
                     <br>
-                    <span style="color: #d1d4dc; font-size: 10pt;">R/R Ratio {RR}, Recom Capital {recom_capital}</span>
+                    <span style="color: #d1d4dc; font-size: 10pt;">R/R Ratio {RR:.2f}, Recom Capital {recom_capital:.2f}$</span>
                 </div>
                 """
                 
         html_under = f"""
                 <div style="text-align: center; border-radius: 5px solid #d1d4dc;">
-                    <span style="color: #d1d4dc; font-size: 10pt;">Stop {stop_loss_price} ({stoploss_percent}%), Amount {stoploss_amount}</span>
+                    <span style="color: #d1d4dc; font-size: 10pt;">Stop {stop_loss_price:{price_precision}} ({stoploss_percent:.2f}%), Amount -{stoploss_amount:.2f}$</span>
                 </div>
                 """
         
@@ -187,7 +194,6 @@ class Longposition(BaseRect):
         _y = _pointf.y() + offset.y()/2
         self.textitem_up.setPos(Point(_x,_y))
         
-        
         r = self.textitem_center.textItem.boundingRect()
         tl = self.textitem_center.textItem.mapToParent(r.topLeft())
         br = self.textitem_center.textItem.mapToParent(r.bottomRight())
@@ -197,10 +203,7 @@ class Longposition(BaseRect):
         _x = _pointf.x() +r.width()/2
         _y = _pointf.y() + offset.y()/8
         self.textitem_center.setPos(Point(_x,_y))
-        
-        
-        
-                 
+             
         r = self.textitem_under.textItem.boundingRect()
         tl = self.textitem_under.textItem.mapToParent(r.topLeft())
         br = self.textitem_under.textItem.mapToParent(r.bottomRight())
@@ -258,28 +261,23 @@ class Longposition(BaseRect):
             for handle in handles:
                 handle['item'].setVisible(True)
         else:
-            if not self.isMoving or not self.isSelected:
-                hover = False
-                self.setCursor(Qt.CursorShape.CrossCursor)
-                self.textitem_up.setVisible(False)
-                self.textitem_center.setVisible(False)
-                self.textitem_under.setVisible(False)
-                handles = self.handles + self.under_part.handles
-                for handle in handles:
-                    handle['item'].setVisible(False)
+            hover = False
+            self.setCursor(Qt.CursorShape.CrossCursor)
+            # self.textitem_up.setVisible(False)
+            # self.textitem_center.setVisible(False)
+            # self.textitem_under.setVisible(False)
+            handles = self.handles + self.under_part.handles
+            for handle in handles:
+                handle['item'].setVisible(False)
     
     def mouseClickEvent(self, ev):
-        super().mouseClickEvent(ev)
-        if ev.button() == Qt.MouseButton.LeftButton:
-            self.drawtool.drawing_object =None 
+        super().mouseClickEvent(ev)   
     
     def mouseReleaseEvent(self, ev):
         super().mouseReleaseEvent()
-        if ev.button() == Qt.MouseButton.LeftButton:
-            self.drawtool.drawing_object =None  
-    
+
     def boundingRect(self):
-        return QRectF(0, 0, self.state['size'][0], self.state['size'][1]).normalized()
+        return QRectF(0, 0, self.state['size'][0]+self.under_part.state['size'][0], self.state['size'][1]+self.under_part.state['size'][1]).normalized()
     
     def paint(self, p:QPainter, opt, widget):
         super().paint(p, opt, widget)
@@ -288,7 +286,6 @@ class Longposition(BaseRect):
         self.update_text()
         
     def mouseDragEvent(self, ev, axis=None):
-        self.setSelected(True)
         if ev.button == Qt.KeyboardModifier.ShiftModifier:
             return self.chart.vb.mouseDragEvent(ev, axis)
         if not self.locked:

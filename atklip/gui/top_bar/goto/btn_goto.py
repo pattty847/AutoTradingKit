@@ -4,6 +4,7 @@ from PySide6.QtWidgets import QWidget, QFrame,QHBoxLayout
 from atklip.gui.qfluentwidgets.components import ToolButton,FastCalendarPicker
 from atklip.gui.qfluentwidgets.common import FluentIcon as FIF,isDarkTheme
 from atklip.gui.components import _PushButton
+from atklip.gui.components._pushbutton import IconTextChangeButton
 
 from .goto_menu import DateTimeMenu
 
@@ -54,34 +55,22 @@ class _Button(ToolButton):
         super().leaveEvent(event)
 
 
-class GotoButton(QFrame):
+class GotoButton(IconTextChangeButton):
     # clicked = Signal()
     sig_remove_menu = Signal()
     def __init__(self,parent:QWidget=None):
-        super().__init__(parent)
-        #self.setClickEnabled(False)
+        super().__init__(FIF.GOTO_DATE,parent=parent)
         self._parent:MainWidget = parent
-        self.setContentsMargins(0,0,0,0)
         self.setFixedSize(35,35)
-        self._QLayout = QHBoxLayout(self)
-        self._QLayout.setSpacing(0)
-        self._QLayout.setContentsMargins(0, 0, 0, 0)
-        self._QLayout.setAlignment(Qt.AlignLeft)
-        self.splitToolButton = _Button(FIF.GOTO_DATE,self)
-        self._QLayout.addWidget(self.splitToolButton)
+        self.setIconSize(QSize(30,30))
         self._menu = None
-        self.splitToolButton.clicked.connect(self.show_menu)
+        self.clicked.connect(self.show_menu)
         self.sig_remove_menu.connect(self.remove_menu)
-        #self.setupcalendar()
-        #self.splitToolButton.dropButton.hide()
+
     def enterEvent(self, event):
         super().enterEvent(event)
     def leaveEvent(self, event):
         super().leaveEvent(event)
-    # def mousePressEvent(self, event: QMouseEvent) -> None:
-    #     if event.button() == Qt.LeftButton:
-    #         self.clicked.emit()
-    #     super().mousePressEvent(event)
 
     def setupcalendar(self):
         self._menu = DateTimeMenu(self.sig_remove_menu,self._parent)

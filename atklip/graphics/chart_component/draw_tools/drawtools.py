@@ -327,7 +327,7 @@ class DrawTool(QObject):
 
     def draw_date_price_range(self, ev):
         pos_x, pos_y = self.get_position_mouse_on_chart(ev)
-        obj = RangePolyLine([pos_x, pos_y], [0, 0],drawtool=self, pen='#2962ff', movable=True)
+        obj = RangePolyLine([pos_x, pos_y], [1, 1],drawtool=self, pen='#2962ff', movable=True)
         # obj.setPos(pos_x, pos_y)
         self.chart.addItem(obj)
         self.chart.drawtools.append(obj)
@@ -338,7 +338,7 @@ class DrawTool(QObject):
         uid_obj = self.chart.objmanager.add(obj)
         self.draw_object_name = "drawed_date_price_range"
         obj.on_click.connect(self.show_popup_menu)
-        self.chart.sig_show_pop_up_draw_tool.emit(obj)
+        # self.chart.sig_show_pop_up_draw_tool.emit(obj)
     
     def draw_up_arrow(self, ev):
         pos_x, pos_y = self.get_position_crosshair()

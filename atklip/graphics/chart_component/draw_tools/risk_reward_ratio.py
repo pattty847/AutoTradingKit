@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 @dataclass
 class Line:
     text: str
-    percent:int =  100
+    percent:int 
     price: float
     item: object
     color: tuple|str

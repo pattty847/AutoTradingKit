@@ -5,7 +5,7 @@ from .plotitem import ViewPlotItem
 from atklip.controls import *
 
 from PySide6 import QtGui
-from PySide6.QtCore import Signal,QPointF,Qt,QSize,QEvent,QCoreApplication
+from PySide6.QtCore import Signal,QPointF,Qt,QSize,QEvent,QTime
 from PySide6.QtGui import QColor,QPainter
 from PySide6.QtWidgets import QGraphicsView,QWidget
 from atklip.graphics.pyqtgraph import mkPen, PlotWidget, InfiniteLine,SignalProxy
@@ -15,10 +15,13 @@ from atklip.controls.candle import SMOOTH_CANDLE, JAPAN_CANDLE
 
 from .globarvar import global_signal
 from .proxy_signal import Signal_Proxy
-from atklip.graphics.chart_component.base_items import CandleStick, PriceLine
+from atklip.graphics.chart_component.base_items import PriceLine
 from atklip.graphics.chart_component.indicator_panel import IndicatorContainer
 from atklip.app_utils import *
 from atklip.graphics.chart_component.draw_tools import DrawTool
+
+from atklip.graphics.chart_component.base_items.replay_cut import ReplayObject
+
 if TYPE_CHECKING:
     from .viewbox import PlotViewBox
     from .axisitem import CustomDateAxisItem, CustomPriceAxisItem
@@ -36,6 +39,7 @@ class Crosshair:
 
 class ViewPlotWidget(PlotWidget):
     mouse_clicked_signal = Signal(QEvent)
+    mouse_clicked_on_chart = Signal(QEvent)
     sig_show_process = Signal(bool)
     sig_change_tab_infor = Signal(tuple)
     sig_goto_date = Signal(tuple)
@@ -62,9 +66,7 @@ class ViewPlotWidget(PlotWidget):
 
         self.PlotItem = ViewPlotItem(context=self, type_chart=type_chart)     # parent?
         # self.sigSceneMouseMoved.
-        self.manual_range = False
-        self.magnet_on = False
-        self.mouse_on_vb = False
+        
 
         super().__init__(parent=parent,background=background, plotItem= self.PlotItem,**kwargs)
         self.crosshair_enabled = kwargs.get(Crosshair.ENABLED, False)
@@ -104,6 +106,11 @@ class ViewPlotWidget(PlotWidget):
         self.ev_pos = None
         self.last_color = None
         self.last_close_price = None
+        self.manual_range = False
+        self.magnet_on = False
+        self.mouse_on_vb = False
+        self.press_time = None
+        self.release_time = None
         
         Signal_Proxy(self.crosshair_y_value_change,slot=self.yAxis.change_value,connect_type = Qt.ConnectionType.AutoConnection)
         Signal_Proxy(self.sig_update_y_axis,self.yAxis.change_view)
@@ -124,7 +131,6 @@ class ViewPlotWidget(PlotWidget):
         self.yAxis.setWidth(60)
         self.xAxis.hide()
         
-        self.timedata, self.data = [], []
         self.vb:PlotViewBox = self.getViewBox()
         self.lastMousePositon = None
         self.nearest_value = None
@@ -135,15 +141,43 @@ class ViewPlotWidget(PlotWidget):
         self.stop_replay_enabled = False
         self.is_running_replay = False
         self.is_cutting_replay = False
-        self.is_get_old_zigzag_base = False
 
         self.drawtool = DrawTool(self)
+        
+        self.replay_obj:ReplayObject =None
         
         Signal_Proxy(signal=self.sig_add_item,slot=self.add_item,connect_type=Qt.ConnectionType.QueuedConnection)
         Signal_Proxy(signal=self.sig_remove_item,slot=self.remove_item,connect_type=Qt.ConnectionType.QueuedConnection)
 
         global_signal.sig_show_hide_cross.connect(self.show_hide_cross,Qt.ConnectionType.AutoConnection)
 
+        self.mouse_clicked_on_chart.connect(self.test_mouse_click)
+    
+    def test_mouse_click(self,ev:QEvent):
+        try:
+            ev_pos = ev.position()
+        except:
+            ev_pos = ev.pos()
+        print(ev_pos)
+    
+    def set_replay_mode(self):
+        btn = self.sender()
+        
+        print(btn,btn.isChecked())
+        
+        if btn.isChecked():
+            self.replay_obj = ReplayObject(self)
+            self.add_item(self.replay_obj)
+            self.mode_replay = True
+            self.drawtool.drawing_object = self.replay_obj
+        else:
+            if isinstance(self.replay_obj,ReplayObject):
+                self.mode_replay = False
+                self.drawtool.drawing_object = None
+                self.remove_item(self.replay_obj)
+                self.replay_obj = None
+        
+    
     def set_precision(self,precision,quanty_precision):
         self._precision = precision
         self.quanty_precision= quanty_precision
@@ -291,9 +325,10 @@ class ViewPlotWidget(PlotWidget):
 
         self.crosshair_x_value_change.emit(("#363a45",None))
         self.crosshair_y_value_change.emit(("#363a45",None))
-
         if self.crosshair_enabled:
             self.hide_crosshair()
+        if self.replay_obj:
+            self.replay_obj.hide()
         super().leaveEvent(ev)
 
     def enterEvent(self, ev: QEvent) -> None:
@@ -303,28 +338,31 @@ class ViewPlotWidget(PlotWidget):
         self._parent.sig_show_hide_cross.emit((True,self.nearest_value))
         if self.crosshair_enabled:
             self.show_crosshair()
+        if self.replay_obj:
+            self.replay_obj.show()
         super().enterEvent(ev)
 
     # @lru_cache()
     def find_nearest_value(self,closest_index):
-        #absolute_differences = np.abs(array - x)
-        # Tìm chỉ số của phần tử có khoảng cách nhỏ nhất
-        #index_of_closest_value = np.argmin(absolute_differences)
-        # Lấy giá trị tại chỉ số tìm được
-        #closest_value = array[index_of_closest_value]
-        #closest_index = round_(x)
-        # index_of_closest_value = np.where(array == closest_value)[0][0]
         ohlcv = self.jp_candle.dict_index_ohlcv[closest_index]
-        #print(x,index,index_of_closest_value, closest_value)
-        return ohlcv #index_of_closest_value, closest_value
+        return ohlcv 
+    
+    def itemAt(self,x,y):
+        print(super().itemAt(x,y))
+        return super().itemAt(x,y)
     
     def mousePressEvent(self, ev):
         self.is_mouse_pressed =  True
-        # self.mouse_clicked_signal.emit(ev)
+        self.press_time = QTime.currentTime()  # Lấy thời gian sự kiện nhấn
         super().mousePressEvent(ev)
         
     def mouseReleaseEvent(self, ev):
         self.is_mouse_pressed = False
+        self.release_time = QTime.currentTime() 
+        if self.press_time:
+            elapsed_time = self.press_time.msecsTo(self.release_time)
+            if elapsed_time < 200: 
+                self.mouse_clicked_on_chart.emit(ev)
         super().mouseReleaseEvent(ev)
         
     def mouseMoveEvent(self, ev: QEvent) -> None:

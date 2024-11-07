@@ -4,7 +4,7 @@ from .mainwidget_ui import Ui_MainWidget
 from atklip.gui.components import CircularProgress,LoadingProgress
 from atklip.gui.qfluentwidgets.common import FluentStyleSheet
 from PySide6.QtWidgets import QFrame,QWidget
-from PySide6.QtCore import QPropertyAnimation,QEasingCurve, Signal, Qt,QEvent
+from PySide6.QtCore import QPropertyAnimation,QEasingCurve, Signal, Qt,QEvent,QTime
 from atklip.gui.qfluentwidgets.common.icon import *
 from atklip.appmanager.setting import AppConfig
 
@@ -53,6 +53,8 @@ class MainWidget(QWidget,Ui_MainWidget):
         self.topbar.sig_add_indicator_to_chart.connect(self.chartbox_splitter.sig_add_indicator_to_chart,Qt.ConnectionType.AutoConnection)
         "signal from TopBar-------end"
         
+        self.topbar.replay.clicked.connect(self.chartbox_splitter.chart.set_replay_mode)
+        
         self.progress = LoadingProgress(self)
         self.chartbox_splitter.chart.sig_show_process.connect(self.progress.run_process,Qt.ConnectionType.AutoConnection)
         
@@ -61,6 +63,10 @@ class MainWidget(QWidget,Ui_MainWidget):
         "khởi tạo indicator menu, symbol menu trước. đang test"
         self.topbar.setup_indicator_menu()
         self.topbar.setup_symbol_menu()
+        
+        self.press_time = None
+        self.release_time = None
+        
         FluentStyleSheet.SPLITTER.apply(self.chartbox_splitter)
 
     def show_favorite_draw_btn(self):
@@ -117,7 +123,15 @@ class MainWidget(QWidget,Ui_MainWidget):
         self.box.start()
 
     def mousePressEvent(self, ev:QEvent):
-        # print(self.drawtool.draw_object_name)
         if Qt.MouseButton.LeftButton:
-            self.mouse_clicked_signal.emit(ev)
+            self.press_time = QTime.currentTime()
             super().mousePressEvent(ev)
+    
+    def mouseReleaseEvent(self, ev:QEvent):
+        self.is_mouse_pressed = False
+        self.release_time = QTime.currentTime() 
+        if self.press_time:
+            elapsed_time = self.press_time.msecsTo(self.release_time)
+            if elapsed_time < 200:
+                self.mouse_clicked_signal.emit(ev)
+        super().mouseReleaseEvent(ev)

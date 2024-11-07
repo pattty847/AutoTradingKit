@@ -5,6 +5,7 @@ from PySide6.QtWidgets import QPushButton, QWidget
 
 from atklip.gui.qfluentwidgets.common import isDarkTheme
 from atklip.gui.qfluentwidgets.common.icon import FluentIcon as FIF
+from atklip.gui.components._pushbutton import IconTextChangeButton
 
 from .indicator_menu import IndicatorMenu
 
@@ -70,11 +71,11 @@ class _PushButton(QPushButton):
         super().leaveEvent(event)
 
 
-class IndicatorButton(_PushButton):
+class IndicatorButton(IconTextChangeButton):
     sig_remove_menu = Signal()
     def __init__(self,sig_add_indicator_to_chart, parent):
-        _icon = QIcon(FIF.INDICATOR.path())
-        super().__init__(_icon, "Indicators", parent)
+        # _icon = QIcon(FIF.INDICATOR.path())
+        super().__init__(FIF.INDICATOR, "Indicators", parent)
         self._parent:MainWidget = parent
         self.setIconSize(QSize(30, 30))
         self._pre_x_pos = None

@@ -18,14 +18,14 @@ class Demo(QWidget):
         self.picker.dateChanged.connect(print)
 
         # customize animation
-        self.picker.setFlyoutAnimationType(FlyoutAnimationType.SLIDE_RIGHT)
+        # self.picker.setFlyoutAnimationType(FlyoutAnimationType.SLIDE_RIGHT)
 
         # set date
-        self.picker.setDate(QDate(2023, 5, 30))
+        # self.picker.setDate(QDate(2023, 5, 30))
 
         # customize date format
-        self.picker.setDateFormat(Qt.TextDate)
-        self.picker.setDateFormat('yyyy-M-d')
+        # self.picker.setDateFormat(Qt.TextDate)
+        # self.picker.setDateFormat('yyyy-M-d')
 
         self.hBoxLayout = QHBoxLayout(self)
         self.hBoxLayout.addWidget(self.picker, 0, Qt.AlignCenter)

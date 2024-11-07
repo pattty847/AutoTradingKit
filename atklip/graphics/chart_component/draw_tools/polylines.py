@@ -1,6 +1,6 @@
 from typing import List
 from PySide6.QtCore import Qt, QRectF, QPointF, Signal
-from PySide6.QtGui import QPainter
+from PySide6.QtGui import QPainter,QPicture
 from PySide6.QtWidgets import QGraphicsItem
 from pyqtgraph import TextItem, Point, ArrowItem, mkPen,mkBrush
 
@@ -96,6 +96,10 @@ class RangePolyLine(SpecialROI):     # for date price range
         
         self.addScaleHandle([0, 0], [1, 1])
         self.addScaleHandle([1, 1], [0, 0])
+
+        self.h1 = None
+        self.h0 = None
+        self.picture:QPicture =QPicture()
         try:
             self.addSegment(self.handles[0]['item'], self.handles[1]['item'])
         except:
@@ -254,6 +258,7 @@ class RangePolyLine(SpecialROI):     # for date price range
             self.last_point = point
             lasthandle = self.handles[-1]['item'] 
             lasthandle.movePoint(pos)
+            
             self.stateChanged()
     
     # def updatePos(self,pointf):
@@ -276,6 +281,7 @@ class RangePolyLine(SpecialROI):     # for date price range
     def update_text(self):
         h0 = self.handles[0]['item'].pos()
         h1 = self.handles[1]['item'].pos()
+
         diff = h1 - h0
         # point0 = self.mapFromParent(Point(h0))
         # point1 = self.mapFromParent(Point(h1))
@@ -335,10 +341,10 @@ class RangePolyLine(SpecialROI):     # for date price range
             raise Exception("Either an event or a position must be given.")
         # h2 = segment.handles[1]['item']
         print(598, pos, self)
-        if not self.finished:
+        if not self.finished and self.last_point:
             self.finished = True
             self.drawtool.drawing_object =None
-        self.on_click.emit(self)
+            self.on_click.emit(self)
 
     
     def addHandle(self, info, index=None):
@@ -386,18 +392,47 @@ class RangePolyLine(SpecialROI):     # for date price range
                 print(111,self.drawtool.drawing_object)
                 self.update()
     
+    def boundingRect(self) -> QRectF:
+        return QRectF(self.picture.boundingRect())
     def paint(self, p: QPainter, *args):
-        p.setRenderHint(QPainter.RenderHint.Antialiasing)
-        p.setPen(mkPen(color=self.has["styles"]["pen"], width=self.has["styles"]["width"],style=self.has["styles"]["style"]))
+        
         if self.handles:
             h0 = self.handles[0]['item'].pos()
             h1 = self.handles[1]['item'].pos()
-            diff = h1 - h0
-            p.drawLine(QPointF(h1.x(), h1.y() - diff.y() /2), QPointF(h0.x(), h1.y() - diff.y() /2))
-            p.drawLine(QPointF(h1.x() - diff.x() /2, h1.y()), QPointF(h1.x() - diff.x() /2, h0.y()))
-            # p.setPen(QColor(252, 163, 38, 40))
-            p.setBrush(mkBrush(self.has["styles"]["brush"]))
-            p.fillRect(QRectF(h1,h0),mkColor(self.has["styles"]["brush"]))
-            self.update_arrows()
-            self.update_text()
+            
+            if not self.h1:
+                self.h1 = h1 
+                self.h0 = h0
+                self.picture = QPicture()
+                painter = QPainter(self.picture)
+                diff = h1 - h0
+                painter.setPen(mkPen(color=self.has["styles"]["pen"], width=self.has["styles"]["width"],style=self.has["styles"]["style"]))
+                painter.drawLine(QPointF(h1.x(), h1.y() - diff.y() /2), QPointF(h0.x(), h1.y() - diff.y() /2))
+                painter.drawLine(QPointF(h1.x() - diff.x() /2, h1.y()), QPointF(h1.x() - diff.x() /2, h0.y()))
+                # p.setPen(QColor(252, 163, 38, 40))
+                painter.setBrush(mkBrush(self.has["styles"]["brush"]))
+                painter.fillRect(QRectF(h1,h0),mkColor(self.has["styles"]["brush"]))
+                self.update_arrows()
+                self.update_text()
+                painter.end()
+
+            elif self.h1 == h1 and self.h0 == h0:
+                pass
+            else:
+                self.picture = QPicture()
+                painter = QPainter(self.picture)
+                self.h1 = h1 
+                self.h0 = h0
+                diff = h1 - h0
+                painter.setPen(mkPen(color=self.has["styles"]["pen"], width=self.has["styles"]["width"],style=self.has["styles"]["style"]))
+                painter.drawLine(QPointF(h1.x(), h1.y() - diff.y() /2), QPointF(h0.x(), h1.y() - diff.y() /2))
+                painter.drawLine(QPointF(h1.x() - diff.x() /2, h1.y()), QPointF(h1.x() - diff.x() /2, h0.y()))
+                # p.setPen(QColor(252, 163, 38, 40))
+                painter.setBrush(mkBrush(self.has["styles"]["brush"]))
+                painter.fillRect(QRectF(h1,h0),mkColor(self.has["styles"]["brush"]))
+                self.update_arrows()
+                self.update_text()
+                painter.end()
+
+            self.picture.play(p)
 

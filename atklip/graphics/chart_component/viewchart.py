@@ -498,17 +498,14 @@ class Chart(ViewPlotWidget):
     def get_position_crosshair(self):
         return self.vLine.getXPos(), self.hLine.getYPos()
     
-    def roll_till_now(self,):
+    def roll_till_now(self):
         vr = self.viewRect()
         height = vr.height()
-        # close_price = datasrc.df.columns[2]
-        y1 = self.last_close_price + height / 2
+        y1 = self.jp_candle.candles[-1].close + height / 2
         y0 = y1 - height
         self.setYRange(y1, y0, padding=0.2)
-        x1 = self.timedata[-1]
-        x0 = x1 - 400*covert_time_to_sec(self.interval)
-        ##print(752, "Rolling", x1, x0, self.timedata[-400])
-        self.setXRange(x1, x0, padding=0.5)
+        x1 = self.jp_candle.candles[-1].index
+        self.setXRange(x1, x1-800, padding=0.5)
 
     def keyPressEvent(self, ev: QKeyEvent):
         if ev.key() == Qt.Key.Key_Delete:
