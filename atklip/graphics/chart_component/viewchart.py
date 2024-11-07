@@ -531,5 +531,4 @@ class Chart(ViewPlotWidget):
 
         return super().keyPressEvent(ev)       
     
-
     
