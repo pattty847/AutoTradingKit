@@ -46,7 +46,7 @@ class TrendlinesROI(BasePolyLineROI):
         self.isSelected = False
         self.last_point = None
         self.finished = False
-        self.dounbleclick = False
+        self.doubleclick = False
         self.yoff = False
         self.xoff =False
         self.locked = False
@@ -206,7 +206,7 @@ class TrendlinesROI(BasePolyLineROI):
     def mouseDoubleClickEvent(self, event) -> None:
         self.drawtool.drawing_object =None
         self.finished = True
-        self.dounbleclick = True
+        self.doubleclick = True
         # lasthandle = self.handles[-1]['item']
         # self.removeHandle(lasthandle)
         # self.addArrowAtEnd()
@@ -214,10 +214,10 @@ class TrendlinesROI(BasePolyLineROI):
     
     def mouseClickEvent_Handle(self, ev):
         if ev.button() == Qt.MouseButton.LeftButton:
-            if self.last_point != None and (not self.dounbleclick):
+            if self.last_point != None and (not self.doubleclick):
                 self.drawtool.drawing_object =None
                 self.finished = True
-                self.dounbleclick = True
+                self.doubleclick = True
                 # lasthandle = self.handles[-1]['item']
                 # self.removeHandle(lasthandle)
                 # self.addArrowAtEnd()
@@ -247,20 +247,20 @@ class TrendlinesROI(BasePolyLineROI):
         return self.addHandle({'name': name, 'type': 'f', 'pos': pos, 'item': item}, index=index)
 
     def setPoint(self, pos_x, pos_y):
+        
         if not self.finished:
             if self.chart.magnet_on:
                 pos_x, pos_y = self.drawtool.get_position_crosshair()
-
             point = Point(pos_x, pos_y)
             pos = self.chart.vb.mapViewToScene(point)
             self.last_point = point
-            # lasthandle = self.handles[-1]['item']
-            # lasthandle.movePoint(pos)
-            # self.movePoint(-1,pos)
+            lasthandle = self.handles[-1]['item']
+            lasthandle.movePoint(pos)
             self.stateChanged()
 
     def mouseClickEvent(self, ev):
         if ev.button() == Qt.MouseButton.LeftButton:
+            print("vao day af")
             # if not self.boundingRect().contains(ev.pos()): 
             self.on_click.emit(self)
             self.finished = True
@@ -350,6 +350,7 @@ class TrendlinesROI(BasePolyLineROI):
         return h
         
     def segmentClicked(self, segment, ev=None, pos=None): ## pos should be in this item's coordinate system
+        print("vao day af ---------")
         self.on_click.emit(self)
         
     def indexOfHandle(self, handle):

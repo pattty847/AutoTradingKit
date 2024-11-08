@@ -80,8 +80,7 @@ class RangePolyLine(SpecialROI):     # for date price range
         self.texts = []
         self.arrows = []
         self.finished = False
-        self.dounbleclick = False
-        self.last_point = None
+        self.doubleclick = False
         self.segments = []
         self.isSelected = False
         self.indicator_name="Ruler..."
@@ -99,6 +98,7 @@ class RangePolyLine(SpecialROI):     # for date price range
 
         self.h1 = None
         self.h0 = None
+        self.last_point = None
         self.picture:QPicture =QPicture()
         try:
             self.addSegment(self.handles[0]['item'], self.handles[1]['item'])
@@ -127,6 +127,8 @@ class RangePolyLine(SpecialROI):     # for date price range
     
     def update_styles(self, _input):
         _style = self.has["styles"][_input]
+        self.h1 = None
+        self.h0 = None
         self.update()
         # if _input == "pen" or _input == "width" or _input == "style":
         #     self.setPen(color=self.has["styles"]["pen"], width=self.has["styles"]["width"],style=self.has["styles"]["style"])
@@ -237,46 +239,25 @@ class RangePolyLine(SpecialROI):     # for date price range
 
     def mouseClickEvent(self, ev):
         if ev.button() == Qt.MouseButton.LeftButton:
-            # if not self.boundingRect().contains(ev.pos()):
-            ev.accept()
-            self.on_click.emit(self)
-            self.finished = True
-            self.drawtool.drawing_object =None
+            if self.last_point:
+                ev.accept()
+                self.on_click.emit(self)
+                self.finished = True
+                self.drawtool.drawing_object =None
         ev.ignore()
         super().mouseClickEvent(ev)
     
     def objectName(self):
         return self.indicator_name
-        
-    def setPoint(self, pos_x, pos_y):
-        if not self.finished:
-            if self.chart.magnet_on:
-                pos_x, pos_y = self.drawtool.get_position_crosshair()
-
-            point = Point(pos_x, pos_y)
-            pos = self.chart.vb.mapViewToScene(point)
-            self.last_point = point
-            lasthandle = self.handles[-1]['item'] 
-            lasthandle.movePoint(pos)
-            
-            self.stateChanged()
     
-    # def updatePos(self,pointf):
-    #     # update text position to obey anchor
-    #     r = self.textItem.boundingRect()
-    #     tl = self.textItem.mapToParent(r.topLeft())
-    #     br = self.textItem.mapToParent(r.bottomRight())
-    #     offset = (br - tl) * self.anchor
-    #     p = self.parentItem()
-    #     if p is not None:
-    #         # prb = p.boundingRect()
-    #         # x,y,w,h = prb.x(),prb.y(),prb.width(),prb.height()
-    #         # _x = -offset.x() + x
-    #         mapFromParent = self.mapFromParent(pointf)
-    #         _x = -offset.x() + mapFromParent.x()
-    #         _y = mapFromParent.y()-r.height()/2
-    #         pos = Point(_x,_y)
-    #         self.textItem.setPos(pos)
+    
+    def setPoint(self,pos_x, pos_y):
+        if not self.finished:
+            if self.drawtool.chart.magnet_on:
+                pos_x, pos_y = self.drawtool.get_position_crosshair()
+            self.last_point =(pos_x, pos_y)
+            self.movePoint(-1, QPointF(pos_x, pos_y))
+            self.stateChanged()
     
     def update_text(self):
         h0 = self.handles[0]['item'].pos()
@@ -291,9 +272,9 @@ class RangePolyLine(SpecialROI):     # for date price range
         diff_y, percent,fsecs,ts = _draw_line_segment_text(self.chart.interval,self.chart._precision,point0, point1)
         
         if diff.y() < 0:
-            self.textitem.setAnchor((1,0))
+            self.textitem.setAnchor((0.5,0))
         else:
-            self.textitem.setAnchor((1,1))
+            self.textitem.setAnchor((0.5,1))
         
         html=f"""<div style="text-align: center"><span style="color: #d1d4dc; font-size: 10pt;">{diff_y} ({percent}%)</span><br><span style="color: #d1d4dc; font-size: 10pt;">{fsecs} bars, {ts}</span></div>"""
         
@@ -305,7 +286,7 @@ class RangePolyLine(SpecialROI):     # for date price range
         offset = (br - tl) * self.textitem.anchor
         
         _pointf = Point(h1.x() - diff.x()/2, h1.y())
-        _x = _pointf.x() +r.width()/2
+        _x = _pointf.x() #+r.width()/2
         
         if diff.y() < 0:
             _y = _pointf.y()-offset.y()/2
@@ -371,8 +352,8 @@ class RangePolyLine(SpecialROI):     # for date price range
         
         h.setZValue(self.zValue()+1)
         self.stateChanged()
-        h.mousePressEvent = self.mousePressEvent
-        h.mouseClickEvent = self.mouseClickEvent_Handle
+        # h.mousePressEvent = self.mousePressEvent
+        # h.mouseClickEvent = self.mouseClickEvent_Handle
         h.mouseDoubleClickEvent = self.mouseDoubleClickEvent
         return h
     
@@ -380,21 +361,19 @@ class RangePolyLine(SpecialROI):     # for date price range
     def mouseDoubleClickEvent(self, event) -> None:
         self.drawtool.drawing_object =None
         self.finished = True
-        self.dounbleclick = True
+        self.doubleclick = True
         self.update()
     
     def mouseClickEvent_Handle(self, ev):
         if ev.button() == Qt.MouseButton.LeftButton:
-            if self.last_point != None and (not self.dounbleclick):
+            if self.last_point != None and (not self.doubleclick):
                 self.drawtool.drawing_object =None
                 self.finished = True
-                self.dounbleclick = True
+                self.doubleclick = True
                 print(111,self.drawtool.drawing_object)
                 self.update()
     
     def boundingRect(self) -> QRectF:
-        return QRectF(self.picture.boundingRect())
-    def paint(self, p: QPainter, *args):
         
         if self.handles:
             h0 = self.handles[0]['item'].pos()
@@ -433,6 +412,11 @@ class RangePolyLine(SpecialROI):     # for date price range
                 self.update_arrows()
                 self.update_text()
                 painter.end()
+        
+        return QRectF(self.picture.boundingRect())
+    def paint(self, p: QPainter, *args):
+        
+        
 
             self.picture.play(p)
 

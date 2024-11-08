@@ -38,6 +38,7 @@ class Crosshair:
 
 
 class ViewPlotWidget(PlotWidget):
+    sig_remove_all_draw_obj = Signal()
     mouse_clicked_signal = Signal(QEvent)
     mouse_clicked_on_chart = Signal(QEvent)
     sig_show_process = Signal(bool)
@@ -55,7 +56,7 @@ class ViewPlotWidget(PlotWidget):
     sig_reload_indicator_panel = Signal()
     sig_update_source = Signal(object)
     sig_update_y_axis = Signal() 
-    sig_show_pop_up_draw_tool = Signal(object)
+    sig_reset_drawbar_favorite_btn = Signal(object)
 
     def __init__(self, parent=None, type_chart="trading", background: str = "#161616",) -> None: #str = "#f0f0f0"
         # Make sure we have LiveAxis in the bottom
@@ -115,8 +116,7 @@ class ViewPlotWidget(PlotWidget):
         Signal_Proxy(self.crosshair_y_value_change,slot=self.yAxis.change_value,connect_type = Qt.ConnectionType.AutoConnection)
         Signal_Proxy(self.sig_update_y_axis,self.yAxis.change_view)
         if self.crosshair_enabled:
-            self._add_crosshair(kwargs.get(Crosshair.LINE_PEN, None),
-                                kwargs.get(Crosshair.TEXT_KWARGS, {}))
+            self._add_crosshair()
   
     
         self.disableAutoRange()
@@ -151,14 +151,6 @@ class ViewPlotWidget(PlotWidget):
 
         global_signal.sig_show_hide_cross.connect(self.show_hide_cross,Qt.ConnectionType.AutoConnection)
 
-        self.mouse_clicked_on_chart.connect(self.test_mouse_click)
-    
-    def test_mouse_click(self,ev:QEvent):
-        try:
-            ev_pos = ev.position()
-        except:
-            ev_pos = ev.pos()
-        print(ev_pos)
     
     def set_replay_mode(self):
         btn = self.sender()
@@ -291,7 +283,7 @@ class ViewPlotWidget(PlotWidget):
             self.vLine.hide()
             self.hLine.hide()
         
-    def _add_crosshair(self, crosshair_pen: QtGui.QPen, crosshair_text_kwargs: dict) -> None:
+    def _add_crosshair(self) -> None:
         """Add crosshair into plot"""
         self.vLine = PriceLine(angle=90, movable=False,precision=self._precision,dash=[5, 5])
         self.hLine = PriceLine(angle=0, movable=False,precision=self._precision,dash=[5, 5])
@@ -344,7 +336,7 @@ class ViewPlotWidget(PlotWidget):
 
     # @lru_cache()
     def find_nearest_value(self,closest_index):
-        ohlcv = self.jp_candle.dict_index_ohlcv[closest_index]
+        ohlcv = self.jp_candle.dict_index_ohlcv.get(closest_index) 
         return ohlcv 
     
     def itemAt(self,x,y):
@@ -388,13 +380,14 @@ class ViewPlotWidget(PlotWidget):
                     if last_index < closest_index:
                         closest_index = last_index
                     ohlcv:OHLCV = self.find_nearest_value(closest_index)
-                    self.nearest_value = ohlcv.time
-                    data = [ohlcv.open,ohlcv.high,ohlcv.low,ohlcv.close]
-                    self._update_crosshair_position(self.lastMousePositon)
-                
-                    self._parent.sig_show_hide_cross.emit((True,ohlcv.index))
-                    ##QCoreApplication.processEvents()
-                    self.sig_show_candle_infor.emit(data)
+                    if ohlcv:
+                        self.nearest_value = ohlcv.time
+                        data = [ohlcv.open,ohlcv.high,ohlcv.low,ohlcv.close]
+                        self._update_crosshair_position(self.lastMousePositon)
+                    
+                        self._parent.sig_show_hide_cross.emit((True,ohlcv.index))
+                        ##QCoreApplication.processEvents()
+                        self.sig_show_candle_infor.emit(data)
                     ##QCoreApplication.processEvents()
                 except:
                     pass

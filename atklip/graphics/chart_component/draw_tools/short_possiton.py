@@ -1,6 +1,6 @@
 
 from PySide6.QtCore import Signal, Qt,QRectF,QPointF,QEvent
-from PySide6.QtGui import QPainter
+from PySide6.QtGui import QPainter,QPicture
 from atklip.app_utils.functions import mkBrush, mkPen
 from atklip.graphics.pyqtgraph.Point import Point
 from atklip.graphics.pyqtgraph.graphicsItems.TextItem import TextItem
@@ -76,6 +76,8 @@ class Shortposition(BaseRect):
         
         
         self.setbrushs()
+        
+        
     
     def update_text(self):
         h0 = self.handles[0]['item'].pos()
@@ -196,10 +198,7 @@ class Shortposition(BaseRect):
         _x = _pointf.x() +r.width()/2
         _y = _pointf.y() + offset.y()/8
         self.textitem_center.setPos(Point(_x,_y))
-        
-        
-        
-                 
+               
         r = self.textitem_under.textItem.boundingRect()
         tl = self.textitem_under.textItem.mapToParent(r.topLeft())
         br = self.textitem_under.textItem.mapToParent(r.bottomRight())
@@ -276,15 +275,73 @@ class Shortposition(BaseRect):
         super().mouseReleaseEvent()
         if ev.button() == Qt.MouseButton.LeftButton:
             self.drawtool.drawing_object =None  
-    
     def boundingRect(self):
-        return QRectF(0, 0, self.state['size'][0], self.state['size'][1]).normalized()
+        return QRectF(0, -self.under_part.state['size'][1], self.state['size'][0], self.state['size'][1]+self.under_part.state['size'][1])#.normalized()
     
-    def paint(self, p:QPainter, opt, widget):
-        super().paint(p, opt, widget)
-        p.setPen(mkPen("red",width=1))
-        p.drawLine(QPointF(0,1), QPointF(1,1))
-        self.update_text()
+    def paint(self, p: QPainter, *args):
+        
+        if self.handles:
+            h0 = self.handles[0]['item'].pos()
+            h1 = self.handles[-1]['item'].pos()
+            
+            if not self.h1:
+                self.h1 = h1 
+                self.h0 = h0
+                self.picture = QPicture()
+                painter = QPainter(self.picture)
+                
+                r = QRectF(0, 0, self.state['size'][0], self.state['size'][1])#.normalized()
+                painter.setRenderHint(
+                    QPainter.RenderHint.Antialiasing,
+                    self._antialias
+                )
+                painter.setPen(mkPen(self.has["styles"]['pen']))
+                painter.setBrush(self.has["styles"]["brush"])
+                painter.translate(r.left(), r.top())
+                painter.scale(r.width(), r.height())
+                painter.drawRect(0, 0, 1, 1)
+                if self.is_long:
+                    painter.setPen(mkPen("red",width=1))
+                    painter.drawLine(QPointF(0,0), QPointF(1,0))
+                if self.is_short:
+                    painter.setPen(mkPen("green",width=1))
+                    painter.drawLine(QPointF(0,0), QPointF(1,0))
+                painter.setPen(mkPen("red",width=1))
+                painter.drawLine(QPointF(0,1), QPointF(1,1))
+                painter.end()
+                
+                self.update_text()
+
+            elif self.h1 == h1 and self.h0 == h0:
+                pass
+            else:
+                self.picture = QPicture()
+                painter = QPainter(self.picture)
+                self.h1 = h1 
+                self.h0 = h0
+                
+                r = QRectF(0, 0, self.state['size'][0], self.state['size'][1])#.normalized()
+                painter.setRenderHint(
+                    QPainter.RenderHint.Antialiasing,
+                    self._antialias
+                )
+                painter.setPen(mkPen(self.has["styles"]['pen']))
+                painter.setBrush(self.has["styles"]["brush"])
+                painter.translate(r.left(), r.top())
+                painter.scale(r.width(), r.height())
+                painter.drawRect(0, 0, 1, 1)
+                if self.is_long:
+                    painter.setPen(mkPen("red",width=1))
+                    painter.drawLine(QPointF(0,0), QPointF(1,0))
+                if self.is_short:
+                    painter.setPen(mkPen("green",width=1))
+                    painter.drawLine(QPointF(0,0), QPointF(1,0))
+                painter.setPen(mkPen("red",width=1))
+                painter.drawLine(QPointF(0,1), QPointF(1,1))
+                painter.end()
+                self.update_text()
+
+            self.picture.play(p)
         
     def mouseDragEvent(self, ev, axis=None):
         self.setSelected(True)

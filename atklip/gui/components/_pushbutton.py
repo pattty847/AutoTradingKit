@@ -19,16 +19,16 @@ class _PushButton(ToolButton):
     * ToolButton(`icon`: QIcon | FluentIcon, `parent`: QWidget = None)
     """
     def __init__(self, *args,**kwargs):
-        #_icon = QIcon(icon.path())
         super().__init__(*args,**kwargs)
-        color = "transparent"
-        self.set_stylesheet(color)
+        
         self.setIconSize(QSize(30,30))
         self.setFixedHeight(30)
         self.setMinimumWidth(120)
         self.setContentsMargins(5,2,5,2)
         self.setCheckable(True)
         self.setChecked(False)
+        color = "transparent"
+        self.set_stylesheet(color)
     
     def set_text(self,text,color):
         self.setText(text)
@@ -41,6 +41,7 @@ class _PushButton(ToolButton):
                         border: none;
                         border-radius: 4px;
                     }}""")
+        self.update()
     def enterEvent(self, event):
         background_color = "rgba(255, 255, 255, 0.0837)" if isDarkTheme() else "#9b9b9b"
         self.set_stylesheet(background_color)
@@ -165,9 +166,9 @@ class IconTextChangeButton(QPushButton):
                     self.setIcon(self._icon.path(Theme.DARK))
                 else:
                     self.setIcon(self._icon.path(Theme.LIGHT))
-        if self.text():
-            color = self.get_color()
-            self.set_stylesheet(color)
+        # if self.text():
+        color = self.get_color()
+        self.set_stylesheet(color)
             
     def get_color(self):
         if self.isChecked():
@@ -639,7 +640,6 @@ class Tradingview_Button(_PushButton):
         if hasattr(self.parent().parent,"uncheck_items"):
             self.parent().parent.uncheck_items(self)
 
-
 class Lock_Unlock_Button(_PushButton):
     """ Transparent toggle tool button
 
@@ -657,13 +657,31 @@ class Lock_Unlock_Button(_PushButton):
         self.setIconSize(QSize(30,30))
         self.setContentsMargins(1,1,1,1)
         self.clicked.connect(self.set_icon_color)
-        self.set_icon_color()
         FluentStyleSheet.BUTTON.apply(self)
 
     def _drawIcon(self, icon, painter, rect):
         if not self.isChecked():
             return ToolButton._drawIcon(self, icon, painter, rect)
+
         PrimaryToolButton._drawIcon(self, icon, painter, rect, QIcon.On)
+    def icon(self):
+        return self.icon
+    
+    def change_status_favorite_btn(self):
+        if self.isChecked():
+            self.show_favorite_drawtool()
+        else:
+            self.hide_favorite_drawtool()
+    
+    def hide_favorite_drawtool(self):
+        self.setChecked(False)
+        icon_path = FIF.HEART.path(Theme.DARK) if isDarkTheme() else icon.path(Theme.LIGHT)
+        self.set_icon(icon_path)
+
+    def show_favorite_drawtool(self):
+        self.setChecked(True)
+        icon_path = FIF.FAVORITE.icon_path()
+        self.set_icon(icon_path)
 
     def set_icon(self, _path):
         icon_path = QIcon(_path)
@@ -671,22 +689,17 @@ class Lock_Unlock_Button(_PushButton):
 
     def set_icon_color(self):
         if self.isChecked():
-            self.setChecked(True)
             _icon = change_svg_color(FIF.LOCK.value,"#0055ff")
             self.setIcon(QIcon(_icon))
         else:
-            self.setChecked(False)
             if isDarkTheme():
                 self.setIcon(FIF.UNLOCK.path(Theme.DARK))
             else:
                 self.setIcon(FIF.UNLOCK.path(Theme.LIGHT))
 
 
-
-
 class Candle_Button(BasePushButton):
     """ Transparent toggle tool button
-
     Constructors
     ------------
     * TransparentToggleToolButton(`parent`: QWidget = None)
@@ -721,10 +734,7 @@ class Candle_Button(BasePushButton):
             icon_path = self._icon.path(Theme.DARK) if isDarkTheme() else self._icon.path(Theme.LIGHT)
             _icon = QIcon(icon_path)
             self.setIcon(_icon)
-
-
-
-
+            
 class Favorite_Draw_Button(BasePushButton):
     """ Transparent toggle tool button
 

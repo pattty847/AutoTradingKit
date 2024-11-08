@@ -45,13 +45,10 @@ class PathROI(BasePolyLineROI):
         self.isSelected = False
         self.last_point = None
         self.finished = False
-        self.dounbleclick = False
+        self.doubleclick = False
         self.yoff = False
         self.xoff =False
         self.locked = False
-
-        # self.on_click.connect(self.drawtool.show_popup_setting_tool)
-        # self.on_click.connect(self.get_pos_point)
         
         self._arrow_height = 5
         self._arrow_width = 4
@@ -204,7 +201,7 @@ class PathROI(BasePolyLineROI):
     def mouseDoubleClickEvent(self, event) -> None:
         self.drawtool.drawing_object =None
         self.finished = True
-        self.dounbleclick = True
+        self.doubleclick = True
         lasthandle = self.handles[-1]['item']
         self.removeHandle(lasthandle)
         # self.addArrowAtEnd()
@@ -212,8 +209,10 @@ class PathROI(BasePolyLineROI):
     
     def mouseClickEvent_Handle(self, ev):
         if ev.button() == Qt.MouseButton.LeftButton:
-            if self.last_point != None and (not self.dounbleclick):
+            if self.last_point != None and (not self.doubleclick):
                 self.addPoint(self.last_point)
+            elif self.last_point != None and self.doubleclick:
+                self.on_click.emit(self)
     
     def addFreeHandle(self, pos=None, axes=None, item=None, name=None, index=None):
         """

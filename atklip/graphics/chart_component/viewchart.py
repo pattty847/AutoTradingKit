@@ -124,11 +124,12 @@ class Chart(ViewPlotWidget):
             x_range = self.getAxis('bottom').range
             left_xrange = x_range[0]
             right_xrange = x_range[1]
-            first_candlestick_index = self.jp_candle.candles[0].index        
-            if left_xrange < first_candlestick_index + 1500:
-                self.is_load_historic = True
-                self.worker_auto_load_old_data = SimpleWorker(fn=self.check_signal_load_old_data)
-                self.worker_auto_load_old_data.start_thread()
+            if self.jp_candle.candles:
+                first_candlestick_index = self.jp_candle.candles[0].index        
+                if left_xrange < first_candlestick_index + 1500:
+                    self.is_load_historic = True
+                    self.worker_auto_load_old_data = SimpleWorker(fn=self.check_signal_load_old_data)
+                    self.worker_auto_load_old_data.start_thread()
         
     def check_signal_load_old_data(self):
         if self.jp_candle.candles != []:
@@ -157,6 +158,7 @@ class Chart(ViewPlotWidget):
             tool = self.drawtools.pop()
             # for tool in self.drawtools:
             self.remove_item(tool)
+        self.sig_remove_all_draw_obj.emit()
             
                 
     

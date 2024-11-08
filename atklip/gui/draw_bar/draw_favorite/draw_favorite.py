@@ -37,7 +37,7 @@ class FAVORITE(QFrame):
             _x = self.parent.chartbox_splitter.chart.width()
             _y = self.parent.chartbox_splitter.chart.height()
             menu = FavoriteSettingMenu(self.parent.chartbox_splitter.chart,self.sig_add_to_favorite,self.sig_draw_object_name)
-            self.parent.chartbox_splitter.chart.sig_show_pop_up_draw_tool.connect(menu.uncheck_btns)
+            self.parent.chartbox_splitter.chart.sig_reset_drawbar_favorite_btn.connect(menu.uncheck_btns)
             self.splitToolButton.clicked.connect(menu.deleteLater)
             x,y = self.parent.chartbox_splitter.chart.x()+(_x-menu.width()), self.parent.chartbox_splitter.chart.y()+2
             menu.move(QPoint(x, y))

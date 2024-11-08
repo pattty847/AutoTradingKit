@@ -26,6 +26,7 @@ class PopUpSettingMenu(CommandBarView):
     def __init__(self, parent:QWidget=None, tool=None):
         super().__init__(parent)
         self.chart:Chart = parent
+        self.chart.sig_remove_all_draw_obj.connect(self.deleteLater)
         self.tool = tool
         self.setContentsMargins(0, 0, 0, 0)
         self.hBoxLayout.setContentsMargins(0, 0, 0, 0)
@@ -65,7 +66,7 @@ class PopUpSettingMenu(CommandBarView):
                     
                     elif "lock" in _input:
                         if styles[_input] == True:
-                            lock = Lock_Unlock_Button(FIF.LOCK,self)
+                            lock = Lock_Unlock_Button(FIF.UNLOCK,self)
                             lock.setChecked(self.tool.locked)
                             lock.set_icon_color()
                             lock.setToolTip("Lock object")

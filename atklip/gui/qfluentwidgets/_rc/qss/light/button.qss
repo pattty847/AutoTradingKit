@@ -305,7 +305,7 @@ PillToolButton:disabled:checked {
 
 
 
-Tradingview_Button, Candle_Button,Favorite_Button {
+Tradingview_Button, Candle_Button,Favorite_Button,Lock_Unlock_Button {
     background-color: transparent;
     border: none;
     border-radius: 5px;
@@ -314,28 +314,33 @@ Tradingview_Button, Candle_Button,Favorite_Button {
 
 Tradingview_Button:hover,
 Candle_Button:hover,
+Lock_Unlock_Button:hover,
 Favorite_Button:hover {
     background-color: rgba(255, 255, 255, 0.0837);
 }
 Tradingview_Button:pressed,
 Candle_Button:pressed,
+Lock_Unlock_Button:pressed,
 Favorite_Button:pressed {
     background-color: rgba(255, 255, 255, 0.0326);
 }
 Tradingview_Button:checked,
 Candle_Button:checked,
+Lock_Unlock_Button:checked,
 Favorite_Button:checked {
     background-color: transparent;
     border: none;
 }
 Tradingview_Button:checked:hover,
 Candle_Button:checked:hover,
+Lock_Unlock_Button:checked:hover,
 Favorite_Button:checked:hover {
     background-color: rgba(255, 255, 255, 0.0837);
     border: none;
 }
 Tradingview_Button:checked:pressed,
 Candle_Button:checked:pressed,
+Lock_Unlock_Button:checked:pressed,
 Favorite_Button:checked:pressed {
     background-color: transparent;
     border: none;

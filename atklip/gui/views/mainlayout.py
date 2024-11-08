@@ -37,7 +37,7 @@ class MainWidget(QWidget,Ui_MainWidget):
         
         
         
-        self.chartbox_splitter.chart.sig_show_pop_up_draw_tool.connect(self.drawbar.reset_drawbar)
+        self.chartbox_splitter.chart.sig_reset_drawbar_favorite_btn.connect(self.drawbar.reset_drawbar)
         
         self.chartbox_splitter.chart.sig_reload_indicator_panel.connect(self.show_favorite_draw_btn)
         

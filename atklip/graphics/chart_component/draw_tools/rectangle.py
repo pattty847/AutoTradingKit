@@ -1,21 +1,21 @@
 from PySide6 import QtCore, QtGui
-from PySide6.QtCore import Signal, QObject, Qt,QPointF
-from PySide6.QtGui import QColor
+from PySide6.QtCore import Signal, QObject, Qt,QPointF,QRectF
+from PySide6.QtGui import QColor,QPainter,QPicture
+from PySide6.QtWidgets import QGraphicsItem
 
-from .roi import SpecialROI, BaseHandle
+from atklip.graphics.pyqtgraph.Point import Point
+from .roi import BaseHandle, SpecialROI, _FiboLineSegment
 from atklip.app_utils import mkBrush,mkColor,mkPen
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 if TYPE_CHECKING:
     from atklip.graphics.chart_component.viewchart import Chart
     from atklip.graphics.chart_component.draw_tools.drawtools import DrawTool
-    
+ 
 class Rectangle(SpecialROI):
     on_click = Signal(object)
     signal_visible = Signal(bool)
     signal_delete = Signal()
-
-
 
     def __init__(self, pos, size=..., angle=0,id=None, invertible=False, maxBounds=None, \
         snapSize=1, scaleSnap=False, translateSnap=False, rotateSnap=False, parent=None, \
@@ -48,6 +48,7 @@ class Rectangle(SpecialROI):
                     "setting": False,
                     "delete":True,}
         }
+        self.addScaleHandle([0, 0], [1, 1])
         
         self.addScaleHandle([1, 0.5], [0, 0.5])
         self.addScaleHandle([0, 0.5], [1, 0.5])
@@ -56,7 +57,6 @@ class Rectangle(SpecialROI):
         self.addScaleHandle([0.5, 0], [0.5, 1])
         self.addScaleHandle([0.5, 1], [0.5, 0])
         ## handles scaling both vertically and horizontally
-        self.addScaleHandle([0, 0], [1, 1])
         self.addScaleHandle([0, 1], [1, 0])
         self.addScaleHandle([1, 0], [0, 1])
         self.addScaleHandle([1, 1], [0, 0])
@@ -66,6 +66,10 @@ class Rectangle(SpecialROI):
 
         self.lastMousePos = pos
         self.finished = False
+        self.h1 = None
+        self.h0 = None
+        self.last_point = None
+        self.picture:QPicture =QPicture()
 
 
     def selectedHandler(self, is_selected):
@@ -129,11 +133,8 @@ class Rectangle(SpecialROI):
         if not self.finished:
             if self.drawtool.chart.magnet_on:
                 pos_x, pos_y = self.drawtool.get_position_crosshair()
-            # self.state['size'] = [pos_x-self.state['pos'][0], pos_y-self.state['pos'][1]]
-            if self.reverse:
-                self.movePoint(0, QPointF(pos_x, pos_y))
-            else:
-                self.movePoint(-1, QPointF(pos_x, pos_y))
+            self.last_point = (pos_x, pos_y)
+            self.movePoint(-1, QPointF(pos_x, pos_y))
             self.stateChanged()
     
     def setObjectName(self, name):
@@ -161,6 +162,8 @@ class Rectangle(SpecialROI):
     
     def update_styles(self, _input):
         _style = self.has["styles"][_input]
+        self.h1 = None
+        self.h0 = None
         self.update()
 
 
@@ -194,8 +197,7 @@ class Rectangle(SpecialROI):
         self.deleteLater()
 
 
-    def boundingRect(self):
-        return QtCore.QRectF(0, 0, self.state['size'][0], self.state['size'][1]).normalized()
+    
     
     
     def set_lock(self,btn):
@@ -225,18 +227,62 @@ class Rectangle(SpecialROI):
         # must not be cached because self.handles may change.
         return [h['item'] for h in self.handles]
 
-    def paint(self, p, opt, widget):
-        # Note: don't use self.boundingRect here, because subclasses may need to redefine it.
-        r = QtCore.QRectF(0, 0, self.state['size'][0], self.state['size'][1]).normalized()
-        p.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
+    def boundingRect(self) -> QRectF:
+        return QRectF(self.picture.boundingRect())
+    
+    def paint(self, p: QPainter, *args):
+        
+        if self.handles:
+            h0 = self.handles[0]['item'].pos()
+            h1 = self.handles[-1]['item'].pos()
+            if not self.h1:
+                self.h1 = h1 
+                self.h0 = h0
+                self.picture = QPicture()
+                painter = QPainter(self.picture)
+                # r = QtCore.QRectF(0, 0, self.state['size'][0], self.state['size'][1]).normalized()
+                # painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
+                "Custom màu viền và nền ở đây...."
+                painter.setPen(mkPen(color=self.has["styles"]["pen"], width=self.has["styles"]["width"],style=self.has["styles"]["style"]))
+                painter.drawRect(QRectF(h1,h0))
+                painter.setBrush(mkBrush(self.has["styles"]["brush"]))
+                # painter.translate(r.left(), r.top())
+                # painter.scale(r.width(), r.height())
+                painter.fillRect(QRectF(h1,h0),mkColor(self.has["styles"]["brush"]))
+                painter.end()
 
-        "Custom màu viền và nền ở đây...."
-        p.setPen(mkPen(color=self.has["styles"]["pen"], width=self.has["styles"]["width"],style=self.has["styles"]["style"]))
-        p.setBrush(mkBrush(self.has["styles"]["brush"]))
-        p.translate(r.left(), r.top())
-        p.scale(r.width(), r.height())
-        #p.fillRect(r, QColor(255,152,0,40))
-        p.drawRect(0, 0, 1, 1)
+            elif self.h1 == h1 and self.h0 == h0:
+                pass
+            else:
+                self.h1 = h1 
+                self.h0 = h0
+                self.picture = QPicture()
+                painter = QPainter(self.picture)
+                # r = QtCore.QRectF(0, 0, self.state['size'][0], self.state['size'][1]).normalized()
+                # painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
+                "Custom màu viền và nền ở đây...."
+                painter.setPen(mkPen(color=self.has["styles"]["pen"], width=self.has["styles"]["width"],style=self.has["styles"]["style"]))
+                painter.drawRect(QRectF(h1,h0))
+                painter.setBrush(mkBrush(self.has["styles"]["brush"]))
+                # painter.translate(r.left(), r.top())
+                # painter.scale(r.width(), r.height())
+                painter.fillRect(QRectF(h1,h0),mkColor(self.has["styles"]["brush"]))
+                painter.end()
+
+            self.picture.play(p)
+    
+    # def paint(self, p, opt, widget):
+    #     # Note: don't use self.boundingRect here, because subclasses may need to redefine it.
+    #     r = QtCore.QRectF(0, 0, self.state['size'][0], self.state['size'][1]).normalized()
+    #     p.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
+
+    #     "Custom màu viền và nền ở đây...."
+    #     p.setPen(mkPen(color=self.has["styles"]["pen"], width=self.has["styles"]["width"],style=self.has["styles"]["style"]))
+    #     p.setBrush(mkBrush(self.has["styles"]["brush"]))
+    #     p.translate(r.left(), r.top())
+    #     p.scale(r.width(), r.height())
+    #     #p.fillRect(r, QColor(255,152,0,40))
+    #     p.drawRect(0, 0, 1, 1)
 
     def mouseDragEvent(self, ev, axis=None, line=None):
         self.setSelected(True)
@@ -256,10 +302,11 @@ class Rectangle(SpecialROI):
     def mouseClickEvent(self, ev):
         if ev.button() == Qt.MouseButton.LeftButton:
             # if not self.boundingRect().contains(ev.pos()): 
-            self.on_click.emit(self)
-            self.finished = True
-            self.drawtool.drawing_object =None
-            ev.accept()
+            if self.last_point:
+                self.on_click.emit(self)
+                self.finished = True
+                self.drawtool.drawing_object =None
+                ev.accept()
         ev.ignore()
         super().mouseClickEvent(ev)
 

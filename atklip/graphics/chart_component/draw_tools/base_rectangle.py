@@ -1,10 +1,10 @@
 # import sys
 # from numpy.array_api import atan2
 from pyqtgraph import ROI
-from PySide6.QtGui import QPainter
+from PySide6.QtGui import QPainter,QPicture
 from PySide6.QtCore import Signal, Qt,QRectF,QPointF
 
-from atklip.app_utils.functions import mkBrush, mkPen
+from atklip.app_utils.functions import mkBrush, mkColor, mkPen
 
 
 class BaseRect(ROI):
@@ -27,7 +27,18 @@ class BaseRect(ROI):
         self.yoff = False
         self.xoff =False
         self.locked = False
-        
+        self.h1 = None
+        self.h0 = None
+        self.picture:QPicture =QPicture()
+    
+    
+    def hoverEvent(self, ev):
+        if not ev.exit: # and not self.boundingRect().contains(ev.pos()):
+            if not self.locked:
+                self.setCursor(Qt.CursorShape.PointingHandCursor)
+        else:
+            self.setCursor(Qt.CursorShape.CrossCursor)
+    
     def set_lock(self,btn):
         if btn.isChecked():
             self.locked_handle()
@@ -48,30 +59,65 @@ class BaseRect(ROI):
         self.has["styles"]['brush'] = brush
     
     def boundingRect(self):
-        return QRectF(0, 0, self.state['size'][0], self.state['size'][1]).normalized()
+        return QRectF(0, 0, self.state['size'][0], self.state['size'][1]) #.normalized()
     
-    def paint(self, p:QPainter, opt, widget):
-        # Note: don't use self.boundingRect here, because subclasses may need to redefine it.
-        r = QRectF(0, 0, self.state['size'][0], self.state['size'][1]).normalized()
-        p.setRenderHint(
-            QPainter.RenderHint.Antialiasing,
-            self._antialias
-        )
-        p.setPen(mkPen(self.has["styles"]['pen']))
-        p.setBrush(self.has["styles"]["brush"])
-        p.translate(r.left(), r.top())
-        p.scale(r.width(), r.height())
-        p.drawRect(0, 0, 1, 1)
-        if self.is_long:
-            p.setPen(mkPen("red",width=1))
-            p.drawLine(QPointF(0,0), QPointF(1,0))
-            # p.setPen(mkPen("w",width=1))
-            # p.drawLine(QPointF(0,1), QPointF(1,1))
-        if self.is_short:
-            p.setPen(mkPen("green",width=1))
-            p.drawLine(QPointF(0,0), QPointF(1,0))
-            # p.setPen(mkPen("w",width=1))
-            # p.drawLine(QPointF(0,1), QPointF(1,1))
+    def paint(self, p: QPainter, *args):
+        
+        if self.handles:
+            h0 = self.handles[0]['item'].pos()
+            h1 = self.handles[1]['item'].pos()
+            
+            if not self.h1:
+                self.h1 = h1 
+                self.h0 = h0
+                self.picture = QPicture()
+                painter = QPainter(self.picture)
+                
+                r = QRectF(0, 0, self.state['size'][0], self.state['size'][1])#.normalized()
+                painter.setRenderHint(
+                    QPainter.RenderHint.Antialiasing,
+                    self._antialias
+                )
+                painter.setPen(mkPen(self.has["styles"]['pen']))
+                painter.setBrush(self.has["styles"]["brush"])
+                painter.translate(r.left(), r.top())
+                painter.scale(r.width(), r.height())
+                painter.drawRect(0, 0, 1, 1)
+                if self.is_long:
+                    painter.setPen(mkPen("red",width=1))
+                    painter.drawLine(QPointF(0,0), QPointF(1,0))
+                if self.is_short:
+                    painter.setPen(mkPen("green",width=1))
+                    painter.drawLine(QPointF(0,0), QPointF(1,0))
+                painter.end()
+
+            elif self.h1 == h1 and self.h0 == h0:
+                pass
+            else:
+                self.picture = QPicture()
+                painter = QPainter(self.picture)
+                self.h1 = h1 
+                self.h0 = h0
+                
+                r = QRectF(0, 0, self.state['size'][0], self.state['size'][1])#.normalized()
+                painter.setRenderHint(
+                    QPainter.RenderHint.Antialiasing,
+                    self._antialias
+                )
+                painter.setPen(mkPen(self.has["styles"]['pen']))
+                painter.setBrush(self.has["styles"]["brush"])
+                painter.translate(r.left(), r.top())
+                painter.scale(r.width(), r.height())
+                painter.drawRect(0, 0, 1, 1)
+                if self.is_long:
+                    painter.setPen(mkPen("red",width=1))
+                    painter.drawLine(QPointF(0,0), QPointF(1,0))
+                if self.is_short:
+                    painter.setPen(mkPen("green",width=1))
+                    painter.drawLine(QPointF(0,0), QPointF(1,0))
+                painter.end()
+
+            self.picture.play(p)
     
     def mouseClickEvent(self, ev):
         if ev.button() == Qt.MouseButton.LeftButton:

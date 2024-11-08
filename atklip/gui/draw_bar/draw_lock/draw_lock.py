@@ -1,7 +1,7 @@
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QWidget, QFrame,QHBoxLayout
-from atklip.gui.components import Lock_Unlock_Button
+from atklip.gui.components import Lock_Unlock_Button,Tradingview_Button
 from atklip.gui import FluentIcon as FIF
 # from atklip.gui.draw_bar import *
 from atklip.gui.qfluentwidgets.common import *
@@ -21,7 +21,8 @@ class LOCK(QFrame):
         self._QLayout.setSpacing(0)
         self._QLayout.setContentsMargins(0, 0, 0, 0)
         self._QLayout.setAlignment(Qt.AlignLeft)
-        self.splitToolButton = Lock_Unlock_Button(FIF.LOCK,self)
+        self.splitToolButton = Lock_Unlock_Button(FIF.UNLOCK,self.parent)
+        # self.splitToolButton = Tradingview_Button(FIF.UNLOCK,self.parent)
         self.splitToolButton.clicked.connect(self.lock_unlock_all_tools)
         self._QLayout.addWidget(self.splitToolButton)
         #self.splitToolButton.dropButton.hide()

@@ -97,7 +97,7 @@ class DrawTool(QObject):
         
         obj.on_click.connect(self.show_popup_menu)
         
-        self.chart.sig_show_pop_up_draw_tool.emit(obj)
+        self.chart.sig_reset_drawbar_favorite_btn.emit(obj)
 
     def draw_verticallines(self, ev: QEvent):
         # pos_x, pos_y = self.get_position_mouse_on_chart(ev)
@@ -111,7 +111,7 @@ class DrawTool(QObject):
         uid_obj = self.chart.objmanager.add(obj)
         self.draw_object_name = None
         obj.on_click.connect(self.show_popup_menu)
-        self.chart.sig_show_pop_up_draw_tool.emit(obj)
+        self.chart.sig_reset_drawbar_favorite_btn.emit(obj)
     
 
     def draw_horizontal_line(self, ev: QEvent):
@@ -125,7 +125,7 @@ class DrawTool(QObject):
         uid_obj = self.chart.objmanager.add(obj)
         self.draw_object_name = None
         obj.on_click.connect(self.show_popup_menu)
-        self.chart.sig_show_pop_up_draw_tool.emit(obj)
+        self.chart.sig_reset_drawbar_favorite_btn.emit(obj)
     
     def draw_horizontal_ray(self, ev: QEvent):
         # pos_x, pos_y = self.get_position_mouse_on_chart(ev)
@@ -139,25 +139,21 @@ class DrawTool(QObject):
         uid_obj = self.chart.objmanager.add(obj)
         self.draw_object_name = None
         obj.on_click.connect(self.show_popup_menu)
-        self.chart.sig_show_pop_up_draw_tool.emit(obj)
+        self.chart.sig_reset_drawbar_favorite_btn.emit(obj)
 
     def draw_fibo(self, ev: QEvent):
-        # pos_x, pos_y = self.get_position_mouse_on_chart(ev)
-        pos_x, pos_y = self.get_position_crosshair()
-        obj =FiboROI([pos_x, pos_y], [0, 0],invertible=True,movable=True, resizable=False, removable=True, pen=mkPen("green",width=1), 
-                     fibo_level=self.custom_fibonacci_levels, color_rect=self.custom_colors_rect, color_line=self.custom_colors_lines, 
-                     color_borders=self.custom_colors_borders,parent=self.chart.vb, drawtool=self)
-    
+        pos_x, pos_y = self.get_position_mouse_on_chart(ev)
+        obj =FiboROI([pos_x, pos_y], [0, 0],invertible=True,movable=True, resizable=True, removable=True, pen="#2962ff",parent=self.chart.vb, drawtool=self)
         self.chart.addItem(obj)
         self.chart.drawtools.append(obj)
-        self.num_fibo += 1
+        self.num_rectangle += 1
         module_name = "Fibo Retracement(I) " + str(self.num_fibo)
         obj.setObjectName(module_name)
         self.drawing_object = obj
         uid_obj = self.chart.objmanager.add(obj)
         self.draw_object_name = "drawed_fibo_retracement"
         obj.on_click.connect(self.show_popup_menu)
-        self.chart.sig_show_pop_up_draw_tool.emit(obj)
+        self.chart.sig_reset_drawbar_favorite_btn.emit(obj)
 
     def draw_long_position(self, ev: QEvent):
         # pos_x, pos_y = self.get_position_mouse_on_chart(ev)
@@ -179,7 +175,7 @@ class DrawTool(QObject):
         uid_obj = self.chart.objmanager.add(obj)
         self.draw_object_name = "drawed_long_position"
         obj.on_click.connect(self.show_popup_menu)
-        self.chart.sig_show_pop_up_draw_tool.emit(obj)
+        self.chart.sig_reset_drawbar_favorite_btn.emit(obj)
     
     def draw_short_position(self, ev: QEvent):
         # pos_x, pos_y = self.get_position_mouse_on_chart(ev)
@@ -201,15 +197,13 @@ class DrawTool(QObject):
         uid_obj = self.chart.objmanager.add(obj)
         self.draw_object_name = "drawed_short_position"
         obj.on_click.connect(self.show_popup_menu)
-        self.chart.sig_show_pop_up_draw_tool.emit(obj)
+        self.chart.sig_reset_drawbar_favorite_btn.emit(obj)
     
     
     def draw_risk_reward_ratio(self, ev: QEvent):
         # pos_x, pos_y = self.get_position_mouse_on_chart(ev)
         pos_x, pos_y = self.get_position_crosshair()
-        obj =RickRewardRatio([pos_x, pos_y], [0, 0],invertible=True,movable=True, resizable=False, removable=True, pen=mkPen("green",width=1), 
-                     fibo_level=self.custom_fibonacci_levels, color_rect=self.custom_colors_rect, color_line=self.custom_colors_lines, 
-                     color_borders=self.custom_colors_borders,parent=self.chart.vb, drawtool=self)
+        obj =RickRewardRatio([pos_x, pos_y], [0, 0],invertible=True,movable=True, resizable=False, removable=True, pen="#2962ff",parent=self.chart.vb, drawtool=self)
     
         self.chart.addItem(obj)
         self.chart.drawtools.append(obj)
@@ -220,14 +214,16 @@ class DrawTool(QObject):
         uid_obj = self.chart.objmanager.add(obj)
         self.draw_object_name = "drawed_risk_reward_ratio"
         obj.on_click.connect(self.show_popup_menu)
-        self.chart.sig_show_pop_up_draw_tool.emit(obj)
+        self.chart.sig_reset_drawbar_favorite_btn.emit(obj)
     
     
     def draw_fibo_2(self, ev: QEvent):
         # pos_x, pos_y = self.get_position_mouse_on_chart(ev)
         pos_x, pos_y = self.get_position_crosshair()
-        obj =FiboROI2([pos_x, pos_y], [0, 0],invertible=True,movable=True, resizable=False, removable=True, pen=mkPen("green",width=1), 
-                          parent=self.chart.vb, drawtool=self)
+        # obj =FiboROI2([pos_x, pos_y], [0, 0],invertible=True,movable=True, resizable=False, removable=True, pen=mkPen("green",width=1), 
+        #                   parent=self.chart.vb, drawtool=self)
+        obj =FiboROI2([pos_x, pos_y], [0, 0],invertible=True,movable=True, resizable=True, removable=True, pen="#2962ff",parent=self.chart.vb, drawtool=self)
+
 
         self.chart.addItem(obj)
         self.chart.drawtools.append(obj)
@@ -238,7 +234,7 @@ class DrawTool(QObject):
         uid_obj = self.chart.objmanager.add(obj)
         self.draw_object_name = "drawed_fibo_retracement_2"
         obj.on_click.connect(self.show_popup_menu)
-        self.chart.sig_show_pop_up_draw_tool.emit(obj)
+        self.chart.sig_reset_drawbar_favorite_btn.emit(obj)
 
     def draw_path(self, ev: QEvent):
         pos_x, pos_y = self.get_position_mouse_on_chart(ev)
@@ -252,7 +248,7 @@ class DrawTool(QObject):
         uid_obj = self.chart.objmanager.add(obj)
         self.draw_object_name = "drawed_path"
         obj.on_click.connect(self.show_popup_menu)
-        self.chart.sig_show_pop_up_draw_tool.emit(obj)
+        self.chart.sig_reset_drawbar_favorite_btn.emit(obj)
 
     def draw_rectangle(self, ev: QEvent):
         pos_x, pos_y = self.get_position_mouse_on_chart(ev)
@@ -266,7 +262,7 @@ class DrawTool(QObject):
         uid_obj = self.chart.objmanager.add(obj)
         self.draw_object_name = "drawed_rectangle"
         obj.on_click.connect(self.show_popup_menu)
-        self.chart.sig_show_pop_up_draw_tool.emit(obj)
+        self.chart.sig_reset_drawbar_favorite_btn.emit(obj)
     
     def draw_rotate_rectangle(self, ev: QEvent):
         pos_x, pos_y = self.get_position_mouse_on_chart(ev)
@@ -280,7 +276,7 @@ class DrawTool(QObject):
         uid_obj = self.chart.objmanager.add(obj)
         self.draw_object_name = "drawed_rotate_rectangle"
         obj.on_click.connect(self.show_popup_menu)
-        self.chart.sig_show_pop_up_draw_tool.emit(obj)
+        self.chart.sig_reset_drawbar_favorite_btn.emit(obj)
     
     def draw_ellipse(self, ev: QEvent):
         pos_x, pos_y = self.get_position_mouse_on_chart(ev)
@@ -294,7 +290,7 @@ class DrawTool(QObject):
         uid_obj = self.chart.objmanager.add(obj)
         self.draw_object_name = "drawed_ellipse"
         obj.on_click.connect(self.show_popup_menu)
-        self.chart.sig_show_pop_up_draw_tool.emit(obj)
+        self.chart.sig_reset_drawbar_favorite_btn.emit(obj)
     
     def draw_circle(self, ev: QEvent):
         pos_x, pos_y = self.get_position_mouse_on_chart(ev)
@@ -308,7 +304,7 @@ class DrawTool(QObject):
         uid_obj = self.chart.objmanager.add(obj)
         self.draw_object_name = "drawed_circle"
         obj.on_click.connect(self.show_popup_menu)
-        self.chart.sig_show_pop_up_draw_tool.emit(obj)
+        self.chart.sig_reset_drawbar_favorite_btn.emit(obj)
     
 
     def draw_text(self, ev: QEvent):
@@ -323,11 +319,11 @@ class DrawTool(QObject):
         self.draw_object_name = None
         uid_obj = self.chart.objmanager.add(obj)
         obj.on_click.connect(self.show_popup_menu)
-        self.chart.sig_show_pop_up_draw_tool.emit(obj)
+        self.chart.sig_reset_drawbar_favorite_btn.emit(obj)
 
     def draw_date_price_range(self, ev):
         pos_x, pos_y = self.get_position_mouse_on_chart(ev)
-        obj = RangePolyLine([pos_x, pos_y], [1, 1],drawtool=self, pen='#2962ff', movable=True)
+        obj = RangePolyLine([pos_x, pos_y], [0, 0], pen='#2962ff', movable=True,drawtool=self)
         # obj.setPos(pos_x, pos_y)
         self.chart.addItem(obj)
         self.chart.drawtools.append(obj)
@@ -338,7 +334,7 @@ class DrawTool(QObject):
         uid_obj = self.chart.objmanager.add(obj)
         self.draw_object_name = "drawed_date_price_range"
         obj.on_click.connect(self.show_popup_menu)
-        # self.chart.sig_show_pop_up_draw_tool.emit(obj)
+        self.chart.sig_reset_drawbar_favorite_btn.emit(obj)
     
     def draw_up_arrow(self, ev):
         pos_x, pos_y = self.get_position_crosshair()
@@ -352,7 +348,7 @@ class DrawTool(QObject):
         uid_obj = self.chart.objmanager.add(obj)
         self.draw_object_name = "drawed_draw_up_arrow"
         obj.on_click.connect(self.show_popup_menu)
-        self.chart.sig_show_pop_up_draw_tool.emit(obj)
+        self.chart.sig_reset_drawbar_favorite_btn.emit(obj)
     
     def draw_down_arrow(self, ev):
         pos_x, pos_y = self.get_position_crosshair()
@@ -366,7 +362,7 @@ class DrawTool(QObject):
         uid_obj = self.chart.objmanager.add(obj)
         self.draw_object_name = "drawed_draw_down_arrow"
         obj.on_click.connect(self.show_popup_menu)
-        self.chart.sig_show_pop_up_draw_tool.emit(obj)
+        self.chart.sig_reset_drawbar_favorite_btn.emit(obj)
     
     def draw_arrow(self, ev):
         pos_x, pos_y = self.get_position_crosshair()
@@ -380,4 +376,4 @@ class DrawTool(QObject):
         uid_obj = self.chart.objmanager.add(obj)
         self.draw_object_name = "drawed_draw_down_arrow"
         obj.on_click.connect(self.show_popup_menu)
-        self.chart.sig_show_pop_up_draw_tool.emit(obj)
+        self.chart.sig_reset_drawbar_favorite_btn.emit(obj)
