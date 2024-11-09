@@ -16,11 +16,10 @@ class MainWidget(QWidget,Ui_MainWidget):
     mouse_clicked_signal = Signal(QEvent)
     def __init__(self, parent,tabItem,name,current_ex,current_symbol,curent_interval):
         super().__init__(parent)
+        self._parent:WindowBase = parent
         self.setObjectName(name)
         self.setupUi(self)
         self.maxExtend = 250
-
-        self._parent:WindowBase = parent
 
         self.tabItem = tabItem
         
@@ -30,7 +29,7 @@ class MainWidget(QWidget,Ui_MainWidget):
         self.rightbar.object.splitToolButton.clicked.connect(lambda :self.extend_right_menu(self.rightview))
 
         self.chartbox_splitter.chart.sig_change_tab_infor.connect(self.change_tab_infor,Qt.ConnectionType.AutoConnection)
-
+        self.chartbox_splitter.chart.mouse_clicked_on_chart.connect(self.mouse_clicked_signal)
         "signal from drawbar"
         self.drawbar.sig_draw_object_name.connect(self.draw_tool)
         self.drawbar.sig_delete_all.connect(self.chartbox_splitter.chart.delete_all_draw_obj)
@@ -92,6 +91,15 @@ class MainWidget(QWidget,Ui_MainWidget):
         if self.progress.isVisible():
             self.progress.run_process(True)
 
+    def resize(self,w=None,h=None):
+        if w == None or h== None:
+            _w = self.width()
+            _h = self.height()
+        else:
+            _w = w
+            _h = h
+        super().resize(_w,_h)
+    
     def change_tab_infor(self,data):
         symbol = data[0]
         interval = data[1]

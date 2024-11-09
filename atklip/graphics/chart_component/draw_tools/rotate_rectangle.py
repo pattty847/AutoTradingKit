@@ -229,10 +229,6 @@ class RotateRectangle(SpecialROI):
         return [h['item'] for h in self.handles]
     
     def boundingRect(self) -> QRectF:
-        return QRectF(self.picture.boundingRect())
-    
-    def paint(self, p: QPainter, *args):
-        
         if self.handles:
             h0 = self.handles[0]['item'].pos()
             h1 = self.handles[-1]['item'].pos()
@@ -242,14 +238,10 @@ class RotateRectangle(SpecialROI):
                 self.h0 = h0
                 self.picture = QPicture()
                 painter = QPainter(self.picture)
-                # r = QtCore.QRectF(0, 0, self.state['size'][0], self.state['size'][1]).normalized()
                 painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
-                "Custom màu viền và nền ở đây...."
                 painter.setPen(mkPen(color=self.has["styles"]["pen"], width=self.has["styles"]["width"],style=self.has["styles"]["style"]))
                 painter.drawRect(QRectF(h1,h0))
                 painter.setBrush(mkBrush(self.has["styles"]["brush"]))
-                # painter.translate(r.left(), r.top())
-                # painter.scale(r.width(), r.height())
                 painter.fillRect(QRectF(h1,h0),mkColor(self.has["styles"]["brush"]))
                 painter.end()
 
@@ -260,18 +252,16 @@ class RotateRectangle(SpecialROI):
                 self.h0 = h0
                 self.picture = QPicture()
                 painter = QPainter(self.picture)
-                # r = QtCore.QRectF(0, 0, self.state['size'][0], self.state['size'][1]).normalized()
                 painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
-                "Custom màu viền và nền ở đây...."
                 painter.setPen(mkPen(color=self.has["styles"]["pen"], width=self.has["styles"]["width"],style=self.has["styles"]["style"]))
                 painter.drawRect(QRectF(h1,h0))
                 painter.setBrush(mkBrush(self.has["styles"]["brush"]))
-                # painter.translate(r.left(), r.top())
-                # painter.scale(r.width(), r.height())
                 painter.fillRect(QRectF(h1,h0),mkColor(self.has["styles"]["brush"]))
                 painter.end()
-
-            self.picture.play(p)
+        return QRectF(self.picture.boundingRect())
+    
+    def paint(self, p: QPainter, *args):
+        self.picture.play(p)
 
     def mouseDragEvent(self, ev, axis=None, line=None):
         self.setSelected(True)

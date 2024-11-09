@@ -89,6 +89,15 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
             if interface.progress.isVisible():
                 interface.progress.run_process(True)
 
+    def resize(self,w=None,h=None):
+        if w == None or h== None:
+            _w = self.width()
+            _h = self.height()
+        else:
+            _w = w
+            _h = h
+        super().resize(_w,_h)
+    
     def addInterface(self, interface: MainWidget) -> None:
         """ add sub interface """
         self.stackedWidget.addWidget(interface)

@@ -85,8 +85,8 @@ class CandleStick(GraphicsObject):
             self.signal_delete.connect(self.source.signal_delete)
 
         self._bar_picutures: Dict[int, QPicture] = {}
-        self.picture: QPicture = None
-        self._rect_area: Tuple[float, float] = None
+        self.picture: QPicture = QPicture()
+        self._rect_area: Tuple[float, float] = ()
         self._to_update: bool = False
         self._is_change_source:bool=False
         self._start:int = None
@@ -105,10 +105,8 @@ class CandleStick(GraphicsObject):
         
         self.source.sig_reset_all.connect(self.update_source,Qt.ConnectionType.QueuedConnection)
         
-        
         self.source.sig_update_candle.connect(self.update_asyncworker,Qt.ConnectionType.AutoConnection)
         self.source.sig_add_candle.connect(self.update_asyncworker,Qt.ConnectionType.AutoConnection)
-        
         self.source.sig_add_historic.connect(self.threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
   
     def delete_source(self):
@@ -261,8 +259,6 @@ class CandleStick(GraphicsObject):
         
     def first_setup_candle(self):
         self.threadpool_asyncworker(True)
-        # x_data, y_data = self.source.get_index_data(stop=-1)
-        # self.setData((x_data, y_data))
   
     def threadpool_asyncworker(self,candles=None):
         self.worker = None
@@ -297,28 +293,6 @@ class CandleStick(GraphicsObject):
 
         This function is called by external QGraphicsView.
         """
-        if self._start is None or self._stop is None:
-            x_left,x_right = int(self.chart.xAxis.range[0]),int(self.chart.xAxis.range[1])
-            start_index = self.chart.jp_candle.candles[0].index
-            stop_index = self.chart.jp_candle.candles[-1].index
-            if x_left > start_index:
-                self._start = x_left+2
-            else:
-                self._start = start_index+2
-            if x_right < stop_index:
-                self._stop = x_right
-            else:
-                self._stop = stop_index
-        rect_area: tuple = (self._start, self._stop)
-        if self._to_update:
-            self._draw_item_picture(self._start, self._stop)
-            self._to_update = False
-        elif (rect_area != self._rect_area):
-            self._rect_area = rect_area
-            self._draw_item_picture(self._start, self._stop)
-        elif self.picture == None:
-            self._rect_area = rect_area
-            self._draw_item_picture(self._start, self._stop)
         self.picture.play(painter)
 
     def _draw_item_picture(self, min_ix: int, max_ix: int) -> None:
@@ -331,14 +305,14 @@ class CandleStick(GraphicsObject):
         painter.end()
     
     def play_bar(self,painter,ix):
-        bar_picture = self._bar_picutures.get(ix)
-        if bar_picture is not None:
+        bar_picture = self._bar_picutures.get(ix,None)
+        if bar_picture:
             bar_picture.play(painter)    
             
     def boundingRect(self) -> QRectF:
         x_left,x_right = int(self.chart.xAxis.range[0]),int(self.chart.xAxis.range[1])   
-        start_index = self.chart.jp_candle.candles[0].index
-        stop_index = self.chart.jp_candle.candles[-1].index
+        start_index = self.source.start_index
+        stop_index = self.source.stop_index
         if x_left > start_index:
             self._start = x_left+2
         elif x_left > stop_index:
@@ -350,16 +324,18 @@ class CandleStick(GraphicsObject):
             self._stop = x_right
         else:
             self._stop = stop_index
-        df = self.chart.jp_candle.get_df()
-        if len(df) == 0:
-            return QRectF(0,0,0,0)
-        h_high =  df["high"].iloc[self._start:self._stop].max()
-        h_low = df["low"].iloc[self._start:self._stop].min()
-        rect = QRectF(x_left,h_low,self._stop-self._start,h_high-h_low)
-        return rect
+
+        rect_area: tuple = (self._start, self._stop)
+        if self._to_update:
+            self._rect_area = rect_area
+            self._draw_item_picture(self._start, self._stop)
+            self._to_update = False
+        elif rect_area != self._rect_area:
+            self._rect_area = rect_area
+            self._draw_item_picture(self._start, self._stop)
+        return self.picture.boundingRect()
 
     def draw_candle(self,_open,_max,_min,close,w,t):
-        # t = x_data[index]
         "dieu kien de han che viec ve lai khi add new candle"
         if not self._bar_picutures.get(t):
             self.draw_single_candle(_open,_max,_min,close,w,t)
@@ -397,31 +373,31 @@ class CandleStick(GraphicsObject):
     def setData(self, data) -> None:
         """y_data must be in format [[open, close, min, max], ...]"""
         self._to_update = False
-        w = 1 / 5
+        
         x_data, y_data = data[0],data[1]
+        w = (x_data[-1] - x_data[-2]) / 5
         _open,_max,_min,close = y_data[0],y_data[1],y_data[2],y_data[3]
         if self._is_change_source:
             self._bar_picutures.clear()
             self._is_change_source = False
-        [self.draw_candle(_open[index],_max[index],_min[index],close[index],w,x_data[index]) for index in range(len(x_data))]
-        # p.end()
+        [self.draw_candle(_open[index],_max[index],_min[index],close[index],w,x_data[index]) for index in range(len(x_data)-1)]
         self._to_update = True
+        self.current_candle.setData(data[-2:])
         self.chart.sig_update_y_axis.emit()
         self.prepareGeometryChange()
         self.informViewBoundsChanged()
     
     def updateData(self, data) -> None:
         """y_data must be in format [[open, close, min, max], ...]"""
-        self.current_candle.setData(data)
-        self.chart.sig_update_y_axis.emit()
-        
         self._to_update = False
-        w = 1 / 5
         x_data, y_data = data[0],data[1]
+        w = (x_data[-1] - x_data[-2]) / 5
         t = x_data[-2]
         _open, _max, _min, close = y_data[0][-2],y_data[1][-2],y_data[2][-2],y_data[3][-2]
-        self.draw_candle(_open, _max, _min, close,w,t)
+        self.draw_single_candle(_open,_max,_min,close,w,t)
         self._to_update = True
+        self.current_candle.setData(data)
+        self.chart.sig_update_y_axis.emit()
         
         
     def update_last_data(self,candles, setdata) -> None:
@@ -431,15 +407,13 @@ class CandleStick(GraphicsObject):
             x_data, y_data = self.source.get_index_data()
         else:
             n = len(self._bar_picutures)
-            x_data, y_data = self.source.get_index_data(stop=n+1)
-        try:
-            if len(x_data) != len(y_data[0]):
-                raise Exception("Len of x_data must be the same as y_data")
-            setdata.emit((x_data, y_data))
-            # self.setData((x_data, y_data))
-            # QCoreApplication.processEvents()
-        except Exception as e:
-            print(f"loi update {e}")
+            x_data, y_data = self.source.get_index_data(stop=n)
+            
+        if len(x_data) != len(y_data[0]):
+            raise Exception("Len of x_data must be the same as y_data")
+        setdata.emit((x_data, y_data))
+        # self.setData((x_data, y_data))
+
     
 class SingleCandleStick(GraphicsObject):
     """Live candlestick plot, plotting data [[open, close, min, max], ...]"""
@@ -449,44 +423,23 @@ class SingleCandleStick(GraphicsObject):
     def __init__(self,chart,_candles, has) -> None:
         """Choose colors of candle"""
         GraphicsObject.__init__(self)
-
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
         self.setAcceptedMouseButtons(Qt.MouseButton.NoButton)
         self.setZValue(999)
-        
         self.has = has
         self.chart:Chart|SubChart = chart 
-        
         self._canldes: JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE = _candles
-        
-
         self.picture = QPicture()
         self.colorline = 'white'
-
         self.old_w = []
 
-        self._canldes.sig_update_candle.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
-        self._canldes.sig_add_candle.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
-        self._canldes.sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
-
-  
-    def reset_threadpool_asyncworker(self):
-        self.worker = None
-        self.worker = FastWorker(self.update_last_data)
-        self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.QueuedConnection)
-        self.worker.start()
-    
-    def threadpool_asyncworker(self, last_candle:List[OHLCV]=[]):
-        self.worker = None
-        self.worker = FastWorker(self.update_last_data)
-        self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.QueuedConnection)
-        self.worker.start()
+ 
 
     def paint(self, p: QPainter, *args) -> None:
-        p.drawPicture(0, 0, self.picture)
+        self.picture.play(p)
 
-    def boundingRect(self) -> QRect:
-        return QRectF(self.picture.boundingRect())
+    def boundingRect(self) -> QRectF:
+        return self.picture.boundingRect()
     
     def draw_candle(self,p:QPainter,_open,_max,_min,close,w,t):
         if _open > close:
@@ -520,8 +473,9 @@ class SingleCandleStick(GraphicsObject):
             y_data = np.array(y_data)
         self.picture = QPicture()
         p = QPainter(self.picture)
-        QPainterPath()
-        w = 1 / 5
+        if len(x_data) < 2:
+            return
+        w = (x_data[-1] - x_data[-2]) / 5
         t = x_data[-1]
         _open, _max, _min, close = y_data[0][-1],y_data[1][-1],y_data[2][-1],y_data[3][-1]
         self.draw_candle(p,_open,_max,_min,close,w,t)

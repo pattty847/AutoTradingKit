@@ -28,7 +28,7 @@ class TopBar(QFrame,TopFrame):
     sig_add_indicator_to_chart = Signal(tuple)
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._parent:MainWidget = self.parent()
+        self._parent:MainWidget = parent
         self.setupUi(self)
         self.setFixedHeight(40)
         self.profile = AvatarButton(self)

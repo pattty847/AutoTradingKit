@@ -65,13 +65,13 @@ class Longposition(BaseRect):
         
         self.textitem_up = TextItem("",color="#FFF")
         self.textitem_up.setParentItem(self)
-        self.textitem_up.setAnchor((1,1))
+        self.textitem_up.setAnchor((0.5,1))
         self.textitem_center = TextItem("",color="#7876")
         self.textitem_center.setParentItem(self)
-        self.textitem_center.setAnchor((1,1))
+        self.textitem_center.setAnchor((0.5,1))
         self.textitem_under = TextItem("",color="#0468")
         self.textitem_under.setParentItem(self.under_part)
-        self.textitem_under.setAnchor((1,0))
+        self.textitem_under.setAnchor((0.5,0))
         
         
         self.setbrushs()
@@ -200,7 +200,7 @@ class Longposition(BaseRect):
         offset = (br - tl) * self.textitem_up.anchor
         
         _pointf = Point(h1.x() - diff.x()/2, h1.y())
-        _x = _pointf.x() +r.width()/2
+        _x = _pointf.x() #+r.width()/2
         _y = _pointf.y() + offset.y()/2
         self.textitem_up.setPos(Point(_x,_y))
         
@@ -210,7 +210,7 @@ class Longposition(BaseRect):
         offset = (br - tl) * self.textitem_center.anchor
         
         _pointf = Point(h1.x() - diff.x()/2, h0.y())
-        _x = _pointf.x() +r.width()/2
+        _x = _pointf.x() #+r.width()/2
         _y = _pointf.y() + offset.y()/8
         self.textitem_center.setPos(Point(_x,_y))
              
@@ -219,7 +219,7 @@ class Longposition(BaseRect):
         br = self.textitem_under.textItem.mapToParent(r.bottomRight())
         offset = (br - tl) * self.textitem_under.anchor
         _pointf = Point(h1_under_part.x() - diff_under_part.x()/2, h1_under_part.y())
-        _x = _pointf.x() +r.width()/2
+        _x = _pointf.x() #+r.width()/2
         _y = _pointf.y() - offset.y()/2
         self.textitem_under.setPos(Point(_x,_y))
         
@@ -287,10 +287,6 @@ class Longposition(BaseRect):
         super().mouseReleaseEvent()
 
     def boundingRect(self):
-        return QRectF(0, -self.under_part.state['size'][1], self.state['size'][0], self.state['size'][1]+self.under_part.state['size'][1])#.normalized()
-    
-    def paint(self, p: QPainter, *args):
-        
         if self.handles:
             h0 = self.handles[0]['item'].pos()
             h1 = self.handles[-1]['item'].pos()
@@ -320,11 +316,11 @@ class Longposition(BaseRect):
                 painter.setPen(mkPen("green",width=1))
                 painter.drawLine(QPointF(0,1), QPointF(1,1))
                 painter.end()
-                
                 self.update_text()
 
             elif self.h1 == h1 and self.h0 == h0:
-                pass
+                if self.under_part.is_size_change:
+                    self.update_text()
             else:
                 self.picture = QPicture()
                 painter = QPainter(self.picture)
@@ -351,8 +347,10 @@ class Longposition(BaseRect):
                 painter.drawLine(QPointF(0,1), QPointF(1,1))
                 painter.end()
                 self.update_text()
-
-            self.picture.play(p)
+        return QRectF(0, -self.under_part.state['size'][1], self.state['size'][0], self.state['size'][1]+self.under_part.state['size'][1])#.normalized()
+    
+    def paint(self, p: QPainter, *args):
+        self.picture.play(p)
     
         
     def mouseDragEvent(self, ev, axis=None):

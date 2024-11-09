@@ -47,18 +47,24 @@ class FiboROI2(SpecialROI):
             
             "inputs":{
                 "data":{
-                        -0.146: Line([],TextItem("",color=(255, 51, 69, 255), anchor=(1, 0)),(255, 51, 69, 255),QColor(255, 51, 69, 60),True),
-                        0: Line([],TextItem("",color=(255,152,0,255), anchor=(1, 0)),(255,152,0,255),QColor(255,152,0,60),True),
-                        0.236: Line([],TextItem("",color=(242,54,69,255), anchor=(1, 0)),(242,54,69,255),QColor(242,54,69,60),True),
-                        0.382: Line([],TextItem("",color=(120,123,134,255), anchor=(1, 0)),(120,123,134,255),QColor(120,123,134,60),True),
-                        0.5: Line([],TextItem("",color=(229,115,115,255), anchor=(1, 0)),(229,115,115,255),QColor(229,115,115,60),True),
-                        0.618: Line([],TextItem("",color=(244,142,177,255), anchor=(1, 0)),(244,142,177,255),QColor(244,142,177,60),True),
-                        0.786: Line([],TextItem("", color=(66, 135, 245, 255),anchor=(1, 0)),(66, 135, 245,255),QColor(66, 135, 245,60),True),
-                        1.0: Line([],TextItem("", color=(180, 0, 0, 255),anchor=(1, 0)),(180, 0, 0, 255),QColor(180, 0, 0, 60),True),
-                        1.146: Line([],TextItem("",color=(255, 51, 69, 255), anchor=(1, 0)),(255, 51, 69, 255),QColor(255, 51, 69, 60),True),
-                        1.236: Line([],TextItem("",color=(255, 51, 69, 255), anchor=(1, 0)),(255, 51, 69, 255),QColor(255, 51, 69, 60),True),
-                        1.382: Line([],TextItem("",color=(255, 51, 69, 255), anchor=(1, 0)),(255, 51, 69, 255),QColor(255, 51, 69, 60),True),
-                        1.5: Line([],TextItem("",color=(255, 51, 69, 255), anchor=(1, 0)),(255, 51, 69, 255),QColor(255, 51, 69, 60),True),
+                        -0.786: Line("-0.786",[],TextItem("",color=(255, 51, 69, 255), anchor=(1, 0)),(255, 51, 69, 255),QColor(255, 51, 69, 60),True),
+                        -0.618: Line("-0.618",[],TextItem("",color=(255, 51, 69, 255), anchor=(1, 0)),(255, 51, 69, 255),QColor(255, 51, 69, 60),True),
+                        -0.5: Line("-0.5",[],TextItem("",color=(255, 51, 69, 255), anchor=(1, 0)),(255, 51, 69, 255),QColor(255, 51, 69, 60),True),
+                        -0.238: Line("-0.238",[],TextItem("",color=(255, 51, 69, 255), anchor=(1, 0)),(255, 51, 69, 255),QColor(255, 51, 69, 60),True),
+                        -0.146: Line("-0.146",[],TextItem("",color=(255, 51, 69, 255), anchor=(1, 0)),(255, 51, 69, 255),QColor(255, 51, 69, 60),True),
+                        0: Line("0",[],TextItem("",color=(255,152,0,255), anchor=(1, 0)),(255,152,0,255),QColor(255,152,0,60),True),
+                        0.236: Line("0.236",[],TextItem("",color=(242,54,69,255), anchor=(1, 0)),(242,54,69,255),QColor(242,54,69,60),True),
+                        0.382: Line("0.382",[],TextItem("",color=(120,123,134,255), anchor=(1, 0)),(120,123,134,255),QColor(120,123,134,60),True),
+                        0.5: Line("0.5",[],TextItem("",color=(229,115,115,255), anchor=(1, 0)),(229,115,115,255),QColor(229,115,115,60),True),
+                        0.618: Line("0.618",[],TextItem("",color=(244,142,177,255), anchor=(1, 0)),(244,142,177,255),QColor(244,142,177,60),True),
+                        0.786: Line("0.786",[],TextItem("", color=(66, 135, 245, 255),anchor=(1, 0)),(66, 135, 245,255),QColor(66, 135, 245,60),True),
+                        1.0: Line("1",[],TextItem("", color=(180, 0, 0, 255),anchor=(1, 0)),(180, 0, 0, 255),QColor(180, 0, 0, 60),True),
+                        1.146: Line("1.146",[],TextItem("",color=(255, 51, 69, 255), anchor=(1, 0)),(255, 51, 69, 255),QColor(255, 51, 69, 60),True),
+                        1.236: Line("1.236",[],TextItem("",color=(255, 51, 69, 255), anchor=(1, 0)),(255, 51, 69, 255),QColor(255, 51, 69, 60),True),
+                        1.382: Line("1.382",[],TextItem("",color=(255, 51, 69, 255), anchor=(1, 0)),(255, 51, 69, 255),QColor(255, 51, 69, 60),True),
+                        1.5: Line("1.5",[],TextItem("",color=(255, 51, 69, 255), anchor=(1, 0)),(255, 51, 69, 255),QColor(255, 51, 69, 60),True),
+                        1.618: Line("1.618",[],TextItem("",color=(255, 51, 69, 255), anchor=(1, 0)),(255, 51, 69, 255),QColor(255, 51, 69, 60),True),
+                        1.786: Line("1.786",[],TextItem("",color=(255, 51, 69, 255), anchor=(1, 0)),(255, 51, 69, 255),QColor(255, 51, 69, 60),True),
                         }
                     },
             "styles":{
@@ -86,7 +92,8 @@ class FiboROI2(SpecialROI):
         
         self.sigRegionChangeStarted.connect(self.drag_change)
         for level in list(self.has["inputs"]["data"].keys()):
-            self.has["inputs"]["data"][level].item.setParentItem(self)
+            line:Line = self.has["inputs"]["data"][level]
+            line.item.setParentItem(self)
 
 
     def selectedHandler(self, is_selected):
@@ -276,21 +283,25 @@ class FiboROI2(SpecialROI):
         keys.sort()
         for i in range(len(keys)):
             level = keys[i]
-            textItem = self.has["inputs"]["data"][level].item
-            # textItem.setAnchor((1, level))
-            color = self.has["inputs"]["data"][level].color
-            brush = self.has["inputs"]["data"][level].brush
-            pointy = QPointF(self.h1.x(), self.h1.y() - diff.y()*level)
-            pointx = QPointF(self.h0.x(), self.h1.y() - diff.y()*level)
-            self.has["inputs"]["data"][level].pos = [pointx,pointy]
-            point = self.mapToParent(pointx)
-            price_level =  f"{point.y():{self.price_precision}}"
-            text = f"{level} ({price_level}) "
-            textItem.setText(text)
-            
-            r = textItem.textItem.boundingRect()
-            _y = pointy.y() + r.height()*1.5
-            textItem.setPos(Point(pointy.x(),_y))
+            line:Line = self.has["inputs"]["data"][level]
+            if line.show:
+                textItem:TextItem = line.item
+                color = line.color
+                brush = line.brush
+                pointy = QPointF(self.h1.x(), self.h1.y() - diff.y()*level)
+                pointx = QPointF(self.h0.x(), self.h1.y() - diff.y()*level)
+                line.pos = [pointx,pointy]
+                point = self.mapToParent(pointx)
+                price_level =  f"{point.y():{self.price_precision}}"
+                text = f"{line.text} ({price_level}) "
+                textItem.setText(text)
+                
+                r = textItem.textItem.boundingRect()
+                tl = textItem.textItem.mapToParent(r.topLeft())
+                br = textItem.textItem.mapToParent(r.bottomRight())
+                offset = (br - tl)
+                _y = pointy.y() + offset.y()
+                textItem.setPos(Point(pointy.x(),_y))
     
     def update_text(self,painter: QPainter=None):
         diff = self.h1 - self.h0
@@ -298,34 +309,40 @@ class FiboROI2(SpecialROI):
         keys.sort()
         for i in range(len(keys)):
             level = keys[i]
-            textItem = self.has["inputs"]["data"][level].item
-            # textItem.setAnchor((1, level))
-            color = self.has["inputs"]["data"][level].color
-            brush = self.has["inputs"]["data"][level].brush
-            pointy = QPointF(self.h1.x(), self.h1.y() - diff.y()*level)
-            pointx = QPointF(self.h0.x(), self.h1.y() - diff.y()*level)
-            self.has["inputs"]["data"][level].pos = [pointx,pointy]
-            point = self.mapToParent(pointx)
-            price_level =  f"{point.y():{self.price_precision}}"
-            text = f"{level} ({price_level}) "
-            textItem.setText(text)
-            
-            r = textItem.textItem.boundingRect()
-            _y = pointy.y() + r.height()*1.5
-            textItem.setPos(Point(pointy.x(),_y))
-            
-            if painter:
-                painter.setPen(mkPen(color=color, width=self.has["styles"]["width"],style=self.has["styles"]["style"]))
-                painter.drawLine(pointx, pointy)
+            line:Line = self.has["inputs"]["data"][level]
+            if line.show:
+                textItem:TextItem = line.item
+                color = line.color
+                brush = line.brush
+                pointy = QPointF(self.h1.x(), self.h1.y() - diff.y()*level)
+                pointx = QPointF(self.h0.x(), self.h1.y() - diff.y()*level)
+                line.pos = [pointx,pointy]
+                point = self.mapToParent(pointx)
+                price_level =  f"{point.y():{self.price_precision}}"
+                text = f"{line.text} ({price_level}) "
+                textItem.setText(text)
                 
-                if i > 0:
-                    pre_level = keys[i-1]
-                    pre_item = self.has["inputs"]["data"][pre_level].pos
-                    cr_pos = self.has["inputs"]["data"][level].pos
-                    top_left = pre_item[0]
-                    bottom_right = cr_pos[1]
-                    painter.setBrush(mkBrush(brush))
-                    painter.fillRect(QRectF(top_left,bottom_right),mkColor(brush))
+                r = textItem.textItem.boundingRect()
+                tl = textItem.textItem.mapToParent(r.topLeft())
+                br = textItem.textItem.mapToParent(r.bottomRight())
+                offset = (br - tl)
+                
+                _y = pointy.y() + offset.y()
+                
+                textItem.setPos(Point(pointy.x(),_y))
+                
+                if painter:
+                    painter.setPen(mkPen(color=color, width=self.has["styles"]["width"],style=self.has["styles"]["style"]))
+                    painter.drawLine(pointx, pointy)
+                    
+                    if i > 0:
+                        pre_level = keys[i-1]
+                        pre_item = self.has["inputs"]["data"][pre_level].pos
+                        cr_pos = line.pos
+                        top_left = pre_item[0]
+                        bottom_right = cr_pos[1]
+                        painter.setBrush(mkBrush(brush))
+                        painter.fillRect(QRectF(top_left,bottom_right),mkColor(brush))
         
     def paint(self, p: QPainter, *args):
         self.picture.play(p)

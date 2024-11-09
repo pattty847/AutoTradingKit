@@ -228,10 +228,6 @@ class Rectangle(SpecialROI):
         return [h['item'] for h in self.handles]
 
     def boundingRect(self) -> QRectF:
-        return QRectF(self.picture.boundingRect())
-    
-    def paint(self, p: QPainter, *args):
-        
         if self.handles:
             h0 = self.handles[0]['item'].pos()
             h1 = self.handles[-1]['item'].pos()
@@ -240,14 +236,10 @@ class Rectangle(SpecialROI):
                 self.h0 = h0
                 self.picture = QPicture()
                 painter = QPainter(self.picture)
-                # r = QtCore.QRectF(0, 0, self.state['size'][0], self.state['size'][1]).normalized()
-                # painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
-                "Custom màu viền và nền ở đây...."
+                painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
                 painter.setPen(mkPen(color=self.has["styles"]["pen"], width=self.has["styles"]["width"],style=self.has["styles"]["style"]))
                 painter.drawRect(QRectF(h1,h0))
                 painter.setBrush(mkBrush(self.has["styles"]["brush"]))
-                # painter.translate(r.left(), r.top())
-                # painter.scale(r.width(), r.height())
                 painter.fillRect(QRectF(h1,h0),mkColor(self.has["styles"]["brush"]))
                 painter.end()
 
@@ -258,31 +250,16 @@ class Rectangle(SpecialROI):
                 self.h0 = h0
                 self.picture = QPicture()
                 painter = QPainter(self.picture)
-                # r = QtCore.QRectF(0, 0, self.state['size'][0], self.state['size'][1]).normalized()
-                # painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
-                "Custom màu viền và nền ở đây...."
+                painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
                 painter.setPen(mkPen(color=self.has["styles"]["pen"], width=self.has["styles"]["width"],style=self.has["styles"]["style"]))
                 painter.drawRect(QRectF(h1,h0))
                 painter.setBrush(mkBrush(self.has["styles"]["brush"]))
-                # painter.translate(r.left(), r.top())
-                # painter.scale(r.width(), r.height())
                 painter.fillRect(QRectF(h1,h0),mkColor(self.has["styles"]["brush"]))
                 painter.end()
-
-            self.picture.play(p)
+        return QRectF(self.picture.boundingRect())
     
-    # def paint(self, p, opt, widget):
-    #     # Note: don't use self.boundingRect here, because subclasses may need to redefine it.
-    #     r = QtCore.QRectF(0, 0, self.state['size'][0], self.state['size'][1]).normalized()
-    #     p.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
-
-    #     "Custom màu viền và nền ở đây...."
-    #     p.setPen(mkPen(color=self.has["styles"]["pen"], width=self.has["styles"]["width"],style=self.has["styles"]["style"]))
-    #     p.setBrush(mkBrush(self.has["styles"]["brush"]))
-    #     p.translate(r.left(), r.top())
-    #     p.scale(r.width(), r.height())
-    #     #p.fillRect(r, QColor(255,152,0,40))
-    #     p.drawRect(0, 0, 1, 1)
+    def paint(self, p: QPainter, *args):
+        self.picture.play(p)
 
     def mouseDragEvent(self, ev, axis=None, line=None):
         self.setSelected(True)

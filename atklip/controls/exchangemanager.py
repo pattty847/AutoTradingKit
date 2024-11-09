@@ -79,8 +79,8 @@ class ExchangeManager:
                 try:
                     cl.close()  
                 except: pass
-            self.map_chart_exchange.clear()
             print("remove all socket--------")
         except:
             pass
-        
+    def clear(self):
+        self.map_chart_exchange.clear()

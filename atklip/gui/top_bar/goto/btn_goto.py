@@ -111,6 +111,8 @@ class GotoButton(IconTextChangeButton):
     
     def remove_menu(self,pos=None)->None:
         if self._menu != None:
+            self.setChecked(False)
+            self.set_icon_color()
             if pos!=None:
                 _pos = self.mapFromParent(QPoint(pos.x(),pos.y()))
                 _rect = QRectF(self._menu.x(),self._menu.y(),self._menu.width(),self._menu.height())

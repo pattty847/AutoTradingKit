@@ -28,6 +28,8 @@ class JAPAN_CANDLE(QObject):
         self.first_gen = False
         self.signal_delete.connect(self.deleteLater)
         self.df = pd.DataFrame([])
+        self.start_index:int = None
+        self.stop_index:int = None
         
     
     def set_candle_infor(self,exchange_id,symbol,interval):
@@ -247,8 +249,10 @@ class JAPAN_CANDLE(QObject):
         [self.gen_update(OHLCV(ohlcv[i][1],ohlcv[i][2],ohlcv[i][3],ohlcv[i][4],round((ohlcv[i][2]+ohlcv[i][3])/2,_precision), round((ohlcv[i][2]+ohlcv[i][3]+ohlcv[i][4])/3,_precision), round((ohlcv[i][1]+ohlcv[i][2]+ohlcv[i][3]+ohlcv[i][4])/4,_precision),ohlcv[i][5],ohlcv[i][0]/1000,i)) for i in range(len(ohlcv))]
         self.first_gen = True
         self.df = pd.DataFrame([data.__dict__ for data in self.candles])
+        
+        self.start_index:int = self.candles[0].index
+        self.stop_index:int = self.candles[-1].index
         self.sig_reset_all.emit()
-        #QCoreApplication.processEvents()
         return self.candles
     
     def load_historic_data(self,ohlcv,_precision):
@@ -332,6 +336,8 @@ class JAPAN_CANDLE(QObject):
             self.candles.append(_new_candle)
             self.dict_index_ohlcv[_new_candle.index] = _new_candle
             self.dict_time_ohlcv[_new_candle.time] = _new_candle
+        self.start_index:int = self.candles[0].index
+        self.stop_index:int = self.candles[-1].index
 
     def update(self,new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]
@@ -376,7 +382,10 @@ class JAPAN_CANDLE(QObject):
                                         last_candle.time,
                                         last_candle.index
                                         ]
+                    self.start_index:int = self.candles[0].index
+                    self.stop_index:int = self.candles[-1].index
                     self.sig_update_candle.emit(self.candles[-2:])
+                    
                     return False
                 return None
             elif _time < new_candle.time:
@@ -401,7 +410,10 @@ class JAPAN_CANDLE(QObject):
                 
                 new_row = pd.DataFrame([data.__dict__ for data in self.candles[-1:]])
                 self.df = pd.concat([self.df, new_row], ignore_index=True)
+                self.start_index:int = self.candles[0].index
+                self.stop_index:int = self.candles[-1].index
                 self.sig_add_candle.emit(self.candles[-2:])
+                
                 return True
         return None
             

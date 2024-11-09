@@ -356,8 +356,6 @@ class RangePolyLine(SpecialROI):     # for date price range
         # h.mouseClickEvent = self.mouseClickEvent_Handle
         h.mouseDoubleClickEvent = self.mouseDoubleClickEvent
         return h
-    
-    
     def mouseDoubleClickEvent(self, event) -> None:
         self.drawtool.drawing_object =None
         self.finished = True
@@ -370,15 +368,12 @@ class RangePolyLine(SpecialROI):     # for date price range
                 self.drawtool.drawing_object =None
                 self.finished = True
                 self.doubleclick = True
-                print(111,self.drawtool.drawing_object)
                 self.update()
     
     def boundingRect(self) -> QRectF:
-        
         if self.handles:
             h0 = self.handles[0]['item'].pos()
             h1 = self.handles[1]['item'].pos()
-            
             if not self.h1:
                 self.h1 = h1 
                 self.h0 = h0
@@ -388,13 +383,11 @@ class RangePolyLine(SpecialROI):     # for date price range
                 painter.setPen(mkPen(color=self.has["styles"]["pen"], width=self.has["styles"]["width"],style=self.has["styles"]["style"]))
                 painter.drawLine(QPointF(h1.x(), h1.y() - diff.y() /2), QPointF(h0.x(), h1.y() - diff.y() /2))
                 painter.drawLine(QPointF(h1.x() - diff.x() /2, h1.y()), QPointF(h1.x() - diff.x() /2, h0.y()))
-                # p.setPen(QColor(252, 163, 38, 40))
                 painter.setBrush(mkBrush(self.has["styles"]["brush"]))
                 painter.fillRect(QRectF(h1,h0),mkColor(self.has["styles"]["brush"]))
                 self.update_arrows()
                 self.update_text()
                 painter.end()
-
             elif self.h1 == h1 and self.h0 == h0:
                 pass
             else:
@@ -406,17 +399,12 @@ class RangePolyLine(SpecialROI):     # for date price range
                 painter.setPen(mkPen(color=self.has["styles"]["pen"], width=self.has["styles"]["width"],style=self.has["styles"]["style"]))
                 painter.drawLine(QPointF(h1.x(), h1.y() - diff.y() /2), QPointF(h0.x(), h1.y() - diff.y() /2))
                 painter.drawLine(QPointF(h1.x() - diff.x() /2, h1.y()), QPointF(h1.x() - diff.x() /2, h0.y()))
-                # p.setPen(QColor(252, 163, 38, 40))
                 painter.setBrush(mkBrush(self.has["styles"]["brush"]))
                 painter.fillRect(QRectF(h1,h0),mkColor(self.has["styles"]["brush"]))
                 self.update_arrows()
                 self.update_text()
                 painter.end()
-        
         return QRectF(self.picture.boundingRect())
     def paint(self, p: QPainter, *args):
-        
-        
-
             self.picture.play(p)
 

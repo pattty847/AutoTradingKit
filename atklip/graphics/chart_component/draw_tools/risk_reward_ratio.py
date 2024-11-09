@@ -47,13 +47,27 @@ class RickRewardRatio(SpecialROI):
             
             "inputs":{
                 "data":{
-                        -1: Line([],TextItem("", anchor=(1, 0)),(180, 0, 0, 255),QColor(180, 0, 0, 60),True),
-                        0: Line([],TextItem("", anchor=(1, 0)),(180, 0, 0, 255),QColor(180, 0, 0, 60),True),
-                        1: Line([],TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
-                        2: Line([],TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
-                        3: Line([],TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
-                        4: Line([],TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
-                        5: Line([],TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
+                        0: Line("R",[],TextItem("", anchor=(1, 0)),(180, 0, 0, 255),QColor(180, 0, 0, 60),True),
+                        1: Line("Entry",[],TextItem("", anchor=(1, 0)),(180, 0, 0, 255),QColor(180, 0, 0, 60),True),
+                        1.5: Line("0.5R",[],TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
+                        2: Line("1R",[],TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
+                        2.5: Line("1.5R",[],TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
+                        3: Line("2R",[],TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
+                        3.5: Line("2.5R",[],TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
+                        4: Line("3R",[],TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
+                        4.5: Line("3.5R",[],TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
+                        5: Line("4R",[],TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
+                        5.5: Line("4.5R",[],TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
+                        6: Line("5R",[],TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
+                        6.5: Line("5.5R",[],TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
+                        7: Line("6R",[],TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
+                        7.5: Line("6.5R",[],TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
+                        8: Line("7R",[],TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
+                        8.5: Line("7.5R",[],TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
+                        9: Line("8R",[],TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
+                        9.5: Line("8.5R",[],TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
+                        10: Line("9R",[],TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
+                        10.5: Line("9.5R",[],TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
                         }
                     },
             "styles":{
@@ -65,9 +79,10 @@ class RickRewardRatio(SpecialROI):
                     "setting": False,
                     "delete":True,}
         }
-        self.addScaleHandle([0, 0], [1, 1])
         
-        self.addScaleHandle([1, 1], [0, 0])
+        self.addScaleHandle([0, 1], [1, 0])
+        self.addScaleHandle([1, 0], [0, 1])
+        
 
         self.signal_visible.connect(self.setVisible)
         self.signal_delete.connect(self.delete)
@@ -81,7 +96,8 @@ class RickRewardRatio(SpecialROI):
         
         self.sigRegionChangeStarted.connect(self.drag_change)
         for level in list(self.has["inputs"]["data"].keys()):
-            self.has["inputs"]["data"][level].item.setParentItem(self)
+            line:Line = self.has["inputs"]["data"][level]
+            line.item.setParentItem(self)
 
 
     def selectedHandler(self, is_selected):
@@ -269,21 +285,25 @@ class RickRewardRatio(SpecialROI):
         keys.sort()
         for i in range(len(keys)):
             level = keys[i]
-            textItem = self.has["inputs"]["data"][level].item
-            # textItem.setAnchor((1, level))
-            color = self.has["inputs"]["data"][level].color
-            brush = self.has["inputs"]["data"][level].brush
-            pointy = QPointF(self.h1.x(), self.h1.y() - diff.y()*level)
-            pointx = QPointF(self.h0.x(), self.h1.y() - diff.y()*level)
-            self.has["inputs"]["data"][level].pos = [pointx,pointy]
-            point = self.mapToParent(pointx)
-            price_level =  f"{point.y():{self.price_precision}}"
-            text = f"{level} ({price_level}) "
-            textItem.setText(text)
-            
-            r = textItem.textItem.boundingRect()
-            _y = pointy.y() + r.height()*1.5
-            textItem.setPos(Point(pointy.x(),_y))
+            line:Line = self.has["inputs"]["data"][level]
+            if line.show:
+                textItem:TextItem = line.item
+                color = line.color
+                brush = line.brush
+                pointy = QPointF(self.h1.x(), self.h1.y() - diff.y()*level)
+                pointx = QPointF(self.h0.x(), self.h1.y() - diff.y()*level)
+                line.pos = [pointx,pointy]
+                point = self.mapToParent(pointx)
+                price_level =  f"{point.y():{self.price_precision}}"
+                text = f"{line.text} ({price_level}) "
+                textItem.setText(text)
+                
+                r = textItem.textItem.boundingRect()
+                tl = textItem.textItem.mapToParent(r.topLeft())
+                br = textItem.textItem.mapToParent(r.bottomRight())
+                offset = (br - tl)
+                _y = pointy.y() + offset.y()
+                textItem.setPos(Point(pointy.x(),_y))
     
     def update_text(self,painter: QPainter=None):
         diff = self.h1 - self.h0
@@ -291,40 +311,44 @@ class RickRewardRatio(SpecialROI):
         keys.sort()
         for i in range(len(keys)):
             level = keys[i]
-            textItem = self.has["inputs"]["data"][level].item
-            # textItem.setAnchor((1, level))
-            color = self.has["inputs"]["data"][level].color
-            brush = self.has["inputs"]["data"][level].brush
-            pointy = QPointF(self.h1.x(), self.h1.y() - diff.y()*level)
-            pointx = QPointF(self.h0.x(), self.h1.y() - diff.y()*level)
-            self.has["inputs"]["data"][level].pos = [pointx,pointy]
-            point = self.mapToParent(pointx)
-            price_level =  f"{point.y():{self.price_precision}}"
-            text = f"{level} ({price_level}) "
-            textItem.setText(text)
-            
-            r = textItem.textItem.boundingRect()
-            _y = pointy.y() + r.height()*1.5
-            textItem.setPos(Point(pointy.x(),_y))
-            
-            if painter:
-                painter.setPen(mkPen(color=color, width=self.has["styles"]["width"],style=self.has["styles"]["style"]))
-                painter.drawLine(pointx, pointy)
+            line:Line = self.has["inputs"]["data"][level]
+            if line.show:
+                textItem:TextItem = line.item
+                color = line.color
+                brush = line.brush
+                pointy = QPointF(self.h1.x(), self.h1.y() - diff.y()*level)
+                pointx = QPointF(self.h0.x(), self.h1.y() - diff.y()*level)
+                line.pos = [pointx,pointy]
+                point = self.mapToParent(pointx)
+                price_level =  f"{point.y():{self.price_precision}}"
+                text = f"{line.text} ({price_level}) "
+                textItem.setText(text)
                 
-                if i > 0:
-                    pre_level = keys[i-1]
-                    pre_item = self.has["inputs"]["data"][pre_level].pos
-                    cr_pos = self.has["inputs"]["data"][level].pos
-                    top_left = pre_item[0]
-                    bottom_right = cr_pos[1]
-                    painter.setBrush(mkBrush(brush))
-                    painter.fillRect(QRectF(top_left,bottom_right),mkColor(brush))
+                r = textItem.textItem.boundingRect()
+                tl = textItem.textItem.mapToParent(r.topLeft())
+                br = textItem.textItem.mapToParent(r.bottomRight())
+                offset = (br - tl)
+                
+                _y = pointy.y() + offset.y()
+                
+                textItem.setPos(Point(pointy.x(),_y))
+                
+                if painter:
+                    painter.setPen(mkPen(color=color, width=self.has["styles"]["width"],style=self.has["styles"]["style"]))
+                    painter.drawLine(pointx, pointy)
+                    
+                    if i > 0:
+                        pre_level = keys[i-1]
+                        pre_item = self.has["inputs"]["data"][pre_level].pos
+                        cr_pos = line.pos
+                        top_left = pre_item[0]
+                        bottom_right = cr_pos[1]
+                        painter.setBrush(mkBrush(brush))
+                        painter.fillRect(QRectF(top_left,bottom_right),mkColor(brush))
         
     def paint(self, p: QPainter, *args):
-        
         self.picture.play(p)
     
-
     def mouseDragEvent(self, ev, axis=None, line=None):
         self.setSelected(True)
         if ev.button == Qt.KeyboardModifier.ShiftModifier:

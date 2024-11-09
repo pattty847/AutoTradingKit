@@ -58,7 +58,7 @@ class Chart(ViewPlotWidget):
         self.sig_reset_exchange = False
         self.is_reseting =  False
         self.worker = None
-        self.worker_reload = None
+        self.worker_reload:asyncio.Task = None
         self.worker_auto_load_old_data = None
         
         self.sources: Dict[str:object] = {}
@@ -66,9 +66,8 @@ class Chart(ViewPlotWidget):
         self.is_load_historic = False
         self.time_delay = 5
                 
-        self._init_async_loop()
+        self._init_async_winloop()
         self.crypto_ex, self.crypto_ex_ws = self.ExchangeManager.add_exchange(self.exchange_name,self.id,self.symbol,self.interval,self.apikey,self.secretkey)
-        # self.reload_market()
         
         self.vb.load_old_data.connect(self.auto_load_old_data)
         self.sig_add_indicator_panel.connect(self.setup_indicator,Qt.ConnectionType.AutoConnection)
@@ -76,12 +75,14 @@ class Chart(ViewPlotWidget):
         
         self.fast_reset_worker()
         
-    def reload_market(self):
-        if self.worker_reload != None:
-            if isinstance(self.worker_reload,FastStartThread):
-                self.worker_reload.stop_thread()
-        self.worker_reload = FastStartThread(self.ExchangeManager.reload_markets,self.exchange_name,self.id,self.symbol,self.interval)
-        self.worker_reload.start_thread()
+    async def reload_market(self):
+        self.worker_reload:asyncio.Task = asyncio.create_task(self.ExchangeManager.reload_markets(self.exchange_name,self.id,self.symbol,self.interval))
+        
+        # if self.worker_reload != None:
+        #     if isinstance(self.worker_reload,FastStartThread):
+        #         self.worker_reload.stop_thread()
+        # self.worker_reload = FastStartThread(self.ExchangeManager.reload_markets,self.exchange_name,self.id,self.symbol,self.interval)
+        # self.worker_reload.start_thread()
 
         
     @property
@@ -92,7 +93,7 @@ class Chart(ViewPlotWidget):
     def id(self,_chart_id):
         self.chart_id = _chart_id
     
-    def _init_async_loop(self) -> asyncio.AbstractEventLoop:
+    def _init_async_winloop(self) -> asyncio.AbstractEventLoop:
         winloop.install()
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
@@ -192,7 +193,6 @@ class Chart(ViewPlotWidget):
         self.sig_reset_exchange = True
         
         self.crypto_ex, self.crypto_ex_ws = self.ExchangeManager.add_exchange(self.exchange_name,self.id,self.symbol,self.interval,self.apikey,self.secretkey)
-        # self.reload_market()
         
         self.sig_change_tab_infor.emit((self.symbol,self.interval))
 
@@ -211,7 +211,6 @@ class Chart(ViewPlotWidget):
         self.is_reseting =  False
         
         self.crypto_ex, self.crypto_ex_ws = self.ExchangeManager.add_exchange(self.exchange_name,self.id,self.symbol,self.interval,self.apikey,self.secretkey)
-        # self.reload_market()
         
         self.sig_change_tab_infor.emit((self.symbol,self.interval))
 
@@ -239,8 +238,6 @@ class Chart(ViewPlotWidget):
         self.update_sources(self.heikinashi)
         self.heikinashi.fisrt_gen_data()
         
-        self.first_run.emit()
-        
         await self.loop_watch_ohlcv(self.symbol,self.interval,self.exchange_name)
     
     def check_all_indicator_updated(self):
@@ -261,6 +258,13 @@ class Chart(ViewPlotWidget):
         return is_updated
     
     async def loop_watch_ohlcv(self,symbol,interval,exchange_name):
+        
+        if not self.worker_reload:
+            await self.reload_market()
+        elif isinstance(self.worker_reload,asyncio.Task):
+            self.worker_reload.cancel()
+            await self.reload_market()
+        
         firt_run = False
         _ohlcv = []
         n = 0
@@ -274,17 +278,16 @@ class Chart(ViewPlotWidget):
             if not (self.symbol == symbol and self.interval == interval and self.exchange_name == exchange_name):
                 break
             if client_socket != None and ws_socket != None:
-                
-                if n == 300:
-                    n=0
-                    client_socket.load_markets(True)
-                    await ws_socket.load_markets(True)
-                    print(f'{exchange_name}-{self.id}-{symbol}-{interval} --- Markets reloaded')
-                
                 try:
                     if "watchOHLCV" in list(ws_socket.has.keys()):
                         if _ohlcv == []:
                             _ohlcv = client_socket.fetch_ohlcv(symbol,interval,limit=2)
+                            ohlcv = await ws_socket.watch_ohlcv(symbol,interval,limit=2)
+                            if _ohlcv[-1][0]/1000 == ohlcv[-1][0]/1000:
+                                _ohlcv[-1] = ohlcv[-1]
+                            else:
+                                _ohlcv = client_socket.fetch_ohlcv(symbol,interval,limit=2)
+                            
                         else:
                             ohlcv = await ws_socket.watch_ohlcv(symbol,interval,limit=2)
                             if _ohlcv[-1][0]/1000 == ohlcv[-1][0]/1000:
@@ -312,6 +315,9 @@ class Chart(ViewPlotWidget):
                         n+=1 
                         _is_add_candle = self.jp_candle.update([pre_ohlcv,last_ohlcv])
                         self.heikinashi.update(self.jp_candle.candles[-2:],_is_add_candle)
+                        if not firt_run:
+                            self.first_run.emit()
+                            firt_run = True
                     
             else:
                 break
@@ -326,7 +332,12 @@ class Chart(ViewPlotWidget):
             print("turn-off with error!!!")
         
     async def close(self):
+        self.ExchangeManager.clear()
         await self.ExchangeManager.remove_exchange(self.exchange_name,self.id,self.symbol,self.interval)
+        
+        if isinstance(self.worker_reload,asyncio.Task):
+            self.worker_reload.cancel()
+            self.worker_reload = None
         self.crypto_ex_ws,self.crypto_ex = None,None
         self.exchange_name = None
         self.id = None

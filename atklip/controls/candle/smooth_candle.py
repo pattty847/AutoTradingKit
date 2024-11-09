@@ -65,6 +65,9 @@ class SMOOTH_CANDLE(QObject):
         self.worker = ApiThreadPool
         self.df = pd.DataFrame([])
         self.connect_signals()
+        
+        self.start_index:int = None
+        self.stop_index:int = None
 
     
     def change_input(self,candles=None,dict_candle_params: dict={}):
@@ -523,6 +526,8 @@ class SMOOTH_CANDLE(QObject):
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
+        self.start_index:int = self.df["index"].iloc[0]
+        self.stop_index:int = self.df["index"].iloc[-1]
         self.sig_reset_all.emit()
         self.is_current_update = True
         return self.candles
@@ -536,10 +541,14 @@ class SMOOTH_CANDLE(QObject):
             _open, _high, _low, _close, hl2, hlc3, ohlc4,_volume, _time,_index = self.get_ma_ohlc_at_index(None,-1)
             ha_candle = OHLCV(_open,_high,_low,_close,hl2,hlc3,ohlc4,new_candle.volume,new_candle.time,_index)
             if is_update:
+                self.start_index:int = self.df["index"].iloc[0]
+                self.stop_index:int = self.df["index"].iloc[-1]
                 self.sig_update_candle.emit([ha_candle])
                 self.is_current_update = True
                 return False
             else:
+                self.start_index:int = self.df["index"].iloc[0]
+                self.stop_index:int = self.df["index"].iloc[-1]
                 self.sig_add_candle.emit([ha_candle])
                 self.is_current_update = True
                 return True

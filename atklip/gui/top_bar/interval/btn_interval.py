@@ -89,6 +89,7 @@ class IntervalButton(SplitWidgetBase):
     clicked = Signal()
     def __init__(self, parent: QWidget = None,sig_change_inteval:Signal=None):
         super().__init__(parent=parent)
+        self._parent = parent
         self.setObjectName('IntervalButton')
         self.intervals:List[_PushButton]  = []
         self.favorites:List[_PushButton] = []
@@ -180,6 +181,7 @@ class IntervalButton(SplitWidgetBase):
         self.setDropIconSize(QSize(10, 10))
         self.dropButton.setFixedSize(16,35)
         self.is_loaded = True
+        # self._parent._parent.resize()
 
     def setcurrent_item(self,current_active:_PushButton):
         if self.current_active == None:

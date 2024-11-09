@@ -29,6 +29,7 @@ class BaseRect(ROI):
         self.locked = False
         self.h1 = None
         self.h0 = None
+        self.is_size_change = False
         self.picture:QPicture =QPicture()
     
     
@@ -59,15 +60,12 @@ class BaseRect(ROI):
         self.has["styles"]['brush'] = brush
     
     def boundingRect(self):
-        return QRectF(0, 0, self.state['size'][0], self.state['size'][1]) #.normalized()
-    
-    def paint(self, p: QPainter, *args):
-        
         if self.handles:
             h0 = self.handles[0]['item'].pos()
             h1 = self.handles[1]['item'].pos()
             
             if not self.h1:
+                
                 self.h1 = h1 
                 self.h0 = h0
                 self.picture = QPicture()
@@ -89,16 +87,16 @@ class BaseRect(ROI):
                 if self.is_short:
                     painter.setPen(mkPen("green",width=1))
                     painter.drawLine(QPointF(0,0), QPointF(1,0))
+                self.is_size_change = True
                 painter.end()
 
             elif self.h1 == h1 and self.h0 == h0:
-                pass
+                self.is_size_change = False
             else:
                 self.picture = QPicture()
                 painter = QPainter(self.picture)
                 self.h1 = h1 
                 self.h0 = h0
-                
                 r = QRectF(0, 0, self.state['size'][0], self.state['size'][1])#.normalized()
                 painter.setRenderHint(
                     QPainter.RenderHint.Antialiasing,
@@ -115,9 +113,12 @@ class BaseRect(ROI):
                 if self.is_short:
                     painter.setPen(mkPen("green",width=1))
                     painter.drawLine(QPointF(0,0), QPointF(1,0))
+                self.is_size_change = True
                 painter.end()
-
-            self.picture.play(p)
+        return QRectF(0, 0, self.state['size'][0], self.state['size'][1]) #.normalized()
+    
+    def paint(self, p: QPainter, *args):
+        self.picture.play(p)
     
     def mouseClickEvent(self, ev):
         if ev.button() == Qt.MouseButton.LeftButton:
