@@ -11,9 +11,9 @@ def round_(v):
     return np.floor(v+0.5)
 
 def convert_precision(number):
-    if "1e" in number:
-        return int(number[-2:])
     if isinstance(number,str):
+        if "1e" in number:
+            return int(number[-2:])
         number = float(number)
     if number >= 1:
         return int(number)

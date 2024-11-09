@@ -433,7 +433,11 @@ class SingleCandleStick(GraphicsObject):
         self.colorline = 'white'
         self.old_w = []
 
- 
+    def reset_threadpool_asyncworker(self):
+        self.worker = None
+        self.worker = FastWorker(self.update_last_data)
+        self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.QueuedConnection)
+        self.worker.start()
 
     def paint(self, p: QPainter, *args) -> None:
         self.picture.play(p)

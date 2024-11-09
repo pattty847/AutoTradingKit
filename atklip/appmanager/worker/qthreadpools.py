@@ -8,7 +8,7 @@ import traceback
 from typing import Callable
 from PySide6.QtCore import QObject, Signal, QRunnable, Slot, QThreadPool
 
-from .threadpool import QThreadPool_global,ThreadPoolExecutor_global,ProcessPoolExecutor_global
+from .threadpool import QThreadPool_global,ThreadPoolExecutor_global
 
 
 class WorkerSignals(QObject):
@@ -28,7 +28,7 @@ class QProcessWorker(QObject):
         self.fn = fn
         self.args = args
         self.kwargs = kwargs.copy()
-        self.threadpool = ProcessPoolExecutor_global
+        self.threadpool = ThreadPoolExecutor_global
         
     def start_thread(self):
         try:

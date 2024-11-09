@@ -333,17 +333,10 @@ class Chart(ViewPlotWidget):
         
     async def close(self):
         self.ExchangeManager.clear()
-        await self.ExchangeManager.remove_exchange(self.exchange_name,self.id,self.symbol,self.interval)
-        
-        if isinstance(self.worker_reload,asyncio.Task):
-            self.worker_reload.cancel()
-            self.worker_reload = None
         self.crypto_ex_ws,self.crypto_ex = None,None
         self.exchange_name = None
         self.id = None
-        if isinstance(self.worker,FastStartThread):
-            self.worker.stop_thread()
-        ThreadPoolExecutor_global.shutdown()
+
 
     def set_market_by_symbol(self,exchange):
         """
@@ -372,9 +365,9 @@ class Chart(ViewPlotWidget):
         'timeInForce': ['GTC', 'IOC', 'FOK', 'GTX', 'GTD']}, 'created': 1569398400000}
         """
         market = exchange.market(self.symbol)
-        #print(market)
-        _precision = convert_precision(market['info']['pricePrecision'])
-        quanty_precision = convert_precision(market['info']['quantityPrecision'])
+        # print(market)
+        _precision = convert_precision(market['precision']['price'])
+        quanty_precision = convert_precision(market['precision']['amount'])
         self.set_precision(_precision,quanty_precision)
         #print("self._precision", self._precision)
 

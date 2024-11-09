@@ -204,7 +204,8 @@ class BaseMenu(ScrollInterface):
                 QCoreApplication.processEvents()
             
     def add_Widget(self,widget):
-        self.insertWidget(0,widget,stretch=0, alignment=Qt.AlignmentFlag.AlignTop)
+        wgs = self.vBoxLayout.widgets
+        self.insertWidget(-1,widget,stretch=0, alignment=Qt.AlignmentFlag.AlignBottom)
         
         #self.addWidget(widget,stretch=0, alignment=Qt.AlignTop)
     

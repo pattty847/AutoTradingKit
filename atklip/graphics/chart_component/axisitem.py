@@ -102,19 +102,36 @@ class CustomDateAxisItem(AxisItem):
         self._updateLabel()
     
     def get_times_via_indexs(self,index):
-        value =  self.context.jp_candle.candles[0].time + (index-self.context.jp_candle.candles[0].index)*(self.context.jp_candle.candles[1].time-self.context.jp_candle.candles[0].time)
-        return value
+        #value =  self.context.jp_candle.candles[0].time + (index-self.context.jp_candle.candles[0].index)*(self.context.jp_candle.candles[1].time-self.context.jp_candle.candles[0].time)
+        ohlc = self.context.jp_candle.dict_index_ohlcv.get(index)
+        if ohlc:
+            value = ohlc.time
+            return value
+        return None
 
     def tickStrings(self, indexs: list, scale: float, spacing: float) -> list:
         """Convert ticks into final strings"""
         values = indexs
         tick_strings = indexs
         try:
-            if self.context.jp_candle.candles != []:
-                try:
-                    values = [self.get_times_via_indexs(index) for index in indexs]
-                except Exception as e:
-                    traceback.print_exception(e)
+            vls = []
+            for index in indexs:
+                value = self.get_times_via_indexs(index)
+                if value:
+                    vls.append(value)
+            values = vls
+            
+            # if self.context.jp_candle.candles != []:
+            #     try:
+            #         vls = []
+            #         for index in indexs:
+            #             value = self.get_times_via_indexs(index)
+            #             if value:
+            #                 vls.append(value)
+            #         # values = [self.get_times_via_indexs(index) for index in indexs if self.get_times_via_indexs(index)]
+            #         values = vls
+            #     except Exception as e:
+            #         pass
 
             if self.tick_format == Axis.DATETIME:
                 tick_strings = [datetime.datetime.fromtimestamp(value, tz=pytz.utc).strftime("%Y-%m-%d %H:%M:%S") for value in values]
@@ -124,11 +141,10 @@ class CustomDateAxisItem(AxisItem):
                 tick_strings = super().tickStrings(values, scale, spacing)
         except Exception as e:
             tick_strings = super().tickStrings(values, scale, spacing)
-            #traceback.print_exception(e)
         return tick_strings
 
     def drawPicture(self, p,  axisSpec, tickSpecs, textSpecs, ):
-        profiler = debug.Profiler()
+        #profiler = debug.Profiler()
 
         p.setRenderHint(p.RenderHint.Antialiasing, False)
         p.setRenderHint(p.RenderHint.TextAntialiasing, True)
@@ -143,7 +159,7 @@ class CustomDateAxisItem(AxisItem):
         for pen, p1, p2 in tickSpecs:
             p.setPen(pen)
             p.drawLine(p1, p2)
-        profiler('draw ticks')
+        #profiler('draw ticks')
 
         # Draw all text
         if self.style['tickFont'] is not None:
@@ -157,7 +173,7 @@ class CustomDateAxisItem(AxisItem):
             p.drawText(rect, int(flags), text)
 
         # self.drawvalue(p ,axisSpec, tickSpecs, textSpecs,color="#363a45",value=self.last_value)
-        profiler('draw text')
+        #profiler('draw text')
         self.draw_xcross_hair(p, color="#363a45",price=self.last_value)
         
         if self.dict_objects != {}:
@@ -205,7 +221,8 @@ class CustomDateAxisItem(AxisItem):
                 tick_strings = datetime.datetime.fromtimestamp(self.get_times_via_indexs(price), tz=pytz.utc).strftime("%Y-%m-%d %H:%M:%S")
                 self.draw_value(p,price_rect,color,str(tick_strings))
             except Exception as e:
-                traceback.print_exc(e)
+                # traceback.print_exc(e)
+                pass
         else:
             pass
 
@@ -215,7 +232,7 @@ class CustomDateAxisItem(AxisItem):
         price = kwargs['value']
         self.last_value = price  
         
-        profiler = debug.Profiler()
+        #profiler = debug.Profiler()
         p.setRenderHint(p.RenderHint.Antialiasing, False)
         p.setRenderHint(p.RenderHint.TextAntialiasing, True)
 
@@ -231,7 +248,7 @@ class CustomDateAxisItem(AxisItem):
         for pen, p1, p2 in tickSpecs:
             p.setPen(pen)
             p.drawLine(p1, p2)
-        profiler('draw ticks')
+        #profiler('draw ticks')
         # Draw all text
         if self.style['tickFont'] is not None:
             p.setFont(self.style['tickFont'])
@@ -266,7 +283,7 @@ class CustomDateAxisItem(AxisItem):
                 self.draw_value(p,price_rect,color,str(tick_strings))
                 
             except Exception as e:
-                traceback.print_exc()
+                # traceback.print_exc()
                 pass
         else:
             if self.context.lastMousePositon != None:
@@ -287,9 +304,9 @@ class CustomDateAxisItem(AxisItem):
                     self.draw_value(p,price_rect,color,str(tick_strings))
                     
                 except Exception as e:
-                    traceback.print_exc()
+                    # traceback.print_exc()
                     pass
-        profiler('draw text')
+        #profiler('draw text')
     
     def change_value(self, args):
         #print(args, type(args))
@@ -299,18 +316,18 @@ class CustomDateAxisItem(AxisItem):
         else:
             color,price = args[0], args[1]
         self.last_value =  price
-        profiler = debug.Profiler()
+        #profiler = debug.Profiler()
         try:
             picture = QPicture()
             painter = QPainter(picture)
             if self.style["tickFont"]:
                 painter.setFont(self.style["tickFont"])
             specs = self.generateDrawSpecs(painter)
-            profiler('generate specs')
+            #profiler('generate specs')
             if specs is not None:
                 self.drawPicture(painter, *specs, )
                 # self.drawvalue(painter, *specs,color="#363a45",value=price)
-                profiler('draw picture')
+                #profiler('draw picture')
         finally:
             
             painter.setRenderHint(painter.RenderHint.Antialiasing, True)  
@@ -346,7 +363,7 @@ class CustomDateAxisItem(AxisItem):
                         self.draw_value(p,price_rect,color,str(tick_strings))
                         
                     except Exception as e:
-                        traceback.print_exc()
+                        # traceback.print_exc()
                         pass
     
     def wheelEvent(self, event):
@@ -417,7 +434,7 @@ class CustomPriceAxisItem(AxisItem):
         be drawn, then generates from this a set of drawing commands to be
         interpreted by drawPicture().
         """
-        profiler = debug.Profiler()
+        #profiler = debug.Profiler()
         if self.style['tickFont'] is not None:
             p.setFont(self.style['tickFont'])
         bounds = self.mapRectFromParent(self.geometry())
@@ -506,7 +523,7 @@ class CustomPriceAxisItem(AxisItem):
         xMin = min(xRange)
         xMax = max(xRange)
 
-        profiler('init')
+        #profiler('init')
 
         tickPositions = [] # remembers positions of previously drawn ticks
 
@@ -556,7 +573,7 @@ class CustomPriceAxisItem(AxisItem):
                 if self.grid is False:
                     p2[axis] += tickLength*tickDir
                 tickSpecs.append((tickPen, Point(p1), Point(p2)))
-        profiler('compute ticks')
+        #profiler('compute ticks')
 
 
         if self.style['stopAxisAtTick'][0] is True:
@@ -691,7 +708,7 @@ class CustomPriceAxisItem(AxisItem):
                     continue
 
                 textSpecs.append((rect, textFlags, vstr))
-        profiler('compute text')
+        #profiler('compute text')
 
         ## update max text size if needed.
         self._updateMaxTextSize(lastTextSize2)
@@ -806,7 +823,7 @@ class CustomPriceAxisItem(AxisItem):
     
     def drawPicture(self, p, axisSpec, tickSpecs, textSpecs):
         #global value
-        profiler = debug.Profiler()
+        #profiler = debug.Profiler()
         p.setRenderHint(p.RenderHint.Antialiasing, False)
         p.setRenderHint(p.RenderHint.TextAntialiasing, True)
         pen, p1, p2 = axisSpec
@@ -815,7 +832,7 @@ class CustomPriceAxisItem(AxisItem):
         for pen, p1, p2 in tickSpecs:
             p.setPen(pen)
             p.drawLine(p1, p2)
-        profiler('draw ticks')
+        #profiler('draw ticks')
         # Draw all text
         if self.style['tickFont'] is not None:
             p.setFont(self.style['tickFont'])
@@ -851,7 +868,7 @@ class CustomPriceAxisItem(AxisItem):
                 price_rect = QRectF(x,position-9,w,18)
                 self.draw_value(p,price_rect,color,str(price))
             except Exception as e:
-                traceback.print_exc(e)
+                # traceback.print_exc(e)
                 pass
         else:
             pass
@@ -868,7 +885,7 @@ class CustomPriceAxisItem(AxisItem):
             #     except Exception as e:
             #         traceback.print_exc()
             #         pass
-        # profiler('draw text')
+        # #profiler('draw text')
     # k dung` cai nay`
     def draw_object_value(self,p,price,color="#2962ff"):
         bounds = self.mapRectFromParent(self.geometry())
@@ -881,7 +898,7 @@ class CustomPriceAxisItem(AxisItem):
         self.draw_value(p,price_rect,color,str(price))
                 
     def paint(self, p, opt, widget):
-        profiler = debug.Profiler()
+        #profiler = debug.Profiler()
         if self.picture is None:
             try:
                 picture = QPicture()
@@ -889,10 +906,10 @@ class CustomPriceAxisItem(AxisItem):
                 if self.style["tickFont"]:
                     painter.setFont(self.style["tickFont"])
                 specs = self.generateDrawSpecs(painter)
-                profiler('generate specs')
+                #profiler('generate specs')
                 if specs is not None:
                     self.drawPicture(painter, *specs)
-                    profiler('draw picture')
+                    #profiler('draw picture')
             finally:
                 painter.end()
             self.picture = picture
@@ -902,17 +919,17 @@ class CustomPriceAxisItem(AxisItem):
     @Slot()
     def change_view(self):
         
-        profiler = debug.Profiler()
+        #profiler = debug.Profiler()
         try:
             picture = QPicture()
             painter = QPainter(picture)
             if self.style["tickFont"]:
                 painter.setFont(self.style["tickFont"])
             specs = self.generateDrawSpecs(painter)
-            profiler('generate specs')
+            #profiler('generate specs')
             if specs is not None:
                 self.drawPicture(painter, *specs) # ,color="#363a45",price=None
-                profiler('draw picture')
+                #profiler('draw picture')
         finally:
             painter.setRenderHint(painter.RenderHint.Antialiasing, True)  
             painter.setRenderHint(painter.RenderHint.TextAntialiasing, True)
@@ -931,17 +948,17 @@ class CustomPriceAxisItem(AxisItem):
         else:
             # if args[1] != None:
             self.cross_color,self.cross_price = args[0], args[1]
-        profiler = debug.Profiler()
+        #profiler = debug.Profiler()
         try:
             picture = QPicture()
             painter = QPainter(picture)
             if self.style["tickFont"]:
                 painter.setFont(self.style["tickFont"])
             specs = self.generateDrawSpecs(painter)
-            profiler('generate specs')
+            #profiler('generate specs')
             if specs is not None:
                 self.drawPicture(painter, *specs) # color="#363a45",price=price
-                profiler('draw picture')
+                #profiler('draw picture')
         finally:
             painter.setRenderHint(painter.RenderHint.Antialiasing, True)  
             painter.setRenderHint(painter.RenderHint.TextAntialiasing, True)
