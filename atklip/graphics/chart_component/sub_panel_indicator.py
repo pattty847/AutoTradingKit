@@ -114,7 +114,6 @@ class ViewSubPanel(PlotWidget):
         self.first_run = False
         self.threadpool = QThreadPool(self)
         self.threadpool.setMaxThreadCount(1)
-        self.is_cutting_replay = False
         
         self.indicator_data = ()
         self.panel:IndicatorPanel = None

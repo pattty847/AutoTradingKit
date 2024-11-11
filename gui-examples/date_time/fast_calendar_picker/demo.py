@@ -4,9 +4,11 @@ import sys
 from PySide6.QtCore import Qt, QCalendar, QDate
 from PySide6.QtWidgets import QApplication, QWidget, QHBoxLayout
 
-from qfluentwidgets import FastCalendarPicker, setTheme, Theme, FluentTranslator, FlyoutAnimationType
+from qfluentwidgets import  setTheme, Theme, FluentTranslator, FlyoutAnimationType
 
+from qfluentwidgets.components.date_time.fast_calendar_view import FastCalendarView
 
+from atklip.gui.top_bar.goto.goto_menu import DateTimeMenu
 class Demo(QWidget):
 
     def __init__(self):
@@ -14,8 +16,10 @@ class Demo(QWidget):
         # setTheme(Theme.DARK)
         self.setStyleSheet('Demo{background: white}')
 
-        self.picker = FastCalendarPicker(self)
-        self.picker.dateChanged.connect(print)
+        # self.picker = FastCalendarPicker(self)
+        # self.picker.dateChanged.connect(print)
+        
+        self.picker = FastCalendarView(self)
 
         # customize animation
         # self.picker.setFlyoutAnimationType(FlyoutAnimationType.SLIDE_RIGHT)

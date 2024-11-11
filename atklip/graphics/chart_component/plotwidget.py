@@ -85,7 +85,7 @@ class ViewPlotWidget(PlotWidget):
         self.indicators:List = []
         self.drawtools:List = []
         
-        self.is_living = False
+        self.is_trading = False
         self._precision = 2
         self.quanty_precision = 3
         
@@ -96,8 +96,10 @@ class ViewPlotWidget(PlotWidget):
         self.container_indicator_wg = IndicatorContainer(self)
         self.sig_show_candle_infor.connect(self.container_indicator_wg.get_candle_infor, Qt.ConnectionType.AutoConnection)
 
-        #print("self.crosshair_enabled", self.crosshair_enabled)
         self.crosshair_items: List = []
+        
+        self.vLine : PriceLine = None
+        self.hLine : PriceLine = None
         
         self.crosshair_x_axis = kwargs.get(Crosshair.X_AXIS, "bottom")
         self.crosshair_y_axis = kwargs.get(Crosshair.Y_AXIS, "left")
@@ -115,8 +117,8 @@ class ViewPlotWidget(PlotWidget):
         
         Signal_Proxy(self.crosshair_y_value_change,slot=self.yAxis.change_value,connect_type = Qt.ConnectionType.AutoConnection)
         Signal_Proxy(self.sig_update_y_axis,self.yAxis.change_view)
-        if self.crosshair_enabled:
-            self._add_crosshair()
+        # if self.crosshair_enabled:
+        #     self._add_crosshair()
   
     
         self.disableAutoRange()
@@ -137,10 +139,8 @@ class ViewPlotWidget(PlotWidget):
         self.is_mouse_pressed = False
         #self.ObjectManager = UniqueObjectManager()
         self.mode_replay = False
-        self.replay_enabled = False
-        self.stop_replay_enabled = False
         self.is_running_replay = False
-        self.is_cutting_replay = False
+        self.is_goto_date = False
 
         self.drawtool = DrawTool(self)
         
@@ -151,24 +151,6 @@ class ViewPlotWidget(PlotWidget):
 
         global_signal.sig_show_hide_cross.connect(self.show_hide_cross,Qt.ConnectionType.AutoConnection)
 
-    
-    def set_replay_mode(self):
-        btn = self.sender()
-        
-        print(btn,btn.isChecked())
-        
-        if btn.isChecked():
-            self.replay_obj = ReplayObject(self)
-            self.add_item(self.replay_obj)
-            self.mode_replay = True
-            self.drawtool.drawing_object = self.replay_obj
-        else:
-            if isinstance(self.replay_obj,ReplayObject):
-                self.mode_replay = False
-                self.drawtool.drawing_object = None
-                self.remove_item(self.replay_obj)
-                self.replay_obj = None
-        
     
     def set_precision(self,precision,quanty_precision):
         self._precision = precision
@@ -181,13 +163,15 @@ class ViewPlotWidget(PlotWidget):
         _isshow, self.nearest_value = value[0],value[1]
         if _isshow:
             if self.nearest_value != None:
-                self.vLine.setPos(self.nearest_value)  
-                if not self.vLine.isVisible():
-                    self.vLine.show()
+                if self.vLine:
+                    self.vLine.setPos(self.nearest_value)  
+                    if not self.vLine.isVisible():
+                        self.vLine.show()
                 self.crosshair_x_value_change.emit(("#363a45",self.nearest_value))
         else:
-            self.hLine.hide()
-            self.vLine.hide()
+            if self.hLine:
+                self.hLine.hide()
+                self.vLine.hide()
             self.crosshair_x_value_change.emit(("#363a45",None))
             self.crosshair_y_value_change.emit(("#363a45",None))
         # self.vb.viewTransformChanged()
@@ -241,20 +225,20 @@ class ViewPlotWidget(PlotWidget):
         timedata = np.clip(timedata, -1e30, 1e30)
         # Optionally normalize data
         # timedata = (timedata - np.mean(timedata)) / np.std(timedata)
-        if len(timedata) >= 800:
+        if len(timedata) >= 500:
             x1 = np.float64(timedata[-1])
-            x2 = np.float64(timedata[-800])
+            x2 = np.float64(timedata[-500])
             self.setXRange(x1, x2, padding=0.2)
             
-            _min = data[2][-800:].min()
-            _max = data[1][-800:].max()
+            _min = data[2][-500:].min()
+            _max = data[1][-500:].max()
             self.setYRange(_max, _min, padding=0.2)
         else:
             x1 = np.float64(timedata[-1])
             x2 = np.float64(timedata[-1*len(timedata)])
             self.setXRange(x1, x2, padding=0.2)
-            _min = data[2][-800:].min()
-            _max = data[1][-800:].max()
+            _min = data[2][-500:].min()
+            _max = data[1][-500:].max()
             self.setYRange(_max, _min, padding=0.2)
     def removeItem(self, *args):
         return self.plotItem.removeItem(*args)
@@ -276,7 +260,7 @@ class ViewPlotWidget(PlotWidget):
         """Update position of crosshair based on mouse position"""
         nearest_value_yaxis = pos.y()
         h_value = round(nearest_value_yaxis,self._precision)
-        if not self.is_cutting_replay and self.mouse_on_vb:
+        if self.mouse_on_vb:
             self.hLine.setPos(h_value)
             self.crosshair_y_value_change.emit(("#363a45",h_value))
         else:
@@ -293,7 +277,7 @@ class ViewPlotWidget(PlotWidget):
             item.setZValue(999)
             self.addItem(item)
         # Hide crosshair at the beginning
-        self.hide_crosshair()
+        # self.hide_crosshair()
 
     def x_format(self, value: Union[int, float]) -> str:
         """X tick format"""
@@ -314,7 +298,6 @@ class ViewPlotWidget(PlotWidget):
     def leaveEvent(self, ev: QEvent) -> None:
         """Mouse left PlotWidget"""
         global_signal.sig_show_hide_cross.emit((False,self.nearest_value))
-
         self.crosshair_x_value_change.emit(("#363a45",None))
         self.crosshair_y_value_change.emit(("#363a45",None))
         if self.crosshair_enabled:
@@ -325,13 +308,10 @@ class ViewPlotWidget(PlotWidget):
 
     def enterEvent(self, ev: QEvent) -> None:
         """Mouse enter PlotWidget"""
-        if not self.vLine.isVisible():
-                self.vLine.show()
-        self._parent.sig_show_hide_cross.emit((True,self.nearest_value))
-        if self.crosshair_enabled:
-            self.show_crosshair()
         if self.replay_obj:
             self.replay_obj.show()
+        self.show_crosshair()
+        self._parent.sig_show_hide_cross.emit((True,self.nearest_value))
         super().enterEvent(ev)
 
     # @lru_cache()
@@ -370,8 +350,9 @@ class ViewPlotWidget(PlotWidget):
             
         if not self.is_mouse_pressed:
             if self.crosshair_enabled and self.sceneBoundingRect().contains(self.ev_pos):
-                if not self.hLine.isVisible():
-                    self.hLine.show()
+                if not self.replay_obj and self.hLine:
+                    if self.hLine.isVisible():
+                        self.hLine.show()
                 self.mouse_on_vb = True
                 nearest_index = None
                 try:
@@ -384,11 +365,8 @@ class ViewPlotWidget(PlotWidget):
                         self.nearest_value = ohlcv.time
                         data = [ohlcv.open,ohlcv.high,ohlcv.low,ohlcv.close]
                         self._update_crosshair_position(self.lastMousePositon)
-                    
                         self._parent.sig_show_hide_cross.emit((True,ohlcv.index))
-                        ##QCoreApplication.processEvents()
                         self.sig_show_candle_infor.emit(data)
-                    ##QCoreApplication.processEvents()
                 except:
                     pass
             elif not self.sceneBoundingRect().contains(self.ev_pos):
@@ -402,7 +380,8 @@ class ViewPlotWidget(PlotWidget):
 
     def hide_crosshair(self) -> None:
         """Hide crosshair items"""
-        self.hLine.setVisible(False)
+        if self.hLine in self.crosshair_items:
+            self.hLine.setVisible(False)
 
     def show_crosshair(self) -> None:
         """Show crosshair items"""

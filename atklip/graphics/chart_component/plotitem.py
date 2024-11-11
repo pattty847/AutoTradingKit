@@ -18,7 +18,7 @@ class ViewPlotItem(PlotItem):
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemClipsChildrenToShape, True)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemClipsToShape, True)
         # self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemAcceptsInputMethod, False)
-        self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemContainsChildrenInShape,True)
+        # self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemContainsChildrenInShape,True)
         self.hideAxis("left")
         self.showAxis("right")
         self.hideButtons()

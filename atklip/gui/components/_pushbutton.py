@@ -21,10 +21,10 @@ class _PushButton(ToolButton):
     def __init__(self, *args,**kwargs):
         super().__init__(*args,**kwargs)
         
-        self.setIconSize(QSize(30,30))
+        self.setIconSize(QSize(20,20))
         self.setFixedHeight(30)
-        self.setMinimumWidth(120)
-        self.setContentsMargins(5,2,5,2)
+        self.setMinimumWidth(30)
+        self.setContentsMargins(2,2,2,2)
         self.setCheckable(True)
         self.setChecked(False)
         color = "transparent"

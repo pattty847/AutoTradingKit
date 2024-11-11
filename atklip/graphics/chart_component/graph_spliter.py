@@ -14,9 +14,16 @@ from .proxy_signal import Signal_Proxy
 from atklip.graphics.chart_component.indicators import *
 from atklip.controls import IndicatorType
 from atklip.gui.qfluentwidgets.components.dialog_box import MessageBox
+from atklip.gui.play_bar.replay_bar import Playbar
+
+
 from PySide6.QtCore import QCoreApplication,QSize,QEvent
 from PySide6.QtGui import QCloseEvent,QIcon
 from PySide6.QtWidgets import QApplication
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from atklip.gui.views.mainlayout import MainWidget
 
 class CustomDockArea(DockArea):
     def __init__(self, parent=None, temporary=False, home=None):
@@ -129,6 +136,9 @@ class ViewSplitter(QFrame,Ui_Form):
         self.setupUi(self)
         self.mainwindow = None
         self.chart:Chart = None
+        
+        self.replay_bar:Playbar = None
+        
         self.dateAxis = None
         self.is_started = False
         
@@ -210,7 +220,7 @@ class GraphSplitter(ViewSplitter):
         QApplication.processEvents()
 
     def setup_chart(self,mainwindow,current_ex:str="",current_symbol:str="",curent_interval:str=""):
-        self.mainwindow = mainwindow
+        self.mainwindow:MainWidget = mainwindow
         self.chart = Chart(parent=self,exchange_name=current_ex,symbol=current_symbol,interval=curent_interval)
         Signal_Proxy(
             signal=self.sig_show_hide_cross,
@@ -228,6 +238,8 @@ class GraphSplitter(ViewSplitter):
         
         self.dateAxis.setHeight(30)
         self.xaxisview = GraphicsView(self,background="#161616")
+        self.xaxisview.setFixedHeight(30)
+        self.xaxisview.setContentsMargins(0,0,0,0)
         self.xaxislayout = GraphicsLayout()
         self.xaxisview.setCentralItem(self.xaxislayout)
         self.xaxislayout.setContentsMargins(0,0,60,0)
@@ -235,15 +247,44 @@ class GraphSplitter(ViewSplitter):
         self.addItem(self.xaxisview)
         self.dateAxis.linkToView(self.chart.vb)
         
-        # self.yaxis_proxy = SignalProxy(signal=self.chart.crosshair_x_value_change, rateLimit=60,
-        #                             slot=self.dateAxis.change_value)
+        
         Signal_Proxy(
             self.chart.crosshair_x_value_change,
             slot=self.dateAxis.change_value,connect_type=Qt.ConnectionType.AutoConnection
         )
         
         self.mouse_clicked_signal.connect(self.chart.mouse_clicked_signal)
-        
+    
+    def show_hide_playbar(self):
+        btn = self.sender()
+        if btn.isChecked():
+            self.replay_bar = Playbar(self.mainwindow)
+            
+            self.replay_bar.set_enable_selectbar()
+
+            
+            self.replay_bar.btn_close.clicked.connect(self.remove_replay_bar)
+            self.replay_bar.play.clicked.connect(self.chart.worker_replay_loop_start)
+            self.replay_bar.forward.clicked.connect(self.chart.replay_forward_update)
+            
+            
+            self.frame.setMaximumSize(QSize(16777215, 70))
+            self.frame.setContentsMargins(0,0,0,5)
+            self.addItem(self.replay_bar)
+            self.replay_bar.show()
+        else:
+            self.frame.setContentsMargins(0,0,0,0)
+            self.frame.setMaximumSize(QSize(16777215, 30))
+            self.removeItem(self.replay_bar)
+    
+    def remove_replay_bar(self):
+        btn = self.sender()
+        self.frame.setContentsMargins(0,0,0,0)
+        self.frame.setMaximumSize(QSize(16777215, 30))
+        self.removeItem(self.replay_bar)
+        self.mainwindow.topbar.replay.setChecked(False)
+        self.mainwindow.topbar.replay.set_icon_color()
+    
     def add_sub_panel(self,panel:ViewSubPanel|SubChart):
         self.listwidgets.append(panel)
         self.addWidget(panel)

@@ -1,7 +1,7 @@
 import sys
 import time
 from PySide6.QtCore import Qt,QRect,QThreadPool,QPoint,QRect,QSize
-from PySide6.QtGui import QColor,QPen,QFont,QPainter,QMovie
+from PySide6.QtGui import QColor, QPaintEvent,QPen,QFont,QPainter,QMovie
 from PySide6.QtWidgets import QWidget, QGraphicsDropShadowEffect,QLabel
 
 from atklip.appmanager.worker import ProcessWorker
@@ -15,6 +15,7 @@ class LoadingProgress(QLabel):
         self.setFixedSize(size,size)
         self.setContentsMargins(1,1,1,1)
         self.moviebusy = QMovie(":/qfluentwidgets/images/gif/rainbow.gif")
+        self.moviebusy.setBackgroundColor("transparent")
         self.moviebusy.setScaledSize(QSize(size-5,size-5))
         self.setMovie(self.moviebusy)
         #self.moviebusy.stop()
@@ -42,6 +43,8 @@ class LoadingProgress(QLabel):
         self.shadow.setYOffset(0)
         self.shadow.setColor(QColor(0, 0, 0, 80))
         self.setGraphicsEffect(self.shadow)
+    def paintEvent(self, arg__1: QPaintEvent) -> None:
+        return super().paintEvent(arg__1)
 
 class StreamingMode(QLabel):
     def __init__(self,parent=None,size=35):
@@ -83,7 +86,7 @@ class CircularProgress(QWidget):
         super().__init__(parent)
         self._parent:QWidget = self.parent()
         self.setWindowFlag(Qt.FramelessWindowHint, True)
-        self.setStyleSheet("QWidget {background-color: black;}")
+        # self.setStyleSheet("QWidget {background-color: transparent;}")
         # CUSTOM PROPERTIES
         self.value = 0
         self.width = 75
@@ -147,7 +150,7 @@ class CircularProgress(QWidget):
             self.shadow.setBlurRadius(15)
             self.shadow.setXOffset(0)
             self.shadow.setYOffset(0)
-            self.shadow.setColor(QColor(0, 0, 0, 80))
+            self.shadow.setColor("transparent")
             self.setGraphicsEffect(self.shadow)
 
     # SET VALUE
@@ -170,9 +173,9 @@ class CircularProgress(QWidget):
         paint.setFont(QFont(self.font_family, self.font_size))
 
         # CREATE RECTANGLE
-        rect = QRect(0, 0, self.width, self.height)
-        paint.setPen(Qt.NoPen)
-        paint.drawRect(rect)
+        # rect = QRect(0, 0, self.width, self.height)
+        # paint.setPen(Qt.NoPen)
+        # paint.drawRoundedRect(rect,45,45)
 
         # PEN
         pen = QPen()             
@@ -192,11 +195,11 @@ class CircularProgress(QWidget):
         paint.setPen(pen)      
         paint.drawArc(margin, margin, width, height, -90 * 16, -value * 16)       
 
-        # CREATE TEXT
-        if self.enable_text:
-            pen.setColor(QColor(self.text_color))
-            paint.setPen(pen)
-            paint.drawText(rect, Qt.AlignCenter, f"{self.value}{self.suffix}")          
+        # # CREATE TEXT
+        # if self.enable_text:
+        #     pen.setColor(QColor(self.text_color))
+        #     paint.setPen(pen)
+        #     paint.drawText(rect, Qt.AlignCenter, f"{self.value}{self.suffix}")          
 
         # END
         paint.end()

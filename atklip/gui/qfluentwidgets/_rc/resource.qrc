@@ -1,5 +1,11 @@
 <RCC>
   <qresource prefix="qfluentwidgets">
+    <file>images/icons/selectbar_white.svg</file>
+    <file>images/icons/selectbar_black.svg</file>
+    <file>images/icons/forward_white.svg</file>
+    <file>images/icons/forward_black.svg</file>
+    <file>images/icons/jump_to_now_white.svg</file>
+    <file>images/icons/jump_to_now_black.svg</file>
     <file>images/icons/1px.svg</file>
     <file>images/icons/1px_black.svg</file>
     <file>images/icons/1px_tradingview.svg</file>

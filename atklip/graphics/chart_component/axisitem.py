@@ -1,5 +1,6 @@
 
 import datetime
+import time
 import traceback
 from typing import Optional, Any, List, TYPE_CHECKING
 
@@ -134,9 +135,15 @@ class CustomDateAxisItem(AxisItem):
             #         pass
 
             if self.tick_format == Axis.DATETIME:
-                tick_strings = [datetime.datetime.fromtimestamp(value, tz=pytz.utc).strftime("%Y-%m-%d %H:%M:%S") for value in values]
+                # timezone_offset = -time.timezone // 3600
+                tz = datetime.datetime.now().astimezone().tzinfo
+                # tick_strings = [datetime.datetime.fromtimestamp(value, tz=pytz.utc).strftime("%Y-%m-%d %H:%M:%S") for value in values]
+                tick_strings = [datetime.datetime.fromtimestamp(value,tz=tz).strftime("%Y-%m-%d %H:%M:%S") for value in values]
             elif self.tick_format == Axis.TIME:
-                tick_strings = [datetime.datetime.fromtimestamp(value, tz=pytz.utc).strftime("%H:%M:%S") for value in values]
+                # timezone_offset = -time.timezone // 3600
+                # tick_strings = [datetime.datetime.fromtimestamp(value, tz=pytz.utc).strftime("%H:%M:%S") for value in values]
+                tz = datetime.datetime.now().astimezone().tzinfo
+                tick_strings = [datetime.datetime.fromtimestamp(value,tz=tz).strftime("%H:%M:%S") for value in values]
             else:
                 tick_strings = super().tickStrings(values, scale, spacing)
         except Exception as e:
@@ -218,7 +225,8 @@ class CustomDateAxisItem(AxisItem):
                 position = (price-range1)*(w-x)/(range2-range1)
                 # print(245, l_price, self.vb.price_line_color)
                 price_rect = QRectF(position-58,2,116,18)
-                tick_strings = datetime.datetime.fromtimestamp(self.get_times_via_indexs(price), tz=pytz.utc).strftime("%Y-%m-%d %H:%M:%S")
+                tz = datetime.datetime.now().astimezone().tzinfo
+                tick_strings = datetime.datetime.fromtimestamp(self.get_times_via_indexs(price), tz=tz).strftime("%Y-%m-%d %H:%M:%S")
                 self.draw_value(p,price_rect,color,str(tick_strings))
             except Exception as e:
                 # traceback.print_exc(e)
@@ -276,8 +284,8 @@ class CustomDateAxisItem(AxisItem):
                 # print(245, l_price, self.vb.price_line_color)
                 price_rect = QRectF(position-58,2,116,18)
                 #self.draw_lastprice(p,price_rect,global_var.last_color,str(global_var.last_price[global_var.symbol]))
-
-                tick_strings = datetime.datetime.fromtimestamp(price, tz=pytz.utc).strftime("%Y-%m-%d %H:%M:%S")
+                tz = datetime.datetime.now().astimezone().tzinfo
+                tick_strings = datetime.datetime.fromtimestamp(price, tz=tz).strftime("%Y-%m-%d %H:%M:%S")
                 
                 
                 self.draw_value(p,price_rect,color,str(tick_strings))
@@ -298,8 +306,8 @@ class CustomDateAxisItem(AxisItem):
                     # print(245, l_price, self.vb.price_line_color)
                     price_rect = QRectF(position-58,2,116,18)
                     #self.draw_lastprice(p,price_rect,global_var.last_color,str(global_var.last_price[global_var.symbol]))
-
-                    tick_strings = datetime.datetime.fromtimestamp(price, tz=pytz.utc).strftime("%Y-%m-%d %H:%M:%S")
+                    tz = datetime.datetime.now().astimezone().tzinfo
+                    tick_strings = datetime.datetime.fromtimestamp(price, tz=tz).strftime("%Y-%m-%d %H:%M:%S")
 
                     self.draw_value(p,price_rect,color,str(tick_strings))
                     
@@ -358,7 +366,8 @@ class CustomDateAxisItem(AxisItem):
                         step = (w-x)/(range2-range1)
                         position = (price-range1)*step 
                         price_rect = QRectF(position-58,y,116,h)
-                        tick_strings = datetime.datetime.fromtimestamp(price, tz=pytz.utc).strftime("%Y-%m-%d %H:%M:%S")
+                        tz = datetime.datetime.now().astimezone().tzinfo
+                        tick_strings = datetime.datetime.fromtimestamp(price, tz=tz).strftime("%Y-%m-%d %H:%M:%S")
 
                         self.draw_value(p,price_rect,color,str(tick_strings))
                         
@@ -822,8 +831,7 @@ class CustomPriceAxisItem(AxisItem):
         painter.drawText(rect, Qt.AlignCenter, text)
     
     def drawPicture(self, p, axisSpec, tickSpecs, textSpecs):
-        #global value
-        #profiler = debug.Profiler()
+        # super().drawPicture(p, axisSpec, tickSpecs, textSpecs)
         p.setRenderHint(p.RenderHint.Antialiasing, False)
         p.setRenderHint(p.RenderHint.TextAntialiasing, True)
         pen, p1, p2 = axisSpec

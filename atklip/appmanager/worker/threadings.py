@@ -39,7 +39,7 @@ class FastStartThread(QObject):
             self.loop.run_until_complete(self.fn(*self.args, **self.kwargs))
             # asyncio.run(self.fn(*self.args, **self.kwargs))
         except Exception as e:
-            traceback.print_exception(e)
+            self.loop.close()
         finally:
             self.deleteLater()
 

@@ -777,6 +777,9 @@ class FluentIcon(FluentIconBase, Enum):
     TWO_PIX = "2px"
     THREE_PIX = "3px"
     FOUR_PIX = "4px"
+    SELECT_BAR = "selectbar"
+    FORWARD = "forward"
+    JUMP_TO_NOW = "jump_to_now"
 
     def path(self, theme=Theme.AUTO):
         return f':/qfluentwidgets/images/icons/{self.value}_{getIconColor(theme)}.svg'

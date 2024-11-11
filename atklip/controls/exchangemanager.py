@@ -10,8 +10,10 @@ from atklip.app_utils.syncer import sync
 class ExchangeManager:
     def __init__(self) -> None:
         self.map_chart_exchange:Dict[str:dict] = {}
+        self.is_stop = False
 
     def add_exchange(self,id_exchange,chart_id,symbol,interval,apikey,secretkey):
+        self.is_stop = False
         client = self.set_client_exchange(id_exchange,chart_id,symbol,interval,apikey,secretkey)
         ws = self.set_ws_exchange(id_exchange,chart_id,symbol,interval,apikey,secretkey)
         return client,ws
@@ -66,6 +68,7 @@ class ExchangeManager:
             except Exception as e:
                 print(type(e).__name__, str(e))
                 break
+        self.is_stop = True
 
     async def remove_exchange(self,id_exchange:str,chart_id,symbol,interval):
         try:

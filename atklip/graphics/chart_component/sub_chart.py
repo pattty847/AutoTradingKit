@@ -185,7 +185,6 @@ class SubChart(PlotWidget):
             #     source.deleteLater()
     
     def on_reset_exchange(self,args):
-        self.sig_reset_exchange = True
         """("change_symbol",symbol,self.exchange_id,exchange_name,symbol_icon_path,echange_icon_path)"""
         #print("viwchart",args)
         _id,exchange = self.get_exchange()
@@ -198,7 +197,6 @@ class SubChart(PlotWidget):
             print("same exchange")
         self.symbol = symbol
         self.exchange_name = exchange_name
-        self.is_reseting =  False
         self.fast_reset_worker(exchange_name=exchange_name,symbol=symbol,interval=self.interval)
     
     def on_change_inteval(self,interval):
@@ -210,9 +208,7 @@ class SubChart(PlotWidget):
             # print(exchange)
             asyncio.run(self.remove_from_exchanges(_id,exchange)) 
         
-        self.sig_reset_exchange = True
         self.interval = interval
-        self.is_reseting =  False
         self.fast_reset_worker(exchange_name=self.exchange_name,symbol=self.symbol,interval=interval)
     
     

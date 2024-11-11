@@ -524,7 +524,7 @@ class ComboBoxMenu(RoundMenu):
 
         self.view.setViewportMargins(0, 2, 0, 6)
         self.view.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        self.view.setItemDelegate(IndicatorMenuItemDelegate())
+        # self.view.setItemDelegate(IndicatorMenuItemDelegate())
         self.view.setObjectName('comboListWidget')
 
         self.setItemHeight(33)

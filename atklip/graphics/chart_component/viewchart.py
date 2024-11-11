@@ -2,9 +2,8 @@ import traceback,asyncio,time
 import winloop
 from typing import Dict
 from PySide6 import QtCore
-from PySide6.QtCore import Qt, Signal, QCoreApplication, QKeyCombination, QThreadPool,QObject
-from PySide6.QtGui import QKeyEvent
-
+from PySide6.QtCore import Qt, QEvent, QCoreApplication, QKeyCombination, QThreadPool,QObject
+from PySide6.QtGui import QKeyEvent,QImage
 from atklip.app_utils.syncer import sync
 from atklip.graphics.chart_component.base_items import CandleStick
 from atklip.graphics.chart_component.indicators import BasicMA,BasicBB,BasicDonchianChannels,BasicZIGZAG
@@ -25,6 +24,7 @@ from atklip.appmanager import FastStartThread,AppLogger,ThreadPoolExecutor_globa
 from atklip.appmanager.object.unique_object_id import objmanager, UniqueManager
 
 from atklip.graphics.chart_component.indicator_panel import IndicatorPanel
+from atklip.graphics.chart_component.base_items.replay_cut import ReplayObject
 
 from atklip.controls.exchangemanager import ExchangeManager
 from atklip.graphics.chart_component.indicators import Volume,BasicZIGZAG
@@ -55,8 +55,6 @@ class Chart(ViewPlotWidget):
             self.apikey = ""
             self.secretkey = ""
         
-        self.sig_reset_exchange = False
-        self.is_reseting =  False
         self.worker = None
         self.worker_reload:asyncio.Task = None
         self.worker_auto_load_old_data = None
@@ -65,25 +63,23 @@ class Chart(ViewPlotWidget):
         
         self.is_load_historic = False
         self.time_delay = 5
+        self.replay_speed = 1
+        self.replay_data:list = []
+        self.replay_pos_i:int = 0
                 
         self._init_async_winloop()
-        self.crypto_ex, self.crypto_ex_ws = self.ExchangeManager.add_exchange(self.exchange_name,self.id,self.symbol,self.interval,self.apikey,self.secretkey)
+        self.crypto_ex = None
+        self.crypto_ex_ws = None
+        self.set_up_exchange()
         
         self.vb.load_old_data.connect(self.auto_load_old_data)
         self.sig_add_indicator_panel.connect(self.setup_indicator,Qt.ConnectionType.AutoConnection)
         self.first_run.connect(self.set_data_dataconnect,Qt.ConnectionType.AutoConnection)
-        
+        self.mouse_clicked_on_chart.connect(self.started_replay_mode)
         self.fast_reset_worker()
         
     async def reload_market(self):
         self.worker_reload:asyncio.Task = asyncio.create_task(self.ExchangeManager.reload_markets(self.exchange_name,self.id,self.symbol,self.interval))
-        
-        # if self.worker_reload != None:
-        #     if isinstance(self.worker_reload,FastStartThread):
-        #         self.worker_reload.stop_thread()
-        # self.worker_reload = FastStartThread(self.ExchangeManager.reload_markets,self.exchange_name,self.id,self.symbol,self.interval)
-        # self.worker_reload.start_thread()
-
         
     @property
     def id(self):
@@ -93,7 +89,7 @@ class Chart(ViewPlotWidget):
     def id(self,_chart_id):
         self.chart_id = _chart_id
     
-    def _init_async_winloop(self) -> asyncio.AbstractEventLoop:
+    def _init_async_winloop(self) -> asyncio.AbstractEventLoop: # type: ignore
         winloop.install()
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
@@ -108,14 +104,228 @@ class Chart(ViewPlotWidget):
     
     def change_mode(self):
         sender = self.sender()
-        print(sender)
-        if self.is_living:
-            self.is_living = False
-            self.time_delay = 5
+        if self.is_trading:
+            self.is_trading = False
+            self.time_delay = 1
         else:
-            self.is_living = True
+            self.is_trading = True
             self.time_delay = 0.3
+            
+    def set_replay_speed(self,text):
+        if text == "0.5x ":
+            self.replay_speed = 0.5
+        elif text == "1x ":
+            self.replay_speed = 1
+        elif text == "2x ":
+            self.replay_speed = 2
+        elif text == "3x ":
+            self.replay_speed = 3
+        elif text == "5x ":
+            self.replay_speed = 5
+        elif text == "10x ":
+            self.replay_speed = 10
+        elif text == "15x ":
+            self.replay_speed = 15
     
+    def set_replay_mode(self):
+        btn = self.sender()     
+        btn_name = btn.objectName()   
+        if btn_name == "btn_replay":
+            self.is_running_replay = False
+            self.replay_data:list = []
+            self.replay_pos_i:int = 0
+            if btn.isChecked():
+                self.replay_obj = ReplayObject(self)
+                self.add_item(self.replay_obj)
+                self.mode_replay = True
+                self.drawtool.drawing_object = self.replay_obj
+                # cursor = QtGui.QCursor(QImage(""))
+                # self.setCursor(cursor)
+            else:
+                self.sig_show_process.emit(True)
+                if isinstance(self.replay_obj,ReplayObject):
+                    self.drawtool.drawing_object = None
+                    self.remove_item(self.replay_obj)
+                    self.replay_obj = None
+                self.mode_replay = False
+                self.set_up_exchange()
+                self.fast_reset_worker()
+        elif btn_name == "btn_seclect_bar":
+            self.is_running_replay = False
+            if btn.isChecked():
+                self.replay_obj = ReplayObject(self)
+                self.add_item(self.replay_obj)
+                self.mode_replay = True
+                self.drawtool.drawing_object = self.replay_obj
+            else:
+                if isinstance(self.replay_obj,ReplayObject):
+                    self.drawtool.drawing_object = None
+                    self.remove_item(self.replay_obj)
+                    self.replay_obj = None
+                self.mode_replay = False
+        elif btn_name == "btn_close_playbar":
+            self.is_running_replay = False
+            self.replay_data:list = []
+            self.replay_pos_i:int = 0
+            self.sig_show_process.emit(True)
+            if isinstance(self.replay_obj,ReplayObject):
+                self.drawtool.drawing_object = None
+                self.remove_item(self.replay_obj)
+                self.replay_obj = None
+            self.mode_replay = False
+            self.set_up_exchange()
+            self.fast_reset_worker()
+    
+    def started_replay_mode(self,event:QEvent):
+        if isinstance(self.replay_obj,ReplayObject):
+            index,posy = self.get_position_crosshair()
+            # self.set_up_exchange()
+            self.on_replay_reset_worker(index)
+
+    def on_replay_reset_worker(self,index,is_goto: bool=False):
+        if is_goto:
+            self.is_goto_date = True
+        self.replay_data:list = []
+        self.replay_pos_i:int = 0
+        self.sig_show_process.emit(True)
+        if self.worker != None:
+            if isinstance(self.worker,FastStartThread):
+                self.worker.stop_thread()
+        
+        worker = FastStartThread(self.on_replay_mode_reset_exchange,index,is_goto)
+        worker.start_thread()
+    
+    async def on_replay_mode_reset_exchange(self,index:int|float,is_goto: bool=False):
+        data = [] 
+        if is_goto:
+            _cr_time = index
+            
+        else:
+            ohlcv = self.jp_candle.dict_index_ohlcv.get(index)
+            if ohlcv:
+                _cr_time = int(ohlcv.time)
+            else:
+                return
+        
+        print(is_goto,_cr_time)
+        
+        data = self.crypto_ex.fetch_ohlcv(self.symbol,self.interval,limit=1500, params={"until":_cr_time*1000})
+        
+        if len(data) == 0:
+            raise BadSymbol(f"{self.exchange_name} data not received")
+        self.set_market_by_symbol(self.crypto_ex)
+        self.jp_candle.fisrt_gen_data(data,self._precision)
+        self.jp_candle.source_name = f"jp {self.symbol} {self.interval}"
+        self.update_sources(self.jp_candle)
+        
+        self.heikinashi.source_name = f"heikin {self.symbol} {self.interval}"
+        self.update_sources(self.heikinashi)
+        self.heikinashi.fisrt_gen_data()
+        
+        if isinstance(self.replay_obj,ReplayObject):
+                self.drawtool.drawing_object = None
+                self.remove_item(self.replay_obj)
+                self.replay_obj = None
+        self.auto_xrange()
+        self.sig_show_process.emit(False)
+
+    def worker_replay_loop_start(self):
+        btn = self.sender()
+        self.is_running_replay = btn.isChecked()
+        if self.is_running_replay:
+            if self.worker != None:
+                if isinstance(self.worker,FastStartThread):
+                    self.worker.stop_thread()
+                self.worker = None
+            
+            self.worker = FastStartThread(self.replay_loop_start)
+            self.worker.start_thread()
+    
+
+    def replay_forward_update(self):
+        
+        if not self.replay_data:
+            ohlcv = self.jp_candle.candles[-1]
+            _cr_time = int(ohlcv.time)
+            _ohlcv = self.crypto_ex.fetch_ohlcv(self.symbol,self.interval,since=_cr_time*1000,limit=1500)
+            self.replay_data = _ohlcv
+            self.replay_pos_i = 0
+        elif len(self.replay_data) == self.replay_pos_i+1:
+            ohlcv = self.jp_candle.candles[-1]
+            _cr_time = int(ohlcv.time)
+            _ohlcv = self.crypto_ex.fetch_ohlcv(self.symbol,self.interval,since=_cr_time*1000,limit=1500)
+            self.replay_data = _ohlcv
+            self.replay_pos_i = 0
+        
+        pre_ohlcv = OHLCV(self.replay_data[self.replay_pos_i-1][1],self.replay_data[self.replay_pos_i-1][2],
+                            self.replay_data[self.replay_pos_i-1][3],self.replay_data[self.replay_pos_i-1][4], 
+                            round((self.replay_data[self.replay_pos_i-1][2]+self.replay_data[self.replay_pos_i-1][3])/2,self._precision) , 
+                            round((self.replay_data[self.replay_pos_i-1][2]+self.replay_data[self.replay_pos_i-1][3]+self.replay_data[self.replay_pos_i-1][4])/3,self._precision), 
+                            round((self.replay_data[self.replay_pos_i-1][1]+self.replay_data[self.replay_pos_i-1][2]+self.replay_data[self.replay_pos_i-1][3]+self.replay_data[self.replay_pos_i-1][4])/4,self._precision),
+                            self.replay_data[self.replay_pos_i-1][5],self.replay_data[self.replay_pos_i-1][0]/1000,0)
+        last_ohlcv = OHLCV(self.replay_data[self.replay_pos_i][1],
+                            self.replay_data[self.replay_pos_i][2],
+                            self.replay_data[self.replay_pos_i][3],
+                            self.replay_data[self.replay_pos_i][4], 
+                            round((self.replay_data[self.replay_pos_i][2]+self.replay_data[self.replay_pos_i][3])/2,self._precision) , 
+                            round((self.replay_data[self.replay_pos_i][2]+self.replay_data[self.replay_pos_i][3]+self.replay_data[self.replay_pos_i][4])/3,self._precision), 
+                            round((self.replay_data[self.replay_pos_i][1]+self.replay_data[self.replay_pos_i][2]+self.replay_data[self.replay_pos_i][3]+self.replay_data[self.replay_pos_i][4])/4,self._precision),self.replay_data[self.replay_pos_i][5],self.replay_data[self.replay_pos_i][0]/1000,0)
+        is_updated =  self.check_all_indicator_updated()
+        if is_updated:
+            _is_add_candle = self.jp_candle.update([pre_ohlcv,last_ohlcv])
+            self.heikinashi.update(self.jp_candle.candles[-2:],_is_add_candle)   
+        self.replay_pos_i += 1
+    
+    def replay_loop_start(self):
+        _ohlcv = []
+        while self.is_running_replay:    
+            try:
+                if not self.replay_data:
+                    ohlcv = self.jp_candle.candles[-1]
+                    _cr_time = int(ohlcv.time)
+                    _ohlcv = self.crypto_ex.fetch_ohlcv(self.symbol,self.interval,since=_cr_time*1000,limit=1500)
+                    self.replay_data = _ohlcv
+                    self.replay_pos_i = 0
+                elif len(self.replay_data) == self.replay_pos_i+1:
+                    ohlcv = self.jp_candle.candles[-1]
+                    _cr_time = int(ohlcv.time)
+                    _ohlcv = self.crypto_ex.fetch_ohlcv(self.symbol,self.interval,since=_cr_time*1000,limit=1500)
+                    self.replay_data = _ohlcv
+                    self.replay_pos_i = 0
+            except Exception as ex:
+                print(ex)
+                
+            if len(self.replay_data)>1:
+                for i in range(self.replay_pos_i,len(self.replay_data)):
+                    if self.is_running_replay:
+                        if i == 0:
+                            pre_ohlcv = self.jp_candle.candles[-1]
+                        else:
+                            pre_ohlcv = OHLCV(self.replay_data[self.replay_pos_i-1][1],self.replay_data[self.replay_pos_i-1][2],
+                                                self.replay_data[self.replay_pos_i-1][3],self.replay_data[self.replay_pos_i-1][4], 
+                                                round((self.replay_data[self.replay_pos_i-1][2]+self.replay_data[self.replay_pos_i-1][3])/2,self._precision) , 
+                                                round((self.replay_data[self.replay_pos_i-1][2]+self.replay_data[self.replay_pos_i-1][3]+self.replay_data[self.replay_pos_i-1][4])/3,self._precision), 
+                                                round((self.replay_data[self.replay_pos_i-1][1]+self.replay_data[self.replay_pos_i-1][2]+self.replay_data[self.replay_pos_i-1][3]+self.replay_data[self.replay_pos_i-1][4])/4,self._precision),
+                                                self.replay_data[self.replay_pos_i-1][5],self.replay_data[self.replay_pos_i-1][0]/1000,0)
+                        last_ohlcv = OHLCV(self.replay_data[self.replay_pos_i][1],
+                                            self.replay_data[self.replay_pos_i][2],
+                                            self.replay_data[self.replay_pos_i][3],
+                                            self.replay_data[self.replay_pos_i][4], 
+                                            round((self.replay_data[self.replay_pos_i][2]+self.replay_data[self.replay_pos_i][3])/2,self._precision) , 
+                                            round((self.replay_data[self.replay_pos_i][2]+self.replay_data[self.replay_pos_i][3]+self.replay_data[self.replay_pos_i][4])/3,self._precision), 
+                                            round((self.replay_data[self.replay_pos_i][1]+self.replay_data[self.replay_pos_i][2]+self.replay_data[self.replay_pos_i][3]+self.replay_data[self.replay_pos_i][4])/4,self._precision),self.replay_data[self.replay_pos_i][5],self.replay_data[self.replay_pos_i][0]/1000,0)
+                        is_updated =  self.check_all_indicator_updated()
+                        if is_updated:
+                            _is_add_candle = self.jp_candle.update([pre_ohlcv,last_ohlcv])
+                            self.heikinashi.update(self.jp_candle.candles[-2:],_is_add_candle)   
+                        self.replay_pos_i = i
+                    else:
+                        break
+                    try:
+                        time.sleep(1/self.replay_speed)
+                    except:
+                        pass
+                    
     def auto_load_old_data(self):
         "load historic data when wheel or drag viewbox"
         if isinstance(self.worker_auto_load_old_data,SimpleWorker):
@@ -178,7 +388,12 @@ class Chart(ViewPlotWidget):
         
     def generate_source_worker(self,exchange_name:str="binanceusdm",symbol:str="",interval:str=""):
         pass
-
+    
+    def set_up_exchange(self):
+        self.ExchangeManager.clear()
+        self.crypto_ex_ws,self.crypto_ex = None,None
+        self.crypto_ex, self.crypto_ex_ws = self.ExchangeManager.add_exchange(self.exchange_name,self.id,self.symbol,self.interval,self.apikey,self.secretkey)
+    
     def on_reset_exchange(self,args):
         """("change_symbol",symbol,self.exchange_id,exchange_name,symbol_icon_path,echange_icon_path)"""
         
@@ -187,12 +402,10 @@ class Chart(ViewPlotWidget):
         _type, symbol, exchange_name = args[0],args[1],args[2]
         self.exchange_name = exchange_name
         self.symbol = symbol
-        self.is_reseting =  False
         
         self.sig_show_process.emit(True)
-        self.sig_reset_exchange = True
         
-        self.crypto_ex, self.crypto_ex_ws = self.ExchangeManager.add_exchange(self.exchange_name,self.id,self.symbol,self.interval,self.apikey,self.secretkey)
+        self.set_up_exchange()
         
         self.sig_change_tab_infor.emit((self.symbol,self.interval))
 
@@ -206,20 +419,24 @@ class Chart(ViewPlotWidget):
         _type, interval = args[0],args[1]
         
         self.sig_show_process.emit(True)
-        self.sig_reset_exchange = True
         self.interval = interval
-        self.is_reseting =  False
         
-        self.crypto_ex, self.crypto_ex_ws = self.ExchangeManager.add_exchange(self.exchange_name,self.id,self.symbol,self.interval,self.apikey,self.secretkey)
+        self.set_up_exchange()
         
         self.sig_change_tab_infor.emit((self.symbol,self.interval))
 
         self.fast_reset_worker()
     
     def fast_reset_worker(self):
+        self.is_goto_date = False
+        self.is_running_replay = False
+        self.replay_data:list = []
+        self.replay_pos_i:int = 0
+        self.mode_replay = False
         if self.worker != None:
             if isinstance(self.worker,FastStartThread):
                 self.worker.stop_thread()
+            self.worker = None
         
         self.worker = FastStartThread(self.reset_exchange)
         self.worker.start_thread()
@@ -237,6 +454,11 @@ class Chart(ViewPlotWidget):
         self.heikinashi.source_name = f"heikin {self.symbol} {self.interval}"
         self.update_sources(self.heikinashi)
         self.heikinashi.fisrt_gen_data()
+        
+        if self.indicators != []:
+            "when replay mode was turn off"
+            self.auto_xrange()
+            self.sig_show_process.emit(False)
         
         await self.loop_watch_ohlcv(self.symbol,self.interval,self.exchange_name)
     
@@ -273,6 +495,13 @@ class Chart(ViewPlotWidget):
             client_socket = self.ExchangeManager.get_client_exchange(exchange_name,self.id,symbol,interval)
             ws_socket = self.ExchangeManager.get_ws_exchange(exchange_name,self.id,symbol,interval)
             
+            if self.mode_replay or self.is_goto_date:
+                print("close because of replay mode ON")
+                if isinstance(self.worker_reload,asyncio.Task):
+                    self.worker_reload.cancel()
+                    self.worker_reload = None
+                break
+            
             if not client_socket and not ws_socket:
                 break
             if not (self.symbol == symbol and self.interval == interval and self.exchange_name == exchange_name):
@@ -307,8 +536,20 @@ class Chart(ViewPlotWidget):
                     continue
                 
                 if len(_ohlcv) >= 2 and (self.symbol == symbol and self.interval == interval and self.exchange_name == exchange_name):
-                    pre_ohlcv = OHLCV(_ohlcv[-2][1],_ohlcv[-2][2],_ohlcv[-2][3],_ohlcv[-2][4], round((_ohlcv[-2][2]+_ohlcv[-2][3])/2,self._precision) , round((_ohlcv[-2][2]+_ohlcv[-2][3]+_ohlcv[-2][4])/3,self._precision), round((_ohlcv[-2][1]+_ohlcv[-2][2]+_ohlcv[-2][3]+_ohlcv[-2][4])/4,self._precision),_ohlcv[-2][5],_ohlcv[-2][0]/1000,0)
-                    last_ohlcv = OHLCV(_ohlcv[-1][1],_ohlcv[-1][2],_ohlcv[-1][3],_ohlcv[-1][4], round((_ohlcv[-1][2]+_ohlcv[-1][3])/2,self._precision) , round((_ohlcv[-1][2]+_ohlcv[-1][3]+_ohlcv[-1][4])/3,self._precision), round((_ohlcv[-1][1]+_ohlcv[-1][2]+_ohlcv[-1][3]+_ohlcv[-1][4])/4,self._precision),_ohlcv[-1][5],_ohlcv[-1][0]/1000,0)
+                    pre_ohlcv = OHLCV(_ohlcv[-2][1],
+                                      _ohlcv[-2][2],
+                                      _ohlcv[-2][3],
+                                      _ohlcv[-2][4], 
+                                      round((_ohlcv[-2][2]+_ohlcv[-2][3])/2,self._precision) , 
+                                      round((_ohlcv[-2][2]+_ohlcv[-2][3]+_ohlcv[-2][4])/3,self._precision), 
+                                      round((_ohlcv[-2][1]+_ohlcv[-2][2]+_ohlcv[-2][3]+_ohlcv[-2][4])/4,self._precision),_ohlcv[-2][5],_ohlcv[-2][0]/1000,0)
+                    last_ohlcv = OHLCV(_ohlcv[-1][1],
+                                       _ohlcv[-1][2],
+                                       _ohlcv[-1][3],
+                                       _ohlcv[-1][4], 
+                                       round((_ohlcv[-1][2]+_ohlcv[-1][3])/2,self._precision) , 
+                                       round((_ohlcv[-1][2]+_ohlcv[-1][3]+_ohlcv[-1][4])/3,self._precision), 
+                                       round((_ohlcv[-1][1]+_ohlcv[-1][2]+_ohlcv[-1][3]+_ohlcv[-1][4])/4,self._precision),_ohlcv[-1][5],_ohlcv[-1][0]/1000,0)
                     
                     is_updated =  self.check_all_indicator_updated()
                     if is_updated:
@@ -316,9 +557,9 @@ class Chart(ViewPlotWidget):
                         _is_add_candle = self.jp_candle.update([pre_ohlcv,last_ohlcv])
                         self.heikinashi.update(self.jp_candle.candles[-2:],_is_add_candle)
                         if not firt_run:
-                            self.first_run.emit()
-                            firt_run = True
-                    
+                            if self.indicators == []:
+                                self.first_run.emit()
+                            firt_run = True   
             else:
                 break
             try:
@@ -332,38 +573,16 @@ class Chart(ViewPlotWidget):
             print("turn-off with error!!!")
         
     async def close(self):
+        if isinstance(self.worker_reload,asyncio.Task):
+            self.worker_reload.cancel()
+            self.worker_reload = None
         self.ExchangeManager.clear()
         self.crypto_ex_ws,self.crypto_ex = None,None
         self.exchange_name = None
         self.id = None
-
+        self.is_running_replay = False
 
     def set_market_by_symbol(self,exchange):
-        """
-        - Binance
-        {'id': 'BTCUSDT', 'lowercaseId': 'btcusdt', 'symbol': 'BTC/USDT:USDT', 'base': 'BTC', 'quote': 'USDT', 
-        'settle': 'USDT', 'baseId': 'BTC', 'quoteId': 'USDT', 'settleId': 'USDT', 'type': 'swap', 'spot': False, 
-        'margin': False, 'swap': True, 'future': False, 'option': False, 'active': True, 'contract': True, 
-        'linear': True, 'inverse': False, 'taker': 0.0004, 'maker': 0.0002, 'contractSize': 1.0, 'expiry': None, 
-        'expiryDatetime': None, 'strike': None, 'optionType': None, 'precision': {'amount': 3, 'price': 1, 'base': 8, 
-        'quote': 8}, 'limits': {'leverage': {'min': None, 'max': None}, 'amount': {'min': 0.001, 'max': 1000.0}, 
-        'price': {'min': 556.8, 'max': 4529764.0}, 'cost': {'min': 100.0, 'max': None}, 
-        'market': {'min': 0.001, 'max': 120.0}}, 'info': {'symbol': 'BTCUSDT', 'pair': 'BTCUSDT', 
-        'contractType': 'PERPETUAL', 'deliveryDate': '4133404800000', 'onboardDate': '1569398400000', 
-        'status': 'TRADING', 'maintMarginPercent': '2.5000', 'requiredMarginPercent': '5.0000', 'baseAsset': 'BTC', 
-        'quoteAsset': 'USDT', 'marginAsset': 'USDT', 
-        'pricePrecision': '2', 'quantityPrecision': '3', 'baseAssetPrecision': '8', 'quotePrecision': '8', 
-        'underlyingType': 'COIN', 'underlyingSubType': ['PoW'], 'settlePlan': '0', 'triggerProtect': '0.0500', 
-        'liquidationFee': '0.012500', 'marketTakeBound': '0.05', 'maxMoveOrderLimit': '10000', 
-        'filters': [{'tickSize': '0.10', 'maxPrice': '4529764', 'filterType': 'PRICE_FILTER', 'minPrice': '556.80'}, 
-        {'minQty': '0.001', 'stepSize': '0.001', 'filterType': 'LOT_SIZE', 'maxQty': '1000'}, 
-        {'minQty': '0.001', 'filterType': 'MARKET_LOT_SIZE', 'maxQty': '120', 'stepSize': '0.001'}, 
-        {'filterType': 'MAX_NUM_ORDERS', 'limit': '200'}, {'limit': '10', 'filterType': 'MAX_NUM_ALGO_ORDERS'}, 
-        {'notional': '100', 'filterType': 'MIN_NOTIONAL'}, 
-        {'multiplierDecimal': '4', 'multiplierUp': '1.0500', 'multiplierDown': '0.9500', 'filterType': 'PERCENT_PRICE'}], 
-        'orderTypes': ['LIMIT', 'MARKET', 'STOP', 'STOP_MARKET', 'TAKE_PROFIT', 'TAKE_PROFIT_MARKET', 'TRAILING_STOP_MARKET'], 
-        'timeInForce': ['GTC', 'IOC', 'FOK', 'GTX', 'GTD']}, 'created': 1569398400000}
-        """
         market = exchange.market(self.symbol)
         # print(market)
         _precision = convert_precision(market['precision']['price'])
@@ -431,13 +650,12 @@ class Chart(ViewPlotWidget):
         if self.indicators == []:
             "load data when starting app"
             self.sig_reload_indicator_panel.emit()
+            self._add_crosshair()
         else:  
             "change interval/symbol data when starting app"
             self.jp_candle.sig_add_candle.emit(self.jp_candle.candles[-2:])
             self.auto_xrange()
         self.sig_show_process.emit(False)
-        self.is_reseting =  False
-        self.sig_reset_exchange = False
 
     def mousePressEvent(self, ev):
         # print(self.drawtool.draw_object_name)
@@ -475,10 +693,7 @@ class Chart(ViewPlotWidget):
                 self.drawtool.draw_circle(ev)
             elif self.drawtool.draw_object_name ==  "draw_elipse":
                 self.drawtool.draw_ellipse(ev)
-                
-                
-                
-                
+                   
             elif self.drawtool.draw_object_name ==  "draw_up_arrow":
                 self.drawtool.draw_up_arrow(ev)
             elif self.drawtool.draw_object_name ==  "draw_down_arrow":
@@ -511,7 +726,8 @@ class Chart(ViewPlotWidget):
         y0 = y1 - height
         self.setYRange(y1, y0, padding=0.2)
         x1 = self.jp_candle.candles[-1].index
-        self.setXRange(x1, x1-800, padding=0.5)
+        self.setXRange(x1, x1-300, padding=0.5)
+        self.auto_xrange()
 
     def keyPressEvent(self, ev: QKeyEvent):
         if ev.key() == Qt.Key.Key_Delete:

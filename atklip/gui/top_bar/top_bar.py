@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 
+from atklip.gui.components._pushbutton import _PushButton
 from atklip.gui.qfluentwidgets.common import FluentIcon as FIF, CryptoIcon as CI
 from atklip.gui.qfluentwidgets.components import VerticalSeparator
 
@@ -40,7 +41,11 @@ class TopBar(QFrame,TopFrame):
         
         self.replay = ReplayButton(FIF.REPLAY,"Replay",self._parent)
         
-        self.mode = ModeButton("Live Trading",self._parent)
+        self.mode = ModeButton("Auto-Trading",self._parent)
+        
+        
+        self.gotonow = _PushButton(FIF.JUMP_TO_NOW,self._parent) 
+        self.gotonow.setIconSize(QSize(27,27))
         
         self.LayoutButton = LayoutButton(self._parent)
 
@@ -58,6 +63,7 @@ class TopBar(QFrame,TopFrame):
         self.left_layout.addWidget(VerticalSeparator(self))
         self.left_layout.addWidget(self.gotodate)
         self.left_layout.addWidget(self.replay)
+        self.left_layout.addWidget(self.gotonow)
         self.left_layout.addWidget(self.mode)
         self.right_layout.addWidget(self.LayoutButton)
         
@@ -66,7 +72,7 @@ class TopBar(QFrame,TopFrame):
         self._parent.mouse_clicked_signal.connect(self.gotodate.delete)
         self._parent.mouse_clicked_signal.connect(self.symbol.delete)
         self._parent.mouse_clicked_signal.connect(self.indicator.delete)
-        
+         
         self.setSizePolicy(QSizePolicy.Preferred,QSizePolicy.Preferred)
 
     def setup_indicator_menu(self):

@@ -1,5 +1,16 @@
-test_str = "abc"
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
-my_str = f"day la str cua toi {test_str} fadsfdfdsff {test_str}"
+# Lấy múi giờ địa phương từ hệ thống
+local_timezone = datetime.now().astimezone().tzinfo
+print("Local timezone:", local_timezone)
 
-print(test_str,my_str)
+import time
+
+# Lấy múi giờ địa phương (giờ lệch so với UTC)
+timezone_offset = -time.timezone // 3600  # Đổi từ giây sang giờ
+print("Timezone offset (hours):", timezone_offset)
+
+# Lấy tên múi giờ địa phương
+local_timezone_name = time.tzname
+print("Local timezone name:", local_timezone_name)

@@ -54,10 +54,10 @@ class CandleStick(GraphicsObject):
                     },
 
             "styles":{
-                "pen_highcolor":"#005b2c",
-                "pen_lowcolor" : "#740000",
-                "brush_highcolor":mkBrush("#005b2c",width=0.7),
-                "brush_lowcolor":mkBrush("#740000",width=0.7)
+                "pen_highcolor":"#006c3c",
+                "pen_lowcolor" : "#750000",
+                "brush_highcolor":mkBrush("#006c3c",width=0.7),
+                "brush_lowcolor":mkBrush("#750000",width=0.7)
                     }
                 }
         else:
@@ -424,7 +424,6 @@ class SingleCandleStick(GraphicsObject):
         """Choose colors of candle"""
         GraphicsObject.__init__(self)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
-        self.setAcceptedMouseButtons(Qt.MouseButton.NoButton)
         self.setZValue(999)
         self.has = has
         self.chart:Chart|SubChart = chart 

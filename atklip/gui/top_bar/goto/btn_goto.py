@@ -8,51 +8,8 @@ from atklip.gui.components._pushbutton import IconTextChangeButton
 
 from .goto_menu import DateTimeMenu
 
-
-
 if TYPE_CHECKING:
     from views.mainlayout import MainWidget
-
-
-class _Button(ToolButton):
-    """ Transparent push button
-    Constructors
-    ------------
-    * ToolButton(`icon`: QIcon | FluentIcon, `parent`: QWidget = None)
-    """
-    def __init__(self, *args,**kwargs):
-        #_icon = QIcon(icon.path())
-        super().__init__(*args,**kwargs)
-        color = "transparent"
-        self.set_stylesheet(color)
-        self.setCheckable(True)
-        self.setChecked(False)
-        self.setFixedSize(35,35)
-        self.setIconSize(QSize(30,30))
-        self.setContentsMargins(5,2,5,2)
-        self.clicked.connect(self.printsth)
-    def printsth(self):
-        print(self.sender())
-    def set_text(self,text,color):
-        self.setText(text)
-        self.set_stylesheet(color)
-    def title(self):
-        return self.text()
-    def set_stylesheet(self,background_color):
-        self.setStyleSheet(f"""QToolButton {{
-                        background-color: {background_color};
-                        border: none;
-                        border-radius: 4px;
-                    }}""")
-    def enterEvent(self, event):
-        background_color = "rgba(255, 255, 255, 0.0837)" if isDarkTheme() else "#9b9b9b"
-        self.set_stylesheet(background_color)
-        self.setCursor(Qt.CursorShape.ArrowCursor)
-        super().enterEvent(event)
-    def leaveEvent(self, event):
-        color = "transparent"
-        self.set_stylesheet(color)
-        super().leaveEvent(event)
 
 
 class GotoButton(IconTextChangeButton):
@@ -74,7 +31,8 @@ class GotoButton(IconTextChangeButton):
 
     def setupcalendar(self):
         self._menu = DateTimeMenu(self.sig_remove_menu,self._parent)
-        #self._menu.moveToThread(QApplication.instance().thread())
+        self._menu.btn_goto_close.btn_goto.clicked.connect(self.reset_btn)
+        self._menu.btn_goto_close.btn_cancel.clicked.connect(self.reset_btn)
         _x = self._parent.width()
         _y = self._parent.height()
         x = (_x-self._menu.width())/2
@@ -84,7 +42,10 @@ class GotoButton(IconTextChangeButton):
     def show_menu(self)->None:
         if self._menu is None:
             self._menu = DateTimeMenu(self.sig_remove_menu,self._parent)
-            #self._menu.moveToThread(QApplication.instance().thread())
+            
+            self._menu.btn_goto_close.btn_goto.clicked.connect(self.reset_btn)
+            self._menu.btn_goto_close.btn_cancel.clicked.connect(self.reset_btn)
+            
             _x = self._parent.width()
             _y = self._parent.height()
             x = (_x-self._menu.width())/2
@@ -101,6 +62,10 @@ class GotoButton(IconTextChangeButton):
                 y = (_y-self._menu.height())/3
                 self._menu.move(QPoint(x, y))
                 self._menu.show()
+    
+    def reset_btn(self):
+        self.setChecked(False)
+        self.set_icon_color()
     
     def delete(self,ev):
         try:

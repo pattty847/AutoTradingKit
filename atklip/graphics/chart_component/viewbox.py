@@ -1,16 +1,11 @@
 
 from typing import TYPE_CHECKING
-
 import numpy as np
 from PySide6 import QtGui
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QGraphicsItem
-from atklip.graphics.pyqtgraph import functions as fn, ViewBox, InfiniteLine, mkPen, Point, PolyLineROI
-
-from atklip.graphics.chart_component.clone_tv_indicators import FinPolyLine
+from atklip.graphics.pyqtgraph import functions as fn, ViewBox, InfiniteLine, mkPen, Point
 from atklip.graphics.chart_component.graph_items import InfLabel
-
 from atklip.app_utils import *
 
 if TYPE_CHECKING:
@@ -27,8 +22,8 @@ class PlotViewBox(ViewBox):
         kwds['enableMenu'] = False
         ViewBox.__init__(self, *args, **kwds)
         # self.setFlag(self.GraphicsItemFlag.ItemClipsChildrenToShape, True)
-        # self.setFlag(self.GraphicsItemFlag.ItemClipsToShape, True)
-        # self.setFlag(self.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
+        self.setFlag(self.GraphicsItemFlag.ItemClipsToShape, True)
+        self.setFlag(self.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
         # self.setFlag(self.GraphicsItemFlag.ItemContainsChildrenInShape,True)
   
         self.symbol,self.interval = None,None
@@ -83,7 +78,6 @@ class PlotViewBox(ViewBox):
                 'yRange': [None, None],   # Maximum and minimum Y range
                 }
         })
-        
         self.setLimits(minXRange=100, maxXRange=1440)
     def makepen(self,color, style=None, width=1):
         if style is None or style == '-':
@@ -336,22 +330,7 @@ class PlotViewBox(ViewBox):
         ev.accept() 
 
     def mouseClickEvent(self, ev):
-        #print(460, "press vbox")
-        
-        if self.plotwidget.is_cutting_replay:
-            mouse_point = self.mapSceneToView(ev.pos())
-            nearest_idx = find_nearest_index(self.plotwidget.timedata, mouse_point.x())
-            
-            self.plotwidget.timedata = self.plotwidget.timedata[:nearest_idx]
-            self.plotwidget.data = self.plotwidget.data[:nearest_idx]
-
-
-            self.plotwidget.is_cutting_replay = False
-            cursor = QtGui.QCursor(Qt.CrossCursor)
-            self.setCursor(cursor)
-            self.plotwidget.show_crosshair()
-         
-            
+        #print(460, "press vbox")   
         if mouse_clicked(self, ev):
             ev.accept()
             return
@@ -361,9 +340,6 @@ class PlotViewBox(ViewBox):
         p = self.mapClickToView(ev.pos())
         # p = _clamp_point(self.parent(), p)
         # print(858, self.parent(), p)
-
-        self.append_draw_segment(p)
-        self.drawing = False
         ev.accept()
 
     def mapClickToView(self, pos):
@@ -376,33 +352,3 @@ class PlotViewBox(ViewBox):
                 pos.setY(pos.y() + self.height())
         return super().mapToView(pos)
 
-    def append_draw_segment(self, p):
-        h0 = self.draw_line.handles[-1]['item']
-        h1 = self.draw_line.addFreeHandle(p)
-        self.draw_line.addSegment(h0, h1)
-        self.drawing = True
-
-    # chua dung den, dang dung ben mapchart roll_till_now
-    # loi roll deen nam 1970
-    def roll_x_to_last(self, datasrc_x, close_price):
-        if datasrc_x is None:
-            return
-        vr = self.viewRect()
-        height = vr.height()
-
-        # close_price = datasrc.df.columns[2]
-        y1 = close_price + height / 2
-        y0 = y1 - height
-        x0, x1 = xminmax(datasrc_x, x_indexed=True, init_steps=300, extra_margin=0)
-        # self.set_range(x0, y0, x1, y1)
-        print(482, "Rolling", x0, x1)
-
-        self.setXRange(x0, x1, padding=0.5)
-        self.setYRange(y0, y1, padding=0)
-
-    def set_draw_line_color(self, color):
-        if self.draw_line:
-            pen = mkPen(color)
-            for segment in self.draw_line.segments:
-                segment.currentPen = segment.pen = pen
-                segment.update()
