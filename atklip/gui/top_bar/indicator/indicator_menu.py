@@ -24,6 +24,7 @@ class RightMenu(VWIDGET):
         self.candles = ICON_TEXT_BUTTON(self._parent,"Candle Idicators",FIF.CANDLE)
         self.subview = ICON_TEXT_BUTTON(self._parent,"Sub View Idicators",FIF.CANDLE)
         self.advands = ICON_TEXT_BUTTON(self._parent,"Advand Idicators",FIF.ANHCHORED_VOLUME)
+        self.strategy = ICON_TEXT_BUTTON(self._parent,"Strategies",FIF.STRATEGY)
         self.addWidget(self.favorites)
         self.addWidget(self.basics)
         self.addWidget(self.subs)
@@ -32,6 +33,7 @@ class RightMenu(VWIDGET):
         self.addWidget(self.candles)
         self.addWidget(self.subview)
         self.addWidget(self.advands)
+        self.addWidget(self.strategy)
         self.addSpacer()
     def get_indicator_menu(self,name):
         menu = self.findChild(ICON_TEXT_BUTTON,name)
@@ -90,7 +92,7 @@ class BasicMenu(ScrollInterface):
             for indicator in self.list_indicators:
                 indicator_data = (indicator,_list_pre_favorites)
                 self.sig_add_indicator.emit(indicator_data)
-                QApplication.processEvents()
+                # QApplication.processEvents()
 
     def find_item(self,name):
         item = self.findChild(Indicator_Item,name)
@@ -230,7 +232,8 @@ class AdvanceIndicator(BasicMenu):
         super(AdvanceIndicator,self).__init__(parent,sig_add_indicator_to_chart,sig_add_remove_favorite)
         self._type_indicator = "Advance Indicator"
         self.setObjectName(self._type_indicator)
-        self.list_indicators = [IndicatorType.SuperTrend,
+        self.list_indicators = [IndicatorType.UTBOT,
+                                IndicatorType.SuperTrend,
                                 IndicatorType.ZIGZAG,
                                 IndicatorType.BB,
                                 IndicatorType.StdDev,
@@ -256,6 +259,19 @@ class CandleIndicator(BasicMenu):
                                 , IndicatorType.N_SMOOTH_HEIKIN, IndicatorType.N_SMOOTH_JP]
         self.load_indicators()
         #self.addSpacer("VERTICAL")
+        
+class StrategyIndicator(BasicMenu):
+    def __init__(self,parent:QWidget=None,sig_add_indicator_to_chart=None,sig_add_remove_favorite=None):
+        super(StrategyIndicator,self).__init__(parent,sig_add_indicator_to_chart,sig_add_remove_favorite)
+        self._type_indicator = "Strategies"
+        self.setObjectName(self._type_indicator)
+
+        self.list_indicators = [IndicatorType.UTBOT_SUPERTREND_SSCANDLE, IndicatorType.UTBOT_SUPERTREND
+                                , IndicatorType.UTBOT_CCI]
+        self.load_indicators()
+        #self.addSpacer("VERTICAL")     
+          
+        
 class SubViewIndicator(BasicMenu):
     def __init__(self,parent:QWidget=None,sig_add_indicator_to_chart=None,sig_add_remove_favorite=None):
         super(SubViewIndicator,self).__init__(parent,sig_add_indicator_to_chart,sig_add_remove_favorite)
@@ -280,6 +296,8 @@ class ListIndicatorMenu(QStackedWidget):
 
         self.CandleMenu = CandleIndicator(self,sig_add_indicator_to_chart,self.sig_add_remove_favorite)
         
+        self.Strategy = StrategyIndicator(self,sig_add_indicator_to_chart,self.sig_add_remove_favorite)
+        
         self.SubView = SubViewIndicator(self,sig_add_indicator_to_chart,self.sig_add_remove_favorite)
         
         self._list_menu: List[MainMenu] = [self.FavoritesMenu,self.BasicMenu,self.SubIndicatorMenu,self.ParttensMenu,self.AdvanceMenu,self.CandleMenu,self.SubView]
@@ -293,6 +311,7 @@ class ListIndicatorMenu(QStackedWidget):
         self.addWidget(self.CandleMenu)
         self.addWidget(self.SubView)
         self.addWidget(self.AdvanceMenu)
+        self.addWidget(self.Strategy)
         
         #self.setSpacing(0)
         self.setContentsMargins(0,0,0,0)
@@ -371,6 +390,8 @@ class ListIndicatorMenu(QStackedWidget):
             self.setCurrentWidget(self.SubView)
         elif item_name == "Candle Idicators":
             self.setCurrentWidget(self.CandleMenu)
+        elif item_name == "Strategies":
+            self.setCurrentWidget(self.Strategy)
         
     
 

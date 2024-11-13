@@ -1,0 +1,1 @@
+from .utbot import UTBOT_ALERT

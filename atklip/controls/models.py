@@ -69,6 +69,13 @@ class BBandsModel(IndicatorBase):
 class DonchainModel(IndicatorBase):
     lower_length:int 
     upper_length:int 
+
+@dataclass         
+class UTBotModel(IndicatorBase):
+    key_value:float
+    atr_period:float
+    ema_period:int
+
 #@evented
 @dataclass 
 class ROCModel(IndicatorBase):

@@ -165,6 +165,13 @@ class GraphSplitter(ViewSplitter):
     mouse_clicked_signal = Signal(QEvent)
     def __init__(self, parent: QWidget | None = ...) -> None:
         super().__init__(parent)
+        
+        self.stratygies:dict = {IndicatorType.UTBOT_SUPERTREND_SSCANDLE:{"Advance Indicator":IndicatorType.UTBOT,
+                                                                         "Advance Indicator":IndicatorType.UTBOT,
+                                                                         "Candle Indicator":IndicatorType.N_SMOOTH_JP},
+                                IndicatorType.UTBOT_SUPERTREND:[],
+                                IndicatorType.UTBOT_CCI:[]}
+        
         self.sig_add_indicator_to_chart.connect(self.create_indicator,Qt.ConnectionType.QueuedConnection)
         self.sig_add_sub_panel.connect(self.add_sub_panel,Qt.ConnectionType.QueuedConnection)
 
@@ -175,48 +182,58 @@ class GraphSplitter(ViewSplitter):
     def create_indicator(self,data):
         "Tạo Indicator panel và setup cho Chart hoặc Sub-Indicator"
         """('Basic Indicator', 'SMA-Simple Moving Average')"""
-        indicator_type = data[0]
-        indicator_name = data[1]
-        if indicator_type =="Sub Indicator":
+        indicator_group = data[0]
+        indicator_type = data[1]
+        if indicator_group =="Sub Indicator":
             self.create_sub_indicator(data)
-        elif indicator_type =="Basic Indicator":
+        elif indicator_group =="Basic Indicator":
             self.create_basic_indicator(data)
-        elif indicator_type =="Candle Indicator":
+        elif indicator_group =="Candle Indicator":
             self.create_candle_indicator(data)
-        elif indicator_type =="Advance Indicator":
+        elif indicator_group =="Advance Indicator":
             self.create_advand_indicator(data)
-        elif indicator_type =="Sub Candle Indicator":
+        elif indicator_group =="Sub Candle Indicator":
             self.create_sub_chart(data)
+        elif indicator_group =="Strategies":
+            self.create_strategy(data)
         else:
-            print("Unknown Indicator Type")
+            print("Unknown Indicator Type: ", data)
 
-    def create_sub_chart(self,indicator_name:IndicatorType):
-        panel = SubChart(self.chart,self,indicator_name,self.mainwindow)
-        #panel.setup_indicator((indicator_name,self.mainwindow))
+    def create_strategy(self,data):
+        "Tạo Panel cho Strategy"
+        strategy_group = data[0]
+        strategy_type = data[1]
+        indicators = self.stratygies.get(strategy_type)
+        if indicators:
+            print(indicators)
+                
+    def create_sub_chart(self,indicator_data:tuple):
+        panel = SubChart(self.chart,self,indicator_data,self.mainwindow)
+        #panel.setup_indicator((indicator_data,self.mainwindow))
         self.add_sub_panel(panel)
         QApplication.processEvents()
     
-    def create_sub_indicator(self,indicator_name:IndicatorType):
+    def create_sub_indicator(self,indicator_data:tuple):
         panel = ViewSubPanel(self.chart,self)
-        indicator = panel.setup_indicator((indicator_name,self.mainwindow))
+        indicator = panel.setup_indicator((indicator_data,self.mainwindow))
         if indicator:
             self.chart.indicators.append(indicator) 
         self.add_sub_panel(panel)
         QApplication.processEvents()
 
-    def create_basic_indicator(self,indicator_name:IndicatorType):
-        self.chart.setup_indicator((indicator_name,self.mainwindow))
+    def create_basic_indicator(self,indicator_data:tuple):
+        self.chart.setup_indicator((indicator_data,self.mainwindow))
         QApplication.processEvents()
     
-    def create_candle_indicator(self,indicator_name:IndicatorType):
-        self.chart.setup_indicator((indicator_name,self.mainwindow))
+    def create_candle_indicator(self,indicator_data:tuple):
+        self.chart.setup_indicator((indicator_data,self.mainwindow))
         QApplication.processEvents()
         
-    def create_advand_indicator(self,indicator_name:IndicatorType):
-        self.chart.setup_indicator((indicator_name,self.mainwindow))
+    def create_advand_indicator(self,indicator_data:tuple):
+        self.chart.setup_indicator((indicator_data,self.mainwindow))
         QApplication.processEvents()
 
-    def create_normal_indicator(self,indicator_name:IndicatorType):
+    def create_normal_indicator(self,indicator_data:tuple):
         QApplication.processEvents()
 
     def setup_chart(self,mainwindow,current_ex:str="",current_symbol:str="",curent_interval:str=""):

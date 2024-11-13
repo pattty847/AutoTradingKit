@@ -181,7 +181,7 @@ class PeriodEdit(IntEdit):
         
         if _input in ["legs","length","period","ma_period","period_lower","period_upper","k_period",\
             "d_period","rsi_period","fast_period","medium_period","slow_period",
-            "signal_period","length_period","n_smooth_period","smooth_k_period"]:
+            "signal_period","length_period","n_smooth_period","smooth_k_period","key_value","atr_period","ema_period"]:
             _value = _inputs.get(_input)
             if _value != None:
                 self.set_value(_value)
@@ -244,9 +244,9 @@ class PriceEdit(FloatEdit):
         self.setFixedHeight(35)
         _inputs = self.indicator.get_inputs()
         
-        if _input in ["price_high","price_low","fast_w_value","medium_w_value","slow_w_value",
+        if _input in ["price_high","price_low","fast_w_value","medium_w_value","slow_w_value","key_value",
                       "capital","loss_capital","proportion_closed","risk_percentage","leverage","taker_fee",
-                      "maker_fee"]:
+                      "maker_fee",]:
             _value = _inputs.get(_input)
             if _value != None:
                 self.set_value(_value)

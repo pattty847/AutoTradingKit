@@ -21,7 +21,7 @@ class ReplaySpeed(ComboBox):
         self.set_values(["0.5x ","1x ","2x ","3x ","5x ","10x ","15x "])
         self.installEventFilter(ToolTipFilter(self, 3000, ToolTipPosition.TOP))
         self.setToolTip("Speed update candle")
-        self.setCurrentIndex(1)
+        self.setCurrentIndex(3)
         color = self.get_color()
         self.set_stylesheet(color)
         self.setFixedSize(35,30)

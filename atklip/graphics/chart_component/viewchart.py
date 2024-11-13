@@ -6,7 +6,7 @@ from PySide6.QtCore import Qt, QEvent, QCoreApplication, QKeyCombination, QThrea
 from PySide6.QtGui import QKeyEvent,QImage
 from atklip.app_utils.syncer import sync
 from atklip.graphics.chart_component.base_items import CandleStick
-from atklip.graphics.chart_component.indicators import BasicMA,BasicBB,BasicDonchianChannels,BasicZIGZAG
+
 from atklip.graphics.chart_component import ViewPlotWidget
 from atklip.exchanges import CryptoExchange,CryptoExchange_WS
 from ccxt.base.errors import *
@@ -27,7 +27,7 @@ from atklip.graphics.chart_component.indicator_panel import IndicatorPanel
 from atklip.graphics.chart_component.base_items.replay_cut import ReplayObject
 
 from atklip.controls.exchangemanager import ExchangeManager
-from atklip.graphics.chart_component.indicators import Volume,BasicZIGZAG
+from atklip.graphics.chart_component.indicators import BasicMA,BasicBB,BasicDonchianChannels,BasicZIGZAG,Volume, UTBot
 
 class Chart(ViewPlotWidget):
     def __init__(self, parent=None,apikey:str="", secretkey:str="",exchange_name:str="binanceusdm",
@@ -63,7 +63,7 @@ class Chart(ViewPlotWidget):
         
         self.is_load_historic = False
         self.time_delay = 5
-        self.replay_speed = 1
+        self.replay_speed = 3
         self.replay_data:list = []
         self.replay_pos_i:int = 0
                 
@@ -642,6 +642,14 @@ class Chart(ViewPlotWidget):
                 self.container_indicator_wg.add_indicator_panel(panel)
                 self.add_item(indicator)
                 indicator.fisrt_gen_data()
+            
+            elif _indicator_type==IndicatorType.UTBOT:
+                indicator = UTBot(self)
+                panel = IndicatorPanel(self.mainwindow,self, indicator)
+                self.container_indicator_wg.add_indicator_panel(panel)
+                self.add_item(indicator)
+                indicator.fisrt_gen_data()
+                
         if indicator:
             self.indicators.append(indicator) 
                     

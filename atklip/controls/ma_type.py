@@ -114,4 +114,8 @@ class IndicatorType(Enum):
     HISTOGRAM = "Histogram"
     CANDLESTICK = "CandleStick"
     SUB_CHART = "Sub_Chart"
+    UTBOT = "UTBot"
+    UTBOT_SUPERTREND = "UTBotFollowTrend"
+    UTBOT_CCI = "UTBotCCI"
+    UTBOT_SUPERTREND_SSCANDLE = "UTBotFollowSMCandle"
 

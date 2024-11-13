@@ -577,6 +577,7 @@ class FluentIcon(FluentIconBase, Enum):
     ANCHORED_VWAP = "anchored_vwap"
     FIX_RANGE_VOLUME = "fix_range_volume"
     ANHCHORED_VOLUME = "anchored_volume"
+    STRATEGY = "strategy"
     PRICE_RANGE = "price_range"
     DATE_RANGE = "date_range"
     DATE_PRICE_RANGE = "date_price_range"

@@ -351,8 +351,8 @@ class ViewPlotWidget(PlotWidget):
         if not self.is_mouse_pressed:
             if self.crosshair_enabled and self.sceneBoundingRect().contains(self.ev_pos):
                 if not self.replay_obj and self.hLine:
-                    if self.hLine.isVisible():
-                        self.hLine.show()
+                    if not self.hLine.isVisible():
+                        self.hLine.setVisible(True)
                 self.mouse_on_vb = True
                 nearest_index = None
                 try:

@@ -9,3 +9,4 @@ from atklip.controls.volume import *
 from atklip.controls.candle_patterns import *
 from atklip.controls.trend import *
 from atklip.controls.statistics import *
+from atklip.controls.tradingview import *
