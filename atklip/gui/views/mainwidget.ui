@@ -3,14 +3,14 @@
  <class>MainWidget</class>
  <widget class="QFrame" name="MainWidget">
   <property name="windowModality">
-   <enum>Qt::NonModal</enum>
+   <enum>Qt::WindowModality::WindowModal</enum>
   </property>
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1130</width>
-    <height>757</height>
+    <width>730</width>
+    <height>457</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -72,7 +72,7 @@
         <string notr="true">background-color: #474747;</string>
        </property>
        <property name="frameShape">
-        <enum>QFrame::NoFrame</enum>
+        <enum>QFrame::Shape::NoFrame</enum>
        </property>
       </widget>
      </item>
@@ -99,7 +99,7 @@
           <string notr="true">background-color: #474747;</string>
          </property>
          <property name="frameShape">
-          <enum>QFrame::NoFrame</enum>
+          <enum>QFrame::Shape::NoFrame</enum>
          </property>
         </widget>
        </item>
@@ -118,7 +118,7 @@
           </size>
          </property>
          <property name="frameShape">
-          <enum>QFrame::NoFrame</enum>
+          <enum>QFrame::Shape::NoFrame</enum>
          </property>
         </widget>
        </item>
@@ -140,7 +140,7 @@
           <string notr="true">background-color: #474747;</string>
          </property>
          <property name="frameShape">
-          <enum>QFrame::NoFrame</enum>
+          <enum>QFrame::Shape::NoFrame</enum>
          </property>
         </widget>
        </item>
@@ -164,7 +164,7 @@
         <string notr="true">background-color: #474747;</string>
        </property>
        <property name="frameShape">
-        <enum>QFrame::NoFrame</enum>
+        <enum>QFrame::Shape::NoFrame</enum>
        </property>
       </widget>
      </item>
@@ -191,7 +191,7 @@
           <string notr="true">background-color: #474747;</string>
          </property>
          <property name="frameShape">
-          <enum>QFrame::NoFrame</enum>
+          <enum>QFrame::Shape::NoFrame</enum>
          </property>
         </widget>
        </item>
@@ -216,7 +216,7 @@
           </size>
          </property>
          <property name="frameShape">
-          <enum>QFrame::NoFrame</enum>
+          <enum>QFrame::Shape::NoFrame</enum>
          </property>
         </widget>
        </item>
@@ -238,7 +238,7 @@
           <string notr="true">background-color: #474747;</string>
          </property>
          <property name="frameShape">
-          <enum>QFrame::NoFrame</enum>
+          <enum>QFrame::Shape::NoFrame</enum>
          </property>
         </widget>
        </item>
@@ -252,15 +252,15 @@
          </property>
          <property name="minimumSize">
           <size>
-           <width>1000</width>
-           <height>700</height>
+           <width>600</width>
+           <height>400</height>
           </size>
          </property>
          <property name="styleSheet">
           <string notr="true">background-color: rgb(71, 71, 71);</string>
          </property>
          <property name="frameShape">
-          <enum>QFrame::NoFrame</enum>
+          <enum>QFrame::Shape::NoFrame</enum>
          </property>
          <layout class="QHBoxLayout" name="horizontalLayout_3">
           <property name="spacing">
@@ -288,15 +288,15 @@
             </property>
             <property name="minimumSize">
              <size>
-              <width>800</width>
-              <height>600</height>
+              <width>600</width>
+              <height>400</height>
              </size>
             </property>
             <property name="styleSheet">
              <string notr="true">background-color: rgb(22, 22, 22);</string>
             </property>
             <property name="frameShape">
-             <enum>QFrame::NoFrame</enum>
+             <enum>QFrame::Shape::NoFrame</enum>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_2">
              <property name="spacing">
@@ -324,8 +324,8 @@
                </property>
                <property name="minimumSize">
                 <size>
-                 <width>800</width>
-                 <height>600</height>
+                 <width>600</width>
+                 <height>400</height>
                 </size>
                </property>
               </widget>
@@ -345,6 +345,9 @@
           </item>
           <item>
            <widget class="QFrame" name="rightview">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
             <property name="sizePolicy">
              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
               <horstretch>0</horstretch>
@@ -367,7 +370,7 @@
 background-color: rgb(72, 72, 72);</string>
             </property>
             <property name="frameShape">
-             <enum>QFrame::NoFrame</enum>
+             <enum>QFrame::Shape::NoFrame</enum>
             </property>
            </widget>
           </item>
@@ -399,7 +402,7 @@ background-color: rgb(72, 72, 72);</string>
 background-color: rgb(33, 33, 33);</string>
          </property>
          <property name="frameShape">
-          <enum>QFrame::NoFrame</enum>
+          <enum>QFrame::Shape::NoFrame</enum>
          </property>
         </widget>
        </item>
@@ -421,7 +424,7 @@ background-color: rgb(33, 33, 33);</string>
           <string notr="true">background-color: #474747;</string>
          </property>
          <property name="frameShape">
-          <enum>QFrame::NoFrame</enum>
+          <enum>QFrame::Shape::NoFrame</enum>
          </property>
         </widget>
        </item>
@@ -445,7 +448,7 @@ background-color: rgb(33, 33, 33);</string>
         <string notr="true">background-color: #474747;</string>
        </property>
        <property name="frameShape">
-        <enum>QFrame::NoFrame</enum>
+        <enum>QFrame::Shape::NoFrame</enum>
        </property>
       </widget>
      </item>

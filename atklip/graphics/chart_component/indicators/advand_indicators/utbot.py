@@ -35,7 +35,7 @@ class UTBot(PlotDataItem):
         
         self.chart:Chart = chart
         self.has = {
-            "name": f"UTBOT 1 3 200",
+            "name": f"UTBOT 1 3 1",
             "y_axis_show":False,
             
             "inputs":{
@@ -43,7 +43,7 @@ class UTBot(PlotDataItem):
                     "source_name": self.chart.jp_candle.source_name,
                     "key_value":1,
                     "atr_period":3,
-                    "ema_period":200,
+                    "ema_period":1,
                     "indicator_type":IndicatorType.UTBOT,
                     "show":False},
 
@@ -55,7 +55,6 @@ class UTBot(PlotDataItem):
                     'pen_low_line': "red",
                     'width_low_line': 1,
                     'style_low_line': Qt.PenStyle.SolidLine,
-                    
                     }
                     }
         

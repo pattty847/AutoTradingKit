@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 import atklip.controls.talib.abstract as ta
+from atklip.controls import atr
+from atklip.controls.ma import ema
 
 import numpy as np
 import pandas as pd
@@ -11,14 +13,16 @@ from atklip.app_api.workers import ApiThreadPool
 from PySide6.QtCore import Signal,QObject
 
 
-def utbot(dataframe:pd.DataFrame, key_value=1, atr_period=3, ema_period=200)->pd.DataFrame:
+def utbot(dataframe:pd.DataFrame, key_value=1, atr_period:float=3, ema_period=200)->pd.DataFrame:
     # Calculate ATR and xATRTrailingStop
-    xATR = np.array(ta.ATR(dataframe['high'], dataframe['low'], dataframe['close'], timeperiod=atr_period))
+    # xATR = np.array(ta.ATR(dataframe['high'], dataframe['low'], dataframe['close'], timeperiod=atr_period))
+    # xATR = np.array(atr(dataframe['high'], dataframe['low'], dataframe['close'], length=atr_period,mamode="rma",talib=False))
+    xATR = atr(dataframe['high'], dataframe['low'], dataframe['close'], length=atr_period,mamode="rma",talib=False).to_numpy()
     nLoss = key_value * xATR
-    src = dataframe['close']
+    src = dataframe['close'].to_numpy()
 
     # Initialize arrays
-    xATRTrailingStop = np.zeros(len(dataframe))
+    xATRTrailingStop = np.ndarray([0 for i in range(len(dataframe))])
     xATRTrailingStop[0] = src[0] - nLoss[0]
 
     # Calculate xATRTrailingStop using vectorized operations
@@ -39,11 +43,15 @@ def utbot(dataframe:pd.DataFrame, key_value=1, atr_period=3, ema_period=200)->pd
     pos = np.where(mask_sell, -1, pos)
     pos[~((pos == 1) | (pos == -1))] = 0
 
-    ema = np.array(ta.EMA(dataframe['close'], timeperiod=ema_period))
+    # ema = np.array(ta.EMA(dataframe['close'], timeperiod=ema_period))
+    _ema = ema(dataframe['close'], length=ema_period,talib=False).to_numpy()
 
-    buy_condition_utbot = (xATRTrailingStop > ema) & (pos > 0) & (src > ema)
-    sell_condition_utbot = (xATRTrailingStop < ema) & (pos < 0) & (src < ema)    
+    buy_condition_utbot = (xATRTrailingStop > _ema) & (pos > 0) & (src > _ema)
+    sell_condition_utbot = (xATRTrailingStop < _ema) & (pos < 0) & (src < _ema)    
 
+
+    print(buy_condition_utbot)
+    print(sell_condition_utbot)
     trend = np.where(buy_condition_utbot, 1, np.where(sell_condition_utbot, -1, 0))
 
     trend = np.array(trend)
@@ -65,9 +73,9 @@ class UTBOT_ALERT(QObject):
         self._candles: JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE =_candles
         
         
-        self.key_value:float=dict_ta_params.get("key_value",1)
+        self.key_value:int=dict_ta_params.get("key_value",1)
         self.atr_period:float=dict_ta_params.get("atr_period",3)
-        self.ema_period:int=dict_ta_params.get("ema_period",200) 
+        self.ema_period:int=dict_ta_params.get("ema_period",1) 
 
         #self.signal_delete.connect(self.deleteLater)
         self.first_gen = False
@@ -82,9 +90,10 @@ class UTBOT_ALERT(QObject):
         self.xdata,self.ut = np.array([]),np.array([])
 
         self.connect_signals()
+
     
     @property
-    def source_name(self)-> str:
+    def source_name(self)-> str: 
         return self._source_name
     @source_name.setter
     def source_name(self,source_name):
@@ -98,7 +107,7 @@ class UTBOT_ALERT(QObject):
         
         if dict_ta_params != {}:
             
-            self.key_value:float=dict_ta_params.get("key_value",1)
+            self.key_value:int=dict_ta_params.get("key_value",1)
             self.atr_period:float=dict_ta_params.get("atr_period",3)
             self.ema_period:int=dict_ta_params.get("ema_period",200) 
             
@@ -150,7 +159,6 @@ class UTBOT_ALERT(QObject):
         if not n:
             return self.df
         return self.df.tail(n)
-    
     
     def get_data(self,start:int=0,stop:int=0):
         if self.xdata == []:

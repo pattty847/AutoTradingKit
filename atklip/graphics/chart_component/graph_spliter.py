@@ -6,7 +6,6 @@ from atklip.graphics.chart_component import  CustomDateAxisItem
 from .viewchart import Chart
 from .sub_chart import SubChart
 from atklip.gui.qfluentwidgets.common import FluentStyleSheet
-from PySide6.QtWidgets import QWidget, QSplitter,QApplication,QLabel,QFrame
 from .pliterbox_ui import Ui_Form
 from .axisitem import *
 from .sub_panel_indicator import ViewSubPanel 
@@ -19,7 +18,8 @@ from atklip.gui.play_bar.replay_bar import Playbar
 
 from PySide6.QtCore import QCoreApplication,QSize,QEvent
 from PySide6.QtGui import QCloseEvent,QIcon
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import (QApplication, QFrame, QSizePolicy, QVBoxLayout,
+    QWidget)
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -141,6 +141,8 @@ class ViewSplitter(QFrame,Ui_Form):
         
         self.dateAxis = None
         self.is_started = False
+        self.verticalLayout.setSpacing(0)
+        self.verticalLayout.setContentsMargins(0,0,0,0)
         
         self.DockArea = CustomDockArea(self)
         self.splitter.addWidget(self.DockArea)
@@ -253,17 +255,21 @@ class GraphSplitter(ViewSplitter):
                                            showValues=True, axisPen="#5b626f", textPen="#5b626f",
                                             **{Axis.TICK_FORMAT: Axis.DATETIME})
         
-        self.dateAxis.setHeight(30)
+        self.dateAxis.setFixedHeight(30)
         self.xaxisview = GraphicsView(self,background="#161616")
         self.xaxisview.setFixedHeight(30)
         self.xaxisview.setContentsMargins(0,0,0,0)
+        sizePolicy = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        self.frame.setSizePolicy(sizePolicy)
         self.xaxislayout = GraphicsLayout()
         self.xaxisview.setCentralItem(self.xaxislayout)
         self.xaxislayout.setContentsMargins(0,0,60,0)
         self.xaxislayout.addItem(self.dateAxis, row=0, col=0)
+        self.xaxislayout.setSpacing(0)
         self.addItem(self.xaxisview)
         self.dateAxis.linkToView(self.chart.vb)
-        
         
         Signal_Proxy(
             self.chart.crosshair_x_value_change,
@@ -271,7 +277,7 @@ class GraphSplitter(ViewSplitter):
         )
         
         self.mouse_clicked_signal.connect(self.chart.mouse_clicked_signal)
-    
+
     def show_hide_playbar(self):
         btn = self.sender()
         if btn.isChecked():
@@ -285,13 +291,13 @@ class GraphSplitter(ViewSplitter):
             self.replay_bar.forward.clicked.connect(self.chart.replay_forward_update)
             
             
-            self.frame.setMaximumSize(QSize(16777215, 70))
-            self.frame.setContentsMargins(0,0,0,5)
+            self.frame.setFixedSize(QSize(16777215, 65))
+            self.frame.setContentsMargins(0,0,0,0)
             self.addItem(self.replay_bar)
             self.replay_bar.show()
         else:
             self.frame.setContentsMargins(0,0,0,0)
-            self.frame.setMaximumSize(QSize(16777215, 30))
+            self.frame.setFixedSize(QSize(16777215, 30))
             self.removeItem(self.replay_bar)
     
     def remove_replay_bar(self):

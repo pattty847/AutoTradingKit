@@ -53,15 +53,18 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
         
 
     def initWindow(self):
-        self.resize(1000, 800)
-        # self.setMinimumWidth(1000)
+        self.resize(800, 600)
+        self.setMinimumWidth(800)
+        self.setMinimumHeight(600)
         desktop = QApplication.screens()[0].availableGeometry()
         w, h = desktop.width(), desktop.height()
+        # self.move(w//2 - self.width()//2, h//2 - self.height()//2)
+        self.resize(w, h)
         self.move(w//2 - self.width()//2, h//2 - self.height()//2)
+        # self.showMaximized()
         self.resize(self.width(), self.height())
-        self.move(w//2 - self.width()//2, h//2 - self.height()//2)
         self.show()
-        QApplication.processEvents()
+        # QApplication.processEvents()
     
 
     def load_pre_config(self):
@@ -101,7 +104,6 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
     def addInterface(self, interface: MainWidget) -> None:
         """ add sub interface """
         self.stackedWidget.addWidget(interface)
-        interface.progress.run_process(True)
         self.resize(self.width(), self.height() - 45)
         interface.resize(self.width(), self.height())
         
@@ -168,6 +170,7 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
     def switchTo(self, interface: MainWidget):
         if not interface.isVisible():
             interface.show()
+        # interface.progress.run_process(True)
         self.stackedWidget.setCurrentWidget(interface)
 
     def _onCurrentInterfaceChanged(self, widget: MainWidget):
