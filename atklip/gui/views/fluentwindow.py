@@ -53,16 +53,16 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
         
 
     def initWindow(self):
-        self.resize(800, 600)
-        self.setMinimumWidth(800)
-        self.setMinimumHeight(600)
+        
+        self.setMinimumWidth(1200)
+        self.setMinimumHeight(800)
         desktop = QApplication.screens()[0].availableGeometry()
         w, h = desktop.width(), desktop.height()
         # self.move(w//2 - self.width()//2, h//2 - self.height()//2)
-        self.resize(w, h)
+        self.resize(1200, 800)
         self.move(w//2 - self.width()//2, h//2 - self.height()//2)
         # self.showMaximized()
-        self.resize(self.width(), self.height())
+        # self.resize(self.width(), self.height())
         self.show()
         # QApplication.processEvents()
     
@@ -85,26 +85,18 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
     def resizeEvent(self, e):
         super().resizeEvent(e)
         self.titleBar.resize(self.width(), self.titleBar.height())
-        self.stackedWidget.resize(self.width(), self.height() - 45)
+        self.stackedWidget.resize(self.width(), self.height() - self.titleBar.height())
         self.resize(self.width(),self.height())
         interface = self.stackedWidget.currentWidget()
         if isinstance(interface,MainWidget):
             if interface.progress.isVisible():
                 interface.progress.run_process(True)
 
-    def resize(self,w=None,h=None):
-        if w == None or h== None:
-            _w = self.width()
-            _h = self.height()
-        else:
-            _w = w
-            _h = h
-        super().resize(_w,_h)
     
     def addInterface(self, interface: MainWidget) -> None:
         """ add sub interface """
         self.stackedWidget.addWidget(interface)
-        self.resize(self.width(), self.height() - 45)
+        self.resize(self.width(), self.height() - self.titleBar.height())
         interface.resize(self.width(), self.height())
         
 
@@ -156,7 +148,7 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
         # if isinstance(old_interface,MainWidget):
         #     old_interface.hide()
         #     TabInterface.resize(old_interface.width(),old_interface.height())
-            
+        TabInterface.progress.run_process(True)
         self.addInterface(TabInterface)
         self.switchTo(TabInterface)
 
@@ -170,7 +162,6 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
     def switchTo(self, interface: MainWidget):
         if not interface.isVisible():
             interface.show()
-        # interface.progress.run_process(True)
         self.stackedWidget.setCurrentWidget(interface)
 
     def _onCurrentInterfaceChanged(self, widget: MainWidget):

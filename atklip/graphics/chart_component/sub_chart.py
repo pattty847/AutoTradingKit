@@ -493,9 +493,9 @@ class SubChart(PlotWidget):
         # last_index = self.jp_candle.last_data().index
         # if last_index < closest_index:
         #     closest_index = last_index
-        sub_ohlcv = self.jp_candle.dict_index_ohlcv.get(closest_index)
+        sub_ohlcv = self.jp_candle.map_index_ohlcv.get(closest_index)
         _time = sub_ohlcv.time
-        main_ohlcv = self.Chart.jp_candle.dict_time_ohlcv.get(_time)
+        main_ohlcv = self.Chart.jp_candle.map_time_ohlcv.get(_time)
 
         return sub_ohlcv, main_ohlcv 
     def mousePressEvent(self, ev):

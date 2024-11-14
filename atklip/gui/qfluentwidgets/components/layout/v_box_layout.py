@@ -11,7 +11,7 @@ class VBoxLayout(QVBoxLayout):
     def __init__(self, parent):
         super().__init__(parent)
         self.setContentsMargins(0,0,0,0)
-        self.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.setSpacing(0)
         self.widgets = []
 

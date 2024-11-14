@@ -10,7 +10,7 @@ from atklip.graphics.chart_component.base_items.plotdataitem import PlotDataItem
 
 from atklip.controls import PD_MAType,IndicatorType,UTBOT_ALERT
 from atklip.controls.models import UTBotModel
-
+from atklip.graphics.chart_component.draw_tools.base_arrow import BaseArrowItem
 
 from atklip.appmanager import FastWorker
 from atklip.app_utils import *
@@ -35,7 +35,7 @@ class UTBot(PlotDataItem):
         
         self.chart:Chart = chart
         self.has = {
-            "name": f"UTBOT 1 3 1",
+            "name": f"UTBOT 1 3 20",
             "y_axis_show":False,
             
             "inputs":{
@@ -43,7 +43,7 @@ class UTBot(PlotDataItem):
                     "source_name": self.chart.jp_candle.source_name,
                     "key_value":1,
                     "atr_period":3,
-                    "ema_period":1,
+                    "ema_period":20,
                     "indicator_type":IndicatorType.UTBOT,
                     "show":False},
 
@@ -62,9 +62,8 @@ class UTBot(PlotDataItem):
         
         # self.bb_bank = FillBetweenItem(self.lowline,self.highline,self.has["styles"]['brush_color'])
         # self.bb_bank.setParentItem(self)
-        
+        self.list_pos:dict = {}
         self.picture: QPicture = QPicture()
-        
         self.INDICATOR  = UTBOT_ALERT(self.has["inputs"]["source"], self.model.__dict__)
         
         self.chart.sig_update_source.connect(self.change_source,Qt.ConnectionType.AutoConnection)   
@@ -82,7 +81,7 @@ class UTBot(PlotDataItem):
     @property
     def model(self) -> dict:
         return UTBotModel(self.id,"UTBot",self.chart.jp_candle.source_name,self.has["inputs"]["key_value"],
-                              self.has["inputs"]["atr_period"],self.has["inputs"]["atr_period"])
+                              self.has["inputs"]["atr_period"],self.has["inputs"]["ema_period"])
     
     def disconnect_signals(self):
         try:
@@ -118,10 +117,10 @@ class UTBot(PlotDataItem):
         self.worker.start()
 
     def regen_indicator(self,setdata):
-        xdata,ut= self.INDICATOR.get_data()
-        setdata.emit((xdata,ut))
+        xdata,_long,_short= self.INDICATOR.get_data()
+        setdata.emit((xdata,_long,_short))
         self.sig_change_yaxis_range.emit()
-        self.has["name"] = f"UTBOT "
+        self.has["name"] = f"UTBOT {self.has["inputs"]["key_value"]} {self.has["inputs"]["atr_period"]}- {self.has["inputs"]["ema_period"]}"
         self.sig_change_indicator_name.emit(self.has["name"])
         
     def replace_source(self):
@@ -165,7 +164,7 @@ class UTBot(PlotDataItem):
                 is_update = True
         
         if is_update:
-            self.has["name"] = f"UTBOT "
+            self.has["name"] = f"UTBOT {self.has["inputs"]["key_value"]} {self.has["inputs"]["atr_period"]}- {self.has["inputs"]["ema_period"]}"
             self.sig_change_indicator_name.emit(self.has["name"])
             self.INDICATOR.change_input(dict_ta_params=self.model.__dict__)
     
@@ -183,30 +182,111 @@ class UTBot(PlotDataItem):
 
     def set_Data(self,data):
         "df.loc[(df['max_speed'] > 1) & (df['shield'] < 8)]"
+        if self.list_pos:
+            for obj in self.list_pos.values():
+                self.chart.remove_item(obj)
+        self.list_pos.clear()
+        # print(data)
+        
         xData:np.ndarray = data[0]
-        ut:np.ndarray = data[1]
-        xData.tolist()
+        _long:np.ndarray  = data[1]
+        _short:np.ndarray  = data[2]
         data = pd.DataFrame({
             "x":xData,
-            "ut":ut
+            "long":_long,
+            "short":_short,
         })
-        # pos = data.loc[data['ut'] != 0]
-        # data["pos"] = pos
-        # data.loc[data['pos'] ==True]
         
-        for i in range(len(data)):
-            if data.loc[i,"ut"] != 0:
-                print(data.iloc[i])
-        # print(xData)
+        df = data.loc[(data['long'] == True) | (data['short'] == True)]
+        # df = data.loc[(data['long'] == True)]        
+        for i in range(len(df)):
+            if df.iloc[i]['long'] == True:
+                _x = df.iloc[i]['x']
+                _val = self.chart.jp_candle.map_index_ohlcv[_x].low
+                obj = BaseArrowItem(drawtool=self,angle=90, tipAngle=60, headLen=10, tailLen=10, tailWidth=5, pen=None, brush='green')
+                obj.setParentItem(self)
+                obj.setPos(_x, _val)
+                obj.locked_handle()
+                self.chart.add_item(obj)
+                self.list_pos[_x] = obj
+            elif df.iloc[i]['short'] == True:
+                _x = df.iloc[i]['x']
+                _val = self.chart.jp_candle.map_index_ohlcv[_x].high
+                obj =  BaseArrowItem(drawtool=self,angle=270, tipAngle=60, headLen=10, tailLen=10, tailWidth=5, pen=None, brush='red')
+                obj.setParentItem(self)
+                obj.locked_handle()
+                obj.setPos(_x, _val)
+                self.chart.add_item(obj)
+                self.list_pos[_x] = obj
+
     
     def add_historic_Data(self,data):
-        xData = data[0]
-        ut = data[1]
+        xData:np.ndarray = data[0]
+        _long:np.ndarray  = data[1]
+        _short:np.ndarray  = data[2]
+        data = pd.DataFrame({
+            "x":xData,
+            "long":_long,
+            "short":_short,
+        })
+        
+        df = data.loc[(data['long'] == True) | (data['short'] == True)]
+        # df = data.loc[(data['long'] == True)]
 
+        for i in range(len(df)):
+            if df.iloc[i]['long'] == True:
+                _x = df.iloc[i]['x']
+                if self.list_pos.get(_x):
+                    continue
+                _val = self.chart.jp_candle.map_index_ohlcv[_x].low
+                obj = BaseArrowItem(drawtool=self,angle=90, tipAngle=60, headLen=10, tailLen=10, tailWidth=5, pen=None, brush='green')
+                obj.setPos(_x, _val)
+                obj.locked_handle()
+                self.chart.add_item(obj)
+                self.list_pos[_x] = obj
+            elif df.iloc[i]['short'] == True:
+                _x = df.iloc[i]['x']
+                if self.list_pos.get(_x):
+                    continue
+                _val = self.chart.jp_candle.map_index_ohlcv[_x].high
+                obj =  BaseArrowItem(drawtool=self,angle=270, tipAngle=60, headLen=10, tailLen=10, tailWidth=5, pen=None, brush='red')
+                obj.locked_handle()
+                obj.setPos(_x, _val)
+                self.chart.add_item(obj)
+                self.list_pos[_x] = obj
         
     def update_Data(self,data):
-        xData = data[0]
-        ut = data[1]
+        xData:np.ndarray = data[0]
+        _long:np.ndarray  = data[1]
+        _short:np.ndarray  = data[2]
+        data = pd.DataFrame({
+            "x":xData,
+            "long":_long,
+            "short":_short,
+        })
+        df = data.loc[(data['long'] == True) | (data['short'] == True)]
+        # df = data.loc[(data['long'] == True)]
+        for i in range(len(df)):
+            if df.iloc[i]['long'] == True:
+                _x = df.iloc[i]['x']
+                if self.list_pos.get(_x):
+                    continue
+                _val = self.chart.jp_candle.map_index_ohlcv[_x].low
+                obj = BaseArrowItem(drawtool=self,angle=90, tipAngle=60, headLen=10, tailLen=10, tailWidth=5, pen=None, brush='green')
+                obj.setPos(_x, _val)
+                obj.locked_handle()
+                self.chart.add_item(obj)
+                self.list_pos[_x] = obj
+            elif df.iloc[i]['short'] == True:
+                _x = df.iloc[i]['x']
+                if self.list_pos.get(_x):
+                    continue
+                _val = self.chart.jp_candle.map_index_ohlcv[_x].high
+                obj =  BaseArrowItem(drawtool=self,angle=270, tipAngle=60, headLen=10, tailLen=10, tailWidth=5, pen=None, brush='red')
+                obj.locked_handle()
+                obj.setPos(_x, _val)
+                self.chart.add_item(obj)
+                self.list_pos[_x] = obj
         
     def setdata_worker(self):
         self.worker = None
@@ -227,32 +307,33 @@ class UTBot(PlotDataItem):
         self.worker.start()    
     
     def load_historic_data(self,_len,setdata):
-        xdata,ut= self.INDICATOR.get_data(stop=_len)
-        setdata.emit((xdata,ut))    
+        xdata,_long,_short= self.INDICATOR.get_data(stop=_len)
+        setdata.emit((xdata,_long,_short))
+        
     def add_data(self,setdata):
-        xdata,ut= self.INDICATOR.get_data(start=-1)
-        setdata.emit((xdata,ut))    
+        xdata,_long,_short= self.INDICATOR.get_data(start=-1)
+        setdata.emit((xdata,_long,_short))
     
     def update_data(self,setdata):
-        xdata,ut= self.INDICATOR.get_data(start=-1)
-        setdata.emit((xdata,ut))    
+        xdata,_long,_short= self.INDICATOR.get_data(start=-1)
+        setdata.emit((xdata,_long,_short))
 
-    def boundingRect(self) -> QRectF:
-        x_left,x_right = int(self.chart.xAxis.range[0]),int(self.chart.xAxis.range[1])
-        start_index = self.chart.jp_candle.candles[0].index
-        stop_index = self.chart.jp_candle.candles[-1].index
-        if x_left > start_index:
-            _start = x_left+2
-            x_range_left = x_left - start_index
-        else:
-            _start = start_index+2
-            x_range_left = 0
-        if x_right < stop_index:
-            _width = x_right-_start
-        else:
-            _width = stop_index-_start
+    # def boundingRect(self) -> QRectF:
+    #     x_left,x_right = int(self.chart.xAxis.range[0]),int(self.chart.xAxis.range[1])
+    #     start_index = self.chart.jp_candle.candles[0].index
+    #     stop_index = self.chart.jp_candle.candles[-1].index
+    #     if x_left > start_index:
+    #         _start = x_left+2
+    #         x_range_left = x_left - start_index
+    #     else:
+    #         _start = start_index+2
+    #         x_range_left = 0
+    #     if x_right < stop_index:
+    #         _width = x_right-_start
+    #     else:
+    #         _width = stop_index-_start
 
-        return QRectF(0,0,0,0)
+    #     return QRectF(0,0,0,0)
     
     def paint(self, p:QPainter, *args):
         self.picture.play(p)
@@ -263,7 +344,7 @@ class UTBot(PlotDataItem):
             _time,_value = self.get_last_point()
         except:
             pass
-        return _value,self.has["styles"]['pen_center_line']
+        return _value,self.has["styles"]['pen_high_line']
     
     
     def get_last_point(self):

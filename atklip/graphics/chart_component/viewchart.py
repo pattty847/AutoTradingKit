@@ -27,7 +27,8 @@ from atklip.graphics.chart_component.indicator_panel import IndicatorPanel
 from atklip.graphics.chart_component.base_items.replay_cut import ReplayObject
 
 from atklip.controls.exchangemanager import ExchangeManager
-from atklip.graphics.chart_component.indicators import BasicMA,BasicBB,BasicDonchianChannels,BasicZIGZAG,Volume, UTBot
+
+from atklip.graphics.chart_component.indicators import BasicMA,BasicBB,BasicDonchianChannels,BasicZIGZAG,UTBot,Volume
 
 class Chart(ViewPlotWidget):
     def __init__(self, parent=None,apikey:str="", secretkey:str="",exchange_name:str="binanceusdm",
@@ -63,7 +64,7 @@ class Chart(ViewPlotWidget):
         
         self.is_load_historic = False
         self.time_delay = 5
-        self.replay_speed = 3
+        self.replay_speed = 1
         self.replay_data:list = []
         self.replay_pos_i:int = 0
                 
@@ -201,7 +202,7 @@ class Chart(ViewPlotWidget):
             _cr_time = index
             
         else:
-            ohlcv = self.jp_candle.dict_index_ohlcv.get(index)
+            ohlcv = self.jp_candle.map_index_ohlcv.get(index)
             if ohlcv:
                 _cr_time = int(ohlcv.time)
             else:
@@ -511,7 +512,7 @@ class Chart(ViewPlotWidget):
                     if "watchOHLCV" in list(ws_socket.has.keys()):
                         if _ohlcv == []:
                             _ohlcv = client_socket.fetch_ohlcv(symbol,interval,limit=2)
-                            ohlcv = await ws_socket.watch_ohlcv(symbol,interval,limit=2)
+                            ohlcv = _ohlcv
                             if _ohlcv[-1][0]/1000 == ohlcv[-1][0]/1000:
                                 _ohlcv[-1] = ohlcv[-1]
                             else:
@@ -642,14 +643,12 @@ class Chart(ViewPlotWidget):
                 self.container_indicator_wg.add_indicator_panel(panel)
                 self.add_item(indicator)
                 indicator.fisrt_gen_data()
-            
             elif _indicator_type==IndicatorType.UTBOT:
                 indicator = UTBot(self)
                 panel = IndicatorPanel(self.mainwindow,self, indicator)
                 self.container_indicator_wg.add_indicator_panel(panel)
                 self.add_item(indicator)
                 indicator.fisrt_gen_data()
-                
         if indicator:
             self.indicators.append(indicator) 
                     
@@ -734,7 +733,7 @@ class Chart(ViewPlotWidget):
         y0 = y1 - height
         self.setYRange(y1, y0, padding=0.2)
         x1 = self.jp_candle.candles[-1].index
-        self.setXRange(x1, x1-300, padding=0.5)
+        self.setXRange(x1, x1-150, padding=0.5)
         self.auto_xrange()
 
     def keyPressEvent(self, ev: QKeyEvent):

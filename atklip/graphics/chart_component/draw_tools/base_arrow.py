@@ -76,6 +76,7 @@ class BaseArrowItem(QGraphicsPathItem):
         # for backward compatibility
         # self.setPos(*pos)
     
+    
     def hoverEvent(self, ev):
         if not ev.exit: # and not self.boundingRect().contains(ev.pos()):
             hover = True

@@ -87,7 +87,7 @@ class DrawTool(QObject):
     def draw_trenlines(self, ev: QEvent):
         pos_x, pos_y = self.get_position_mouse_on_chart(ev)
         obj = TrendlinesROI(positions=[[pos_x, pos_y],[pos_x, pos_y]], pen="#2962ff",drawtool=self)
-        self.chart.addItem(obj)
+        self.chart.add_item(obj)
         self.chart.drawtools.append(obj)
         self.num_trendline += 1
         module_name = "Trend Line " + str(self.num_trendline)
@@ -103,7 +103,7 @@ class DrawTool(QObject):
         # pos_x, pos_y = self.get_position_mouse_on_chart(ev)
         pos_x, pos_y = self.get_position_crosshair()
         obj = Vertical_line(pos=pos_x, movable=True,angle=90,pen="#2962ff", drawtool=self)
-        self.chart.addItem(obj)
+        self.chart.add_item(obj)
         self.chart.drawtools.append(obj)
         self.num_vertical_line += 1
         module_name = "Vertital Line " + str(self.num_vertical_line)
@@ -117,7 +117,7 @@ class DrawTool(QObject):
     def draw_horizontal_line(self, ev: QEvent):
         pos_x, pos_y = self.get_position_mouse_on_chart(ev)
         obj = Horizontal_line(pos=pos_y, movable=True,angle=0,pen="#2962ff", drawtool=self)
-        self.chart.addItem(obj)
+        self.chart.add_item(obj)
         self.chart.drawtools.append(obj)
         self.num_horizontal_line += 1
         module_name = "Horizontal Line " + str(self.num_horizontal_line)
@@ -131,7 +131,7 @@ class DrawTool(QObject):
         # pos_x, pos_y = self.get_position_mouse_on_chart(ev)
         pos_x, pos_y = self.get_position_crosshair()
         obj = Horizontal_ray(positions=[[pos_x, pos_y]], pen="#2962ff", drawtool=self)
-        self.chart.addItem(obj)
+        self.chart.add_item(obj)
         self.chart.drawtools.append(obj)
         self.num_horizontal_ray += 1
         module_name = "Horizontal Ray " + str(self.num_horizontal_ray)
@@ -144,7 +144,7 @@ class DrawTool(QObject):
     def draw_fibo(self, ev: QEvent):
         pos_x, pos_y = self.get_position_mouse_on_chart(ev)
         obj =FiboROI([pos_x, pos_y], [0, 0],invertible=True,movable=True, resizable=True, removable=True, pen="#2962ff",parent=self.chart.vb, drawtool=self)
-        self.chart.addItem(obj)
+        self.chart.add_item(obj)
         self.chart.drawtools.append(obj)
         self.num_rectangle += 1
         module_name = "Fibo Retracement(I) " + str(self.num_fibo)
@@ -166,7 +166,7 @@ class DrawTool(QObject):
         
         obj =Longposition(pos=[pos_x, pos_y], size=[deltax, deltay], drawtool=self)
     
-        self.chart.addItem(obj)
+        self.chart.add_item(obj)
         self.chart.drawtools.append(obj)
         self.num_fibo += 1
         module_name = "Longposition " + str(self.num_fibo)
@@ -188,7 +188,7 @@ class DrawTool(QObject):
         
         obj =Shortposition(pos=[pos_x, pos_y], size=[deltax, deltay], drawtool=self)
     
-        self.chart.addItem(obj)
+        self.chart.add_item(obj)
         self.chart.drawtools.append(obj)
         self.num_fibo += 1
         module_name = "Shortposition " + str(self.num_fibo)
@@ -205,7 +205,7 @@ class DrawTool(QObject):
         pos_x, pos_y = self.get_position_crosshair()
         obj =RickRewardRatio([pos_x, pos_y], [0, 0],invertible=True,movable=True, resizable=False, removable=True, pen="#2962ff",parent=self.chart.vb, drawtool=self)
     
-        self.chart.addItem(obj)
+        self.chart.add_item(obj)
         self.chart.drawtools.append(obj)
         self.num_fibo += 1
         module_name = "Risk Reward Ratio " + str(self.num_fibo)
@@ -225,7 +225,7 @@ class DrawTool(QObject):
         obj =FiboROI2([pos_x, pos_y], [0, 0],invertible=True,movable=True, resizable=True, removable=True, pen="#2962ff",parent=self.chart.vb, drawtool=self)
 
 
-        self.chart.addItem(obj)
+        self.chart.add_item(obj)
         self.chart.drawtools.append(obj)
         self.num_fibo2 += 1
         module_name = "Fibo Retracement(II) " + str(self.num_fibo2)
@@ -239,7 +239,7 @@ class DrawTool(QObject):
     def draw_path(self, ev: QEvent):
         pos_x, pos_y = self.get_position_mouse_on_chart(ev)
         obj =PathROI(positions=[(pos_x, pos_y), (pos_x, pos_y)], pen="#2962ff", drawtool=self)
-        self.chart.addItem(obj)
+        self.chart.add_item(obj)
         self.chart.drawtools.append(obj)
         self.num_path += 1
         module_name = "Path " + str(self.num_path)
@@ -253,7 +253,7 @@ class DrawTool(QObject):
     def draw_rectangle(self, ev: QEvent):
         pos_x, pos_y = self.get_position_mouse_on_chart(ev)
         obj =Rectangle([pos_x, pos_y], [0, 0],invertible=True,movable=True, resizable=False, removable=True, pen="#2962ff",parent=self.chart.vb, drawtool=self)
-        self.chart.addItem(obj)
+        self.chart.add_item(obj)
         self.chart.drawtools.append(obj)
         self.num_rectangle += 1
         module_name = "Rectangle " + str(self.num_rectangle)
@@ -267,7 +267,7 @@ class DrawTool(QObject):
     def draw_rotate_rectangle(self, ev: QEvent):
         pos_x, pos_y = self.get_position_mouse_on_chart(ev)
         obj =RotateRectangle([pos_x, pos_y], [0, 0],invertible=True,movable=True, resizable=False, removable=True, pen="#2962ff",parent=self.chart.vb, drawtool=self)
-        self.chart.addItem(obj)
+        self.chart.add_item(obj)
         self.chart.drawtools.append(obj)
         self.num_rectangle += 1
         module_name = "Rotate_rectangle " + str(self.num_rectangle)
@@ -281,7 +281,7 @@ class DrawTool(QObject):
     def draw_ellipse(self, ev: QEvent):
         pos_x, pos_y = self.get_position_mouse_on_chart(ev)
         obj =Ellipse([pos_x, pos_y], [0, 0],invertible=True,movable=True, resizable=False, removable=True, pen="#2962ff", drawtool=self)
-        self.chart.addItem(obj)
+        self.chart.add_item(obj)
         self.chart.drawtools.append(obj)
         self.num_rectangle += 1
         module_name = "Ellipse " + str(self.num_rectangle)
@@ -295,7 +295,7 @@ class DrawTool(QObject):
     def draw_circle(self, ev: QEvent):
         pos_x, pos_y = self.get_position_mouse_on_chart(ev)
         obj =Circle([pos_x, pos_y], [0, 0],invertible=True,movable=True, resizable=False, removable=True, pen="#2962ff", drawtool=self)
-        self.chart.addItem(obj)
+        self.chart.add_item(obj)
         self.chart.drawtools.append(obj)
         self.num_rectangle += 1
         module_name = "Circle " + str(self.num_rectangle)
@@ -311,7 +311,7 @@ class DrawTool(QObject):
         pos_x, pos_y = self.get_position_mouse_on_chart(ev)
         obj = TextBoxROI(size=5,symbol="o",pen="green",brush = "green", drawtool=self)
         obj.setPos((pos_x, pos_y))
-        self.chart.addItem(obj)
+        self.chart.add_item(obj)
         self.chart.drawtools.append(obj)
         self.num_textbox += 1
         module_name = "TextBox " + str(self.num_textbox)
@@ -325,7 +325,7 @@ class DrawTool(QObject):
         pos_x, pos_y = self.get_position_mouse_on_chart(ev)
         obj = RangePolyLine([pos_x, pos_y], [0, 0], pen='#2962ff', movable=True,drawtool=self)
         # obj.setPos(pos_x, pos_y)
-        self.chart.addItem(obj)
+        self.chart.add_item(obj)
         self.chart.drawtools.append(obj)
         self.num_dateprice_range += 1
         module_name = "DatePrice Range " + str(self.num_dateprice_range)
@@ -340,7 +340,7 @@ class DrawTool(QObject):
         pos_x, pos_y = self.get_position_crosshair()
         obj = BaseArrowItem(drawtool=self,angle=90, tipAngle=60, headLen=10, tailLen=10, tailWidth=5, pen=None, brush='green')
         obj.setPos(pos_x, pos_y)
-        self.chart.addItem(obj)
+        self.chart.add_item(obj)
         self.chart.drawtools.append(obj)
         self.num_dateprice_range += 1
         module_name = "ArrowItem " + str(self.num_dateprice_range)
@@ -354,7 +354,7 @@ class DrawTool(QObject):
         pos_x, pos_y = self.get_position_crosshair()
         obj = BaseArrowItem(drawtool=self,angle=270, tipAngle=60, headLen=10, tailLen=10, tailWidth=5, pen=None, brush='red')
         obj.setPos(pos_x, pos_y)
-        self.chart.addItem(obj)
+        self.chart.add_item(obj)
         self.chart.drawtools.append(obj)
         self.num_dateprice_range += 1
         module_name = "ArrowItem " + str(self.num_dateprice_range)
@@ -368,7 +368,7 @@ class DrawTool(QObject):
         pos_x, pos_y = self.get_position_crosshair()
         obj = BaseArrowItem(drawtool=self,angle=180, tipAngle=60, headLen=5, tailLen=2, tailWidth=2, pen=None, brush='red')
         obj.setPos(pos_x, pos_y)
-        self.chart.addItem(obj)
+        self.chart.add_item(obj)
         self.chart.drawtools.append(obj)
         self.num_dateprice_range += 1
         module_name = "ArrowItem " + str(self.num_dateprice_range)

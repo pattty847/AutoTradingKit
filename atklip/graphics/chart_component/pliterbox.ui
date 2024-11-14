@@ -2,15 +2,12 @@
 <ui version="4.0">
  <class>Form</class>
  <widget class="QWidget" name="Form">
-  <property name="windowModality">
-   <enum>Qt::WindowModality::WindowModal</enum>
-  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>602</width>
-    <height>432</height>
+    <width>1002</width>
+    <height>644</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -34,15 +31,12 @@
    </property>
    <item>
     <layout class="QVBoxLayout" name="verticalLayout_2">
-     <property name="spacing">
-      <number>0</number>
-     </property>
      <item>
       <widget class="QWidget" name="splitter_wg" native="true">
        <property name="minimumSize">
         <size>
-         <width>600</width>
-         <height>400</height>
+         <width>800</width>
+         <height>600</height>
         </size>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_5">
@@ -82,20 +76,20 @@
        <property name="minimumSize">
         <size>
          <width>0</width>
-         <height>30</height>
+         <height>35</height>
         </size>
        </property>
        <property name="maximumSize">
         <size>
          <width>16777215</width>
-         <height>30</height>
+         <height>35</height>
         </size>
        </property>
        <property name="frameShape">
-        <enum>QFrame::Shape::NoFrame</enum>
+        <enum>QFrame::NoFrame</enum>
        </property>
        <property name="frameShadow">
-        <enum>QFrame::Shadow::Plain</enum>
+        <enum>QFrame::Plain</enum>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout">
         <property name="spacing">

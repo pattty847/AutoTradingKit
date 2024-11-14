@@ -244,7 +244,7 @@ class PriceEdit(FloatEdit):
         self.setFixedHeight(35)
         _inputs = self.indicator.get_inputs()
         
-        if _input in ["price_high","price_low","fast_w_value","medium_w_value","slow_w_value","key_value",
+        if _input in ["price_high","price_low","fast_w_value","medium_w_value","slow_w_value",
                       "capital","loss_capital","proportion_closed","risk_percentage","leverage","taker_fee",
                       "maker_fee",]:
             _value = _inputs.get(_input)
@@ -474,4 +474,3 @@ class WidthEditDrawTool(ComboBox):
             self.setCurrentIndex(2)
         elif _value == 4:
             self.setCurrentIndex(3)
-

@@ -6,6 +6,7 @@ from atklip.graphics.chart_component import  CustomDateAxisItem
 from .viewchart import Chart
 from .sub_chart import SubChart
 from atklip.gui.qfluentwidgets.common import FluentStyleSheet
+from PySide6.QtWidgets import QWidget, QSplitter,QApplication,QLabel,QFrame
 from .pliterbox_ui import Ui_Form
 from .axisitem import *
 from .sub_panel_indicator import ViewSubPanel 
@@ -18,8 +19,7 @@ from atklip.gui.play_bar.replay_bar import Playbar
 
 from PySide6.QtCore import QCoreApplication,QSize,QEvent
 from PySide6.QtGui import QCloseEvent,QIcon
-from PySide6.QtWidgets import (QApplication, QFrame, QSizePolicy, QVBoxLayout,
-    QWidget)
+from PySide6.QtWidgets import QApplication
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -141,8 +141,6 @@ class ViewSplitter(QFrame,Ui_Form):
         
         self.dateAxis = None
         self.is_started = False
-        self.verticalLayout.setSpacing(0)
-        self.verticalLayout.setContentsMargins(0,0,0,0)
         
         self.DockArea = CustomDockArea(self)
         self.splitter.addWidget(self.DockArea)
@@ -167,13 +165,11 @@ class GraphSplitter(ViewSplitter):
     mouse_clicked_signal = Signal(QEvent)
     def __init__(self, parent: QWidget | None = ...) -> None:
         super().__init__(parent)
-        
         self.stratygies:dict = {IndicatorType.UTBOT_SUPERTREND_SSCANDLE:{"Advance Indicator":IndicatorType.UTBOT,
                                                                          "Advance Indicator":IndicatorType.UTBOT,
                                                                          "Candle Indicator":IndicatorType.N_SMOOTH_JP},
                                 IndicatorType.UTBOT_SUPERTREND:[],
                                 IndicatorType.UTBOT_CCI:[]}
-        
         self.sig_add_indicator_to_chart.connect(self.create_indicator,Qt.ConnectionType.QueuedConnection)
         self.sig_add_sub_panel.connect(self.add_sub_panel,Qt.ConnectionType.QueuedConnection)
 
@@ -184,22 +180,22 @@ class GraphSplitter(ViewSplitter):
     def create_indicator(self,data):
         "Tạo Indicator panel và setup cho Chart hoặc Sub-Indicator"
         """('Basic Indicator', 'SMA-Simple Moving Average')"""
-        indicator_group = data[0]
-        indicator_type = data[1]
-        if indicator_group =="Sub Indicator":
+        indicator_type = data[0]
+        indicator_name = data[1]
+        if indicator_type =="Sub Indicator":
             self.create_sub_indicator(data)
-        elif indicator_group =="Basic Indicator":
+        elif indicator_type =="Basic Indicator":
             self.create_basic_indicator(data)
-        elif indicator_group =="Candle Indicator":
+        elif indicator_type =="Candle Indicator":
             self.create_candle_indicator(data)
-        elif indicator_group =="Advance Indicator":
+        elif indicator_type =="Advance Indicator":
             self.create_advand_indicator(data)
-        elif indicator_group =="Sub Candle Indicator":
+        elif indicator_type =="Sub Candle Indicator":
             self.create_sub_chart(data)
-        elif indicator_group =="Strategies":
+        elif indicator_type =="Strategies":
             self.create_strategy(data)
         else:
-            print("Unknown Indicator Type: ", data)
+            print("Unknown Indicator Type")
 
     def create_strategy(self,data):
         "Tạo Panel cho Strategy"
@@ -208,34 +204,34 @@ class GraphSplitter(ViewSplitter):
         indicators = self.stratygies.get(strategy_type)
         if indicators:
             print(indicators)
-                
-    def create_sub_chart(self,indicator_data:tuple):
-        panel = SubChart(self.chart,self,indicator_data,self.mainwindow)
-        #panel.setup_indicator((indicator_data,self.mainwindow))
+    
+    def create_sub_chart(self,indicator_name:IndicatorType):
+        panel = SubChart(self.chart,self,indicator_name,self.mainwindow)
+        #panel.setup_indicator((indicator_name,self.mainwindow))
         self.add_sub_panel(panel)
         QApplication.processEvents()
     
-    def create_sub_indicator(self,indicator_data:tuple):
+    def create_sub_indicator(self,indicator_name:IndicatorType):
         panel = ViewSubPanel(self.chart,self)
-        indicator = panel.setup_indicator((indicator_data,self.mainwindow))
+        indicator = panel.setup_indicator((indicator_name,self.mainwindow))
         if indicator:
             self.chart.indicators.append(indicator) 
         self.add_sub_panel(panel)
         QApplication.processEvents()
 
-    def create_basic_indicator(self,indicator_data:tuple):
-        self.chart.setup_indicator((indicator_data,self.mainwindow))
+    def create_basic_indicator(self,indicator_name:IndicatorType):
+        self.chart.setup_indicator((indicator_name,self.mainwindow))
         QApplication.processEvents()
     
-    def create_candle_indicator(self,indicator_data:tuple):
-        self.chart.setup_indicator((indicator_data,self.mainwindow))
+    def create_candle_indicator(self,indicator_name:IndicatorType):
+        self.chart.setup_indicator((indicator_name,self.mainwindow))
         QApplication.processEvents()
         
-    def create_advand_indicator(self,indicator_data:tuple):
-        self.chart.setup_indicator((indicator_data,self.mainwindow))
+    def create_advand_indicator(self,indicator_name:IndicatorType):
+        self.chart.setup_indicator((indicator_name,self.mainwindow))
         QApplication.processEvents()
 
-    def create_normal_indicator(self,indicator_data:tuple):
+    def create_normal_indicator(self,indicator_name:IndicatorType):
         QApplication.processEvents()
 
     def setup_chart(self,mainwindow,current_ex:str="",current_symbol:str="",curent_interval:str=""):
@@ -255,21 +251,17 @@ class GraphSplitter(ViewSplitter):
                                            showValues=True, axisPen="#5b626f", textPen="#5b626f",
                                             **{Axis.TICK_FORMAT: Axis.DATETIME})
         
-        self.dateAxis.setFixedHeight(30)
+        self.dateAxis.setHeight(30)
         self.xaxisview = GraphicsView(self,background="#161616")
         self.xaxisview.setFixedHeight(30)
         self.xaxisview.setContentsMargins(0,0,0,0)
-        sizePolicy = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        self.frame.setSizePolicy(sizePolicy)
         self.xaxislayout = GraphicsLayout()
         self.xaxisview.setCentralItem(self.xaxislayout)
         self.xaxislayout.setContentsMargins(0,0,60,0)
         self.xaxislayout.addItem(self.dateAxis, row=0, col=0)
-        self.xaxislayout.setSpacing(0)
         self.addItem(self.xaxisview)
         self.dateAxis.linkToView(self.chart.vb)
+        
         
         Signal_Proxy(
             self.chart.crosshair_x_value_change,
@@ -277,7 +269,7 @@ class GraphSplitter(ViewSplitter):
         )
         
         self.mouse_clicked_signal.connect(self.chart.mouse_clicked_signal)
-
+    
     def show_hide_playbar(self):
         btn = self.sender()
         if btn.isChecked():
@@ -291,13 +283,13 @@ class GraphSplitter(ViewSplitter):
             self.replay_bar.forward.clicked.connect(self.chart.replay_forward_update)
             
             
-            self.frame.setFixedSize(QSize(16777215, 65))
-            self.frame.setContentsMargins(0,0,0,0)
+            self.frame.setMaximumSize(QSize(16777215, 70))
+            self.frame.setContentsMargins(0,0,0,5)
             self.addItem(self.replay_bar)
             self.replay_bar.show()
         else:
             self.frame.setContentsMargins(0,0,0,0)
-            self.frame.setFixedSize(QSize(16777215, 30))
+            self.frame.setMaximumSize(QSize(16777215, 30))
             self.removeItem(self.replay_bar)
     
     def remove_replay_bar(self):

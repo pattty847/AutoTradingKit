@@ -12,11 +12,6 @@ from .icon_text_button_ui import  Ui__pushbutton as CIRCLE_ICON_WITH_TEXT_WG
 from .iconwidget_with_text_button_ui import  Ui_Form as ICON_WITH_TEXT_WG
 from .color_dialog import ColorDialog
 
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from atklip.gui.top_bar.indicator.indicator_menu import ListIndicatorMenu
-    from atklip.gui.top_bar.symbol.symbol_menu import ListSymbolMenuByExchange
-
 class _PushButton(ToolButton):
     """ Transparent push button
     Constructors
@@ -352,7 +347,7 @@ class ICON_TEXT_BUTTON(CardWidget,ICON_WITH_TEXT_WG):
     def __init__(self,parent:QWidget=None,name:str="",icon:FluentIcon=None):
         super().__init__(parent)
         self.setObjectName(name)
-        self._parent:ListIndicatorMenu = parent
+        self._parent = parent
         self.setupUi(self)
         self.parent = parent
         self.items = []
@@ -368,9 +363,10 @@ class ICON_TEXT_BUTTON_SYMBOL(CardWidget,CIRCLE_ICON_WITH_TEXT_WG):
 
     def __init__(self,exchange_id,parent:QWidget=None,text:str="",icon:FluentIcon=None):
         super().__init__(parent)
-        self._parent:ListSymbolMenuByExchange = parent
+        self._parent = parent
         self.setupUi(self)
         self.setContentsMargins(1,1,1,1)
+        self.parent = parent
         self.isChecked = False
         self.items = []
         self.exchange_id = exchange_id

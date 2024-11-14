@@ -92,14 +92,6 @@ class MainWidget(QWidget,Ui_MainWidget):
         if self.progress.isVisible():
             self.progress.run_process(True)
 
-    def resize(self,w=None,h=None):
-        if w == None or h== None:
-            _w = self.width()
-            _h = self.height()
-        else:
-            _w = w
-            _h = h
-        super().resize(_w,_h)
     
     def change_tab_infor(self,data):
         symbol = data[0]

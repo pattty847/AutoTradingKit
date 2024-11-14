@@ -104,7 +104,7 @@ class CustomDateAxisItem(AxisItem):
     
     def get_times_via_indexs(self,index):
         #value =  self.context.jp_candle.candles[0].time + (index-self.context.jp_candle.candles[0].index)*(self.context.jp_candle.candles[1].time-self.context.jp_candle.candles[0].time)
-        ohlc = self.context.jp_candle.dict_index_ohlcv.get(index)
+        ohlc = self.context.jp_candle.map_index_ohlcv.get(index)
         if ohlc:
             value = ohlc.time
             return value

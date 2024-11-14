@@ -20,8 +20,8 @@ class HEIKINASHI(QObject):
     """
     lastcandle: signal(list)  - the list of 2 last candle of para "_candles: JAPAN_CANDLE|HEIKINASHI"
     """
-    dict_index_ohlcv: Dict[int, OHLCV] = {}
-    dict_time_ohlcv: Dict[int, OHLCV] = {}
+    map_index_ohlcv: Dict[int, OHLCV] = {}
+    map_time_ohlcv: Dict[int, OHLCV] = {}
     sig_update_candle = Signal(list)
     sig_add_candle = Signal(list)
     sig_add_historic = Signal(int)
@@ -310,8 +310,8 @@ class HEIKINASHI(QObject):
         
         ha_candle = OHLCV(ha_open,ha_high,ha_low,ha_close,hl2,hlc3,ohlc4,candle.volume,candle.time,candle.index)
         
-        self.dict_index_ohlcv[ha_candle.index] = ha_candle
-        self.dict_time_ohlcv[ha_candle.time] = ha_candle
+        self.map_index_ohlcv[ha_candle.index] = ha_candle
+        self.map_time_ohlcv[ha_candle.time] = ha_candle
             
         self.candles.append(ha_candle)
 
@@ -322,8 +322,8 @@ class HEIKINASHI(QObject):
     def fisrt_gen_data(self):
         self.first_gen = False
         self.candles = []
-        self.dict_index_ohlcv: Dict[int, OHLCV] = {}
-        self.dict_time_ohlcv: Dict[int, OHLCV] = {}
+        self.map_index_ohlcv: Dict[int, OHLCV] = {}
+        self.map_time_ohlcv: Dict[int, OHLCV] = {}
         self.df = pd.DataFrame([])
         [self.compute(candle) for candle in self._candles.candles]
         
@@ -374,8 +374,8 @@ class HEIKINASHI(QObject):
         
         ha_candle = OHLCV(ha_open,ha_high,ha_low,ha_close,hl2,hlc3,ohlc4,candle.volume,candle.time,candle.index)
         
-        self.dict_index_ohlcv[ha_candle.index] = ha_candle
-        self.dict_time_ohlcv[ha_candle.time] = ha_candle
+        self.map_index_ohlcv[ha_candle.index] = ha_candle
+        self.map_time_ohlcv[ha_candle.time] = ha_candle
         if self.candles[i].time == ha_candle.time:
             self.candles[i] = ha_candle
         else:
@@ -405,8 +405,8 @@ class HEIKINASHI(QObject):
                     ha_candle = OHLCV(ha_open,ha_high,ha_low,ha_close,hl2,hlc3,ohlc4,new_candle.volume,new_candle.time,_index)
                     self.candles.append(ha_candle)
                     
-                    self.dict_index_ohlcv[ha_candle.index] = ha_candle
-                    self.dict_time_ohlcv[ha_candle.time] = ha_candle
+                    self.map_index_ohlcv[ha_candle.index] = ha_candle
+                    self.map_time_ohlcv[ha_candle.time] = ha_candle
                     
                     new_row = pd.DataFrame([data.__dict__ for data in self.candles[-1:]])
                     # concatenate the existing DataFrame and the new row
@@ -436,8 +436,8 @@ class HEIKINASHI(QObject):
                         ha_candle.open != self.candles[-1].open:
                         self.candles[-1] = ha_candle
                         
-                        self.dict_index_ohlcv[ha_candle.index] = ha_candle
-                        self.dict_time_ohlcv[ha_candle.time] = ha_candle
+                        self.map_index_ohlcv[ha_candle.index] = ha_candle
+                        self.map_time_ohlcv[ha_candle.time] = ha_candle
                         
                         
                         self.df.iloc[-1] = [self.candles[-1].open,

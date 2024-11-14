@@ -21,7 +21,7 @@ from atklip.app_utils import *
 from atklip.graphics.chart_component.draw_tools import DrawTool
 
 from atklip.graphics.chart_component.base_items.replay_cut import ReplayObject
-
+from atklip.graphics.chart_component.indicators.advand_indicators.utbot import UTBot
 if TYPE_CHECKING:
     from .viewbox import PlotViewBox
     from .axisitem import CustomDateAxisItem, CustomPriceAxisItem
@@ -195,6 +195,12 @@ class ViewPlotWidget(PlotWidget):
             item = args[0]
         else:
             item = args       
+        
+        if isinstance(item,UTBot):
+            if item.list_pos:
+                for obj in item.list_pos.values():
+                    self.remove_item(obj) 
+            
         if item in self.indicators:
             self.indicators.remove(item) 
         if item in self.drawtools:
@@ -225,20 +231,20 @@ class ViewPlotWidget(PlotWidget):
         timedata = np.clip(timedata, -1e30, 1e30)
         # Optionally normalize data
         # timedata = (timedata - np.mean(timedata)) / np.std(timedata)
-        if len(timedata) >= 500:
+        if len(timedata) >= 200:
             x1 = np.float64(timedata[-1])
-            x2 = np.float64(timedata[-500])
+            x2 = np.float64(timedata[-200])
             self.setXRange(x1, x2, padding=0.2)
             
-            _min = data[2][-500:].min()
-            _max = data[1][-500:].max()
+            _min = data[2][-200:].min()
+            _max = data[1][-200:].max()
             self.setYRange(_max, _min, padding=0.2)
         else:
             x1 = np.float64(timedata[-1])
             x2 = np.float64(timedata[-1*len(timedata)])
             self.setXRange(x1, x2, padding=0.2)
-            _min = data[2][-500:].min()
-            _max = data[1][-500:].max()
+            _min = data[2][-200:].min()
+            _max = data[1][-200:].max()
             self.setYRange(_max, _min, padding=0.2)
     def removeItem(self, *args):
         return self.plotItem.removeItem(*args)
@@ -316,7 +322,7 @@ class ViewPlotWidget(PlotWidget):
 
     # @lru_cache()
     def find_nearest_value(self,closest_index):
-        ohlcv = self.jp_candle.dict_index_ohlcv.get(closest_index) 
+        ohlcv = self.jp_candle.map_index_ohlcv.get(closest_index) 
         return ohlcv 
     
     def itemAt(self,x,y):
@@ -352,7 +358,7 @@ class ViewPlotWidget(PlotWidget):
             if self.crosshair_enabled and self.sceneBoundingRect().contains(self.ev_pos):
                 if not self.replay_obj and self.hLine:
                     if not self.hLine.isVisible():
-                        self.hLine.setVisible(True)
+                        self.hLine.show()
                 self.mouse_on_vb = True
                 nearest_index = None
                 try:

@@ -338,7 +338,7 @@ class ViewSubPanel(PlotWidget):
         # if last_index < closest_value:
         #     closest_value = last_index
         # index_of_closest_value = np.where(array == closest_value)[0][0]
-        ohlcv = self.jp_candle.dict_index_ohlcv[closest_value]
+        ohlcv = self.jp_candle.map_index_ohlcv[closest_value]
         #print(x,index,index_of_closest_value, closest_value)
         return ohlcv #index_of_closest_value, closest_value
     def mousePressEvent(self, ev):

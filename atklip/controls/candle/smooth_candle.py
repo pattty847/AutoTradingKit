@@ -413,21 +413,21 @@ class SMOOTH_CANDLE(QObject):
         if ohlc != []:
             _open, _high, _low, _close, _hl2, _hlc3, _ohlc4,_volume, _time = ohlc[0],ohlc[1],ohlc[2],ohlc[3],ohlc[4],ohlc[5],ohlc[6],ohlc[7],ohlc[8]
             ha_candle = OHLCV(_open,_high,_low,_close, _hl2, _hlc3, _ohlc4,_volume,_time,_index)
-            self.dict_index_ohlcv[ha_candle.index] = ha_candle
-            self.dict_time_ohlcv[ha_candle.time] = ha_candle
+            self.map_index_ohlcv[ha_candle.index] = ha_candle
+            self.map_time_ohlcv[ha_candle.time] = ha_candle
             self.candles.append(ha_candle)
 
     
     def compute_historic(self,df: pd.DataFrame,index:np.array, i:int):
         _index = index[i]
-        if _index in list(self.dict_index_ohlcv.keys()):
+        if _index in list(self.map_index_ohlcv.keys()):
             return
         ohlc = self.get_ma_ohlc_at_index(df,i)
         if ohlc != []:
             _open, _high, _low, _close, _hl2, _hlc3, _ohlc4,_volume, _time = ohlc[0],ohlc[1],ohlc[2],ohlc[3],ohlc[4],ohlc[5],ohlc[6],ohlc[7],ohlc[8]
             ha_candle = OHLCV(_open,_high,_low,_close, _hl2, _hlc3, _ohlc4,_volume,_time,_index)
-            self.dict_index_ohlcv[ha_candle.index] = ha_candle
-            self.dict_time_ohlcv[ha_candle.time] = ha_candle
+            self.map_index_ohlcv[ha_candle.index] = ha_candle
+            self.map_time_ohlcv[ha_candle.time] = ha_candle
             self.candles.insert(i,ha_candle)
     
     
@@ -490,8 +490,8 @@ class SMOOTH_CANDLE(QObject):
         self.is_genering = True
         self.df = pd.DataFrame([])
         self.candles:List[OHLCV] = []
-        self.dict_index_ohlcv: Dict[int, OHLCV] = {}
-        self.dict_time_ohlcv: Dict[int, OHLCV] = {}
+        self.map_index_ohlcv: Dict[int, OHLCV] = {}
+        self.map_time_ohlcv: Dict[int, OHLCV] = {}
         
         df:pd.DataFrame = self._candles.get_df()
         highs = ta.ma(self.ma_type, df["high"],length=self.ma_leng).dropna().round(4)

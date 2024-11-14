@@ -521,11 +521,11 @@ class N_SMOOTH_CANDLE(QObject):
                   self.df["hl2"].iloc[i], self.df["hlc3"].iloc[i], self.df["ohlc4"].iloc[i],self.df["volume"].iloc[i],\
                       self.df["time"].iloc[i],self.df["index"].iloc[i]
             variables = [_open,_high,_low,_close,hl2,hlc3,ohlc4,_volume,_time,_index]
-            if _index not in list(self.dict_index_ohlcv.keys()):
+            if _index not in list(self.map_index_ohlcv.keys()):
                 if not any(v is None for v in variables):
                     ohlcv = OHLCV(_open,_high,_low,_close,hl2,hlc3,ohlc4,_volume,_time,_index)
-                    self.dict_index_ohlcv[ohlcv.index] = ohlcv
-                    self.dict_time_ohlcv[ohlcv.time] = ohlcv
+                    self.map_index_ohlcv[ohlcv.index] = ohlcv
+                    self.map_time_ohlcv[ohlcv.time] = ohlcv
                     self.candles.append(ohlcv)
     
     
@@ -546,8 +546,8 @@ class N_SMOOTH_CANDLE(QObject):
         self.is_current_update = False
         self.is_genering = True
         self.df = pd.DataFrame([])
-        self.dict_index_ohlcv: Dict[int, OHLCV] = {}
-        self.dict_time_ohlcv: Dict[int, OHLCV] = {}
+        self.map_index_ohlcv: Dict[int, OHLCV] = {}
+        self.map_time_ohlcv: Dict[int, OHLCV] = {}
         self.dict_n_frame.clear()
         self.dict_n_ma.clear()
         
