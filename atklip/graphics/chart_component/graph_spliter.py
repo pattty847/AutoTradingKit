@@ -165,11 +165,11 @@ class GraphSplitter(ViewSplitter):
     mouse_clicked_signal = Signal(QEvent)
     def __init__(self, parent: QWidget | None = ...) -> None:
         super().__init__(parent)
-        self.stratygies:dict = {IndicatorType.UTBOT_SUPERTREND_SSCANDLE:{"Advance Indicator":IndicatorType.UTBOT,
-                                                                         "Advance Indicator":IndicatorType.UTBOT,
+        self.stratygies:dict = {IndicatorType.ATKBOT_SUPERTREND_SSCANDLE:{"Advance Indicator":IndicatorType.ATKPRO,
+                                                                         "Advance Indicator":IndicatorType.ATKPRO,
                                                                          "Candle Indicator":IndicatorType.N_SMOOTH_JP},
-                                IndicatorType.UTBOT_SUPERTREND:[],
-                                IndicatorType.UTBOT_CCI:[]}
+                                IndicatorType.ATKBOT_SUPERTREND:[],
+                                IndicatorType.ATKBOT_CCI:[]}
         self.sig_add_indicator_to_chart.connect(self.create_indicator,Qt.ConnectionType.QueuedConnection)
         self.sig_add_sub_panel.connect(self.add_sub_panel,Qt.ConnectionType.QueuedConnection)
 

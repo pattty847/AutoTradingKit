@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from pandas import Series
+from atklip.controls.pandas_ta._typing import DictLike, Int
 from atklip.controls.pandas_ta._typing import DictLike
 from atklip.controls.overlap.dema import dema
 from atklip.controls.overlap.ema import ema
@@ -13,16 +14,19 @@ from atklip.controls.overlap.sinwma import sinwma
 from atklip.controls.overlap.sma import sma
 from atklip.controls.overlap.smma import smma
 from atklip.controls.overlap.ssf import ssf
+from atklip.controls.overlap.ssf3 import ssf3
+
 from atklip.controls.overlap.swma import swma
 from atklip.controls.overlap.t3 import t3
 from atklip.controls.overlap.tema import tema
 from atklip.controls.overlap.trima import trima
 from atklip.controls.overlap.vidya import vidya
 from atklip.controls.overlap.wma import wma
+from atklip.controls.overlap.zlma import zlma
 
 
 
-def ma(name: str = None, source: Series = None, **kwargs: DictLike) -> Series:
+def ma(name: str = None, source: Series = None,length: Int = None,mamode: str="ema") -> Series:
     """Simple MA Utility for easier MA selection
 
     Available MAs:
@@ -45,34 +49,38 @@ def ma(name: str = None, source: Series = None, **kwargs: DictLike) -> Series:
         pd.Series: New feature generated.
     """
     _mas = [
-        "dema", "ema", "fwma", "hma", "linreg", "midpoint", "pwma", "rma",
-        "sinwma", "sma", "ssf", "swma", "t3", "tema", "trima", "vidya", "wma"
+        "dema", "ema", "fwma", "hma", "linreg", "midpoint", "pwma", "rma","smma"
+        "sinwma", "sma", "ssf", "swma", "t3", "tema", "trima", "vidya", "wma","zlma"
     ]
     if name is None and source is None:
         return _mas
     elif isinstance(name, str) and name.lower() in _mas:
         name = name.lower()
     else:  # "ema"
-        name = _mas[1]
+        name = "ema"
+    
+    print("ma name", name)
 
-    if   name == "dema": return dema(source, **kwargs)
-    elif name == "fwma": return fwma(source, **kwargs)
-    elif name == "hma": return hma(source, **kwargs)
-    elif name == "linreg": return linreg(source, **kwargs)
-    elif name == "midpoint": return midpoint(source, **kwargs)
-    elif name == "pwma": return pwma(source, **kwargs)
-    elif name == "rma": return rma(source, **kwargs)
-    elif name == "sinwma": return sinwma(source, **kwargs)
-    elif name == "sma": return sma(source, **kwargs)
-    elif name == "smma": return smma(source, **kwargs)
-    elif name == "ssf": return ssf(source, **kwargs)
-    elif name == "swma": return swma(source, **kwargs)
-    elif name == "t3": return t3(source, **kwargs)
-    elif name == "tema": return tema(source, **kwargs)
-    elif name == "trima": return trima(source, **kwargs)
-    elif name == "vidya": return vidya(source, **kwargs)
-    elif name == "wma": return wma(source, **kwargs)
-    else: return ema(source, **kwargs)
+    if   name == "dema": return dema(source, length)
+    elif name == "fwma": return fwma(source, length)
+    elif name == "hma": return hma(source, length)
+    elif name == "linreg": return linreg(source, length)
+    elif name == "midpoint": return midpoint(source, length)
+    elif name == "pwma": return pwma(source, length)
+    elif name == "rma": return rma(source, length)
+    elif name == "sinwma": return sinwma(source, length)
+    elif name == "sma": return sma(source, length)
+    elif name == "smma": return smma(source, length,mamode)
+    elif name == "ssf": return ssf(source, length)
+    elif name == "ssf3": return ssf3(source, length)
+    elif name == "swma": return swma(source, length)
+    elif name == "t3": return t3(source, length)
+    elif name == "tema": return tema(source, length)
+    elif name == "trima": return trima(source, length)
+    elif name == "vidya": return vidya(source, length)
+    elif name == "wma": return wma(source, length)
+    elif name == "zlma": return zlma(source, length,mamode)
+    else: return ema(source, length)
 
 
 import numpy as np
@@ -97,6 +105,7 @@ class MA(QObject):
         self.ma_type:str = dict_ta_params.get("ma_type")
         self.source:str = dict_ta_params.get("source")
         self.length:int= dict_ta_params.get("length") 
+        self.zl_mode:str= dict_ta_params.get("zl_mode","ema") 
         
         self._candles: JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE =_candles
         
@@ -221,7 +230,7 @@ class MA(QObject):
         self.df = pd.DataFrame([])
         df:pd.DataFrame = self._candles.get_df()
         
-        data = ma(self.ma_type,source=df[self.source],length=self.length).dropna().round(4)
+        data = ma(self.ma_type,source=df[self.source],length=self.length,mamode=self.zl_mode).dropna().round(4)
         
         _len = len(data)
         _index = df["index"].tail(_len)
@@ -246,7 +255,7 @@ class MA(QObject):
         _pre_len = len(self.df)
         df:pd.DataFrame = self._candles.get_df().iloc[:-1*_pre_len]
         
-        data = ma(self.ma_type,source=df[self.source],length=self.length).dropna().round(4)
+        data = ma(self.ma_type,source=df[self.source],length=self.length,mamode=self.zl_mode).dropna().round(4)
         
         
         _len = len(data)
@@ -278,7 +287,7 @@ class MA(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.length*10)
                         
-            data = ma(self.ma_type,source=df[self.source],length=self.length).round(4)
+            data = ma(self.ma_type,source=df[self.source],length=self.length,mamode=self.zl_mode).round(4)
             
             _data = data.iloc[-1]
             
@@ -300,7 +309,7 @@ class MA(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.length*10)
                         
-            data = ma(self.ma_type,source=df[self.source],length=self.length).round(4)
+            data = ma(self.ma_type,source=df[self.source],length=self.length,mamode=self.zl_mode).round(4)
             
             self.df.iloc[-1] = [new_candle.index,data.iloc[-1]]
             

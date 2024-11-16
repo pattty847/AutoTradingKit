@@ -428,7 +428,7 @@ class OLD_ZIGZAG(QObject):
             self.first_gen = True
             self.is_genering = False
         
-        self.sig_add_historic.emit(_len)
+        self.sig_add_historic.emit(n)
     
     def add(self,new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]
@@ -555,6 +555,7 @@ def my_zigzag(list_zizgzag:list=[],candles: List[OHLCV]=None,percent: float=0.5)
 
 
 class ZIGZAG(QObject):
+    map_x_y:dict = {}
     sig_update_candle = Signal()
     sig_add_candle = Signal()
     sig_reset_all = Signal()
@@ -579,6 +580,7 @@ class ZIGZAG(QObject):
         self.df = pd.DataFrame([])
         
         self.x_data,self.y_data  = np.array([]),np.array([])
+        
 
         self.connect_signals()
         
@@ -676,6 +678,10 @@ class ZIGZAG(QObject):
         else:
             x_data = [x[0] for x in list_zizgzag]
             y_data = [x[1] for x in list_zizgzag]  
+            
+            for x in list_zizgzag:
+                self.map_x_y[x[0]] = x[1]
+            
         return x_data,y_data
     
     def calculate(self,list_zizgzag, candles: List[OHLCV],process:str=""):

@@ -75,7 +75,7 @@ class BasicMA(PlotDataItem):
         
     @property
     def model(self) -> dict:
-        return MAModel(self.id,"ZigZag",self.chart.jp_candle.source_name,self.has["inputs"]["ma_type"].name.lower(),
+        return MAModel(self.id,"MA",self.chart.jp_candle.source_name,self.has["inputs"]["ma_type"].name.lower(),
                               self.has["inputs"]["type"],self.has["inputs"]["length"])
     
     def disconnect_signals(self):

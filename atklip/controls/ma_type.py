@@ -14,13 +14,15 @@ class PD_MAType(Enum):
     SINWMA = "sinwma"
     SMA = "sma"
     SWMA = "swma"
+    SMMA = "smma"
     T3 = "t3"
     TEMA = "tema"
     TRIMA = "trima"
     VIDYA = "vidya"
     WMA = "wma"
-    # ZLMA = "zlma"
+    ZLMA = "zlma"
     SSF = "ssf"
+    SSF3 = "ssf3"
     
 
 class IndicatorType(Enum):
@@ -42,8 +44,9 @@ class IndicatorType(Enum):
     TRIMA = "trima"
     VIDYA = "vidya"
     WMA = "wma"
-    # ZLMA = "zlma"
+    ZLMA = "zlma"
     SSF = "ssf"
+    SSF3 = "ssf3"
     
     SMC = "Smart Money Concept"
     IBS = "IBS"
@@ -114,8 +117,8 @@ class IndicatorType(Enum):
     HISTOGRAM = "Histogram"
     CANDLESTICK = "CandleStick"
     SUB_CHART = "Sub_Chart"
-    UTBOT = "UTBot"
-    UTBOT_SUPERTREND = "UTBotFollowTrend"
-    UTBOT_CCI = "UTBotCCI"
-    UTBOT_SUPERTREND_SSCANDLE = "UTBotFollowSMCandle"
+    ATKPRO = "ATKBOT"
+    ATKBOT_SUPERTREND = "ATKBOTFollowTrend"
+    ATKBOT_CCI = "ATKBOTCCI"
+    ATKBOT_SUPERTREND_SSCANDLE = "ATKBOTFollowSMCandle"
 

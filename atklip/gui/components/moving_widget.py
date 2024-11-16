@@ -12,16 +12,13 @@ class MovingWidget(VWIDGET):
     def __init__(self, parent:QWidget=None, name:str="Indicators, Metrics, Strategies"):
         super(MovingWidget, self).__init__(parent,name)
         self._parent = parent
-        
-        print(self._parent)
-        
+        self.setContentsMargins(1,1,1,1)
+        self.setSpacing(0)
         self.setObjectName(name)
         self.startPos = None
         self.title = TitleBar(self,name)
         self.addWidget(self.title)
-        self.setSizePolicy(QSizePolicy.Policy.Preferred,QSizePolicy.Policy.Preferred)
-
-
+        self.setSizePolicy(QSizePolicy.Policy.Expanding,QSizePolicy.Policy.Expanding)
 
 class MovingParentWG(PushButton):
     sig_mouse_move = Signal(tuple)

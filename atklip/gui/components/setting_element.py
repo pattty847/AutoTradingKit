@@ -96,10 +96,13 @@ class MaTypeEdit(ComboboxEdit):
     def __init__(self,parent:QWidget=None,indicator=None, _input=None):
         super(MaTypeEdit,self).__init__(parent,indicator, _input)
         
+        list_types = ["ma_type","macd_type","rsi_ma_type"]
         
         _inputs = self.indicator.get_inputs()
-        _type = _inputs.get("ma_type")
+        
+        _type = _inputs.get(_input) 
         _type_name = _type.name
+        
         
         self._dict_values = {"SSF":PD_MAType.SSF,
                             "WMA":PD_MAType.WMA,
@@ -109,6 +112,7 @@ class MaTypeEdit(ComboboxEdit):
                             "T3":PD_MAType.T3,
                             "SWMA":PD_MAType.SWMA,
                             "SMA":PD_MAType.SMA,
+                            "SMMA":PD_MAType.SMMA,
                             "SINWMA":PD_MAType.SINWMA,
                             "RMA":PD_MAType.RMA,
                             "PWMA":PD_MAType.PWMA,
@@ -117,7 +121,7 @@ class MaTypeEdit(ComboboxEdit):
                             "HMA":PD_MAType.HMA,
                             "EMA":PD_MAType.EMA,
                             "DEMA":PD_MAType.DEMA,
-                            # "ALMA":PD_MAType.ALMA,
+                            "ZLMA":PD_MAType.ZLMA,
                             "FWMA":PD_MAType.FWMA}
         _ma_type =  PD_MAType.__getitem__(_type_name)
         
@@ -179,9 +183,12 @@ class PeriodEdit(IntEdit):
         self.setFixedHeight(35)
         _inputs = self.indicator.get_inputs()
         
-        if _input in ["legs","length","period","ma_period","period_lower","period_upper","k_period",\
-            "d_period","rsi_period","fast_period","medium_period","slow_period",
-            "signal_period","length_period","n_smooth_period","smooth_k_period","key_value","atr_period","ema_period"]:
+        _list_inputs = ["legs","length","period","ma_period","period_lower","period_upper","k_period",\
+            "d_period","rsi_period","fast_period","medium_period","slow_period","ma_smooth_period","n_period","m_period",
+            "signal_period","length_period","n_smooth_period","smooth_k_period","atr_long_period","ema_long_period",
+            "atr_short_period","ema_short_period"]
+        
+        if _input in _list_inputs:
             _value = _inputs.get(_input)
             if _value != None:
                 self.set_value(_value)
@@ -244,8 +251,8 @@ class PriceEdit(FloatEdit):
         self.setFixedHeight(35)
         _inputs = self.indicator.get_inputs()
         
-        if _input in ["price_high","price_low","fast_w_value","medium_w_value","slow_w_value",
-                      "capital","loss_capital","proportion_closed","risk_percentage","leverage","taker_fee",
+        if _input in ["price_high","price_low","fast_w_value","medium_w_value","slow_w_value","key_value_long","key_value_short",
+                      "capital","loss_capital","proportion_closed","risk_percentage","leverage","taker_fee","rsi_price_high","rsi_price_low",
                       "maker_fee",]:
             _value = _inputs.get(_input)
             if _value != None:

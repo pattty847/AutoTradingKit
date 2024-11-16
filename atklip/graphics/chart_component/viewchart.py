@@ -28,7 +28,7 @@ from atklip.graphics.chart_component.base_items.replay_cut import ReplayObject
 
 from atklip.controls.exchangemanager import ExchangeManager
 
-from atklip.graphics.chart_component.indicators import BasicMA,BasicBB,BasicDonchianChannels,BasicZIGZAG,UTBot,Volume
+from atklip.graphics.chart_component.indicators import BasicMA,BasicBB,BasicDonchianChannels,BasicZIGZAG,ATKBOT,Volume
 
 class Chart(ViewPlotWidget):
     def __init__(self, parent=None,apikey:str="", secretkey:str="",exchange_name:str="binanceusdm",
@@ -297,7 +297,12 @@ class Chart(ViewPlotWidget):
                 print(ex)
                 
             if len(self.replay_data)>1:
+                autorange = 0
                 for i in range(self.replay_pos_i,len(self.replay_data)):
+                    autorange += 1
+                    if autorange == 15:
+                        self.auto_xrange()
+                        autorange = 0
                     if self.is_running_replay:
                         if i == 0:
                             pre_ohlcv = self.jp_candle.candles[-1]
@@ -326,6 +331,8 @@ class Chart(ViewPlotWidget):
                         time.sleep(1/self.replay_speed)
                     except:
                         pass
+            else:
+                break
                     
     def auto_load_old_data(self):
         "load historic data when wheel or drag viewbox"
@@ -643,8 +650,8 @@ class Chart(ViewPlotWidget):
                 self.container_indicator_wg.add_indicator_panel(panel)
                 self.add_item(indicator)
                 indicator.fisrt_gen_data()
-            elif _indicator_type==IndicatorType.UTBOT:
-                indicator = UTBot(self)
+            elif _indicator_type==IndicatorType.ATKPRO:
+                indicator = ATKBOT(self)
                 panel = IndicatorPanel(self.mainwindow,self, indicator)
                 self.container_indicator_wg.add_indicator_panel(panel)
                 self.add_item(indicator)

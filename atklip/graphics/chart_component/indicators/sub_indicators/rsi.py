@@ -47,10 +47,10 @@ class BasicRSI(PlotDataItem):
                     "source_name": self.chart.jp_candle.source_name,
                     "type":"close",
                     "indicator_type":IndicatorType.RSI,
-                    "period":3,
+                    "period":14,
                     "ma_type":PD_MAType.RMA,
-                    "price_high":80,
-                    "price_low":20,
+                    "price_high":60,
+                    "price_low":40,
                     "show":True},
 
             "styles":{

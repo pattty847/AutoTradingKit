@@ -166,6 +166,7 @@ class BasicIndicator(BasicMenu):
                                 IndicatorType.RMA ,
                                 IndicatorType.SINWMA ,
                                 IndicatorType.SMA ,
+                                IndicatorType.SMMA ,
                                 IndicatorType.SWMA ,
                                 IndicatorType.T3 ,
                                 IndicatorType.TEMA ,
@@ -173,7 +174,7 @@ class BasicIndicator(BasicMenu):
                                 IndicatorType.VIDYA ,
                                 IndicatorType.WMA ,
                                 IndicatorType.SSF ,
-                                # IndicatorType.ZLMA,
+                                IndicatorType.ZLMA,
                                 ]
         
         self.load_indicators()
@@ -232,7 +233,7 @@ class AdvanceIndicator(BasicMenu):
         super(AdvanceIndicator,self).__init__(parent,sig_add_indicator_to_chart,sig_add_remove_favorite)
         self._type_indicator = "Advance Indicator"
         self.setObjectName(self._type_indicator)
-        self.list_indicators = [IndicatorType.UTBOT,
+        self.list_indicators = [IndicatorType.ATKPRO,
                                 IndicatorType.SuperTrend,
                                 IndicatorType.ZIGZAG,
                                 IndicatorType.BB,
@@ -266,8 +267,8 @@ class StrategyIndicator(BasicMenu):
         self._type_indicator = "Strategies"
         self.setObjectName(self._type_indicator)
 
-        self.list_indicators = [IndicatorType.UTBOT_SUPERTREND_SSCANDLE, IndicatorType.UTBOT_SUPERTREND
-                                , IndicatorType.UTBOT_CCI]
+        self.list_indicators = [IndicatorType.ATKBOT_SUPERTREND_SSCANDLE, IndicatorType.ATKBOT_SUPERTREND
+                                , IndicatorType.ATKBOT_CCI]
         self.load_indicators()
         #self.addSpacer("VERTICAL")     
           

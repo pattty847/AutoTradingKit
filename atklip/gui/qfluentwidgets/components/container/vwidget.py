@@ -21,7 +21,7 @@ class VWIDGET(QFrame):
 
     def addSpacer(self,_type:str="VERTICAL"):
         self.Layout.addSpacer(_type)
-    def addWidget(self, widget: QWidget, stretch=0, alignment=Qt.AlignTop):
+    def addWidget(self, widget: QWidget, stretch=0, alignment=Qt.AlignmentFlag.AlignVCenter):
         self.Layout.addWidget(widget, stretch, alignment)
     def addLayout(self, layout: QLayout, stretch=0, alignment=Qt.AlignTop):
         self.Layout.addLayout(layout, stretch)

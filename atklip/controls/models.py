@@ -71,10 +71,13 @@ class DonchainModel(IndicatorBase):
     upper_length:int 
 
 @dataclass         
-class UTBotModel(IndicatorBase):
-    key_value:int
-    atr_period:float
-    ema_period:int
+class ATKBOTModel(IndicatorBase):
+    key_value_long:float
+    key_value_short:float
+    atr_long_period:float
+    ema_long_period:int
+    atr_short_period:float
+    ema_short_period:int
 
 #@evented
 @dataclass 

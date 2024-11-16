@@ -1,1 +1,1 @@
-from .utbot import UTBOT_ALERT
+from .utbot import ATKBOT_ALERT
