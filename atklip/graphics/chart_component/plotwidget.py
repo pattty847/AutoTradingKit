@@ -138,13 +138,15 @@ class ViewPlotWidget(PlotWidget):
         self.nearest_value = None
         self.is_mouse_pressed = False
         #self.ObjectManager = UniqueObjectManager()
-        self.mode_replay = False
+        self.replay_mode = False
         self.is_running_replay = False
         self.is_goto_date = False
+        self.trading_mode = True
 
         self.drawtool = DrawTool(self)
         
         self.replay_obj:ReplayObject =None
+        self.atkobj:ATKBOT = None
         
         Signal_Proxy(signal=self.sig_add_item,slot=self.add_item,connect_type=Qt.ConnectionType.QueuedConnection)
         Signal_Proxy(signal=self.sig_remove_item,slot=self.remove_item,connect_type=Qt.ConnectionType.QueuedConnection)
@@ -183,7 +185,10 @@ class ViewPlotWidget(PlotWidget):
             item = args[0]
         else:
             item = args
-                    
+        
+        if isinstance(item,ATKBOT):
+            self.atkobj = item
+        
         self.addItem(item) 
         if "y_axis_show" in list(item.has.keys()):
             self.yAxis.dict_objects.update({item:item.has["y_axis_show"]})
@@ -197,10 +202,18 @@ class ViewPlotWidget(PlotWidget):
             item = args       
         
         if isinstance(item,ATKBOT):
+            self.atkobj = None
             if item.list_pos:
                 for obj in item.list_pos.values():
-                    self.remove_item(obj["obj"]) 
-            
+                    # arrow = obj["obj"]
+                    entry = obj["entry"]
+                    # self.removeItem(arrow) 
+                    # if hasattr(arrow, "deleteLater"):
+                    #     arrow.deleteLater()
+                    self.removeItem(entry) 
+                    if hasattr(entry, "deleteLater"):
+                        entry.deleteLater()
+
         if item in self.indicators:
             self.indicators.remove(item) 
         if item in self.drawtools:

@@ -59,7 +59,7 @@ def ma(name: str = None, source: Series = None,length: Int = None,mamode: str="e
     else:  # "ema"
         name = "ema"
     
-    print("ma name", name)
+    # print("ma name", name)
 
     if   name == "dema": return dema(source, length)
     elif name == "fwma": return fwma(source, length)

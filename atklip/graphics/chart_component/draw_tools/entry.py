@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from atklip.graphics.chart_component.viewchart import Chart
     from atklip.graphics.chart_component.draw_tools.drawtools import DrawTool
  
-class RickRewardRatio(SpecialROI):
+class Entry(SpecialROI):
     on_click = Signal(object)
     signal_visible = Signal(bool)
     signal_delete = Signal()
@@ -49,25 +49,12 @@ class RickRewardRatio(SpecialROI):
                 "data":{
                         0: Line("R",[],None,TextItem("", anchor=(1, 0)),(180, 0, 0, 255),QColor(180, 0, 0, 60),True),
                         1: Line("Entry",[],None,TextItem("", anchor=(1, 0)),(180, 0, 0, 255),QColor(180, 0, 0, 60),True),
-                        1.5: Line("0.5R",[],None,TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
+                        # 1.5: Line("0.5R",[],None,TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
                         2: Line("1R",[],None,TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
                         2.5: Line("1.5R",[],None,TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
                         3: Line("2R",[],None,TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
-                        3.5: Line("2.5R",[],None,TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
+                        # 3.5: Line("2.5R",[],None,TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
                         4: Line("3R",[],None,TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
-                        4.5: Line("3.5R",[],None,TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
-                        5: Line("4R",[],None,TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
-                        # 5.5: Line("4.5R",[],None,TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
-                        # 6: Line("5R",[],None,TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
-                        # 6.5: Line("5.5R",[],None,TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
-                        # 7: Line("6R",[],None,TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
-                        # 7.5: Line("6.5R",[],None,TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
-                        # 8: Line("7R",[],None,TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
-                        # 8.5: Line("7.5R",[],None,TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
-                        # 9: Line("8R",[],None,TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
-                        # 9.5: Line("8.5R",[],None,TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
-                        # 10: Line("9R",[],None,TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
-                        # 10.5: Line("9.5R",[],None,TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
                         }
                     },
             "styles":{
@@ -167,6 +154,15 @@ class RickRewardRatio(SpecialROI):
             else:
                 self.movePoint(0, QPointF(pos_x, pos_y))
             self.stateChanged()
+        self.update(self.boundingRect())
+    
+    def moveEntry(self,pos_x, pos_y):
+        if self.reverse:
+            self.movePoint(-1, QPointF(pos_x, pos_y))
+        else:
+            self.movePoint(0, QPointF(pos_x, pos_y))
+        self.stateChanged()
+        # self.update(self.boundingRect())
     
     def setObjectName(self, name):
         self.indicator_name = name
@@ -237,13 +233,13 @@ class RickRewardRatio(SpecialROI):
         self.yoff = True
         self.xoff = True
         self.locked = True
-        self.change_size_handle(2)
+        # self.change_size_handle(2)
 
     def unlocked_handle(self):
         self.yoff = False
         self.xoff =False
         self.locked = False
-        self.change_size_handle(4)
+        # self.change_size_handle(4)
     
     def change_size_handle(self, size):
         for handle in self.endpoints:
@@ -294,7 +290,6 @@ class RickRewardRatio(SpecialROI):
                 pointx = QPointF(self.h0.x(), self.h1.y() - diff.y()*level)
                 line.pos = [pointx,pointy]
                 point = self.mapToParent(pointx)
-                line.chart_pos = point
                 price_level =  f"{point.y():{self.price_precision}}"
                 text = f"{line.text} ({price_level}) "
                 textItem.setText(text)
@@ -321,6 +316,7 @@ class RickRewardRatio(SpecialROI):
                 pointx = QPointF(self.h0.x(), self.h1.y() - diff.y()*level)
                 line.pos = [pointx,pointy]
                 point = self.mapToParent(pointx)
+                line.chart_pos = point
                 price_level =  f"{point.y():{self.price_precision}}"
                 text = f"{line.text} ({price_level}) "
                 textItem.setText(text)

@@ -24,6 +24,7 @@ class BaseRect(ROI):
         self.brush = self.has["styles"]['brush']
         self.is_short:bool = is_short
         self.is_long:bool = is_long
+        self.handleSize = 7
         self.yoff = False
         self.xoff =False
         self.locked = False

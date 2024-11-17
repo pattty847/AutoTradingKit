@@ -138,7 +138,7 @@ class Chart(ViewPlotWidget):
             if btn.isChecked():
                 self.replay_obj = ReplayObject(self)
                 self.add_item(self.replay_obj)
-                self.mode_replay = True
+                self.replay_mode = True
                 self.drawtool.drawing_object = self.replay_obj
                 # cursor = QtGui.QCursor(QImage(""))
                 # self.setCursor(cursor)
@@ -148,7 +148,7 @@ class Chart(ViewPlotWidget):
                     self.drawtool.drawing_object = None
                     self.remove_item(self.replay_obj)
                     self.replay_obj = None
-                self.mode_replay = False
+                self.replay_mode = False
                 self.set_up_exchange()
                 self.fast_reset_worker()
         elif btn_name == "btn_seclect_bar":
@@ -156,14 +156,14 @@ class Chart(ViewPlotWidget):
             if btn.isChecked():
                 self.replay_obj = ReplayObject(self)
                 self.add_item(self.replay_obj)
-                self.mode_replay = True
+                self.replay_mode = True
                 self.drawtool.drawing_object = self.replay_obj
             else:
                 if isinstance(self.replay_obj,ReplayObject):
                     self.drawtool.drawing_object = None
                     self.remove_item(self.replay_obj)
                     self.replay_obj = None
-                self.mode_replay = False
+                self.replay_mode = False
         elif btn_name == "btn_close_playbar":
             self.is_running_replay = False
             self.replay_data:list = []
@@ -173,7 +173,7 @@ class Chart(ViewPlotWidget):
                 self.drawtool.drawing_object = None
                 self.remove_item(self.replay_obj)
                 self.replay_obj = None
-            self.mode_replay = False
+            self.replay_mode = False
             self.set_up_exchange()
             self.fast_reset_worker()
     
@@ -208,7 +208,7 @@ class Chart(ViewPlotWidget):
             else:
                 return
         
-        print(is_goto,_cr_time)
+        # print(is_goto,_cr_time)
         
         data = self.crypto_ex.fetch_ohlcv(self.symbol,self.interval,limit=1500, params={"until":_cr_time*1000})
         
@@ -272,9 +272,16 @@ class Chart(ViewPlotWidget):
                             round((self.replay_data[self.replay_pos_i][2]+self.replay_data[self.replay_pos_i][3]+self.replay_data[self.replay_pos_i][4])/3,self._precision), 
                             round((self.replay_data[self.replay_pos_i][1]+self.replay_data[self.replay_pos_i][2]+self.replay_data[self.replay_pos_i][3]+self.replay_data[self.replay_pos_i][4])/4,self._precision),self.replay_data[self.replay_pos_i][5],self.replay_data[self.replay_pos_i][0]/1000,0)
         is_updated =  self.check_all_indicator_updated()
-        if is_updated:
-            _is_add_candle = self.jp_candle.update([pre_ohlcv,last_ohlcv])
-            self.heikinashi.update(self.jp_candle.candles[-2:],_is_add_candle)   
+        while not is_updated:
+            is_updated =  self.check_all_indicator_updated()
+            time.sleep(0.01)
+
+            if self.trading_mode or not self.exchange_name:
+                self.replay_mode = False
+                break
+
+        _is_add_candle = self.jp_candle.update([pre_ohlcv,last_ohlcv])
+        self.heikinashi.update(self.jp_candle.candles[-2:],_is_add_candle)   
         self.replay_pos_i += 1
     
     def replay_loop_start(self):
@@ -321,10 +328,20 @@ class Chart(ViewPlotWidget):
                                             round((self.replay_data[self.replay_pos_i][2]+self.replay_data[self.replay_pos_i][3]+self.replay_data[self.replay_pos_i][4])/3,self._precision), 
                                             round((self.replay_data[self.replay_pos_i][1]+self.replay_data[self.replay_pos_i][2]+self.replay_data[self.replay_pos_i][3]+self.replay_data[self.replay_pos_i][4])/4,self._precision),self.replay_data[self.replay_pos_i][5],self.replay_data[self.replay_pos_i][0]/1000,0)
                         is_updated =  self.check_all_indicator_updated()
-                        if is_updated:
-                            _is_add_candle = self.jp_candle.update([pre_ohlcv,last_ohlcv])
-                            self.heikinashi.update(self.jp_candle.candles[-2:],_is_add_candle)   
+                        while not is_updated:
+                            is_updated =  self.check_all_indicator_updated()
+                            time.sleep(0.01)
+                            if self.trading_mode or not self.exchange_name:
+                                break
+                        _is_add_candle = self.jp_candle.update([pre_ohlcv,last_ohlcv])
+                        self.heikinashi.update(self.jp_candle.candles[-2:],_is_add_candle)   
                         self.replay_pos_i = i
+                        
+                        last_point = self.jp_candle.candles[-1]
+                        
+                        if self.atkobj:
+                            self.atkobj.move_entry(last_point.index,last_point.high,last_point.low)
+                        
                     else:
                         break
                     try:
@@ -440,7 +457,7 @@ class Chart(ViewPlotWidget):
         self.is_running_replay = False
         self.replay_data:list = []
         self.replay_pos_i:int = 0
-        self.mode_replay = False
+        self.replay_mode = False
         if self.worker != None:
             if isinstance(self.worker,FastStartThread):
                 self.worker.stop_thread()
@@ -485,10 +502,20 @@ class Chart(ViewPlotWidget):
                 elif indicator.INDICATOR.is_current_update == False:
                     is_updated = False
                     return is_updated
+        if self.indicators:
+            for indicator in self.indicators:
+                if isinstance(indicator,CandleStick):
+                    if isinstance(indicator.source,SMOOTH_CANDLE) or isinstance(indicator.source,N_SMOOTH_CANDLE):
+                        indicator.source.is_current_update = False
+                elif isinstance(indicator,Volume) or isinstance(indicator,BasicZIGZAG):
+                    pass
+                # elif indicator.INDICATOR.is_current_update == False:
+                else:
+                    indicator.INDICATOR.is_current_update = False
         return is_updated
     
     async def loop_watch_ohlcv(self,symbol,interval,exchange_name):
-        
+        self.trading_mode = True
         if not self.worker_reload:
             await self.reload_market()
         elif isinstance(self.worker_reload,asyncio.Task):
@@ -499,11 +526,11 @@ class Chart(ViewPlotWidget):
         _ohlcv = []
         n = 0
         while True:
-                       
+              
             client_socket = self.ExchangeManager.get_client_exchange(exchange_name,self.id,symbol,interval)
             ws_socket = self.ExchangeManager.get_ws_exchange(exchange_name,self.id,symbol,interval)
             
-            if self.mode_replay or self.is_goto_date:
+            if self.replay_mode or self.is_goto_date:
                 print("close because of replay mode ON")
                 if isinstance(self.worker_reload,asyncio.Task):
                     self.worker_reload.cancel()
@@ -560,14 +587,29 @@ class Chart(ViewPlotWidget):
                                        round((_ohlcv[-1][1]+_ohlcv[-1][2]+_ohlcv[-1][3]+_ohlcv[-1][4])/4,self._precision),_ohlcv[-1][5],_ohlcv[-1][0]/1000,0)
                     
                     is_updated =  self.check_all_indicator_updated()
-                    if is_updated:
-                        n+=1 
-                        _is_add_candle = self.jp_candle.update([pre_ohlcv,last_ohlcv])
-                        self.heikinashi.update(self.jp_candle.candles[-2:],_is_add_candle)
-                        if not firt_run:
-                            if self.indicators == []:
-                                self.first_run.emit()
-                            firt_run = True   
+                    while not is_updated:
+                            is_updated =  self.check_all_indicator_updated()
+                            time.sleep(0.01)
+                            if self.replay_mode or not self.exchange_name:
+                                self.trading_mode = False
+                                break
+                    _is_add_candle = self.jp_candle.update([pre_ohlcv,last_ohlcv])
+                    self.heikinashi.update(self.jp_candle.candles[-2:],_is_add_candle)
+                    
+                    
+                    if _is_add_candle:
+                        last_point = self.jp_candle.candles[-1]
+                        if self.atkobj:
+                            self.atkobj.move_entry(last_point.index,last_point.high,last_point.low)
+                        if self.is_trading:
+                            n+=1
+                            if n == 15:
+                                self.roll_till_now()
+                                n = 0 
+                    if not firt_run:
+                        if self.indicators == []:
+                            self.first_run.emit()
+                        firt_run = True   
             else:
                 break
             try:

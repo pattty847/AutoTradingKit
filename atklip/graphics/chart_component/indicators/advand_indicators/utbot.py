@@ -1,7 +1,7 @@
 import time
 from typing import List,TYPE_CHECKING
 
-from PySide6.QtCore import Signal, QObject,Qt,QRectF
+from PySide6.QtCore import Signal, QObject,Qt,QRectF,QPointF
 from PySide6.QtWidgets import QGraphicsItem
 from PySide6.QtGui import QPainter,QPicture
 import pandas as pd
@@ -11,6 +11,7 @@ from atklip.graphics.chart_component.base_items.plotdataitem import PlotDataItem
 from atklip.controls import PD_MAType,IndicatorType,ATKBOT_ALERT
 from atklip.controls.models import ATKBOTModel, MACDModel, RSIModel
 from atklip.graphics.chart_component.draw_tools.base_arrow import BaseArrowItem
+from atklip.graphics.chart_component.draw_tools.entry import Entry
 
 from atklip.appmanager import FastWorker
 from atklip.app_utils import *
@@ -34,8 +35,8 @@ class ATKBOT(PlotDataItem):
     def __init__(self,chart) -> None:
         super().__init__()
         # GraphicsObject.__init__(self)
-        self.setFlag(self.GraphicsItemFlag.ItemHasNoContents)
-        self.setFlag(self.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
+        # self.setFlag(self.GraphicsItemFlag.ItemHasNoContents)
+        # self.setFlag(self.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
         
         self.chart:Chart = chart
         self.has = {
@@ -43,8 +44,8 @@ class ATKBOT(PlotDataItem):
             "y_axis_show":False,
             
             "inputs":{
-                    "source":self.chart.jp_candle,
-                    "source_name": self.chart.jp_candle.source_name,
+                    "source":self.chart.heikinashi,
+                    "source_name": self.chart.heikinashi.source_name,
                     
                     "key_value_long":0.1,
                     "key_value_short":0.1,
@@ -55,7 +56,7 @@ class ATKBOT(PlotDataItem):
                     "atr_short_period":1,
                     "ema_short_period":2,
                     
-                    "n_smooth_period":2,
+                    "n_smooth_period":3,
                     "ma_smooth_period":2,
                     "ma_type":PD_MAType.EMA,
                     
@@ -65,11 +66,11 @@ class ATKBOT(PlotDataItem):
                     "slow_period":26,
                     "signal_period":9,
                     "macd_type":PD_MAType.RMA,
-                    "price_high":40,
-                    "price_low":-40,
+                    "price_high":80,
+                    "price_low":-80,
                     
-                    "max_price_high":100,
-                    "min_price_low":-100,
+                    "max_price_high":150,
+                    "min_price_low":-150,
                     
 
                     "rsi_period":14,
@@ -99,20 +100,32 @@ class ATKBOT(PlotDataItem):
         
         self.list_pos:dict = {}
         self.picture: QPicture = QPicture()
+
+        self.smooth_heikin = N_SMOOTH_CANDLE(self.chart._precision,self.has["inputs"]["source"],
+                                                  self.has["inputs"]["n_smooth_period"],
+                                                  self.has["inputs"]["ma_type"].value,
+                                                  self.has["inputs"]["ma_smooth_period"])
+        self.smooth_heikin.fisrt_gen_data()
         
         
+        self.smoothcandle = N_SMOOTH_CANDLE(self.chart._precision,self.smooth_heikin,
+                                                  self.has["inputs"]["n_smooth_period"],
+                                                  self.has["inputs"]["ma_type"].value,
+                                                  self.has["inputs"]["ma_smooth_period"])
+        self.smoothcandle.fisrt_gen_data()
         
-        # self.super_smoothcandle = N_SMOOTH_CANDLE(self.chart._precision,self.has["inputs"]["source"],
+        
+        # self.super_smoothcandle = N_SMOOTH_CANDLE(self.chart._precision,self.smoothcandle,
         #                                           self.has["inputs"]["n_smooth_period"],
         #                                           self.has["inputs"]["ma_type"].value,
         #                                           self.has["inputs"]["ma_smooth_period"])
         # self.super_smoothcandle.fisrt_gen_data()
         
         
-        self.macd = MACD(self.has["inputs"]["source"], self.macd_model.__dict__)
+        self.macd = MACD(self.smoothcandle, self.macd_model.__dict__)
         self.macd.fisrt_gen_data()
         
-        self.INDICATOR  = ATKBOT_ALERT(self.has["inputs"]["source"], self.model.__dict__)
+        self.INDICATOR  = ATKBOT_ALERT(self.smoothcandle, self.model.__dict__)
                 
         self.chart.sig_update_source.connect(self.change_source,Qt.ConnectionType.AutoConnection)   
         self.signal_delete.connect(self.delete)
@@ -144,7 +157,7 @@ class ATKBOT(PlotDataItem):
     
     @property
     def model(self) -> dict:
-        return ATKBOTModel(self.id,"ATKPRO",self.chart.jp_candle.source_name,self.has["inputs"]["key_value_long"],self.has["inputs"]["key_value_short"],
+        return ATKBOTModel(self.id,"ATKPRO",self.has["inputs"]["source"].source_name,self.has["inputs"]["key_value_long"],self.has["inputs"]["key_value_short"],
                               self.has["inputs"]["atr_long_period"],self.has["inputs"]["ema_long_period"],
                               self.has["inputs"]["atr_short_period"],self.has["inputs"]["ema_short_period"])
     
@@ -168,9 +181,7 @@ class ATKBOT(PlotDataItem):
             
     def fisrt_gen_data(self):
         self.connect_signals()
-        
         self.INDICATOR.started_worker()
-    
     
     def check_pivot_points(self,df:pd.DataFrame,_type:str="high",n = 10, m=20):
         _len = len(df)
@@ -179,20 +190,41 @@ class ATKBOT(PlotDataItem):
             for i in range(n):  
                 if _len - i - m > 0:  
                     array = df.iloc[_len-i - m:_len-i][_type].to_numpy()
-                    max_previous_m = array.max()              
-                    if array[-2] >= max_previous_m: 
-                        return (True, df.iloc[-i-1][_type], df.iloc[-i-1]["index"])
+                    index = df.iloc[_len-i - m:_len-i]["index"].to_numpy()
+                    max_previous_m = array.max()  
+                    
+                    if array[-1] >= max_previous_m: 
+                        # print(True, array[-1], index[-1])
+                        return (True, array[-1], index[-1])
             
         elif _type == "low":
             for i in range(n):  
                 if _len - i - m > 0:  
                     array = df.iloc[_len-i - m:_len-i][_type].to_numpy()
-                    min_previous_m = array.min()                 
-                    if array[-2] <= min_previous_m: 
-                        return (True, df.iloc[-i-1][_type], df.iloc[-i-1]["index"])
+                    index = df.iloc[_len-i - m:_len-i]["index"].to_numpy()
+                    min_previous_m = array.min()   
+                         
+                    if array[-1] <= min_previous_m: 
+                        # print(True, array[-1], index[-1]) 
+                        return (True, array[-1], index[-1])
         return (False, None, None)
 
-       
+    def check_active_pos(self,_type:str,_open: float):
+        if self.list_pos:
+            for x in self.list_pos.keys():
+                entry_infor:dict = self.list_pos[x]
+                is_entry_closed =  entry_infor["is_stoploss"]
+                is_take_profit_2R =  entry_infor["take_profit_2R"]
+                is_take_profit_1_5R =  entry_infor["take_profit_1_5R"]
+                
+                entry_type = entry_infor["type"]
+                entry:Entry = entry_infor["entry"]
+                
+                if entry_type == _type:
+                    if not is_entry_closed and not is_take_profit_1_5R:
+                        self.list_pos[x]["is_stoploss"] = _open
+                        entry.locked_handle()
+                        
     def delete(self):
         self.INDICATOR.deleteLater()
         self.macd.deleteLater()
@@ -240,8 +272,12 @@ class ATKBOT(PlotDataItem):
                     "slow_period":self.has["inputs"]["slow_period"],
                     "signal_period":self.has["inputs"]["signal_period"],
                     "macd_type":self.has["inputs"]["macd_type"],
+                    
                     "price_high":self.has["inputs"]["price_high"],
                     "price_low":self.has["inputs"]["price_low"],
+                    
+                    "max_price_high":self.has["inputs"]["max_price_high"],
+                    "min_price_low":self.has["inputs"]["min_price_low"],
                     
                     
                     "rsi_period":self.has["inputs"]["rsi_period"],
@@ -252,9 +288,6 @@ class ATKBOT(PlotDataItem):
                     
                     "n_period":self.has["inputs"]["n_period"],
                     "m_period":self.has["inputs"]["m_period"],
-                    
-                    
-                    
                     }
         return inputs
     
@@ -305,6 +338,10 @@ class ATKBOT(PlotDataItem):
         else:
             self.hide()
 
+    def calculate_stop_loss(self,_type:str, price:float):
+        return calculate_stoploss(_type,price,0.15)
+            
+    
     def check_n_long_short_pos(self,is_new: bool=True,_type:str="long",n:int=5):
         sorted_pos = sorted(list(self.list_pos.keys()))
         if len(sorted_pos) < n:
@@ -320,31 +357,104 @@ class ATKBOT(PlotDataItem):
                     return False
         return True
     
+    def move_entry(self,index: float, high: float,low: float):
+        """
+        self.list_pos[pivot_point[2]] = {"pivot_value":pivot_point[1],"entry_x":_x,"entry_y":_val,"type":"long","obj":obj, 
+        "entry":entry, "is_stoploss":False, "take_profit_1_5R":None,"take_profit_2R":None}"""
+        if self.list_pos:
+            for x in self.list_pos.keys():
+                entry_infor:dict = self.list_pos[x]
+                is_entry_closed =  entry_infor["is_stoploss"]
+                is_take_profit_2R =  entry_infor["take_profit_2R"]
+                is_take_profit_1_5R =  entry_infor["take_profit_1_5R"]
+                
+                entry_type = entry_infor["type"]
+                
+                stoploss = entry_infor["pivot_value"]
+                
+                entry:Entry = entry_infor["entry"]
+                
+                
+                
+                if is_entry_closed or is_take_profit_1_5R:
+                    continue
+                
+                entry_pos_1_5R:QPointF = entry.has["inputs"]["data"][2.5].chart_pos
+                entry_pos_2R:QPointF = entry.has["inputs"]["data"][4].chart_pos
+                
+                
+                profit_2R = entry_pos_2R.y()
+                profit_1_5R = entry_pos_1_5R.y()
+                
+                if entry_type == "long":
+                    if not is_take_profit_1_5R:
+                        if profit_1_5R <= high:
+                            self.list_pos[x]["take_profit_1_5R"] = profit_1_5R
+                    if not is_take_profit_2R:
+                        if profit_2R <= high:
+                            self.list_pos[x]["take_profit_2R"] = profit_2R
+                    if stoploss >= low:
+                        self.list_pos[x]["is_stoploss"] = True
+                elif entry_type == "short":
+                    if not is_take_profit_1_5R:
+                        if profit_1_5R >= low:
+                            self.list_pos[x]["take_profit_1_5R"] = profit_1_5R
+                    if not is_take_profit_2R:
+                        if profit_2R >= low:
+                            self.list_pos[x]["take_profit_2R"] = profit_2R
+                    if stoploss <= high:
+                        self.list_pos[x]["is_stoploss"] = True
+                
+                is_entry_closed =  self.list_pos[x]["is_stoploss"]
+                is_take_profit_1_5R =  self.list_pos[x]["take_profit_1_5R"]
+                
+                entry_y = self.list_pos[x]["entry_y"]
+                self.list_pos[x]["entry_x"] = index
+                entry.moveEntry(index,entry_y)
+                
+                if is_entry_closed or is_take_profit_1_5R:
+                    entry.locked_handle()
+                
+                
+    
     def set_Data(self,data):
         "df.loc[(df['max_speed'] > 1) & (df['shield'] < 8)]"
         if self.list_pos:
             for obj in self.list_pos.values():
-                self.chart.remove_item(obj["obj"])
+                # self.chart.remove_item(obj["obj"])
+                self.chart.remove_item(obj["entry"])
         self.list_pos.clear()        
         xData:np.ndarray = data[0]
         _long:np.ndarray  = data[1]
         _short:np.ndarray  = data[2]
-        data = pd.DataFrame({
+        df = pd.DataFrame({
             "x":xData,
             "long":_long,
             "short":_short,
         })
         
-        df = data.loc[(data['long'] == True) | (data['short'] == True)]
+        # df = data.loc[(data['long'] == True) | (data['short'] == True)]
         for i in range(1,len(df)):
             _x = df.iloc[i]['x']
 
             if i-self.has["inputs"]["n_period"]-self.has["inputs"]["m_period"]-1 <=0:
                     continue
             
+            row = self.smoothcandle.df.loc[self.smoothcandle.df['index'] == _x-1]
+            sm_candle_short_signal = False
+            sm_candle_long_signal = False
+            if not row.empty:
+                _high = row.iloc[-1]["high"]
+                _low = row.iloc[-1]["low"]
+                _open = row.iloc[-1]["open"]
+                _close = row.iloc[-1]["close"]
+                sm_candle_long_signal = _open < _close
+                sm_candle_short_signal = _open > _close
             
-            jp_open = self.chart.jp_candle.map_index_ohlcv[_x-1].open
-            jp_close = self.chart.jp_candle.map_index_ohlcv[_x-1].close
+            jp_high = self.chart.jp_candle.map_index_ohlcv[_x].high
+            jp_low = self.chart.jp_candle.map_index_ohlcv[_x].low
+            jp_x = self.chart.jp_candle.map_index_ohlcv[_x].index
+            self.move_entry(_x,jp_high,jp_low)
             
             macd_df = self.macd.df.loc[(self.macd.df['index'] == _x-1)]
             macd = None
@@ -357,162 +467,291 @@ class ATKBOT(PlotDataItem):
                 signalma = macd_df.iloc[-1]['signalma']
                 histogram = macd_df.iloc[-1]['histogram']
                 
-                macd_long_signal = ((histogram > 0) and (signalma < 0)  and (macd < 0)) 
-                macd_short_signal = ((histogram < 0) and (signalma > 0)  and (macd > 0)) 
+                macd_long_signal = ((histogram < 0) and (self.has["inputs"]["min_price_low"] < signalma < self.has["inputs"]["price_low"])  and (macd < 0)) 
+                macd_short_signal = ((histogram > 0) and (self.has["inputs"]["price_high"] < signalma < self.has["inputs"]["max_price_high"])  and (macd > 0)) 
             
             if df.iloc[i-1]['long'] == True:
                 # if self.check_n_long_short_pos(True,"long",1):
                 #     continue
                 
-                pv_df =  self.chart.jp_candle.df.loc[(self.chart.jp_candle.df['index'] <= _x) & (self.chart.jp_candle.df['index'] >= _x-self.has["inputs"]["n_period"]-self.has["inputs"]["m_period"]-1)]   
+                pv_df =  self.chart.jp_candle.df.loc[(self.chart.jp_candle.df['index'] < _x) & (self.chart.jp_candle.df['index'] >= _x-self.has["inputs"]["n_period"]-self.has["inputs"]["m_period"]-1)]   
                 pivot_point = self.check_pivot_points(pv_df,"low",self.has["inputs"]["n_period"],self.has["inputs"]["m_period"])
+                
+                if self.list_pos.get(pivot_point[2]):
+                    continue
                 
                 if pivot_point[0]:
   
                     _val = self.chart.jp_candle.map_index_ohlcv[_x].open
                     
-                    if macd_long_signal:
+                    if macd_long_signal and sm_candle_long_signal:
+                        # obj = BaseArrowItem(drawtool=self,angle=90, tipAngle=60, headLen=10, tailLen=10, tailWidth=5, pen=None, brush='green')
+                        # obj.setParentItem(self)
+                        # obj.setPos(_x, _val)
+                        # obj.locked_handle()
+                        # self.chart.add_item(obj)
+                        _open = self.chart.jp_candle.map_index_ohlcv[_x].open
+                        self.check_active_pos("short",_open)
+                        
+                        stop_loss =  self.calculate_stop_loss("long",pivot_point[1])
+                        
+                        entry = Entry([pivot_point[2], stop_loss], [0, 0],invertible=True,movable=True, resizable=False, removable=True, pen="#2962ff",parent=self.chart.vb, drawtool=self.chart.drawtool)
+                        
+                        entry.setPoint(_x,_val)
+                        # entry.locked_handle()
+                        # entry.setParentItem(self)
+                        self.chart.add_item(entry)
+                        
+                        self.list_pos[pivot_point[2]] = {"pivot_value":stop_loss,"entry_x":_x,"entry_y":_val,"type":"long","obj":None, "entry":entry, "is_stoploss":False, "take_profit_1_5R":None,"take_profit_2R":None}
+            elif df.iloc[i-1]['short'] == True:
+                # if self.check_n_long_short_pos(True,"short",1):
+                #     continue
+
+                pv_df =  self.chart.jp_candle.df.loc[(self.chart.jp_candle.df['index'] < _x) & (self.chart.jp_candle.df['index'] >= _x-self.has["inputs"]["n_period"]-self.has["inputs"]["m_period"]-1)]   
+                pivot_point = self.check_pivot_points(pv_df,"high",self.has["inputs"]["n_period"],self.has["inputs"]["m_period"])
+                
+                if self.list_pos.get(pivot_point[2]):
+                    continue
+                
+                if pivot_point[0]:
+                    _val = self.chart.jp_candle.map_index_ohlcv[_x].open
+                    "Check dieu kien so voi smcandle 50"
+                    if macd_short_signal and sm_candle_short_signal:
+                        # obj =  BaseArrowItem(drawtool=self,angle=270, tipAngle=60, headLen=10, tailLen=10, tailWidth=5, pen=None, brush='red')
+                        # obj.setParentItem(self)
+                        # obj.locked_handle()
+                        # obj.setPos(_x, _val)
+                        # self.chart.add_item(obj)
+                        
+                        _open = self.chart.jp_candle.map_index_ohlcv[_x].open
+                        self.check_active_pos("long",_open)
+                        
+                        stop_loss =  self.calculate_stop_loss("short",pivot_point[1])
+                        
+                        entry = Entry([pivot_point[2], stop_loss], [0, 0],invertible=True,movable=True, resizable=False, removable=True, pen="#2962ff",parent=self.chart.vb, drawtool=self.chart.drawtool)
+                        
+                        entry.setPoint(_x,_val)
+                        # entry.locked_handle()
+                        # entry.setParentItem(self)
+                        self.chart.add_item(entry)
+                        
+                        self.list_pos[pivot_point[2]] = {"pivot_value":stop_loss,"entry_x":_x,"entry_y":_val,"type":"short","obj":None, "entry":entry, "is_stoploss":False, "take_profit_1_5R":None,"take_profit_2R":None}
+
+    
+    def add_historic_Data(self,data):
+        return
+        xData:np.ndarray = data[0]
+        _long:np.ndarray  = data[1]
+        _short:np.ndarray  = data[2]
+        df = pd.DataFrame({
+            "x":xData,
+            "long":_long,
+            "short":_short,
+        })
+        
+        # df = data.loc[(data['long'] == True) | (data['short'] == True)]
+        for i in range(1,len(df)):
+            _x = df.iloc[i]['x']
+            
+            
+
+            if i-self.has["inputs"]["n_period"]-self.has["inputs"]["m_period"]-1 <=0:
+                    continue
+            
+            row = self.smoothcandle.df.loc[self.smoothcandle.df['index'] == _x-1]
+            sm_candle_short_signal = False
+            sm_candle_long_signal = False
+            if not row.empty:
+                _high = row.iloc[-1]["high"]
+                _low = row.iloc[-1]["low"]
+                _open = row.iloc[-1]["open"]
+                _close = row.iloc[-1]["close"]
+                sm_candle_long_signal = _open < _close
+                sm_candle_short_signal = _open > _close
+            
+            # jp_open = self.chart.jp_candle.map_index_ohlcv[_x-1].open
+            # jp_close = self.chart.jp_candle.map_index_ohlcv[_x-1].close
+            
+            macd_df = self.macd.df.loc[(self.macd.df['index'] == _x-1)]
+            macd = None
+            signalma = None
+            histogram = None
+            macd_long_signal = False
+            macd_short_signal = False
+            if len(macd_df) > 0:
+                macd = macd_df.iloc[-1]['macd']
+                signalma = macd_df.iloc[-1]['signalma']
+                histogram = macd_df.iloc[-1]['histogram']
+                
+                macd_long_signal = ((histogram < 0) and (self.has["inputs"]["min_price_low"] < signalma < self.has["inputs"]["price_low"])  and (macd < 0)) 
+                macd_short_signal = ((histogram > 0) and (self.has["inputs"]["price_high"] < signalma < self.has["inputs"]["max_price_high"])  and (macd > 0))
+            
+            if df.iloc[i-1]['long'] == True:
+                # if self.check_n_long_short_pos(True,"long",1):
+                #     continue
+                
+                pv_df =  self.chart.jp_candle.df.loc[(self.chart.jp_candle.df['index'] < _x) & (self.chart.jp_candle.df['index'] >= _x-self.has["inputs"]["n_period"]-self.has["inputs"]["m_period"]-1)]   
+                pivot_point = self.check_pivot_points(pv_df,"low",self.has["inputs"]["n_period"],self.has["inputs"]["m_period"])
+                
+                if self.list_pos.get(pivot_point[2]):
+                    continue
+                
+                if pivot_point[0]:
+  
+                    _val = self.chart.jp_candle.map_index_ohlcv[_x].open
+                    
+                    if macd_long_signal and sm_candle_long_signal:
                         obj = BaseArrowItem(drawtool=self,angle=90, tipAngle=60, headLen=10, tailLen=10, tailWidth=5, pen=None, brush='green')
                         obj.setParentItem(self)
                         obj.setPos(_x, _val)
                         obj.locked_handle()
                         self.chart.add_item(obj)
-                        self.list_pos[_x] = {"type":"long","obj":obj}
+                        entry = Entry([pivot_point[2], pivot_point[1]], [0, 0],invertible=True,movable=True, resizable=False, removable=True, pen="#2962ff",parent=self.chart.vb, drawtool=self.chart.drawtool)
+                        
+                        entry.setPoint(_x,_val)
+                        entry.locked_handle()
+                        entry.setParentItem(self)
+                        self.chart.add_item(entry)
+                        
+                        self.list_pos[pivot_point[2]] = {"pivot_value":pivot_point[1],"entry_x":_x,"entry_y":_val,"type":"long","obj":obj, "entry":entry}
             elif df.iloc[i-1]['short'] == True:
                 # if self.check_n_long_short_pos(True,"short",1):
                 #     continue
-
-                pv_df =  self.chart.jp_candle.df.loc[(self.chart.jp_candle.df['index'] <= _x) & (self.chart.jp_candle.df['index'] >= _x-self.has["inputs"]["n_period"]-self.has["inputs"]["m_period"]-1)]   
+                pv_df =  self.chart.jp_candle.df.loc[(self.chart.jp_candle.df['index'] < _x) & (self.chart.jp_candle.df['index'] >= _x-self.has["inputs"]["n_period"]-self.has["inputs"]["m_period"]-1)]   
                 pivot_point = self.check_pivot_points(pv_df,"high",self.has["inputs"]["n_period"],self.has["inputs"]["m_period"])
-                
+                if self.list_pos.get(pivot_point[2]):
+                    continue
                 if pivot_point[0]:
                     _val = self.chart.jp_candle.map_index_ohlcv[_x].open
                     "Check dieu kien so voi smcandle 50"
-                    if macd_short_signal:
+                    if macd_short_signal and sm_candle_short_signal:
                         obj =  BaseArrowItem(drawtool=self,angle=270, tipAngle=60, headLen=10, tailLen=10, tailWidth=5, pen=None, brush='red')
                         obj.setParentItem(self)
                         obj.locked_handle()
                         obj.setPos(_x, _val)
                         self.chart.add_item(obj)
-                        self.list_pos[_x] = {"type":"short","obj":obj}
-
-    
-    def add_historic_Data(self,data):
-        xData:np.ndarray = data[0]
-        _long:np.ndarray  = data[1]
-        _short:np.ndarray  = data[2]
-        data = pd.DataFrame({
-            "x":xData,
-            "long":_long,
-            "short":_short,
-        })
-        df = data.loc[(data['long'] == True) | (data['short'] == True)]
-        for i in range(1,len(df)):
-            _x = df.iloc[i]['x']
-            if i-self.has["inputs"]["n_period"]-self.has["inputs"]["m_period"]-1 <=0:
-                    continue
-            if self.list_pos.get(_x):
-                    continue
-            if df.iloc[i-1]['long'] == True:
-                # if self.check_n_long_short_pos(True,"long",1):
-                #     continue
-
-                pv_df =  self.chart.jp_candle.df.loc[(self.chart.jp_candle.df['index'] <= _x) & (self.chart.jp_candle.df['index'] >= _x-self.has["inputs"]["n_period"]-self.has["inputs"]["m_period"]-1)]   
-                pivot_point = self.check_pivot_points(pv_df,"low",self.has["inputs"]["n_period"],self.has["inputs"]["m_period"])
-                
-                # print(pivot_point, type(pivot_point))
-                if pivot_point[0]:
-  
-                    _val = self.chart.jp_candle.map_index_ohlcv[_x].open
-                    jp_open = self.chart.jp_candle.map_index_ohlcv[_x-1].open
-                    jp_close = self.chart.jp_candle.map_index_ohlcv[_x-1].close
-                    
-                    obj = BaseArrowItem(drawtool=self,angle=90, tipAngle=60, headLen=10, tailLen=10, tailWidth=5, pen=None, brush='green')
-                    obj.setParentItem(self)
-                    obj.setPos(_x, _val)
-                    obj.locked_handle()
-                    self.chart.add_item(obj)
-                    self.list_pos[_x] = {"type":"long","obj":obj}
-            elif df.iloc[i-1]['short'] == True:
-                # if self.check_n_long_short_pos(True,"short",1):
-                #     continue
-
-                pv_df =  self.chart.jp_candle.df.loc[(self.chart.jp_candle.df['index'] <= _x) & (self.chart.jp_candle.df['index'] >= _x-self.has["inputs"]["n_period"]-self.has["inputs"]["m_period"]-1)]   
-                pivot_point = self.check_pivot_points(pv_df,"high",self.has["inputs"]["n_period"],self.has["inputs"]["m_period"])
-                if pivot_point[0]:
-                    
-                    _val = self.chart.jp_candle.map_index_ohlcv[_x].open
-                    
-                    jp_open = self.chart.jp_candle.map_index_ohlcv[_x-1].open
-                    jp_close = self.chart.jp_candle.map_index_ohlcv[_x-1].close
-                    "Check dieu kien so voi smcandle 50"
-
-                    obj =  BaseArrowItem(drawtool=self,angle=270, tipAngle=60, headLen=10, tailLen=10, tailWidth=5, pen=None, brush='red')
-                    obj.setParentItem(self)
-                    obj.locked_handle()
-                    obj.setPos(_x, _val)
-                    self.chart.add_item(obj)
-                    self.list_pos[_x] = {"type":"short","obj":obj}
+                        entry = Entry([pivot_point[2], pivot_point[1]], [0, 0],invertible=True,movable=True, resizable=False, removable=True, pen="#2962ff",parent=self.chart.vb, drawtool=self.chart.drawtool)
+                        
+                        entry.setPoint(_x,_val)
+                        entry.locked_handle()
+                        entry.setParentItem(self)
+                        self.chart.add_item(entry)
+                        
+                        self.list_pos[pivot_point[2]] = {"pivot_value":pivot_point[1],"entry_x":_x,"entry_y":_val,"type":"long","obj":obj, "entry":entry}
         
     
     def update_Data(self,data):
         xData:np.ndarray = data[0]
         _long:np.ndarray  = data[1]
         _short:np.ndarray  = data[2]
-        data = pd.DataFrame({
+        df = pd.DataFrame({
             "x":xData,
             "long":_long,
             "short":_short,
         })
-        df = data.loc[(data['long'] == True) | (data['short'] == True)]
+        
+        # df = data.loc[(data['long'] == True) | (data['short'] == True)]
         for i in range(1,len(df)):
             _x = df.iloc[i]['x']
-            if i-self.has["inputs"]["n_period"]-self.has["inputs"]["m_period"]-1 <0:
+            
+
+            if i-self.has["inputs"]["n_period"]-self.has["inputs"]["m_period"]-1 <=0:
                     continue
-            if self.list_pos.get(_x):
-                    continue
+            
+            row = self.smoothcandle.df.loc[self.smoothcandle.df['index'] == _x-1]
+            sm_candle_short_signal = False
+            sm_candle_long_signal = False
+            if not row.empty:
+                _high = row.iloc[-1]["high"]
+                _low = row.iloc[-1]["low"]
+                _open = row.iloc[-1]["open"]
+                _close = row.iloc[-1]["close"]
+                sm_candle_long_signal = _open < _close
+                sm_candle_short_signal = _open > _close
+            
+            # jp_high = self.chart.jp_candle.map_index_ohlcv[_x].high
+            # jp_low = self.chart.jp_candle.map_index_ohlcv[_x].low
+            # jp_x = self.chart.jp_candle.map_index_ohlcv[_x].index
+            # self.move_entry(_x,jp_high,jp_low)
+            
+            macd_df = self.macd.df.loc[(self.macd.df['index'] == _x-1)]
+            macd = None
+            signalma = None
+            histogram = None
+            macd_long_signal = False
+            macd_short_signal = False
+            if len(macd_df) > 0:
+                macd = macd_df.iloc[-1]['macd']
+                signalma = macd_df.iloc[-1]['signalma']
+                histogram = macd_df.iloc[-1]['histogram']
+                
+                macd_long_signal = ((histogram < 0) and (self.has["inputs"]["min_price_low"] < signalma < self.has["inputs"]["price_low"])  and (macd < 0)) 
+                macd_short_signal = ((histogram > 0) and (self.has["inputs"]["price_high"] < signalma < self.has["inputs"]["max_price_high"])  and (macd > 0))
+            
             if df.iloc[i-1]['long'] == True:
                 # if self.check_n_long_short_pos(True,"long",1):
                 #     continue
-
-                pv_df =  self.chart.jp_candle.df.loc[(self.chart.jp_candle.df['index'] <= _x) & (self.chart.jp_candle.df['index'] >= _x-self.has["inputs"]["n_period"]-self.has["inputs"]["m_period"]-1)]   
+                
+                pv_df =  self.chart.jp_candle.df.loc[(self.chart.jp_candle.df['index'] < _x) & (self.chart.jp_candle.df['index'] >= _x-self.has["inputs"]["n_period"]-self.has["inputs"]["m_period"]-1)]   
                 pivot_point = self.check_pivot_points(pv_df,"low",self.has["inputs"]["n_period"],self.has["inputs"]["m_period"])
                 
-                # print(pivot_point, type(pivot_point))
+                if self.list_pos.get(pivot_point[2]):
+                    continue
+                
                 if pivot_point[0]:
   
                     _val = self.chart.jp_candle.map_index_ohlcv[_x].open
-                    jp_open = self.chart.jp_candle.map_index_ohlcv[_x-1].open
-                    jp_close = self.chart.jp_candle.map_index_ohlcv[_x-1].close
                     
-                    obj = BaseArrowItem(drawtool=self,angle=90, tipAngle=60, headLen=10, tailLen=10, tailWidth=5, pen=None, brush='green')
-                    obj.setParentItem(self)
-                    obj.setPos(_x, _val)
-                    obj.locked_handle()
-                    self.chart.add_item(obj)
-                    self.list_pos[_x] = {"type":"long","obj":obj}
+                    if macd_long_signal and sm_candle_long_signal:
+                        # obj = BaseArrowItem(drawtool=self,angle=90, tipAngle=60, headLen=10, tailLen=10, tailWidth=5, pen=None, brush='green')
+                        # obj.setParentItem(self)
+                        # obj.setPos(_x, _val)
+                        # obj.locked_handle()
+                        # self.chart.add_item(obj)
+                        _open = self.chart.jp_candle.map_index_ohlcv[_x].open
+                        self.check_active_pos("short",_open)
+                        
+                        stop_loss =  self.calculate_stop_loss("long",pivot_point[1])
+                        
+                        entry = Entry([pivot_point[2], stop_loss], [0, 0],invertible=True,movable=True, resizable=False, removable=True, pen="#2962ff",parent=self.chart.vb, drawtool=self.chart.drawtool)
+                        
+                        entry.setPoint(_x,_val)
+                        # entry.locked_handle()
+                        # entry.setParentItem(self)
+                        self.chart.add_item(entry)
+                        
+                        self.list_pos[pivot_point[2]] = {"pivot_value":stop_loss,"entry_x":_x,"entry_y":_val,"type":"long","obj":None, "entry":entry, "is_stoploss":False, "take_profit_1_5R":None,"take_profit_2R":None}
             elif df.iloc[i-1]['short'] == True:
                 # if self.check_n_long_short_pos(True,"short",1):
                 #     continue
-
-                pv_df =  self.chart.jp_candle.df.loc[(self.chart.jp_candle.df['index'] <= _x) & (self.chart.jp_candle.df['index'] >= _x-self.has["inputs"]["n_period"]-self.has["inputs"]["m_period"]-1)]   
+                pv_df =  self.chart.jp_candle.df.loc[(self.chart.jp_candle.df['index'] < _x) & (self.chart.jp_candle.df['index'] >= _x-self.has["inputs"]["n_period"]-self.has["inputs"]["m_period"]-1)]   
                 pivot_point = self.check_pivot_points(pv_df,"high",self.has["inputs"]["n_period"],self.has["inputs"]["m_period"])
                 
+                if self.list_pos.get(pivot_point[2]):
+                    continue
+                
                 if pivot_point[0]:
-                    
                     _val = self.chart.jp_candle.map_index_ohlcv[_x].open
-                    
-                    jp_open = self.chart.jp_candle.map_index_ohlcv[_x-1].open
-                    jp_close = self.chart.jp_candle.map_index_ohlcv[_x-1].close
                     "Check dieu kien so voi smcandle 50"
-
-                    obj =  BaseArrowItem(drawtool=self,angle=270, tipAngle=60, headLen=10, tailLen=10, tailWidth=5, pen=None, brush='red')
-                    obj.setParentItem(self)
-                    obj.locked_handle()
-                    obj.setPos(_x, _val)
-                    self.chart.add_item(obj)
-                    self.list_pos[_x] = {"type":"short","obj":obj}
-        
+                    if macd_short_signal and sm_candle_short_signal:
+                        # obj =  BaseArrowItem(drawtool=self,angle=270, tipAngle=60, headLen=10, tailLen=10, tailWidth=5, pen=None, brush='red')
+                        # obj.setParentItem(self)
+                        # obj.locked_handle()
+                        # obj.setPos(_x, _val)
+                        # self.chart.add_item(obj)
+                        
+                        _open = self.chart.jp_candle.map_index_ohlcv[_x].open
+                        self.check_active_pos("long",_open)
+                        
+                        stop_loss =  self.calculate_stop_loss("short",pivot_point[1])
+                        entry = Entry([pivot_point[2], stop_loss], [0, 0],invertible=True,movable=True, resizable=False, removable=True, pen="#2962ff",parent=self.chart.vb, drawtool=self.chart.drawtool)
+                        
+                        entry.setPoint(_x,_val)
+                        # entry.locked_handle()
+                        # entry.setParentItem(self)
+                        self.chart.add_item(entry)
+                        
+                        self.list_pos[pivot_point[2]] = {"pivot_value":stop_loss,"entry_x":_x,"entry_y":_val,"type":"short","obj":None, "entry":entry, "is_stoploss":False, "take_profit_1_5R":None,"take_profit_2R":None}
         
     def setdata_worker(self):
         self.worker = None
@@ -544,22 +783,18 @@ class ATKBOT(PlotDataItem):
         xdata,_long,_short= self.INDICATOR.get_data(start=-int(self.has["inputs"]["n_period"]+self.has["inputs"]["m_period"]+10))
         setdata.emit((xdata,_long,_short))
 
-    # def boundingRect(self) -> QRectF:
-    #     x_left,x_right = int(self.chart.xAxis.range[0]),int(self.chart.xAxis.range[1])
-    #     start_index = self.chart.jp_candle.candles[0].index
-    #     stop_index = self.chart.jp_candle.candles[-1].index
-    #     if x_left > start_index:
-    #         _start = x_left+2
-    #         x_range_left = x_left - start_index
-    #     else:
-    #         _start = start_index+2
-    #         x_range_left = 0
-    #     if x_right < stop_index:
-    #         _width = x_right-_start
-    #     else:
-    #         _width = stop_index-_start
+    def boundingRect(self) -> QRectF:
+        # if self.list_pos:
+        #     x_left,x_right = int(self.chart.xAxis.range[0]),int(self.chart.xAxis.range[1])
+        #     for _x in self.list_pos.keys():
+        #         obj = self.list_pos.get(_x)
+        #         if obj:
+        #             if x_left < _x < x_right:
+        #                 obj["obj"].show()
+        #             else:
+        #                 obj["obj"].hide()
 
-    #     return QRectF(0,0,0,0)
+        return self.picture.boundingRect()
     
     def paint(self, p:QPainter, *args):
         self.picture.play(p)
@@ -571,7 +806,6 @@ class ATKBOT(PlotDataItem):
         except:
             pass
         return _value,self.has["styles"]['pen_high_line']
-    
     
     def get_last_point(self):
         # _time = self.centerline.xData[-1]

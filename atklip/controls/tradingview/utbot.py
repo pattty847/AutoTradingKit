@@ -218,6 +218,15 @@ class ATKBOT_ALERT(QObject):
         _short = self.paire_data(SHORT)[1]
         return _short
     
+    def calculate_long_short(self,df: pd.DataFrame):
+        LONG_SHORT = utbot(dataframe=df,
+                            key_value=self.key_value_long,
+                            atr_period=self.atr_long_period,
+                            ema_period=self.ema_long_period
+                            )
+        _long,_short = self.paire_data(LONG_SHORT)[0],self.paire_data(LONG_SHORT)[1]
+        return _long,_short
+    
     def fisrt_gen_data(self):
                 
         self.is_current_update = False
@@ -228,8 +237,9 @@ class ATKBOT_ALERT(QObject):
         self.xdata,self.long,self.short = np.array([]),np.array([]),np.array([])
         
 
-        _long = self.calculate_long(df)
-        _short = self.calculate_short(df)
+        # _long = self.calculate_long(df)
+        # _short = self.calculate_short(df)
+        _long,_short = self.calculate_long_short(df)
 
         _len = min([len(_long),len(_short)])
         
@@ -265,11 +275,9 @@ class ATKBOT_ALERT(QObject):
         df:pd.DataFrame = self._candles.get_df().iloc[:-1*_pre_len]
         
         
-        _long = self.calculate_long(df)
-        
-        
-        
-        _short = self.calculate_short(df)
+        # _long = self.calculate_long(df)
+        # _short = self.calculate_short(df)
+        _long,_short = self.calculate_long_short(df)
                 
         _len = min([len(_long),len(_short)])
                 
@@ -300,10 +308,11 @@ class ATKBOT_ALERT(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             self.is_current_update = False
             df_long:pd.DataFrame = self._candles.df.iloc[-int(self.ema_long_period+10):]
-            df_short:pd.DataFrame = self._candles.df.iloc[-int(self.ema_short_period+10):]
+            # df_short:pd.DataFrame = self._candles.df.iloc[-int(self.ema_short_period+10):]
              
-            _long = self.calculate_long(df_long)
-            _short = self.calculate_short(df_short)
+            # _long = self.calculate_long(df)
+            # _short = self.calculate_short(df)
+            _long,_short = self.calculate_long_short(df_long)
             
             new_frame = pd.DataFrame({
                                     'index':[new_candle.index],
@@ -313,7 +322,7 @@ class ATKBOT_ALERT(QObject):
             
             self.df = pd.concat([self.df,new_frame],ignore_index=True)
             
-            print(self.df.iloc[-1])
+            # print(self.df.iloc[-1])
             
             self.xdata,self.long,self.short = self.df["index"].to_list(),self.df["long"].to_list(),self.df["short"].to_list()
             
@@ -326,17 +335,19 @@ class ATKBOT_ALERT(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             self.is_current_update = False
             df_long:pd.DataFrame = self._candles.df.iloc[-int(self.ema_long_period+10):]
-            df_short:pd.DataFrame = self._candles.df.iloc[-int(self.ema_short_period+10):]
+            # df_short:pd.DataFrame = self._candles.df.iloc[-int(self.ema_short_period+10):]
              
-            _long = self.calculate_long(df_long)
-            _short = self.calculate_short(df_short)
+            # _long = self.calculate_long(df)
+            # _short = self.calculate_short(df)
+            _long,_short = self.calculate_long_short(df_long)
             
             self.df.iloc[-1] = [new_candle.index,_long.iloc[-1],_short.iloc[-1]]
             
-            print(self.df.iloc[-1])
+            # print(self.df.iloc[-1])
             
             self.xdata,self.long,self.short = self.df["index"].to_list(),self.df["long"].to_list(),self.df["short"].to_list()
             
             self.sig_update_candle.emit()
             self.is_current_update = True
 
+    

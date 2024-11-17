@@ -89,11 +89,20 @@ def divide_with_remainder(a, b):
 
 @njit(cache=True)
 def percent_caculator(start, stop):
-    percent = float(((float(start) - float(stop)) / float(start))) * 100
+    percent = ((start - stop) / start) * 100
     if percent > 0:
         return round(percent,2)
     else:
         return round(abs(percent),2)
+
+
+@njit(cache=True)
+def calculate_stoploss(_type,start, percent):
+    if _type == "long":
+        stop = start*(1-percent/100)
+    else:
+        stop = start*(1+percent/100)
+    return stop
 
 @jit(nopython=True)
 def binary_search(x,arr,length):
