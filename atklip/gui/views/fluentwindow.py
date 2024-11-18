@@ -48,12 +48,14 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
         self.tabBar.tabCloseRequested.connect(self.onTabCloseRequested)
         qconfig.themeChangedFinished.connect(self._onThemeChangedFinished)
         FluentStyleSheet.FLUENT_WINDOW.apply(self)
+        
+        self.TabInterface:MainWidget = None
+        
         self.onTabAddRequested()
         self.initWindow()
         
 
     def initWindow(self):
-        
         self.setMinimumWidth(1200)
         self.setMinimumHeight(800)
         desktop = QApplication.screens()[0].availableGeometry()
@@ -63,6 +65,8 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
         self.move(w//2 - self.width()//2, h//2 - self.height()//2)
         # self.showMaximized()
         # self.resize(self.width(), self.height())
+        # if self.TabInterface:
+        #     self.TabInterface.progress.run_process(True)
         self.show()
         # QApplication.processEvents()
     
@@ -84,9 +88,6 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
         return current_ex,current_symbol,curent_interval
     def resizeEvent(self, e):
         super().resizeEvent(e)
-        self.titleBar.resize(self.width(), self.titleBar.height())
-        self.stackedWidget.resize(self.width(), self.height() - self.titleBar.height())
-        self.resize(self.width(),self.height())
         interface = self.stackedWidget.currentWidget()
         if isinstance(interface,MainWidget):
             if interface.progress.isVisible():
@@ -96,9 +97,6 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
     def addInterface(self, interface: MainWidget) -> None:
         """ add sub interface """
         self.stackedWidget.addWidget(interface)
-        self.resize(self.width(), self.height() - self.titleBar.height())
-        interface.resize(self.width(), self.height())
-        
 
     def removeInterface(self, interface: MainWidget) -> None:
         """ add sub interface """
@@ -142,15 +140,15 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
         tabItem = self.tabBar.addTab(routeKey, text, icon)
         self.tabBar.setCurrentTab(routeKey)
         # self.stackedWidget.resize(self.width(), self.height() - self.titleBar.height())
-        TabInterface = MainWidget(self,tabItem,routeKey,current_ex,current_symbol,curent_interval)
+        self.TabInterface = MainWidget(self,tabItem,routeKey,current_ex,current_symbol,curent_interval)
         
         # old_interface = self.stackedWidget.currentWidget()
         # if isinstance(old_interface,MainWidget):
         #     old_interface.hide()
         #     TabInterface.resize(old_interface.width(),old_interface.height())
-        TabInterface.progress.run_process(True)
-        self.addInterface(TabInterface)
-        self.switchTo(TabInterface)
+        self.TabInterface.progress.run_process(True)
+        self.addInterface(self.TabInterface)
+        self.switchTo(self.TabInterface)
 
     def setTabIcon(self, index: int, icon: Union[QIcon, FluentIconBase, str]):
         """ set tab icon """
@@ -163,6 +161,8 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
         if not interface.isVisible():
             interface.show()
         self.stackedWidget.setCurrentWidget(interface)
+        # self.resize(self.width(), self.height() - self.titleBar.height())
+        interface.resize(self.stackedWidget.width(), self.stackedWidget.height())
 
     def _onCurrentInterfaceChanged(self, widget: MainWidget):
         #widget = self.stackedWidget.widget(index)

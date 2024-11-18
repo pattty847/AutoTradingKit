@@ -36,7 +36,7 @@ class Ui_Frame(object):
 
         self.horizontalLayout.addLayout(self.left_layout)
 
-        self.horizontalSpacer = QSpacerItem(380, 1, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer = QSpacerItem(380, 1, QSizePolicy.Preferred, QSizePolicy.Minimum)
 
         self.horizontalLayout.addItem(self.horizontalSpacer)
 

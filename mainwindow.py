@@ -1,11 +1,14 @@
 import sys
+from PySide6.QtCore import QCoreApplication,QSize
+from PySide6.QtGui import QCloseEvent,QIcon
+from PySide6.QtWidgets import QApplication
+
 from atklip.gui.qfluentwidgets.common import screen, setTheme,Theme
 from atklip.gui.qfluentwidgets.common.icon import *
 from atklip.gui.qfluentwidgets.components.dialog_box import MessageBox
 from atklip.gui.views.fluentwindow import WindowBase
-from PySide6.QtCore import QCoreApplication,QSize
-from PySide6.QtGui import QCloseEvent,QIcon
-from PySide6.QtWidgets import QApplication
+from atklip.appmanager.setting.config import cfg
+
 
 class MainWindow(WindowBase):
     def __init__(self):
@@ -23,8 +26,15 @@ class MainWindow(WindowBase):
             event.ignore()
 
 def main():
+    
+    # enable dpi scale
+    if cfg.get(cfg.dpiScale) != "Auto":
+        os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "0"
+        os.environ["QT_SCALE_FACTOR"] = str(cfg.get(cfg.dpiScale))
+    
     setTheme(Theme.DARK,True,True)
     app = QApplication(sys.argv)
+    app.setAttribute(Qt.AA_DontCreateNativeWidgetSiblings)
     app.setStyle("Fusion")
     app.setApplicationVersion("1.0.0")
     app.setApplicationName('Auto Trading Kit')

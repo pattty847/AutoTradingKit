@@ -1,66 +1,70 @@
-# PyQt with server code
-from multiprocessing import Process
-import multiprocessing
-from fastapi import FastAPI
-import threading
-import uvicorn
-from PySide6.QtWidgets import (QMainWindow, QApplication, QTextEdit)
+from PySide6.QtWidgets import QApplication, QWidget
+from PySide6.QtGui import QPainter, QPolygon, QColor, QBrush
+from PySide6.QtCore import QPoint, Qt
 import sys
-from PySide6.QtCore import (QRect, Signal, QObject)
 
+class ArrowWidget(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Arrow Up and Down Example")
+        self.setGeometry(100, 100, 600, 400)
 
-import asyncio
-import concurrent.futures
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
 
-from test_ import app as api_app
+        # Tạo màu cho mũi tên
+        painter.setBrush(QBrush(QColor("blue")))
+        painter.setPen(Qt.NoPen)  # Không có đường viền
 
+        # Kích thước mũi tên
+        tail_width = 20
+        tail_length = 80
+        triangle_width = 40
+        triangle_length = 40
 
-app = api_app
+        # Vẽ mũi tên hướng lên trên
+        self.draw_arrow_up(painter, 150, 300, tail_width, tail_length, triangle_width, triangle_length)
 
+        # Vẽ mũi tên hướng xuống dưới
+        self.draw_arrow_down(painter, 450, 100, tail_width, tail_length, triangle_width, triangle_length)
 
-class Signals(QObject):
-    text_signal = Signal(str)
+    def draw_arrow_up(self, painter, x, y, tail_width, tail_length, triangle_width, triangle_length):
+        """
+        Vẽ mũi tên hướng lên trên tại vị trí (x, y).
+        - x, y: Tọa độ của phần dưới của mũi tên.
+        """
+        # Vẽ đuôi mũi tên (hình chữ nhật)
+        painter.drawRect(x - tail_width // 2, y - tail_length, tail_width, tail_length)
 
-signals = Signals()
+        # Vẽ đầu mũi tên (hình tam giác hướng lên trên)
+        points = QPolygon([
+            QPoint(x, y - tail_length - triangle_length),    # Đỉnh nhọn của tam giác
+            QPoint(x - triangle_width // 2, y - tail_length),  # Góc trái
+            QPoint(x + triangle_width // 2, y - tail_length)   # Góc phải
+        ])
+        painter.drawPolygon(points)
 
+    def draw_arrow_down(self, painter, x, y, tail_width, tail_length, triangle_width, triangle_length):
+        """
+        Vẽ mũi tên hướng xuống dưới tại vị trí (x, y).
+        - x, y: Tọa độ của phần trên của mũi tên.
+        """
+        # Vẽ đuôi mũi tên (hình chữ nhật)
+        painter.drawRect(x - tail_width // 2, y, tail_width, tail_length)
 
-# main window app in main thread
-class MainWindow(QMainWindow):
-    def __init__(self, *args, **kwargs):
-        super(MainWindow, self).__init__(*args, **kwargs)
-        self.setGeometry(QRect(0, 0, 400, 400))
-        self._initial_widgets()
-        self._create_server()
-        
-        # future = concurrent.futures.ThreadPoolExecutor().submit(self._create_server)
-        
-        signals.text_signal.connect(self.set_textEdit)
-
-    def _initial_widgets(self):
-        self.textedit = QTextEdit(self)
-        self.textedit.setGeometry(QRect(100, 0, 100, 100))
-        self.textedit.setReadOnly(True)
-        self.setCentralWidget(self.textedit)
-
-    def _create_server(self):
-        thread = multiprocessing.Process(target=uvicorn.run, kwargs={
-                                                    "app": "test_qconcurent:app", 
-                                                    "host": "localhost",
-                                                    "port": 81,
-                                                    "ws_max_queue":1000,
-                                                    "limit_max_requests":100000,
-                                                    "workers": 2 
-                                                },daemon=False)
-        thread.start()
-        # thread.terminate()
-        print(thread.pid)
-
-    def set_textEdit(self, data):
-        self.textedit.setText(data)
-
+        # Vẽ đầu mũi tên (hình tam giác hướng xuống dưới)
+        points = QPolygon([
+            QPoint(x, y + tail_length + triangle_length),    # Đỉnh nhọn của tam giác
+            QPoint(x - triangle_width // 2, y + tail_length),  # Góc trái
+            QPoint(x + triangle_width // 2, y + tail_length)   # Góc phải
+        ])
+        painter.drawPolygon(points)
 
 if __name__ == "__main__":
-    _app = QApplication(sys.argv)
-    window = MainWindow()
+    app = QApplication(sys.argv)
+
+    window = ArrowWidget()
     window.show()
-    _app.exec()
+
+    sys.exit(app.exec())

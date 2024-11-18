@@ -21,7 +21,7 @@ from atklip.app_utils import *
 from atklip.graphics.chart_component.draw_tools import DrawTool
 
 from atklip.graphics.chart_component.base_items.replay_cut import ReplayObject
-from atklip.graphics.chart_component.indicators.advand_indicators.utbot import ATKBOT
+from atklip.graphics.chart_component.indicators.advand_indicators.utbot_no import ATKBOT
 if TYPE_CHECKING:
     from .viewbox import PlotViewBox
     from .axisitem import CustomDateAxisItem, CustomPriceAxisItem
@@ -205,14 +205,12 @@ class ViewPlotWidget(PlotWidget):
             self.atkobj = None
             if item.list_pos:
                 for obj in item.list_pos.values():
-                    # arrow = obj["obj"]
-                    entry = obj["entry"]
-                    # self.removeItem(arrow) 
+                    self.removeItem(obj["obj"])
                     # if hasattr(arrow, "deleteLater"):
                     #     arrow.deleteLater()
-                    self.removeItem(entry) 
-                    if hasattr(entry, "deleteLater"):
-                        entry.deleteLater()
+                    # self.removeItem(entry) 
+                    # if hasattr(entry, "deleteLater"):
+                    #     entry.deleteLater()
 
         if item in self.indicators:
             self.indicators.remove(item) 

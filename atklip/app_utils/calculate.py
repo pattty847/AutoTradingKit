@@ -169,6 +169,7 @@ def timestamptodate(timestamp):
     return datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S")
 
 
+
 def calculate_pl_with_fees(entry_price: float, exit_price: float, 
                            capital=1000, proportion_closed=1, 
                            leverage: int=1, taker_fee: float=0, 
@@ -202,6 +203,51 @@ def calculate_pl_with_fees(entry_price: float, exit_price: float,
             close_fee = total_position_value *maker_fee* proportion_closed
 
     price_difference = abs(entry_price - exit_price)
+        
+    percent_change = price_difference / entry_price
+    leverage_gain = percent_change * leverage
+    capital_gain = leverage_gain * capital * proportion_closed
+    pl = capital_gain - open_fee * proportion_closed - close_fee
+    return round(pl, 2)
+
+
+def cal_pnl_with_fee(entry_price: float, exit_price: float, 
+                           capital=1000, proportion_closed=1, 
+                           leverage: int=1, taker_fee: float=0, 
+                           maker_fee: float=0, order_type: str="market",order_side:str="long",
+                           is_stop_loss=False):
+    """_summary_
+    Args:
+        entry_price (float): _description_
+        exit_price (float): _description_
+        capital (int, optional): _description_. Defaults to 1000.
+        leverage (int, optional): _description_. Defaults to 5.
+        proportion_closed (int, optional): _description_. Defaults to 1.
+        taker_fee (float, optional): fee for market order. Defaults to 0.05.
+        maker_fee (float, optional): fee for litmit order. Defaults to 0.02.
+        order_type (str, optional): limit or market. Defaults to "market".
+        is_stop_loss (bool, optional): if Fasle: calculate profit if True: calculate stop loss. Defaults to False.
+    Returns:
+        _type_: _description_
+    """
+    taker_fee = taker_fee/100
+    maker_fee = maker_fee/100
+    total_position_value = capital * leverage
+    close_fee = 0
+    if order_type == "market":
+        open_fee = total_position_value * taker_fee
+        if is_stop_loss:
+            close_fee = total_position_value *taker_fee* proportion_closed
+    else:
+        open_fee = total_position_value * maker_fee
+        if is_stop_loss:
+            close_fee = total_position_value *maker_fee* proportion_closed
+
+    
+    if order_side == "long":
+        price_difference =  exit_price - entry_price
+    else:
+        price_difference = entry_price - exit_price
         
     percent_change = price_difference / entry_price
     leverage_gain = percent_change * leverage

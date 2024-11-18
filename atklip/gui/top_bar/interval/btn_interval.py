@@ -34,7 +34,7 @@ class _PushButton(QPushButton):
         self.set_stylesheet(color)
         self.setMinimumWidth(40)
         self.setFixedHeight(35)
-        self.setContentsMargins(5,2,5,2)
+        self.setContentsMargins(2,2,2,2)
         self.setCheckable(True)
         self.setChecked(False)
 
@@ -111,13 +111,16 @@ class IntervalButton(SplitWidgetBase):
         self.d3 = _PushButton("3D",self)
         self.w1 = _PushButton("1W",self)
         self.is_loaded = False
-        
+        self._w:float=None
         self._postInit()
-
+        
         self.sig_change_inteval = sig_change_inteval
         
         self.interval_menu = INTERVALS(parent,self)
 
+    def resizeEvent(self, e):
+        super().resizeEvent(e)
+    
     def get_current_inteval(self):
         return self.current_active.title()
 
@@ -174,13 +177,22 @@ class IntervalButton(SplitWidgetBase):
                 if button.title().lower() in self.list_old_favorites:
                     self.favorites.append(button)
                     button.show()
-                    
-            
+        self._w = self.width()
+        for button in [self.m1, self.m3,self.m5,self.m15,self.m30,self.h1,self.h2,self.h4,self.h6,self.h12,self.d1,self.d3,self.w1]:
+            # if button.title().lower() == self.old_actice_btn:
+            #     continue
+            if button.isVisible():
+                self._w += button.width()+35
+        _h = self.height()
+        
+                
         self.setDropButton(_SplitDropButton(self))
         self.setDropIcon(FIF.ARROW_DOWN)
         self.setDropIconSize(QSize(10, 10))
         self.dropButton.setFixedSize(16,35)
         self.is_loaded = True
+        self._w += self.dropButton.width()
+        self.resize(self._w,_h)
         # self._parent._parent.resize()
 
     def setcurrent_item(self,current_active:_PushButton):
@@ -228,7 +240,7 @@ class IntervalButton(SplitWidgetBase):
                 if button.title().lower() == title.lower():
                     if button not in self.favorites:
                         self.favorites.append(button)
-                        self.cfg.intervalFavorites
+                        # self.cfg.intervalFavorites
                         button.show()
                     else:
                         if self.current_active != None:

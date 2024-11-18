@@ -29,7 +29,7 @@ class TopBar(QFrame,TopFrame):
     sig_add_indicator_to_chart = Signal(tuple)
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._parent:MainWidget = parent
+        self._parent:MainWidget = parent.parent()
         self.setupUi(self)
         self.setFixedHeight(40)
         self.profile = AvatarButton(self)
@@ -48,7 +48,7 @@ class TopBar(QFrame,TopFrame):
         self.gotonow.setIconSize(QSize(27,27))
         
         self.LayoutButton = LayoutButton(self._parent)
-
+        self.left_layout.setSpacing(1)
         self.left_layout.addWidget(self.profile)
         self.left_layout.addWidget(VerticalSeparator(self))
         self.left_layout.addWidget(self.exchange)
@@ -74,6 +74,17 @@ class TopBar(QFrame,TopFrame):
         self._parent.mouse_clicked_signal.connect(self.indicator.delete)
          
         self.setSizePolicy(QSizePolicy.Preferred,QSizePolicy.Preferred)
+        
+        _w = self.width()
+        _interval_w = self.interval.width()
+        _interval_with_btn = self.interval._w
+        
+        # print(_w,_interval_w,_interval_with_btn)
+        
+        
+        # self._parent._parent
+        
+        # self.resize(_w-_interval_w+_interval_with_btn, 45)
 
     def setup_indicator_menu(self):
         self.indicator.setup_menu()

@@ -1,35 +1,6 @@
 {
-    "Folders": {
-        "Local": [],
-        "Download": "D:/AutoTradingKit/download"
-    },
-    "Candle": {
-        "current": "japanese",
-        "favorites": []
-    },
-    "Update": {
-        "CheckUpdateAtStartUp": true
-    },
-    "DesktopLyric": {
-        "FontFamily": "Microsoft YaHei",
-        "HighlightColor": "#ff23bc35",
-        "StrokeColor": "#ff000000"
-    },
-    "MainWindow": {
-        "DpiScale": "Auto",
-        "EnableAcrylicBackground": false,
-        "Language": "Auto",
-        "MinimizeToTray": true
-    },
-    "Draw": {
-        "favorites": []
-    },
-    "Interval": {
-        "current": "1m",
-        "favorites": []
-    },
     "QFluentWidgets": {
-        "ThemeColor": "#ff00b294",
+        "ThemeColor": "#ff009faa",
         "ThemeMode": "Dark"
     }
 }

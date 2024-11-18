@@ -29,6 +29,7 @@ class CustomDockArea(DockArea):
     def __init__(self, parent=None, temporary=False, home=None):
         super(CustomDockArea, self).__init__(parent=parent, temporary=temporary, home=home)
         self._parent: ViewSplitter = parent
+        self.setContentsMargins(0,0,0,0)
         
     def addDock(self, dock=None, position='bottom', relativeTo=None, **kwds):
         _dock:CustomDock = dock
@@ -133,7 +134,15 @@ class ViewSplitter(QFrame,Ui_Form):
     def __init__(self, parent: QWidget | None = ...) -> None:
         super().__init__(parent)
         self.listwidgets = []
+        self.setContentsMargins(0,0,0,0)
+        self.setFrameShape(QFrame.NoFrame)
         self.setupUi(self)
+        self.axis_layout.setContentsMargins(0,0,0,0)
+        self.axis_layout.setSpacing(0)
+        self.splitter.setContentsMargins(0,0,0,0)
+        self.splitter.setSpacing(0)
+        
+        
         self.mainwindow = None
         self.chart:Chart = None
         
@@ -154,10 +163,10 @@ class ViewSplitter(QFrame,Ui_Form):
         self.DockArea.addDock(_dock)
   
     def addItem(self,item:QWidget):
-        self.verticalLayout.addWidget(item)
+        self.axis_layout.addWidget(item)
     
     def removeItem(self,item: QWidget):
-        self.verticalLayout.removeWidget(item)
+        self.axis_layout.removeWidget(item)
         item.deleteLater()
 
 
@@ -261,7 +270,6 @@ class GraphSplitter(ViewSplitter):
         self.xaxislayout.addItem(self.dateAxis, row=0, col=0)
         self.addItem(self.xaxisview)
         self.dateAxis.linkToView(self.chart.vb)
-        
         
         Signal_Proxy(
             self.chart.crosshair_x_value_change,

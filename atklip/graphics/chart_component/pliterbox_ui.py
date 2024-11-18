@@ -22,49 +22,51 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(1002, 644)
+        Form.resize(663, 300)
         self.verticalLayout_3 = QVBoxLayout(Form)
         self.verticalLayout_3.setSpacing(0)
         self.verticalLayout_3.setObjectName(u"verticalLayout_3")
         self.verticalLayout_3.setContentsMargins(0, 0, 0, 0)
-        self.verticalLayout_2 = QVBoxLayout()
-        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
-        self.splitter_wg = QWidget(Form)
+        self.splitter_wg = QFrame(Form)
         self.splitter_wg.setObjectName(u"splitter_wg")
-        self.splitter_wg.setMinimumSize(QSize(800, 600))
-        self.verticalLayout_5 = QVBoxLayout(self.splitter_wg)
-        self.verticalLayout_5.setSpacing(0)
-        self.verticalLayout_5.setObjectName(u"verticalLayout_5")
-        self.verticalLayout_5.setContentsMargins(0, 0, 0, 0)
+        self.splitter_wg.setFrameShape(QFrame.NoFrame)
+        self.splitter_wg.setFrameShadow(QFrame.Raised)
+        self.verticalLayout_2 = QVBoxLayout(self.splitter_wg)
+        self.verticalLayout_2.setSpacing(0)
+        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
+        self.verticalLayout_2.setContentsMargins(0, 0, 0, 0)
         self.splitter = QVBoxLayout()
         self.splitter.setSpacing(0)
         self.splitter.setObjectName(u"splitter")
 
-        self.verticalLayout_5.addLayout(self.splitter)
+        self.verticalLayout_2.addLayout(self.splitter)
 
 
-        self.verticalLayout_2.addWidget(self.splitter_wg)
+        self.verticalLayout_3.addWidget(self.splitter_wg)
 
         self.frame = QFrame(Form)
         self.frame.setObjectName(u"frame")
-        sizePolicy = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
+        sizePolicy = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.frame.sizePolicy().hasHeightForWidth())
         self.frame.setSizePolicy(sizePolicy)
-        self.frame.setMinimumSize(QSize(0, 30))
-        self.frame.setMaximumSize(QSize(16777215, 30))
+        self.frame.setMinimumSize(QSize(0, 35))
+        self.frame.setMaximumSize(QSize(16777215, 35))
         self.frame.setFrameShape(QFrame.NoFrame)
         self.frame.setFrameShadow(QFrame.Plain)
         self.verticalLayout = QVBoxLayout(self.frame)
         self.verticalLayout.setSpacing(0)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
+        self.axis_layout = QVBoxLayout()
+        self.axis_layout.setSpacing(0)
+        self.axis_layout.setObjectName(u"axis_layout")
 
-        self.verticalLayout_2.addWidget(self.frame)
+        self.verticalLayout.addLayout(self.axis_layout)
 
 
-        self.verticalLayout_3.addLayout(self.verticalLayout_2)
+        self.verticalLayout_3.addWidget(self.frame)
 
 
         self.retranslateUi(Form)
@@ -73,6 +75,6 @@ class Ui_Form(object):
     # setupUi
 
     def retranslateUi(self, Form):
-        Form.setWindowTitle(QCoreApplication.translate("Form", u"Form", None))
+        Form.setWindowTitle(QCoreApplication.translate("Form", u"Frame", None))
     # retranslateUi
 

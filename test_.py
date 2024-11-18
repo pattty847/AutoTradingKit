@@ -1,46 +1,85 @@
-import pandas as pd
-import numpy as np
+from PySide6.QtCore import Qt, QAbstractTableModel, QTimer, QModelIndex
+from PySide6.QtWidgets import QApplication, QTableView, QVBoxLayout, QWidget,QTableWidget
+import random
+import sys
 
-# Giả định có dữ liệu OHLC trong một DataFrame
-data = {
-    'open': np.random.uniform(100, 200, 100),
-    'high': np.random.uniform(150, 250, 100),
-    'low': np.random.uniform(50, 100, 100),
-    'close': np.random.uniform(100, 200, 100)
-}
-df = pd.DataFrame(data)
+class RealTimeTableModel(QAbstractTableModel):
+    def __init__(self, data):
+        super().__init__()
+        self._data = data
 
-# Tham số đầu vào
-leftLenH = 10  # Pivot High Left Length
-rightLenH = 10  # Pivot High Right Length
-leftLenL = 10  # Pivot Low Left Length
-rightLenL = 10  # Pivot Low Right Length
+    def rowCount(self, index):
+        return len(self._data)
 
-# Hàm tính toán pivot high
-def pivot_high(df, left_len, right_len):
-    pivots = []
-    for i in range(left_len, len(df) - right_len):
-        high_segment = df['high'].iloc[i - left_len:i + right_len + 1]
-        if df['high'].iloc[i] == high_segment.max():
-            pivots.append(df['high'].iloc[i])
-        else:
-            pivots.append(np.nan)
-    return  pivots 
+    def columnCount(self, index):
+        return len(self._data[0]) if self._data else 0
 
-# Hàm tính toán pivot low
-def pivot_low(df, left_len, right_len):
-    pivots = []
-    for i in range(left_len, len(df) - right_len):
-        low_segment = df['low'].iloc[i - left_len:i + right_len + 1]
-        if df['low'].iloc[i] == low_segment.min():
-            pivots.append(df['low'].iloc[i])
-        else:
-            pivots.append(np.nan)
-    return  pivots
+    def data(self, index, role):
+        if role == Qt.DisplayRole:
+            return self._data[index.row()][index.column()]
 
-# Tính toán Pivot High và Pivot Low
-df['Pivot_High'] = [pivot_high(df, leftLenH, rightLenH)]
-df['Pivot_Low'] = [pivot_low(df, leftLenL, rightLenL)]
+    def setData(self, index, value, role):
+        if role == Qt.EditRole:
+            self._data[index.row()][index.column()] = value
+            self.dataChanged.emit(index, index)
+            return True
+        return False
 
-# Kết quả
-print(df[['high', 'Pivot_High', 'low', 'Pivot_Low']])
+    def flags(self, index):
+        return Qt.ItemIsEditable | Qt.ItemIsEnabled
+
+    def updateRows(self, rows_to_update):
+        """Cập nhật dữ liệu của các hàng cụ thể."""
+        for row in rows_to_update:
+            if 0 <= row < self.rowCount(None):  # Kiểm tra nếu hàng nằm trong phạm vi hợp lệ
+                # Cập nhật dữ liệu cho từng cột trong hàng
+                for column in range(self.columnCount(None)):
+                    new_value = random.randint(0, 100)  # Giá trị mới ngẫu nhiên
+                    index = self.index(row, column)
+                    self.setData(index, new_value, Qt.EditRole)
+
+        # Thông báo cập nhật dữ liệu cho các hàng cụ thể
+        first_row = min(rows_to_update)
+        last_row = max(rows_to_update)
+        top_left_index = self.index(first_row, 0)
+        bottom_right_index = self.index(last_row, self.columnCount(None) - 1)
+        # self.dataChanged.emit(top_left_index, bottom_right_index)
+class RealTimeTable(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Real-Time Update Table Example")
+
+        # Dữ liệu khởi tạo
+        data = [
+            [random.randint(0, 100) for _ in range(5)] for _ in range(10)
+        ]
+
+        # Tạo mô hình dữ liệu
+        self.model = RealTimeTableModel(data)
+
+        # Tạo QTableView và gán mô hình dữ liệu
+        self.table_view = QTableView()
+        self.table_view.setModel(self.model)
+
+        # Layout chính
+        layout = QVBoxLayout()
+        layout.addWidget(self.table_view)
+        self.setLayout(layout)
+
+        # Tạo QTimer để cập nhật dữ liệu theo thời gian thực
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.update_table)
+        self.timer.start(1000)  # Cập nhật mỗi 1 giây
+
+    def update_table(self):
+        """Cập nhật dữ liệu của các hàng cụ thể trong bảng."""
+        # Ví dụ chỉ cập nhật các hàng 2, 4 và 6
+        rows_to_update = [2, 4, 6]
+        self.model.updateRows(rows_to_update)
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    window = RealTimeTable()
+    window.resize(600, 400)
+    window.show()
+    sys.exit(app.exec())

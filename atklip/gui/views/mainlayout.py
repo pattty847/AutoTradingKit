@@ -58,6 +58,10 @@ class MainWidget(QWidget,Ui_MainWidget):
         self.progress = LoadingProgress(self)
         self.chartbox_splitter.chart.sig_show_process.connect(self.progress.run_process,Qt.ConnectionType.AutoConnection)
         
+        if self.progress.isVisible():
+                self.progress.run_process(True)
+                
+        
         self.topbar.mode.clicked.connect(self.chartbox_splitter.chart.change_mode)
         
         "khởi tạo indicator menu, symbol menu trước. đang test"
