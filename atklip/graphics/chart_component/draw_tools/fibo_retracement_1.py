@@ -47,15 +47,15 @@ class FiboROI(SpecialROI):
             
             "inputs":{
                 "data":{
-                        -0.146: Line("-0.146",[],TextItem("",color=(255, 51, 69, 255), anchor=(1, 0)),(255, 51, 69, 255),QColor(255, 51, 69, 60),True),
-                        0: Line("0",[],TextItem("",color=(255,152,0,255), anchor=(1, 0)),(255,152,0,255),QColor(255,152,0,60),True),
-                        0.236: Line("0.236",[],TextItem("",color=(242,54,69,255), anchor=(1, 0)),(242,54,69,255),QColor(242,54,69,60),True),
-                        0.382: Line("0.382",[],TextItem("",color=(120,123,134,255), anchor=(1, 0)),(120,123,134,255),QColor(120,123,134,60),True),
-                        0.5: Line("0.5",[],TextItem("",color=(229,115,115,255), anchor=(1, 0)),(229,115,115,255),QColor(229,115,115,60),True),
-                        0.618: Line("0.618",[],TextItem("",color=(244,142,177,255), anchor=(1, 0)),(244,142,177,255),QColor(244,142,177,60),True),
-                        0.786: Line("0.786",[],TextItem("", color=(66, 135, 245, 255),anchor=(1, 0)),(66, 135, 245,255),QColor(66, 135, 245,60),True),
-                        1.0: Line("1",[],TextItem("", color=(180, 0, 0, 255),anchor=(1, 0)),(180, 0, 0, 255),QColor(180, 0, 0, 60),True),
-                        1.146: Line("1.146",[],TextItem("",color=(255, 51, 69, 255), anchor=(1, 0)),(255, 51, 69, 255),QColor(255, 51, 69, 60),True),
+                        -0.146: Line("-0.146",[],None,TextItem("",color=(255, 51, 69, 255), anchor=(1, 0)),(255, 51, 69, 255),QColor(255, 51, 69, 60),True),
+                        0: Line("0",[],None,TextItem("",color=(255,152,0,255), anchor=(1, 0)),(255,152,0,255),QColor(255,152,0,60),True),
+                        0.236: Line("0.236",[],None,TextItem("",color=(242,54,69,255), anchor=(1, 0)),(242,54,69,255),QColor(242,54,69,60),True),
+                        0.382: Line("0.382",[],None,TextItem("",color=(120,123,134,255), anchor=(1, 0)),(120,123,134,255),QColor(120,123,134,60),True),
+                        0.5: Line("0.5",[],None,TextItem("",color=(229,115,115,255), anchor=(1, 0)),(229,115,115,255),QColor(229,115,115,60),True),
+                        0.618: Line("0.618",[],None,TextItem("",color=(244,142,177,255), anchor=(1, 0)),(244,142,177,255),QColor(244,142,177,60),True),
+                        0.786: Line("0.786",[],None,TextItem("", color=(66, 135, 245, 255),anchor=(1, 0)),(66, 135, 245,255),QColor(66, 135, 245,60),True),
+                        1.0: Line("1",[],None,TextItem("", color=(180, 0, 0, 255),anchor=(1, 0)),(180, 0, 0, 255),QColor(180, 0, 0, 60),True),
+                        1.146: Line("1.146",[],None,TextItem("",color=(255, 51, 69, 255), anchor=(1, 0)),(255, 51, 69, 255),QColor(255, 51, 69, 60),True),
                         }
                     },
             "styles":{
@@ -266,8 +266,9 @@ class FiboROI(SpecialROI):
                 # painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
                 self.update_text(painter)
                 painter.end()
+            return QRectF(self.picture.boundingRect())
         
-        return QRectF(self.picture.boundingRect())
+        return QRectF(0,0,0,0)
     
     def drag_change(self,obj):
         diff = self.h1 - self.h0

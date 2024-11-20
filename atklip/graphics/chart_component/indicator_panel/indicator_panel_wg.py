@@ -61,8 +61,9 @@ class IndicatorPanel(QWidget):
 
         if isinstance(self.indicator,CandleStick):
             # self.chart.remove_source(self.indicator.has["inputs"]["source"])
-            self.indicator.signal_delete.emit()
-        
+            if not isinstance(self.indicator.source, JAPAN_CANDLE):
+                self.indicator.signal_delete.emit()
+        # print(self.indicator)
         self.chart.sig_remove_item.emit(self.indicator)
 
     def _on_hide_show(self):

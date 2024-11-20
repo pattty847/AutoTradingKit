@@ -21,7 +21,7 @@ from atklip.app_utils import *
 from atklip.graphics.chart_component.draw_tools import DrawTool
 
 from atklip.graphics.chart_component.base_items.replay_cut import ReplayObject
-from atklip.graphics.chart_component.indicators.advand_indicators.utbot_no import ATKBOT
+from atklip.graphics.chart_component.indicators.advand_indicators.utbot import ATKBOT
 if TYPE_CHECKING:
     from .viewbox import PlotViewBox
     from .axisitem import CustomDateAxisItem, CustomPriceAxisItem
@@ -200,17 +200,18 @@ class ViewPlotWidget(PlotWidget):
             item = args[0]
         else:
             item = args       
-        
         if isinstance(item,ATKBOT):
-            self.atkobj = None
             if item.list_pos:
                 for obj in item.list_pos.values():
                     self.removeItem(obj["obj"])
-                    # if hasattr(arrow, "deleteLater"):
-                    #     arrow.deleteLater()
-                    # self.removeItem(entry) 
-                    # if hasattr(entry, "deleteLater"):
-                    #     entry.deleteLater()
+                    if hasattr(obj["obj"], "deleteLater"):
+                        obj["obj"].deleteLater()
+                    
+                    self.removeItem(obj["entry"])
+                    if hasattr(obj["entry"], "deleteLater"):
+                        obj["entry"].deleteLater()
+                        
+            self.atkobj = None
 
         if item in self.indicators:
             self.indicators.remove(item) 
@@ -222,6 +223,7 @@ class ViewPlotWidget(PlotWidget):
         self.removeItem(item) 
         if hasattr(item, "deleteLater"):
             item.deleteLater()
+            
     def addItem(self, *args: Any, **kwargs: Any) -> None:
         if hasattr(args[0], "_vl_kwargs") and args[0]._vl_kwargs is not None:
             self.plotItem.addItem(args[0]._vl_kwargs["line"], ignoreBounds=True)

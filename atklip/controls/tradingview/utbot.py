@@ -13,9 +13,9 @@ from atklip.app_api.workers import ApiThreadPool
 from PySide6.QtCore import Signal,QObject
 
 
-def utbot(dataframe:pd.DataFrame, key_value=1, atr_period=3, ema_period=200)->pd.DataFrame:
+def utbot(dataframe:pd.DataFrame, key_value=1, atr_period=3, ema_period=200, ma_atr_mode="rma", ma_mode="ema")->pd.DataFrame:
 
-    xATR = atr(dataframe['high'], dataframe['low'], dataframe['close'], length=atr_period,mamode="rma").dropna().to_numpy()
+    xATR = atr(dataframe['high'], dataframe['low'], dataframe['close'], length=atr_period,mamode=ma_atr_mode).dropna().to_numpy()
     _lenatr = len(xATR)
     
     nLoss = key_value * xATR
@@ -40,7 +40,14 @@ def utbot(dataframe:pd.DataFrame, key_value=1, atr_period=3, ema_period=200)->pd
     pos = np.where(mask_sell, -1, pos)
     pos[~((pos == 1) | (pos == -1))] = 0
 
-    _ema = ma(name="ema",source=dataframe['close'], length=ema_period).dropna().to_numpy()
+    if ma_mode == "smma":
+        ema_mode = "sma"
+    elif ma_mode == "zlma":
+        ema_mode = "ema"
+    else:
+        ema_mode = ""
+    
+    _ema = ma(name=ma_mode,source=dataframe['close'], length=ema_period, mamode=ema_mode).dropna().to_numpy()
 
     _leng = min([len(xATRTrailingStop),len(_ema),len(pos)])
     
@@ -65,10 +72,11 @@ class ATKBOT_ALERT(QObject):
         
         self._candles: JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE =_candles
 
-        self.key_value_long:int=dict_ta_params.get("key_value_long",0.5)
-        self.key_value_short:int=dict_ta_params.get("key_value_short",1)
-        self.atr_long_period:float=dict_ta_params.get("atr_long_period",3)
-        self.ema_long_period:int=dict_ta_params.get("ema_long_period",500) 
+        self.key_value_long:int=dict_ta_params.get("key_value_long",0.1)
+        self.key_value_short:int=dict_ta_params.get("key_value_short",0.1)
+        
+        self.atr_long_period:float=dict_ta_params.get("atr_long_period",1)
+        self.ema_long_period:int=dict_ta_params.get("ema_long_period",100) 
         
         self.atr_short_period:float=dict_ta_params.get("atr_short_period",1)
         self.ema_short_period:int=dict_ta_params.get("ema_short_period",10) 
@@ -237,9 +245,9 @@ class ATKBOT_ALERT(QObject):
         self.xdata,self.long,self.short = np.array([]),np.array([]),np.array([])
         
 
-        # _long = self.calculate_long(df)
-        # _short = self.calculate_short(df)
-        _long,_short = self.calculate_long_short(df)
+        _long = self.calculate_long(df)
+        _short = self.calculate_short(df)
+        # _long,_short = self.calculate_long_short(df)
 
         _len = min([len(_long),len(_short)])
         
@@ -276,9 +284,9 @@ class ATKBOT_ALERT(QObject):
         df:pd.DataFrame = self._candles.get_df().iloc[:-1*_pre_len]
         
         
-        # _long = self.calculate_long(df)
-        # _short = self.calculate_short(df)
-        _long,_short = self.calculate_long_short(df)
+        _long = self.calculate_long(df)
+        _short = self.calculate_short(df)
+        # _long,_short = self.calculate_long_short(df)
                 
         _len = min([len(_long),len(_short)])
                 
@@ -317,11 +325,11 @@ class ATKBOT_ALERT(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             self.is_current_update = False
             df_long:pd.DataFrame = self._candles.df.iloc[-int(self.ema_long_period+10):]
-            # df_short:pd.DataFrame = self._candles.df.iloc[-int(self.ema_short_period+10):]
+            df_short:pd.DataFrame = self._candles.df.iloc[-int(self.ema_short_period+10):]
              
-            # _long = self.calculate_long(df)
-            # _short = self.calculate_short(df)
-            _long,_short = self.calculate_long_short(df_long)
+            _long = self.calculate_long(df_long)
+            _short = self.calculate_short(df_short)
+            # _long,_short = self.calculate_long_short(df_long)
             
             new_frame = pd.DataFrame({
                                     'index':[new_candle.index],
@@ -346,11 +354,11 @@ class ATKBOT_ALERT(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             self.is_current_update = False
             df_long:pd.DataFrame = self._candles.df.iloc[-int(self.ema_long_period+10):]
-            # df_short:pd.DataFrame = self._candles.df.iloc[-int(self.ema_short_period+10):]
+            df_short:pd.DataFrame = self._candles.df.iloc[-int(self.ema_short_period+10):]
              
-            # _long = self.calculate_long(df)
-            # _short = self.calculate_short(df)
-            _long,_short = self.calculate_long_short(df_long)
+            _long = self.calculate_long(df_long)
+            _short = self.calculate_short(df_short)
+            # _long,_short = self.calculate_long_short(df_long)
             
             self.df.iloc[-1] = [new_candle.index,_long.iloc[-1],_short.iloc[-1]]
             
