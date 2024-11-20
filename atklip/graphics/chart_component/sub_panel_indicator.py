@@ -160,8 +160,11 @@ class ViewSubPanel(PlotWidget):
             self.indicator = BasicUO(self.get_last_pos_worker,self.Chart,self)
         elif _indicator_type == IndicatorType.Stoch:
             self.indicator = BasicSTOCH(self.get_last_pos_worker,self.Chart,self)
+        elif _indicator_type == IndicatorType.SQEEZE:
             
-            
+            self.indicator = BaSicSqeeze(self.get_last_pos_worker,self.Chart,self)
+        
+    
         if self.indicator:
             self.add_item(self.indicator)
             self.panel = IndicatorPanel(mainwindow,self, self.indicator)

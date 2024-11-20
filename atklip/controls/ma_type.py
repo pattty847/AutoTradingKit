@@ -51,6 +51,7 @@ class IndicatorType(Enum):
     SMC = "Smart Money Concept"
     IBS = "IBS"
     MACD = "Moving Average Convergence Divergence (MACD)"
+    SQEEZE = "SQEEZE"
     AccuDist = "Accumulation/Distribution (ADL)"
     ADX = "Average Directional Index (ADX)"
 

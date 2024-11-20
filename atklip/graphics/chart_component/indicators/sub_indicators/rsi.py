@@ -48,7 +48,7 @@ class BasicRSI(PlotDataItem):
                     "type":"close",
                     "indicator_type":IndicatorType.RSI,
                     "period":14,
-                    "ma_type":PD_MAType.RMA,
+                    "mamode":PD_MAType.RMA,
                     "price_high":60,
                     "price_low":40,
                     "show":True},
@@ -99,7 +99,7 @@ class BasicRSI(PlotDataItem):
         return RSIModel(self.id,"RSI",self.chart.jp_candle.source_name,
                         self.has["inputs"]["type"],
                         self.has["inputs"]["period"],
-                        self.has["inputs"]["ma_type"].name.lower())
+                        self.has["inputs"]["mamode"].name.lower())
     
     def disconnect_signals(self):
         try:
@@ -155,7 +155,7 @@ class BasicRSI(PlotDataItem):
         inputs =  {"source":self.has["inputs"]["source"],
                     "type":self.has["inputs"]["type"],
                     "period":self.has["inputs"]["period"],
-                    "ma_type":self.has["inputs"]["ma_type"],
+                    "mamode":self.has["inputs"]["mamode"],
                     "price_high":self.has["inputs"]["price_high"],
                     "price_low":self.has["inputs"]["price_low"]}
         return inputs
@@ -168,7 +168,7 @@ class BasicRSI(PlotDataItem):
     
     def update_inputs(self,_input,_source):
         """"source":self.has["inputs"]["source"],
-                "ma_type":self.has["inputs"]["ma_type"],
+                "mamode":self.has["inputs"]["mamode"],
                 "ma_period":self.has["inputs"]["ma_period"]"""
         update = False
         
@@ -190,7 +190,7 @@ class BasicRSI(PlotDataItem):
                 update = True
                 
         if update:
-            self.has["name"] = f"RSI {self.has["inputs"]["period"]} {f"{self.has["inputs"]["ma_type"].name}".lower()} {self.has["inputs"]["type"]}"
+            self.has["name"] = f"RSI {self.has["inputs"]["period"]} {f"{self.has["inputs"]["mamode"].name}".lower()} {self.has["inputs"]["type"]}"
             self.sig_change_indicator_name.emit(self.has["name"])
             self.INDICATOR.change_input(dict_ta_params=self.model.__dict__)
     
@@ -289,7 +289,7 @@ class BasicRSI(PlotDataItem):
         return _min,_max
 
     def on_click_event(self):
-        print("zooo day__________________")
+        #print("zooo day__________________")
         pass
 
     def mousePressEvent(self, ev):

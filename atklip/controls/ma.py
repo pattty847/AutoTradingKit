@@ -59,8 +59,6 @@ def ma(name: str = None, source: Series = None,length: Int = None,mamode: str="e
     else:  # "ema"
         name = "ema"
     
-    # print("ma name", name)
-
     if   name == "dema": return dema(source, length)
     elif name == "fwma": return fwma(source, length)
     elif name == "hma": return hma(source, length)
@@ -102,7 +100,7 @@ class MA(QObject):
     def __init__(self,_candles,dict_ta_params) -> None:
         super().__init__(parent=None)
         
-        self.ma_type:str = dict_ta_params.get("ma_type")
+        self.mamode:str = dict_ta_params.get("mamode")
         self.source:str = dict_ta_params.get("source")
         self.length:int= dict_ta_params.get("length") 
         self.zl_mode:str= dict_ta_params.get("zl_mode","ema") 
@@ -114,13 +112,13 @@ class MA(QObject):
         self.is_genering = True
         self.is_current_update = False
         self.is_histocric_load = False
-        self.name = f"{self.ma_type} {self.source} {self.length}"
+        self.name = f"{self.mamode} {self.source} {self.length}"
 
         self.df = pd.DataFrame([])
         self.worker = ApiThreadPool
         
-        self.xdata = []
-        self.ydata = []
+        self.xdata = np.array([])
+        self.ydata = np.array([])
 
         self.connect_signals()
     
@@ -138,14 +136,14 @@ class MA(QObject):
             self.connect_signals()
         
         if dict_ta_params != {}:
-            self.ma_type:str = dict_ta_params.get("ma_type")
+            self.mamode:str = dict_ta_params.get("mamode")
             self.source:str = dict_ta_params.get("source")
             self.length:int= dict_ta_params.get("length") 
             
             ta_name:str=dict_ta_params.get("ta_name")
             obj_id:str=dict_ta_params.get("obj_id") 
             
-            ta_param = f"{obj_id}-{ta_name}-{self.source}-{self.ma_type}-{self.length}"
+            ta_param = f"{obj_id}-{ta_name}-{self.source}-{self.mamode}-{self.length}"
 
             self.indicator_name = ta_param
         
@@ -192,7 +190,7 @@ class MA(QObject):
         return self.df.tail(n)
     
     def get_data(self,start:int=0,stop:int=0):
-        if self.xdata == []:
+        if len(self.xdata) == 0:
             return [],[]
         if start == 0 and stop == 0:
             x_data = self.xdata
@@ -206,7 +204,7 @@ class MA(QObject):
         else:
             x_data = self.xdata[start:stop]
             y_data = self.ydata[start:stop]
-        return np.array(x_data),np.array(y_data)
+        return x_data,y_data
     
     
     def get_last_row_df(self):
@@ -230,7 +228,7 @@ class MA(QObject):
         self.df = pd.DataFrame([])
         df:pd.DataFrame = self._candles.get_df()
         
-        data = ma(self.ma_type,source=df[self.source],length=self.length,mamode=self.zl_mode).dropna().round(4)
+        data = ma(self.mamode,source=df[self.source],length=self.length,mamode=self.zl_mode).dropna().round(4)
         
         _len = len(data)
         _index = df["index"].tail(_len)
@@ -240,22 +238,22 @@ class MA(QObject):
                             "data":data
                             })
         
-        self.xdata,self.ydata = self.df["index"].to_list(),self.df["data"].to_list()
+        self.xdata,self.ydata = self.df["index"].to_numpy(),self.df["data"].to_numpy()
         
         self.is_genering = False
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
-        self.sig_reset_all.emit()
         self.is_current_update = True
-    
+        self.sig_reset_all.emit()
+        
     def add_historic(self,n:int):
         self.is_genering = True
         self.is_histocric_load = False
         _pre_len = len(self.df)
         df:pd.DataFrame = self._candles.get_df().iloc[:-1*_pre_len]
         
-        data = ma(self.ma_type,source=df[self.source],length=self.length,mamode=self.zl_mode).dropna().round(4)
+        data = ma(self.mamode,source=df[self.source],length=self.length,mamode=self.zl_mode).dropna().round(4)
         
         
         _len = len(data)
@@ -268,11 +266,8 @@ class MA(QObject):
         
         self.df = pd.concat([_df,self.df],ignore_index=True)
         
-        
-        self.xdata = _df["index"].to_list() + self.xdata
-        self.ydata = _df["data"].to_list() + self.ydata
-        
-        # self.xdata,self.ydata = self.df["index"].to_list(),self.df["data"].to_list()
+        self.xdata = np.concatenate((_df["index"].to_numpy(), self.xdata)) 
+        self.ydata = np.concatenate((_df["data"].to_numpy(), self.ydata))  
            
         self.is_genering = False
         if self.first_gen == False:
@@ -287,7 +282,7 @@ class MA(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.length*10)
                         
-            data = ma(self.ma_type,source=df[self.source],length=self.length,mamode=self.zl_mode).round(4)
+            data = ma(self.mamode,source=df[self.source],length=self.length,mamode=self.zl_mode).round(4)
             
             _data = data.iloc[-1]
             
@@ -296,26 +291,24 @@ class MA(QObject):
                                 "data":[_data]
                                 })
             
-            self.df = pd.concat([self.df,new_frame],ignore_index=True)
-            
-            self.xdata,self.ydata = self.df["index"].to_list(),self.df["data"].to_list()
-            
+            self.df = pd.concat([self.df,new_frame],ignore_index=True)            
+            self.xdata = np.concatenate((self.xdata,np.array([new_candle.index])))
+            self.ydata = np.concatenate((self.ydata,np.array([_data])))
             self.sig_add_candle.emit()
-            self.is_current_update = True
+        self.is_current_update = True
+            
         
     def update(self, new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]
         self.is_current_update = False
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.length*10)
-                        
-            data = ma(self.ma_type,source=df[self.source],length=self.length,mamode=self.zl_mode).round(4)
-            
+            data = ma(self.mamode,source=df[self.source],length=self.length,mamode=self.zl_mode).round(4)
             self.df.iloc[-1] = [new_candle.index,data.iloc[-1]]
-            
-            self.xdata,self.ydata = self.df["index"].to_list(),self.df["data"].to_list()
-            
+            self.xdata[-1] = new_candle.index
+            self.ydata[-1] = data.iloc[-1]
             self.sig_update_candle.emit()
-            self.is_current_update = True
+        self.is_current_update = True
+            
             
             

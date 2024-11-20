@@ -48,7 +48,7 @@ class API():
         id_exchange = candle_infor.get("id_exchange")
         symbol = candle_infor.get("symbol")
         interval = candle_infor.get("interval")
-        ma_type = candle_infor.get("ma_type")
+        mamode = candle_infor.get("mamode")
         ma_leng = candle_infor.get("ma_leng")
         name = candle_infor.get("name")
         source = candle_infor.get("source")
@@ -58,7 +58,7 @@ class API():
             "id_exchange": f"{id_exchange}",
             "symbol": f"{symbol}",
             "interval": f"{interval}",
-            "ma_type": f"{ma_type}",
+            "mamode": f"{mamode}",
             "ma_leng": f"{ma_leng}",
             "name": f"{name}",
             "source": f"{source}",
@@ -85,7 +85,7 @@ class API():
         id_exchange = candle_infor.get("id_exchange")
         symbol = candle_infor.get("symbol")
         interval = candle_infor.get("interval")
-        ma_type = candle_infor.get("ma_type")
+        mamode = candle_infor.get("mamode")
         ma_leng = candle_infor.get("ma_leng")
         name = candle_infor.get("name")
         source = candle_infor.get("source")
@@ -95,7 +95,7 @@ class API():
             "id_exchange": f"{id_exchange}",
             "symbol": f"{symbol}",
             "interval": f"{interval}",
-            "ma_type": f"{ma_type}",
+            "mamode": f"{mamode}",
             "ma_leng": f"{ma_leng}",
             "name": f"{name}",
             "source": f"{source}",
@@ -181,7 +181,7 @@ class API():
         #                 "id_exchange":old_candle_infor.get("id_exchange"),
         #                 "symbol":old_candle_infor.get("symbol"),
         #                 "interval":old_candle_infor.get("interval"),
-        #                 "ma_type":old_candle_infor.get("ma_type"),
+        #                 "mamode":old_candle_infor.get("mamode"),
         #                 "ma_leng":old_candle_infor.get("ma_leng"),
         #                 "name":old_candle_infor.get("name"),
         #                 "source":old_candle_infor.get("source"),
@@ -192,7 +192,7 @@ class API():
         #                 "id_exchange":new_candle_infor.get("id_exchange"),
         #                 "symbol":new_candle_infor.get("symbol"),
         #                 "interval":new_candle_infor.get("interval"),
-        #                 "ma_type":new_candle_infor.get("ma_type"),
+        #                 "mamode":new_candle_infor.get("mamode"),
         #                 "ma_leng":new_candle_infor.get("ma_leng"),
         #                 "name":new_candle_infor.get("name"),
         #                 "source":new_candle_infor.get("source"),
@@ -221,7 +221,7 @@ class API():
         # id_exchange = candle_infor.get("id_exchange")
         # symbol = candle_infor.get("symbol")
         # interval = candle_infor.get("interval")
-        # ma_type = candle_infor.get("ma_type")
+        # mamode = candle_infor.get("mamode")
         # ma_leng = candle_infor.get("ma_leng")
         # n_smooth = candle_infor.get("n_smooth")
         # name = candle_infor.get("name")
@@ -312,7 +312,7 @@ class API():
                                 "fast_period":15,
                                 "slow_period":30,
                                 "signal_period":12,
-                                "ma_type":"ema"}
+                                "mamode":"ema"}
         Returns:
             _type_: _description_
         """

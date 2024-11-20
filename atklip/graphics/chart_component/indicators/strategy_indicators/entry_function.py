@@ -160,7 +160,7 @@ class MACD(QObject):
     sig_add_candle = Signal()
     sig_reset_all = Signal()
     signal_delete = Signal()    
-    def __init__(self,parent,_candles,source,fast_period,slow_period,signal_period,ma_type) -> None:
+    def __init__(self,parent,_candles,source,fast_period,slow_period,signal_period,mamode) -> None:
         super().__init__(parent=parent)
         
         self._candles: JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE =_candles
@@ -169,13 +169,13 @@ class MACD(QObject):
         self.slow_period:int = slow_period
         self.fast_period:int = fast_period
         self.signal_period:int = signal_period
-        self.ma_type: PD_MAType = ma_type
+        self.mamode: PD_MAType = mamode
 
         # self.signal_delete.connect(self.deleteLater)
         self.first_gen = False
         self.is_genering = True
         
-        self.name = f"MACD {self.source} {self.ma_type.name.lower()} {self.slow_period} {self.fast_period} {self.signal_period}"
+        self.name = f"MACD {self.source} {self.mamode.name.lower()} {self.slow_period} {self.fast_period} {self.signal_period}"
 
         self.df = pd.DataFrame([])
         
@@ -223,8 +223,8 @@ class MACD(QObject):
         elif _input == "type":
             self.source = _source
             is_update = True
-        elif _input == "ma_type":
-            self.ma_type = _source
+        elif _input == "mamode":
+            self.mamode = _source
             is_update = True
         if is_update:
             self.started_worker()
@@ -285,7 +285,7 @@ class MACD(QObject):
                         fast=self.fast_period,
                         slow=self.slow_period,
                         signal = self.signal_period,
-                        mamode=self.ma_type.name.lower())
+                        mamode=self.mamode.name.lower())
         return self.paire_data(INDICATOR)
     
     def fisrt_gen_data(self):

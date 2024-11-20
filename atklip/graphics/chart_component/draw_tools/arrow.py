@@ -46,16 +46,16 @@ class Arrow(QGraphicsObject):
         self.interval = self.chart.interval
         self._type:IndicatorType = _type
         
-        self.source, ma_type, period, n = self.get_source(self._type)
+        self.source, mamode, period, n = self.get_source(self._type)
         
-        if ma_type != None:
+        if mamode != None:
             self.has = {
             "is_candle": True,
-            "name": f"{self.source.source_name} {ma_type.name} {period} {n}",
+            "name": f"{self.source.source_name} {mamode.name} {period} {n}",
             "y_axis_show":True,
             "inputs":{
                     "source":self.source,
-                    "ma_type":ma_type,
+                    "mamode":mamode,
                     "ma_period":period,
                     "n_smooth_period": n,
                     "show":True
@@ -120,9 +120,9 @@ class Arrow(QGraphicsObject):
         self.chart.remove_source(self.source)
         source_name = self.has["name"].split(" ")[0]
         if isinstance(self.source,N_SMOOTH_CANDLE):
-            self.has["name"] = f"{source_name} {self.has["inputs"]["ma_type"].name} {self.has["inputs"]["ma_period"]} {self.has["inputs"]["n_smooth_period"]}"
+            self.has["name"] = f"{source_name} {self.has["inputs"]["mamode"].name} {self.has["inputs"]["ma_period"]} {self.has["inputs"]["n_smooth_period"]}"
         if isinstance(self.source,SMOOTH_CANDLE):
-            self.has["name"] = f"{source_name} {self.has["inputs"]["ma_type"].name} {self.has["inputs"]["ma_period"]}"
+            self.has["name"] = f"{source_name} {self.has["inputs"]["mamode"].name} {self.has["inputs"]["ma_period"]}"
         else:
             self.has["name"] = f"{source_name} {self.chart.symbol} {self.chart.interval}"
         
@@ -135,10 +135,10 @@ class Arrow(QGraphicsObject):
     
     def update_inputs(self,_input,_source):
         """"source":self.source,
-                "ma_type":self.has["inputs"]["ma_type"],
+                "mamode":self.has["inputs"]["mamode"],
                 "ma_period":self.has["inputs"]["ma_period"]"""
         update = False
-        if _input == "ma_type":
+        if _input == "mamode":
             if _source != self.has["inputs"][_input]:
                 self.has["inputs"][_input] = _source
                 update = True
@@ -156,13 +156,13 @@ class Arrow(QGraphicsObject):
             self._is_change_source = True
             ma_period = self.has["inputs"].get("ma_period")
             n_smooth_period = self.has["inputs"].get("n_smooth_period")
-            ma_type = self.has["inputs"].get("ma_type")
+            mamode = self.has["inputs"].get("mamode")
             
-            if ma_type != None:
+            if mamode != None:
                 if isinstance(self.source,N_SMOOTH_CANDLE):
-                    self.has["name"] = f"{self.source.source_name} {self.has["inputs"]["ma_type"].name} {self.has["inputs"]["ma_period"]} {self.has["inputs"]["n_smooth_period"]}"
+                    self.has["name"] = f"{self.source.source_name} {self.has["inputs"]["mamode"].name} {self.has["inputs"]["ma_period"]} {self.has["inputs"]["n_smooth_period"]}"
                 else:
-                    self.has["name"] = f"{self.source.source_name} {self.has["inputs"]["ma_type"].name} {self.has["inputs"]["ma_period"]}"
+                    self.has["name"] = f"{self.source.source_name} {self.has["inputs"]["mamode"].name} {self.has["inputs"]["ma_period"]}"
             else:
                 self.has.update({"inputs":{
                         "source":self.source,
@@ -172,17 +172,17 @@ class Arrow(QGraphicsObject):
                 
             self.sig_change_indicator_name.emit(self.has["name"])
             
-            if ma_type != None:
-                self.source.refresh_data(ma_type,ma_period,n_smooth_period)
+            if mamode != None:
+                self.source.refresh_data(mamode,ma_period,n_smooth_period)
             
     def change_interval(self):
         self._is_change_source = True
-        ma_period = self.has["inputs"].get("ma_type")
+        ma_period = self.has["inputs"].get("mamode")
         n_smooth_period = self.has["inputs"].get("n_smooth_period")
-        ma_type = self.has["inputs"].get("ma_type")
+        mamode = self.has["inputs"].get("mamode")
 
-        if ma_type != None:
-            self.has["name"] = f"{self.source.source_name} {self.has["inputs"]["ma_type"].name} {self.has["inputs"]["ma_period"]} {self.has["inputs"]["n_smooth_period"]}"
+        if mamode != None:
+            self.has["name"] = f"{self.source.source_name} {self.has["inputs"]["mamode"].name} {self.has["inputs"]["ma_period"]} {self.has["inputs"]["n_smooth_period"]}"
         else:
             self.has["name"] = f"{self.source.source_name}"
             
@@ -191,50 +191,50 @@ class Arrow(QGraphicsObject):
         self.chart.sig_update_source.emit(self.source)
 
     
-    def get_source(self,_type:IndicatorType,ma_type:PD_MAType=PD_MAType.EMA, period:int=3,n:int=3):
+    def get_source(self,_type:IndicatorType,mamode:PD_MAType=PD_MAType.EMA, period:int=3,n:int=3):
 
         if _type.value == "japan" or _type.value == "Sub_Chart":
             return self.chart.jp_candle, None,None, n
 
         elif _type.value == "smooth_jp":
-            smooth_jp_candle = SMOOTH_CANDLE(self.precision,self.chart.jp_candle,ma_type,period)
+            smooth_jp_candle = SMOOTH_CANDLE(self.precision,self.chart.jp_candle,mamode,period)
             smooth_jp_candle._source_name = f"sm_jp {self.chart.symbol} {self.chart.interval}"
             self.chart.update_sources(smooth_jp_candle)
             smooth_jp_candle.fisrt_gen_data()
-            return smooth_jp_candle, ma_type,period, n
+            return smooth_jp_candle, mamode,period, n
         
         elif _type.value == "n_smooth_jp":
-            n_smooth_jp = N_SMOOTH_CANDLE(self.precision,self.chart.jp_candle,n,ma_type,period)
+            n_smooth_jp = N_SMOOTH_CANDLE(self.precision,self.chart.jp_candle,n,mamode,period)
             n_smooth_jp._source_name = f"n_smooth_jp {self.chart.symbol} {self.chart.interval}"
             self.chart.update_sources(n_smooth_jp)
             n_smooth_jp.fisrt_gen_data()
-            return n_smooth_jp, ma_type, period,n
+            return n_smooth_jp, mamode, period,n
         
         elif _type.value == "heikin":
             return self.chart.heikinashi, None,None, n
             
         elif _type.value == "smooth_heikin":
-            smooth_heikin = SMOOTH_CANDLE(self.precision,self.chart.heikinashi,ma_type,period)
+            smooth_heikin = SMOOTH_CANDLE(self.precision,self.chart.heikinashi,mamode,period)
             smooth_heikin._source_name = f"sm_heikin {self.chart.symbol} {self.chart.interval}"
             self.chart.update_sources(smooth_heikin)
             smooth_heikin.fisrt_gen_data()
-            return smooth_heikin, ma_type,period, n
+            return smooth_heikin, mamode,period, n
             
         elif _type.value == "n_smooth_heikin":
-            n_smooth_heikin = N_SMOOTH_CANDLE(self.precision,self.chart.heikinashi,n,ma_type,period)
+            n_smooth_heikin = N_SMOOTH_CANDLE(self.precision,self.chart.heikinashi,n,mamode,period)
             n_smooth_heikin._source_name = f"n_smooth_heikin {self.chart.symbol} {self.chart.interval}"
             self.chart.update_sources(n_smooth_heikin)
             n_smooth_heikin.fisrt_gen_data()
-            return n_smooth_heikin, ma_type, period,n
+            return n_smooth_heikin, mamode, period,n
             
     def get_inputs(self):
         if isinstance(self.source,JAPAN_CANDLE) or isinstance(self.source,HEIKINASHI):
             return {}
         if isinstance(self.source,N_SMOOTH_CANDLE):
-            return  {"ma_type":self.has["inputs"]["ma_type"],
+            return  {"mamode":self.has["inputs"]["mamode"],
                     "ma_period":self.has["inputs"]["ma_period"],
                     "n_smooth_period":self.has["inputs"]["n_smooth_period"],}
-        inputs =  {"ma_type":self.has["inputs"]["ma_type"],
+        inputs =  {"mamode":self.has["inputs"]["mamode"],
                     "ma_period":self.has["inputs"]["ma_period"],}
         return inputs
 

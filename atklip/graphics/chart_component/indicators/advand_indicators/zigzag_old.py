@@ -122,7 +122,7 @@ class BasicZigzag(PlotDataItem):
             self.setData(x_data,y_data)
         #self.indicator.setData(data)
     def on_click_event(self):
-        print("zooo day__________________")
+        #print("zooo day__________________")
         pass
 
     def mouseClickEvent(self, ev):

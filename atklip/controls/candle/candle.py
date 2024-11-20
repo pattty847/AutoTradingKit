@@ -30,6 +30,7 @@ class JAPAN_CANDLE(QObject):
         self.df = pd.DataFrame([])
         self.start_index:int = None
         self.stop_index:int = None
+        self.is_current_update = False
         
     
     def set_candle_infor(self,exchange_id,symbol,interval):
@@ -241,6 +242,7 @@ class JAPAN_CANDLE(QObject):
             return []
     
     def fisrt_gen_data(self,ohlcv,_precision):
+        self.is_current_update = False
         self.first_gen = False
         self.df = pd.DataFrame([])
         self.map_index_ohlcv: Dict[int, OHLCV] = {}
@@ -252,6 +254,7 @@ class JAPAN_CANDLE(QObject):
         
         self.start_index:int = self.candles[0].index
         self.stop_index:int = self.candles[-1].index
+        self.is_current_update = True
         self.sig_reset_all.emit()
         return self.candles
     
@@ -340,6 +343,7 @@ class JAPAN_CANDLE(QObject):
         self.stop_index:int = self.candles[-1].index
 
     def update(self,new_candles:List[OHLCV]):
+        self.is_current_update = False
         new_candle:OHLCV = new_candles[-1]
         if self.first_gen:
             if len(self.candles) == 0:
@@ -348,10 +352,12 @@ class JAPAN_CANDLE(QObject):
                 self.candles.append(new_candle)
                 self.map_index_ohlcv[new_candle.index] = new_candle
                 self.map_time_ohlcv[new_candle.time] = new_candle
+                self.is_current_update = True
                 return None
             last_candle = self.candles[-1]
             _time = last_candle.time
             if _time == new_candle.time:
+                
                 if new_candle.close != last_candle.close or\
                     new_candle.high != last_candle.high or\
                     new_candle.low != last_candle.low or\
@@ -384,9 +390,10 @@ class JAPAN_CANDLE(QObject):
                                         ]
                     self.start_index:int = self.candles[0].index
                     self.stop_index:int = self.candles[-1].index
+                    self.is_current_update = True
                     self.sig_update_candle.emit(self.candles[-2:])
-                    
                     return False
+                self.is_current_update = True
                 return None
             elif _time < new_candle.time:
                 pre_candle:OHLCV = new_candles[-2]
@@ -412,8 +419,10 @@ class JAPAN_CANDLE(QObject):
                 self.df = pd.concat([self.df, new_row], ignore_index=True)
                 self.start_index:int = self.candles[0].index
                 self.stop_index:int = self.candles[-1].index
+                self.is_current_update = True
                 self.sig_add_candle.emit(self.candles[-2:])
                 
                 return True
+        self.is_current_update = True
         return None
             

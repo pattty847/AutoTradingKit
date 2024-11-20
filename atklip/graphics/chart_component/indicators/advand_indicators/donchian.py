@@ -326,7 +326,7 @@ class BasicDonchianChannels(PlotDataItem):
         return _min,_max
 
     def on_click_event(self):
-        print("zooo day__________________")
+        #print("zooo day__________________")
         pass
 
     def mousePressEvent(self, ev):

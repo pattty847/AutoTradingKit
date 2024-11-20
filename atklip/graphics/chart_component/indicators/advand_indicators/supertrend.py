@@ -149,7 +149,7 @@ class BasicSPTrend(PlotDataItem):
             setdata.emit((output_times[:-1],output_values[:-1]))
     
     def on_click_event(self):
-        print("zooo day__________________")
+        #print("zooo day__________________")
         pass
 
     def mouseClickEvent(self, ev):
@@ -312,7 +312,7 @@ class CurrentSPTrend(PlotDataItem):
         setdata.emit((self.spt.output_times[-2:],self.spt.output_values[-2:]))
 
     def on_click_event(self):
-        print("zooo day__________________")
+        #print("zooo day__________________")
         pass
 
     def mouseClickEvent(self, ev):

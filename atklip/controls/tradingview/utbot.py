@@ -161,7 +161,7 @@ class ATKBOT_ALERT(QObject):
         return self.df.tail(n)
     
     def get_data(self,start:int=0,stop:int=0):
-        if self.xdata == []:
+        if len(self.xdata) == 0:
             return [],[]
         if start == 0 and stop == 0:
             x_data = self.xdata
@@ -249,13 +249,13 @@ class ATKBOT_ALERT(QObject):
         
 
         self.df = pd.DataFrame({
-                            'index':_index.to_list(),
-                            "long":_long.to_list(),
-                            "short":_short.to_list()
+                            'index':_index.to_numpy(),
+                            "long":_long.to_numpy(),
+                            "short":_short.to_numpy()
                             })
         
         
-        self.xdata,self.long,self.short = self.df["index"].to_list(),self.df["long"].to_list(),self.df["short"].to_list()
+        self.xdata,self.long,self.short = self.df["index"].to_numpy(),self.df["long"].to_numpy(),self.df["short"].to_numpy()
         
         # print(self.df)
         
@@ -263,8 +263,9 @@ class ATKBOT_ALERT(QObject):
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
-        self.sig_reset_all.emit()
+        
         self.is_current_update = True
+        self.sig_reset_all.emit()
           
     
     def add_historic(self,n:int):
@@ -286,15 +287,23 @@ class ATKBOT_ALERT(QObject):
         _short = _short.tail(_len)
         
         _df = pd.DataFrame({
-                            'index':_index.to_list(),
-                            "long":_long.to_list(),
-                            "short":_short.to_list()
+                            'index':_index.to_numpy(),
+                            "long":_long.to_numpy(),
+                            "short":_short.to_numpy()
                             })
         
         self.df = pd.concat([_df,self.df],ignore_index=True)
         
         
-        self.xdata,self.long,self.short = self.df["index"].to_list(),self.df["long"].to_list(),self.df["short"].to_list()
+        self.xdata,self.long,self.short = self.df["index"].to_numpy(),self.df["long"].to_numpy(),self.df["short"].to_numpy()
+        
+        
+        # self.xdata = np.concatenate((_df["index"].to_numpy(), self.xdata)) 
+        # self.SUPERTd = np.concatenate((_df["SUPERTd"].to_numpy(), self.SUPERTd))   
+        # self.SUPERTl = np.concatenate((_df["SUPERTl"].to_numpy(), self.SUPERTl))
+        # self.SUPERTs = np.concatenate((_df["SUPERTs"].to_numpy(), self.SUPERTs))
+        # self.SUPERTt = np.concatenate((_df["SUPERTt"].to_numpy(), self.SUPERTt))
+        
         
         self.is_genering = False
         if self.first_gen == False:
@@ -322,12 +331,14 @@ class ATKBOT_ALERT(QObject):
             
             self.df = pd.concat([self.df,new_frame],ignore_index=True)
             
-            # print(self.df.iloc[-1])
-            
-            self.xdata,self.long,self.short = self.df["index"].to_list(),self.df["long"].to_list(),self.df["short"].to_list()
+            self.xdata = np.concatenate((self.xdata,np.array([new_candle.index])))
+            self.long = np.concatenate((self.long,np.array([_long.iloc[-1]])))
+            self.short = np.concatenate((self.short,np.array([_short.iloc[-1]])))
             
             self.sig_add_candle.emit()
-            self.is_current_update = True
+            
+        self.is_current_update = True
+            
         
     def update(self, new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]
@@ -343,11 +354,10 @@ class ATKBOT_ALERT(QObject):
             
             self.df.iloc[-1] = [new_candle.index,_long.iloc[-1],_short.iloc[-1]]
             
-            # print(self.df.iloc[-1])
-            
-            self.xdata,self.long,self.short = self.df["index"].to_list(),self.df["long"].to_list(),self.df["short"].to_list()
+            self.xdata[-1],self.long[-1],self.short[-1] = new_candle.index,_long.iloc[-1],_short.iloc[-1]
             
             self.sig_update_candle.emit()
-            self.is_current_update = True
+        self.is_current_update = True
+            
 
     

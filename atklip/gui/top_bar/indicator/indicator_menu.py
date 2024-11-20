@@ -188,7 +188,7 @@ class SubIndicator(BasicMenu):
         self.setObjectName(self._type_indicator)
 
         self.list_indicators = [IndicatorType.VOLUME,IndicatorType.MACD,
-                                IndicatorType.RSI,IndicatorType.ROC,
+                                IndicatorType.RSI,IndicatorType.ROC,IndicatorType.SQEEZE,
                                 IndicatorType.TTM,IndicatorType.TSI,
                                 IndicatorType.VTX,IndicatorType.UO,
                                 IndicatorType.StochRSI,IndicatorType.TRIX,

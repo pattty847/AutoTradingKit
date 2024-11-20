@@ -11,7 +11,6 @@ from atklip.appmanager import FastWorker
 if TYPE_CHECKING:
     from atklip.graphics.chart_component.viewchart import Chart
     from atklip.graphics.chart_component.sub_panel_indicator import ViewSubPanel
-    from atklip.graphics.chart_component.indicators.sub_indicators.macd import BasicMACD
 
 class MACDHistogram(GraphicsObject):
     """Live candlestick plot, plotting data [[open, close, min, max], ...]"""

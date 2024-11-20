@@ -32,7 +32,7 @@ from .rvgi import rvgi
 from .slope import slope
 from .smc import smc
 from .smi import smi
-from .squeeze import squeeze
+from .squeeze import squeeze, SQEEZE
 from .squeeze_pro import squeeze_pro
 from .stc import stc, STC
 from .stoch import stoch, STOCH

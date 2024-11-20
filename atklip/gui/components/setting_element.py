@@ -96,7 +96,7 @@ class MaTypeEdit(ComboboxEdit):
     def __init__(self,parent:QWidget=None,indicator=None, _input=None):
         super(MaTypeEdit,self).__init__(parent,indicator, _input)
         
-        list_types = ["ma_type","macd_type","rsi_ma_type"]
+        list_types = ["mamode","macd_type","rsi_ma_type"]
         
         _inputs = self.indicator.get_inputs()
         
@@ -186,7 +186,7 @@ class PeriodEdit(IntEdit):
         _list_inputs = ["legs","length","period","ma_period","period_lower","period_upper","k_period",\
             "d_period","rsi_period","fast_period","medium_period","slow_period","ma_smooth_period","n_period","m_period",
             "signal_period","length_period","n_smooth_period","smooth_k_period","atr_long_period","ema_long_period",
-            "atr_short_period","ema_short_period"]
+            "atr_short_period","ema_short_period","bb_length","kc_length","mom_length","mom_smooth"]
         
         if _input in _list_inputs:
             _value = _inputs.get(_input)
@@ -253,8 +253,8 @@ class PriceEdit(FloatEdit):
         
         if _input in ["price_high","price_low","fast_w_value","medium_w_value","min_price_low",
                       "slow_w_value","key_value_long","key_value_short","max_price_high",
-                      "capital","loss_capital","proportion_closed","risk_percentage",
-                      "leverage","taker_fee","rsi_price_high","rsi_price_low",
+                      "capital","loss_capital","proportion_closed","risk_percentage","kc_scalar",
+                      "leverage","taker_fee","rsi_price_high","rsi_price_low","bb_std",
                       "maker_fee",]:
             _value = _inputs.get(_input)
             if _value != None:

@@ -70,9 +70,9 @@ class IndicatorManager:
                 old_source_name:str = sm_candle.source_name
                 new_source_name:str = ""
                 if old_source_name.__contains__("supersmoothcandle"):
-                    new_source_name = f"{new_chart_id}-{sm_candle.canlde_id}-{new_id_exchange}-{sm_candle.source}-supersmoothcandle-{new_symbol}-{new_interval}-{sm_candle.ma_type}-{sm_candle.ma_leng}-{sm_candle.n}"
+                    new_source_name = f"{new_chart_id}-{sm_candle.canlde_id}-{new_id_exchange}-{sm_candle.source}-supersmoothcandle-{new_symbol}-{new_interval}-{sm_candle.mamode}-{sm_candle.ma_leng}-{sm_candle.n}"
                 elif old_source_name.__contains__("smoothcandle"):
-                    new_source_name = f"{new_chart_id}-{sm_candle.canlde_id}-{new_id_exchange}-{sm_candle.source}-smoothcandle-{new_symbol}-{new_interval}-{sm_candle.ma_type}-{sm_candle.ma_leng}"
+                    new_source_name = f"{new_chart_id}-{sm_candle.canlde_id}-{new_id_exchange}-{sm_candle.source}-smoothcandle-{new_symbol}-{new_interval}-{sm_candle.mamode}-{sm_candle.ma_leng}"
 
                 if new_source_name != "":
                     if old_source_name in list(self.map_candle.keys()):
@@ -95,7 +95,7 @@ class IndicatorManager:
     def setup_market(self,crypto_ex,candle_infor:dict):
         symbol:str=candle_infor.get("symbol")
         interval:str=candle_infor.get("interval")
-        ma_type:str=candle_infor.get("ma_type")
+        mamode:str=candle_infor.get("mamode")
         ma_leng:int=candle_infor.get("ma_leng")
         n_smooth:int=candle_infor.get("n_smooth")
         name:str=candle_infor.get("name")
@@ -122,7 +122,7 @@ class IndicatorManager:
     def re_connect_market(self,crypto_ex,candle_infor:dict):
         symbol:str=candle_infor.get("symbol")
         interval:str=candle_infor.get("interval")
-        ma_type:str=candle_infor.get("ma_type")
+        mamode:str=candle_infor.get("mamode")
         ma_leng:int=candle_infor.get("ma_leng")
         n_smooth:int=candle_infor.get("n_smooth")
         name:str=candle_infor.get("name")
@@ -448,30 +448,30 @@ class IndicatorManager:
             slow_period:int = ta_infor.get("slow_period") 
             fast_period:int = ta_infor.get("fast_period") 
             signal_period:int = ta_infor.get("signal_period") 
-            ma_type: str = ta_infor.get("ma_type")
-            ta_param = f"{obj_id}-{ta_name}-{source}-{ma_type}-{slow_period}-{fast_period}-{signal_period}"
+            mamode: str = ta_infor.get("mamode")
+            ta_param = f"{obj_id}-{ta_name}-{source}-{mamode}-{slow_period}-{fast_period}-{signal_period}"
             
             indicator = MACD(_candles= _candles,
                     dict_ta_params=ta_infor)
             indicator.started_worker()
             
         elif ta_name == "ma":
-            ma_type:str = ta_infor.get("ma_type")
+            mamode:str = ta_infor.get("mamode")
             source:str = ta_infor.get("source")
             length:int= ta_infor.get("length")
-            ta_param = f"{obj_id}-{ta_name}-{source}-{ma_type}-{length}"
+            ta_param = f"{obj_id}-{ta_name}-{source}-{mamode}-{length}"
             
             indicator = MA(_candles= _candles,
                     dict_ta_params=ta_infor)
             indicator.started_worker()
         
         elif ta_name == "bbands":
-            ma_type:PD_MAType = ta_infor["ma_type"]
+            mamode:PD_MAType = ta_infor["mamode"]
             source:str = ta_infor["source"]
             length:int = ta_infor["length"]
             std_dev_mult:float = ta_infor["std_dev_mult"]
             
-            ta_param = f"{obj_id}-{ta_name}-{source}-{ma_type}-{length}-{std_dev_mult}"
+            ta_param = f"{obj_id}-{ta_name}-{source}-{mamode}-{length}-{std_dev_mult}"
             
             indicator = BBANDS(_candles= _candles,
                                 dict_ta_params=ta_infor)
@@ -498,8 +498,8 @@ class IndicatorManager:
         elif ta_name == "rsi":
             source:str = ta_infor["source"]      
             length:int = ta_infor["length"]
-            ma_type:str = ta_infor["ma_type"]
-            ta_param = f"{obj_id}-{ta_name}-{source}-{ma_type}-{length}"
+            mamode:str = ta_infor["mamode"]
+            ta_param = f"{obj_id}-{ta_name}-{source}-{mamode}-{length}"
             
             indicator = RSI(_candles= _candles,
                                 dict_ta_params=ta_infor)
@@ -510,9 +510,9 @@ class IndicatorManager:
             tclength:int= ta_infor["tclength"]
             fast:int = ta_infor["fast"]
             slow:int = ta_infor["slow"]
-            ma_type:str = ta_infor["ma_type"]
+            mamode:str = ta_infor["mamode"]
             
-            ta_param = f"{obj_id}-{ta_name}-{source}-{ma_type}-{tclength}-{fast}-{slow}"
+            ta_param = f"{obj_id}-{ta_name}-{source}-{mamode}-{tclength}-{fast}-{slow}"
             
             indicator = STC(_candles= _candles,
                                 dict_ta_params=ta_infor)
@@ -522,9 +522,9 @@ class IndicatorManager:
             smooth_k_period:int = ta_infor["smooth_k_period"]
             k_period:int = ta_infor["k_period"]
             d_period:int = ta_infor["d_period"]
-            ma_type:str = ta_infor["ma_type"]
+            mamode:str = ta_infor["mamode"]
             
-            ta_param = f"{obj_id}-{ta_name}-{ma_type}-{smooth_k_period}-{k_period}-{d_period}"
+            ta_param = f"{obj_id}-{ta_name}-{mamode}-{smooth_k_period}-{k_period}-{d_period}"
             
             indicator = STOCH(_candles= _candles,
                                 dict_ta_params=ta_infor)
@@ -536,9 +536,9 @@ class IndicatorManager:
             k_period:int = ta_infor["k_period"]
             d_period:int = ta_infor["d_period"]
             source:str = ta_infor["source"]
-            ma_type:str = ta_infor["ma_type"]
+            mamode:str = ta_infor["mamode"]
             
-            ta_param = f"{obj_id}-{ta_name}-{source}-{ma_type}-{rsi_period}-{period}-{k_period}-{d_period}"
+            ta_param = f"{obj_id}-{ta_name}-{source}-{mamode}-{rsi_period}-{period}-{k_period}-{d_period}"
             
             indicator = STOCHRSI(_candles= _candles,
                                 dict_ta_params=ta_infor)
@@ -557,9 +557,9 @@ class IndicatorManager:
             length_period :int = ta_infor["length_period"]
             signal_period:int = ta_infor["signal_period"]
             source:str = ta_infor["source"]
-            ma_type:str = ta_infor["ma_type"]
+            mamode:str = ta_infor["mamode"]
             
-            ta_param = f"{obj_id}-{ta_name}-{source}-{ma_type}-{signal_period}-{length_period}"
+            ta_param = f"{obj_id}-{ta_name}-{source}-{mamode}-{signal_period}-{length_period}"
             
             indicator = TRIX(_candles= _candles,
                                 dict_ta_params=ta_infor)
@@ -570,9 +570,9 @@ class IndicatorManager:
             slow_period :int = ta_infor["slow_period"]
             signal_period:int = ta_infor["signal_period"]
             source:str = ta_infor["source"]
-            ma_type:str = ta_infor["ma_type"]
+            mamode:str = ta_infor["mamode"]
             
-            ta_param = f"{obj_id}-{ta_name}-{source}-{ma_type}-{signal_period}-{slow_period}-{fast_period}"
+            ta_param = f"{obj_id}-{ta_name}-{source}-{mamode}-{signal_period}-{slow_period}-{fast_period}"
             
             indicator = TSI(_candles= _candles,
                                 dict_ta_params=ta_infor)
@@ -712,7 +712,7 @@ class IndicatorManager:
         id_exchange = candle_infor.get("id_exchange")
         symbol:str=candle_infor.get("symbol")
         interval:str=candle_infor.get("interval")
-        ma_type:str=candle_infor.get("ma_type")
+        mamode:str=candle_infor.get("mamode")
         ma_leng:int=candle_infor.get("ma_leng")
         n_smooth:int=candle_infor.get("n_smooth")
         name:str=candle_infor.get("name")
@@ -724,7 +724,7 @@ class IndicatorManager:
         heikin_name = f"{chart_id}-{id_exchange}-heikinashi-{symbol}-{interval}"
         _candles:JAPAN_CANDLE|HEIKINASHI = None
         if name == "smoothcandle":
-            source_name = f"{chart_id}-{canlde_id}-{id_exchange}-{source}-{name}-{symbol}-{interval}-{ma_type}-{ma_leng}"
+            source_name = f"{chart_id}-{canlde_id}-{id_exchange}-{source}-{name}-{symbol}-{interval}-{mamode}-{ma_leng}"
             if source == "japancandle":
                 _candles = self.map_candle[jp_name]
                 candle = self.map_candle[source_name] = SMOOTH_CANDLE(_candles,candle_infor)
@@ -740,7 +740,7 @@ class IndicatorManager:
             source_name = jp_name
             candle = self.map_candle[source_name] = JAPAN_CANDLE()
         elif name == "supersmoothcandle":
-            source_name = f"{chart_id}-{canlde_id}-{id_exchange}-{source}-{name}-{symbol}-{interval}-{ma_type}-{ma_leng}-{n_smooth}"
+            source_name = f"{chart_id}-{canlde_id}-{id_exchange}-{source}-{name}-{symbol}-{interval}-{mamode}-{ma_leng}-{n_smooth}"
             if source == "japancandle":
                 _candles = self.map_candle[jp_name]
                 candle = self.map_candle[source_name] = N_SMOOTH_CANDLE(_candles,candle_infor)
@@ -774,20 +774,20 @@ class IndicatorManager:
         id_exchange = candle_infor.get("id_exchange")
         symbol:str=candle_infor.get("symbol")
         interval:str=candle_infor.get("interval")
-        ma_type:str=candle_infor.get("ma_type")
+        mamode:str=candle_infor.get("mamode")
         ma_leng:int=candle_infor.get("ma_leng")
         n_smooth:int=candle_infor.get("n_smooth")
         name:str=candle_infor.get("name")
         source:str=candle_infor.get("source")
         source_name = ""
         if name == "smoothcandle":
-            source_name = f"{chart_id}-{canlde_id}-{id_exchange}-{source}-{name}-{symbol}-{interval}-{ma_type}-{ma_leng}"
+            source_name = f"{chart_id}-{canlde_id}-{id_exchange}-{source}-{name}-{symbol}-{interval}-{mamode}-{ma_leng}"
             return self.map_candle.get(source_name), source_name
         elif name == "japancandle":
             source_name = f"{chart_id}-{id_exchange}-{name}-{symbol}-{interval}"
             return self.map_candle.get(source_name) ,source_name
         elif name == "supersmoothcandle":
-            source_name = f"{chart_id}-{canlde_id}-{id_exchange}-{source}-{name}-{symbol}-{interval}-{ma_type}-{ma_leng}-{n_smooth}"
+            source_name = f"{chart_id}-{canlde_id}-{id_exchange}-{source}-{name}-{symbol}-{interval}-{mamode}-{ma_leng}-{n_smooth}"
             return self.map_candle.get(source_name),source_name
         elif name == "heikinashi":
             source_name = f"{chart_id}-{id_exchange}-{name}-{symbol}-{interval}"
@@ -801,7 +801,7 @@ class IndicatorManager:
         id_exchange = candle_infor.get("id_exchange")
         symbol:str=candle_infor.get("symbol")
         interval:str=candle_infor.get("interval")
-        ma_type:str=candle_infor.get("ma_type")
+        mamode:str=candle_infor.get("mamode")
         ma_leng:int=candle_infor.get("ma_leng")
         n_smooth:int=candle_infor.get("n_smooth")
         name:str=candle_infor.get("name")
@@ -816,9 +816,9 @@ class IndicatorManager:
         else:
             _candles = self.map_candle[heikin_name]
         if name == "smoothcandle":
-            source_name = f"{chart_id}-{canlde_id}-{id_exchange}-{source}-{name}-{symbol}-{interval}-{ma_type}-{ma_leng}"
+            source_name = f"{chart_id}-{canlde_id}-{id_exchange}-{source}-{name}-{symbol}-{interval}-{mamode}-{ma_leng}"
         elif name == "supersmoothcandle":
-            source_name = f"{chart_id}-{canlde_id}-{id_exchange}-{source}-{name}-{symbol}-{interval}-{ma_type}-{ma_leng}-{n_smooth}"
+            source_name = f"{chart_id}-{canlde_id}-{id_exchange}-{source}-{name}-{symbol}-{interval}-{mamode}-{ma_leng}-{n_smooth}"
         else:
             return {"detail": f"{candle_infor} is not exist","data":{}}
         
