@@ -440,7 +440,7 @@ class ATKBOT(PlotDataItem):
                     continue
                 
                 entry_pos_1_5R:QPointF = entry.has["inputs"]["data"][2.5].chart_pos
-                entry_pos_2R:QPointF = entry.has["inputs"]["data"][4].chart_pos
+                entry_pos_2R:QPointF = entry.has["inputs"]["data"][3].chart_pos
                 
                 
                 profit_2R = entry_pos_2R.y()
