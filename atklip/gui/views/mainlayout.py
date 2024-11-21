@@ -7,6 +7,8 @@ from PySide6.QtWidgets import QFrame,QWidget
 from PySide6.QtCore import QPropertyAnimation,QEasingCurve, Signal, Qt,QEvent,QTime
 from atklip.gui.qfluentwidgets.common.icon import *
 from atklip.appmanager.setting import AppConfig
+# from atklip.gui.components.possition_table import PositionTable
+from atklip.gui.bottom_widget.tab_interface import TabInterface
 
 if TYPE_CHECKING:
     from .fluentwindow import WindowBase
@@ -18,6 +20,12 @@ class MainWidget(QWidget,Ui_MainWidget):
         self._parent:WindowBase = parent
         self.setObjectName(name)
         self.setupUi(self)
+        
+        self.TabInterface = TabInterface(self)
+        
+        self.layout_bottom.setContentsMargins(0,0,0,0)
+        self.layout_bottom.addWidget(self.TabInterface) #,0,alignment=Qt.AlignmentFlag.AlignVCenter
+                
         self.maxExtend = 250
 
         self.tabItem = tabItem

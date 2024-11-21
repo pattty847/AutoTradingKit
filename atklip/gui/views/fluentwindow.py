@@ -60,16 +60,9 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
         self.setMinimumHeight(800)
         desktop = QApplication.screens()[0].availableGeometry()
         w, h = desktop.width(), desktop.height()
-        # self.move(w//2 - self.width()//2, h//2 - self.height()//2)
-        self.resize(1200, 800)
+        self.resize(1260, 800)
         self.move(w//2 - self.width()//2, h//2 - self.height()//2)
-        # self.showMaximized()
-        # self.resize(self.width(), self.height())
-        # if self.TabInterface:
-        #     self.TabInterface.progress.run_process(True)
-        self.show()
-        # QApplication.processEvents()
-    
+        self.show()    
 
     def load_pre_config(self):
         curent_tab = AppConfig.get_config_value("profiles.current_tab")

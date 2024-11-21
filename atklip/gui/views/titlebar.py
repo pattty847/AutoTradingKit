@@ -42,9 +42,9 @@ class TitleBar(MSFluentTitleBar):
         self.tabBar.setMovable(False)
         self.tabBar.setTabMaximumWidth(180)
         # self.tabBar.setTabShadowEnabled(True)
-        self.tabBar.setTabSelectedBackgroundColor(QColor(255, 255, 255, 125), QColor(255, 255, 255, 50))
+        # self.tabBar.setTabSelectedBackgroundColor(QColor(255, 255, 255, 125), QColor(255, 255, 255, 50))
 
-        self.tabBar.setScrollable(True)
+        # self.tabBar.setScrollable(True)
         self.tabBar.setCloseButtonDisplayMode(TabCloseButtonDisplayMode.ON_HOVER)
 
         self.tabBar.tabCloseRequested.connect(self.tabBar.removeTab)

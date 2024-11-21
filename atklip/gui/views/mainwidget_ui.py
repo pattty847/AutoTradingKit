@@ -216,6 +216,15 @@ class Ui_MainWidget(object):
 
         self.horizontalLayout_3.addWidget(self.rightview)
 
+        self.frame_9 = QFrame(self.chartview)
+        self.frame_9.setObjectName(u"frame_9")
+        self.frame_9.setMinimumSize(QSize(2, 0))
+        self.frame_9.setMaximumSize(QSize(2, 16777215))
+        self.frame_9.setStyleSheet(u"background-color: #474747;")
+        self.frame_9.setFrameShape(QFrame.NoFrame)
+
+        self.horizontalLayout_3.addWidget(self.frame_9)
+
 
         self.horizontalLayout.addWidget(self.chartview)
 

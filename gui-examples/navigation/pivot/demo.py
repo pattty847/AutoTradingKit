@@ -4,7 +4,7 @@ import sys
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication, QWidget, QStackedWidget, QVBoxLayout, QLabel
 
-from qfluentwidgets import Pivot, setTheme, Theme
+from qfluentwidgets import Pivot, setTheme, Theme, ToolButton, FluentIcon as FI
 
 
 class Demo(QWidget):
@@ -23,6 +23,7 @@ class Demo(QWidget):
         self.resize(400, 400)
 
         self.pivot = Pivot(self)
+        
         self.stackedWidget = QStackedWidget(self)
         self.vBoxLayout = QVBoxLayout(self)
 
@@ -35,7 +36,7 @@ class Demo(QWidget):
         self.addSubInterface(self.albumInterface, 'albumInterface', 'Album')
         self.addSubInterface(self.artistInterface, 'artistInterface', 'Artist')
 
-        self.vBoxLayout.addWidget(self.pivot, 0, Qt.AlignHCenter)
+        self.vBoxLayout.addWidget(self.pivot, 0, Qt.AlignmentFlag.AlignLeft)
         self.vBoxLayout.addWidget(self.stackedWidget)
         self.vBoxLayout.setContentsMargins(30, 0, 30, 30)
 
@@ -43,6 +44,10 @@ class Demo(QWidget):
         self.pivot.setCurrentItem(self.songInterface.objectName())
         self.pivot.currentItemChanged.connect(
             lambda k:  self.stackedWidget.setCurrentWidget(self.findChild(QWidget, k)))
+        
+        maximum_btn = ToolButton(FI.MAX)
+        
+        self.pivot.hBoxLayout.insertWidget
 
     def addSubInterface(self, widget: QLabel, objectName, text):
         widget.setObjectName(objectName)

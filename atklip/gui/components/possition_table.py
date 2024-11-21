@@ -4,18 +4,19 @@ import sys
 from typing import List, Union
 
 from PySide6.QtCore import Qt, QMargins, QModelIndex, QItemSelectionModel, Property, QRectF,Qt, \
-    QAbstractTableModel, QTimer, QModelIndex
-from PySide6.QtGui import QPainter, QColor, QKeyEvent, QPalette, QBrush
+    QAbstractTableModel, QTimer, QModelIndex,QPointF,QPoint,Signal
+from PySide6.QtGui import QPainter, QColor, QKeyEvent, QPalette, QBrush, QStandardItemModel,QMouseEvent
 from PySide6.QtWidgets import (QStyledItemDelegate, QApplication, QStyleOptionViewItem,QHeaderView,
                              QTableView, QTableWidget, QWidget, QTableWidgetItem, QStyle,QVBoxLayout,
                              QStyleOptionButton)
 
-from qfluentwidgets import TableWidget, isDarkTheme, setTheme, Theme, TableView,\
+from atklip.gui.qfluentwidgets import TableWidget, isDarkTheme, setTheme, Theme, TableView,\
     TableItemDelegate, setCustomStyleSheet,SmoothScrollDelegate\
-    ,getFont,themeColor
-from qfluentwidgets.components.widgets.check_box import CheckBoxIcon
-from qfluentwidgets.components.widgets.line_edit import LineEdit
-from qfluentwidgets.components.widgets.label import TitleLabel
+    ,getFont,themeColor, FluentIcon as FI,ThemeColor
+from atklip.gui.qfluentwidgets.components.widgets.check_box import CheckBoxIcon
+from atklip.gui.qfluentwidgets.components.widgets.line_edit import LineEdit
+from atklip.gui.qfluentwidgets.components.widgets.label import TitleLabel
+from atklip.gui.qfluentwidgets.components.widgets.button import ToolButton
 
 from atklip.controls.position import Position
 
@@ -27,7 +28,10 @@ class PositionItemDelegate(QStyledItemDelegate):
         self.margin = 2
         self.hoverRow = -1
         self.pressedRow = -1
+        self.mouse_pos:QPointF|QPoint = None
+        self.on_btn_pos_hover = False
         self.selectedRows = set()
+        
 
     def setHoverRow(self, row: int):
         self.hoverRow = row
@@ -54,9 +58,8 @@ class PositionItemDelegate(QStyledItemDelegate):
         lineEdit.setProperty("transparent", False)
         lineEdit.setStyle(QApplication.style())
         lineEdit.setText(option.text)
-        # lineEdit.setClearButtonEnabled(True)
         return lineEdit
-
+    
     def updateEditorGeometry(self, editor: QWidget, option: QStyleOptionViewItem, index: QModelIndex):
         rect = option.rect
         y = rect.y() + (rect.height() - editor.height()) // 2
@@ -146,14 +149,15 @@ class PositionItemDelegate(QStyledItemDelegate):
         if index.row() in self.selectedRows and index.column() == 0 and self.parent().horizontalScrollBar().value() == 0:
             self._drawIndicator(painter, option, index)
 
-        if index.data(Qt.CheckStateRole) is not None:
-            self._drawCheckBox(painter, option, index)
+        if self.hoverRow != -1:
+            if index.data(Qt.CheckStateRole) and index.column() == 0 and index.row()==self.hoverRow:
+                self._drawCheckBox(painter, option, index)
 
         painter.restore()
         super().paint(painter, option, index)
 
     def _drawCheckBox(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex):
-        painter.save()
+        # painter.save()
         checkState = Qt.CheckState(index.data(Qt.ItemDataRole.CheckStateRole))
 
         isDark = isDarkTheme()
@@ -163,21 +167,27 @@ class PositionItemDelegate(QStyledItemDelegate):
         y = option.rect.center().y() - 9.5
         rect = QRectF(x, y, 19, 19)
 
-        if checkState == Qt.CheckState.Unchecked:
-            painter.setBrush(QColor(0, 0, 0, 26) if isDark else QColor(0, 0, 0, 6))
-            painter.setPen(QColor(255, 255, 255, 142) if isDark else QColor(0, 0, 0, 122))
+        mouse_pos = self.mouse_pos
+        
+        if rect.contains(mouse_pos):
+            self.on_btn_pos_hover = True
+            # print(rect, mouse_pos)
+            # if checkState == Qt.CheckState.Unchecked:
+            #     painter.setBrush(ThemeColor.DARK_2.color()) #if isDark #else QColor(0, 0, 0, 6))
+            #     painter.setPen(ThemeColor.DARK_2.color()) #if isDark #else QColor(0, 0, 0, 122))
+            #     painter.drawRoundedRect(rect, r, r)
+            # else:
+            painter.setPen(ThemeColor.DARK_2.color())
+            # painter.setBrush(ThemeColor.DARK_1.color())
             painter.drawRoundedRect(rect, r, r)
         else:
-            painter.setPen(themeColor())
-            painter.setBrush(themeColor())
-            painter.drawRoundedRect(rect, r, r)
+            self.on_btn_pos_hover = False
+        if checkState == Qt.CheckState.Checked:
+            FI.POSITION.render(painter, rect, Theme.DARK)
+        else:
+            FI.POSITION.render(painter, rect, Theme.DARK)
 
-            if checkState == Qt.CheckState.Checked:
-                CheckBoxIcon.ACCEPT.render(painter, rect)
-            else:
-                CheckBoxIcon.PARTIAL_ACCEPT.render(painter, rect)
-
-        painter.restore()
+        # painter.restore()
         
     # def initStyleOption(self, option: QStyleOptionViewItem, index: QModelIndex):
     #     super().initStyleOption(option, index)
@@ -190,7 +200,7 @@ class PositionItemDelegate(QStyledItemDelegate):
     #     else:
     #         option.palette.setColor(QPalette.Text, Qt.red)
     #         option.palette.setColor(QPalette.HighlightedText, Qt.red)
-    
+# QStandardItemModel
 
 class PositionModel(QAbstractTableModel):
     def __init__(self, data):
@@ -203,9 +213,13 @@ class PositionModel(QAbstractTableModel):
     def columnCount(self, index):
         return len(self._data[0]) if self._data else 0
 
-    def data(self, index, role):
+    def data(self, index: QModelIndex, role):
+        "để thêm các vai trò cho cell, column, row theo dựa vào index, quy định nội dung và cách thức hiện thị cho bảng"
+        if role == Qt.CheckStateRole:
+            return Qt.CheckState.Checked if self._data[index.row()][index.column()] else Qt.CheckState.Unchecked
         if role == Qt.DisplayRole:
             return self._data[index.row()][index.column()]
+        
 
     def update_row(self,row,column, value):
         index = self.index(row, column)
@@ -222,35 +236,35 @@ class PositionModel(QAbstractTableModel):
                     self.setData(index, new_value, Qt.EditRole)
     
     def setData(self, index, value, role):
-        if index.column() == 1:
-            print("column side pos long/short")
-        elif index.column() == 2:
-            print("column type pos buy/sell")
-        elif index.column() == 3:
-            print("column entry time pos")
-        elif index.column() == 4:
-            print("column close time pos")
-        elif index.column() == 5:
-            print("column entry price")
-        elif index.column() == 6:
-            print("column close price")
-        elif index.column() == 6:
-            print("column quanty pos")
-        elif index.column() == 6:
-            print("column lavarate price")
-        elif index.column() == 6:
-            print("column PnL pos")
-        elif index.column() == 6:
-            print("column MaxDrawdown pos")
-        elif index.column() == 6:
-            print("column Fee pos")
-        elif index.column() == 6:
-            print("column Balance")
+        # if index.column() == 1:
+        #     print("column side pos long/short")
+        # elif index.column() == 2:
+        #     print("column type pos buy/sell")
+        # elif index.column() == 3:
+        #     print("column entry time pos")
+        # elif index.column() == 4:
+        #     print("column close time pos")
+        # elif index.column() == 5:
+        #     print("column entry price")
+        # elif index.column() == 6:
+        #     print("column close price")
+        # elif index.column() == 6:
+        #     print("column quanty pos")
+        # elif index.column() == 6:
+        #     print("column lavarate price")
+        # elif index.column() == 6:
+        #     print("column PnL pos")
+        # elif index.column() == 6:
+        #     print("column MaxDrawdown pos")
+        # elif index.column() == 6:
+        #     print("column Fee pos")
+        # elif index.column() == 6:
+        #     print("column Balance")
         if role == Qt.EditRole:
             self._data[index.row()][index.column()] = value
             self.dataChanged.emit(index, index)
-            return True
-        return False
+        #     return True
+        # return False
 
     def flags(self, index):
         "NoItemFlags"
@@ -258,6 +272,7 @@ class PositionModel(QAbstractTableModel):
 
 
 class PositionTable(TableView):
+    on_btn_pos_clicked = Signal(object)
     def __init__(self, parent=None):
         super().__init__(parent)
         
@@ -266,12 +281,15 @@ class PositionTable(TableView):
         self.setBorderVisible(True)
         
         self.verticalHeader().setDefaultSectionSize(45)
-        self.setItemDelegate(PositionItemDelegate(self))
+        self.delegate = PositionItemDelegate(self)
+        self.setItemDelegate(self.delegate)
         
         self.resizeColumnsToContents()
         self.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.setSortingEnabled(True)
         
+        self.clicked.connect(self.on_btn_pos_click)
+                
         data = [
             ['かばん', 'aiko', 'かばん', '2004', '5:04'],
             ['爱你', '王心凌', '爱你', '2004', '3:39'],
@@ -308,10 +326,57 @@ class PositionTable(TableView):
         self.pos_model = PositionModel(data)
         
         self.setModel(self.pos_model)
+        
+        # self.pos_model.dataChanged.connect(self.item_changed)
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.update_table)
+        self.timer.start(1000)  # Cập nhật mỗi 1 giây
+
+    def update_table(self):
+        """Cập nhật dữ liệu của các hàng cụ thể trong bảng."""
+        # Ví dụ chỉ cập nhật các hàng 2, 4 và 6
+        rows_to_update = [2, 4, 6]
+        self.pos_model.updateRows(rows_to_update)
+    
+    def leaveEvent(self,ev):
+        # print("leaveEvent")
+        super().leaveEvent(ev)
+    
+    def enterEvent(self,ev):
+        # print("enterEvent")
+        super().leaveEvent(ev)
+    
+    def mouseMoveEvent(self,ev:QMouseEvent):
+        super().mouseMoveEvent(ev)
+        pos = ev.pos()
+        index = self.indexAt(pos)
+        self.row_hover = index.row()
+        self.delegate.setHoverRow(index.row())
+        self.delegate.mouse_pos = pos        
+        self.pos_model.dataChanged.emit(index, index)
+        # if self.rect().contains(pos):
+        #     print("okie")
+        # print(self.row_hover)
+    
+
+    
+    def on_btn_pos_click(self, item):
+        "click on cell, item là PySide6.QtCore.QModelIndex(19,3,0x0,PositionModel(0x1d787459870)) tại cell đó"
+        if self.delegate.on_btn_pos_hover:
+            print(item)
+            self.on_btn_pos_clicked.emit(item)
+        
+        # Kiểm tra trạng thái của checkbox khi nó thay đổi
+        # if item.checkState() == Qt.Checked:
+        #     print(f"{item.text()} is Checked")
+        # elif item.checkState() == Qt.Unchecked:
+        #     print(f"{item.text()} is Unchecked")
+        # elif item.checkState() == Qt.PartiallyChecked:
+        #     print(f"{item.text()} is Partially Checked")
 
 class RealTimeTable(QWidget):
-    def __init__(self):
-        super().__init__()
+    def __init__(self,parent:QWidget=None):
+        super().__init__(parent)
         self.setWindowTitle("Real-Time Update Table Example")
         self.setStyleSheet("""
                            QWidget {
@@ -336,12 +401,12 @@ class RealTimeTable(QWidget):
         rows_to_update = [2, 4, 6]
         self.table_view.model().updateRows(rows_to_update)
 
-if __name__ == "__main__":
-    setTheme(Theme.DARK,True,True)
-    app = QApplication(sys.argv)
+# if __name__ == "__main__":
+#     setTheme(Theme.DARK,True,True)
+#     app = QApplication(sys.argv)
     
-    window = RealTimeTable()
-    window.resize(600, 400)
-    window.show()
-    sys.exit(app.exec())
+#     window = RealTimeTable()
+#     window.resize(600, 400)
+#     window.show()
+#     sys.exit(app.exec())
 

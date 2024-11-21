@@ -18,6 +18,7 @@ class AvatarButton(QPushButton):
         # self.setIcon(QIcon(icon_path))
         # self.setIconSize(QSize(size - 10, size - 10))
         #self.setFixedHeight(30)
+        # self.setContentsMargins(0,0,10,0)
         self.setStyleSheet("""
             QPushButton {
                 border: 0px solid;
