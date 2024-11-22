@@ -1,25 +1,18 @@
 # coding: utf-8
 import random
-import sys
-from typing import List, Union
+from typing import List
 
-from PySide6.QtCore import Qt, QMargins, QModelIndex, QItemSelectionModel, Property, QRectF,Qt, \
-    QAbstractTableModel, QTimer, QModelIndex,QPointF,QPoint,Signal
-from PySide6.QtGui import QPainter, QColor, QKeyEvent, QPalette, QBrush, QStandardItemModel,QMouseEvent
+from PySide6.QtCore import Qt, QMargins, QModelIndex, QRectF,Qt, \
+    QAbstractTableModel, QModelIndex,QPointF,QPoint,Signal
+from PySide6.QtGui import QPainter, QColor, QPalette, QBrush, QMouseEvent
 from PySide6.QtWidgets import (QStyledItemDelegate, QApplication, QStyleOptionViewItem,QHeaderView,
-                             QTableView, QTableWidget, QWidget, QTableWidgetItem, QStyle,QVBoxLayout,
-                             QStyleOptionButton)
+                             QTableView, QWidget, QVBoxLayout)
 
 from atklip.app_utils.functions import mkColor
-from atklip.gui.qfluentwidgets import TableWidget, isDarkTheme, setTheme, Theme, TableView,\
-    TableItemDelegate, setCustomStyleSheet,SmoothScrollDelegate\
-    ,getFont,themeColor, FluentIcon as FI,ThemeColor
-from atklip.gui.qfluentwidgets.components.widgets.check_box import CheckBoxIcon
-from atklip.gui.qfluentwidgets.components.widgets.line_edit import LineEdit
+from atklip.gui.qfluentwidgets import isDarkTheme, Theme, TableView,\
+    getFont,themeColor, FluentIcon as FI
 from atklip.gui.qfluentwidgets.components.widgets.label import TitleLabel
-from atklip.gui.qfluentwidgets.components.widgets.button import ToolButton
 
-from atklip.controls.position import Position
 
 
 class PositionItemDelegate(QStyledItemDelegate):
@@ -284,7 +277,7 @@ class PositionTable(TableView):
         self.setItemDelegate(self.delegate)
         self.resizeColumnsToContents()
         self.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.setSortingEnabled(True)
+        # self.setSortingEnabled(True)
         self.clicked.connect(self.on_btn_pos_click)
                 
         data = [
@@ -355,21 +348,12 @@ class PositionTable(TableView):
         #     print("okie")
         # print(self.row_hover)
     
-
-    
     def on_btn_pos_click(self, item):
         "click on cell, item là PySide6.QtCore.QModelIndex(19,3,0x0,PositionModel(0x1d787459870)) tại cell đó"
         if self.delegate.on_btn_pos_hover:
             print(item)
             self.on_btn_pos_clicked.emit(item)
         
-        # Kiểm tra trạng thái của checkbox khi nó thay đổi
-        # if item.checkState() == Qt.Checked:
-        #     print(f"{item.text()} is Checked")
-        # elif item.checkState() == Qt.Unchecked:
-        #     print(f"{item.text()} is Unchecked")
-        # elif item.checkState() == Qt.PartiallyChecked:
-        #     print(f"{item.text()} is Partially Checked")
 
 class RealTimeTable(QWidget):
     def __init__(self,parent:QWidget=None):

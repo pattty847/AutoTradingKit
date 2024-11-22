@@ -5,10 +5,16 @@ from atklip.gui.qfluentwidgets.common.router import qrouter
 from atklip.gui.qfluentwidgets.components import  TabBar
 from .position_table import  PositionTable
 from .titlebar import TitleBar
+
 class TabInterface(QWidget):
     """ Tab interface """
     def __init__(self, parent=None):
         super().__init__(parent=parent)
+        self.vBoxLayout = QVBoxLayout()
+        self.vBoxLayout.setSpacing(1)
+        self.vBoxLayout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(self.vBoxLayout)
+        
         self.tabCount = 1
         self.setStyleSheet("""
                            QWidget {
@@ -16,41 +22,28 @@ class TabInterface(QWidget):
                             }""")
         self.title_bar = TitleBar(self)
         self.tabBar = self.title_bar.tabBar
-        
         self.tabBar.addButton.hide()
         self.stackedWidget = QStackedWidget(self)
         # self.tabView = QWidget(self)
-        self.vBoxLayout = QVBoxLayout()
-        self.vBoxLayout.setSpacing(1)
-        self.vBoxLayout.setContentsMargins(0, 0, 0, 0)
         
-        # self.tabBar.setTabMaximumWidth(180)
-        # self.tabBar.setTabMinimumWidth(180)
-        # self.setFixedHeight(280)
         
         self.frame = QFrame(self)
-        self.frame.setObjectName(u"frame_5")
+        self.frame.setObjectName(u"frame")
         self.frame.setMinimumSize(QSize(0, 2))
         self.frame.setMaximumSize(QSize(16777215, 2))
         self.frame.setStyleSheet(u"background-color: #474747;")
         self.frame.setFrameShape(QFrame.NoFrame)
+        self.frame.setFrameShadow(QFrame.Plain)
+        
         self.vBoxLayout.addWidget(self.frame)
         self.vBoxLayout.addWidget(self.title_bar)
         self.vBoxLayout.addWidget(self.stackedWidget)
-        self.setLayout(self.vBoxLayout)
         
         
         self.overview = PositionTable(self)
         self.PositionTable = PositionTable(self)
         self.property = PositionTable(self)
         
-        # add items to pivot
-        self.__initWidget()
-        # self.tabBar.itemLayout.setSpacing(1)
-        # self.tabBar.itemLayout.setContentsMargins(1, 1, 1, 1)
-        # self.setContentsMargins(0,0,0,0)
-
-    def __initWidget(self):
         self.tabBar.setCloseButtonDisplayMode(2)
         self.addSubInterface(self.PositionTable,
                              'tabposition', self.tr('List of trades'))
@@ -58,15 +51,9 @@ class TabInterface(QWidget):
                              'taboverview', self.tr('Overview'))
         self.addSubInterface(self.property,
                              'tabproperty', self.tr('Properties'))
-        # StyleSheet.NAVIGATION_VIEW_INTERFACE.apply(self)
-        self.connectSignalToSlot()
+        self.stackedWidget.currentChanged.connect(self.onCurrentIndexChanged)  
         qrouter.setDefaultRouteKey(
             self.stackedWidget, self.PositionTable.objectName())
-
-    def connectSignalToSlot(self):
-        # self.tabBar.tabAddRequested.connect(self.addTab)
-        # self.tabBar.tabCloseRequested.connect(self.removeTab)
-        self.stackedWidget.currentChanged.connect(self.onCurrentIndexChanged)  
 
     def addSubInterface(self, widget: QLabel|QWidget, objectName, text, icon=None):
         widget.setObjectName(objectName)

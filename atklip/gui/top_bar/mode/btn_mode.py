@@ -1,10 +1,8 @@
 
 from typing import Union
-from PySide6.QtCore import QSize,Signal
-from PySide6.QtGui import QIcon,QMovie,QColor
-from PySide6.QtWidgets import QPushButton,QLabel,QWidget,QGraphicsDropShadowEffect
+from PySide6.QtCore import Signal
+from PySide6.QtWidgets import QWidget
 
-from atklip.gui.qfluentwidgets.common import isDarkTheme
 from atklip.gui.qfluentwidgets.components import HWIDGET
 from atklip.gui.components import StreamingMode
 

@@ -67,7 +67,7 @@ class TopBar(QFrame,TopFrame):
         self.left_layout.addWidget(self.mode)
         self.right_layout.addWidget(self.LayoutButton)
         
-        self.left_layout.setSpacing(10)
+        # self.left_layout.setSpacing(10)
         
         self._parent.mouse_clicked_signal.connect(self.gotodate.delete)
         self._parent.mouse_clicked_signal.connect(self.symbol.delete)

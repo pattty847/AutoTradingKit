@@ -159,6 +159,7 @@ class IconTextChangeButton(QPushButton):
         if self._icon:
             if self.isChecked():
                 _icon = change_svg_color(self._icon.value,"#0055ff")
+                print(_icon)
                 self.setIcon(QIcon(_icon))
             else:
                 if isDarkTheme():

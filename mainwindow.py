@@ -47,7 +47,6 @@ def main():
     app_icon = get_real_path("atklip/appdata")
     icon.addFile(f'{app_icon}/appico.ico',QSize(), QIcon.Normal, QIcon.Off)
     w.setWindowIcon(icon)
-    # w.show()
     sys.exit(app.exec())
 
 if __name__ == '__main__':

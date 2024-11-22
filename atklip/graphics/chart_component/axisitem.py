@@ -53,6 +53,16 @@ class CustomDateAxisItem(AxisItem):
         super().__init__(orientation, pen=pen, textPen=textPen, linkView=linkView, parent=parent,
                          maxTickLength=maxTickLength, showValues=showValues, text=text, units=units,
                          unitPrefix=unitPrefix, **kwargs)
+        
+        self.style['tickTextOffset'] = [2, 2]
+        # self.style['textFillLimits'] = [ 
+        #                                 # (0, 0.8),  
+        #                                 (2, 0.8),   
+        #                                 (4, 0.6),    
+        #                                 ]
+        self.style['maxTickLevel'] = 2
+        self.style['maxTextLevel'] = 2
+        
         self.setCursor(QCursor(Qt.CursorShape.SizeHorCursor))
         self.setTickFont("Segoe UI")
         self.context:Chart = context

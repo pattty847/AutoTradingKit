@@ -1,17 +1,16 @@
 # type: ignore
-from typing import Union, Optional, Any, List, TYPE_CHECKING 
-from functools import lru_cache
+from typing import Union, Any, List, TYPE_CHECKING 
 from .plotitem import ViewPlotItem
 from atklip.controls import *
 
 from PySide6 import QtGui
-from PySide6.QtCore import Signal,QPointF,Qt,QSize,QEvent,QTime
-from PySide6.QtGui import QColor,QPainter
+from PySide6.QtCore import Signal,Qt,QSize,QEvent,QTime
+from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import QGraphicsView,QWidget
-from atklip.graphics.pyqtgraph import mkPen, PlotWidget, InfiniteLine,SignalProxy
+from atklip.graphics.pyqtgraph import mkPen, PlotWidget
 
 
-from atklip.controls.candle import SMOOTH_CANDLE, JAPAN_CANDLE
+from atklip.controls.candle import JAPAN_CANDLE
 
 from .globarvar import global_signal
 from .proxy_signal import Signal_Proxy

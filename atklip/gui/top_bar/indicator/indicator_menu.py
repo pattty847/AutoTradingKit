@@ -6,9 +6,9 @@ from atklip.gui.qfluentwidgets import FluentIcon as FIF
 from atklip.gui.components import ScrollInterface,ICON_TEXT_BUTTON,Indicator_Item,MovingWidget
 from atklip.gui.qfluentwidgets.common import FluentStyleSheet
 from atklip.appmanager.setting import AppConfig
-from atklip.controls import IndicatorType,PD_MAType
+from atklip.controls import IndicatorType
 
-from PySide6.QtWidgets import QStackedWidget,QAbstractScrollArea, QWidget,QApplication
+from PySide6.QtWidgets import QStackedWidget,QWidget
 from PySide6.QtCore import Signal,Qt
 
 class RightMenu(VWIDGET):

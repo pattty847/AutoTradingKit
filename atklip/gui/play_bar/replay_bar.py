@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 from PySide6.QtCore import Signal,QSize
-from PySide6.QtWidgets import QFrame,QSizePolicy,QWidget
+from PySide6.QtWidgets import QFrame,QSizePolicy
 
 from atklip.gui.qfluentwidgets.common import FluentIcon as FIF
 from atklip.gui.qfluentwidgets.components import VerticalSeparator
@@ -10,9 +10,7 @@ from atklip.gui.components._pushbutton import _PushButton
 from .playbar_ui import  Ui_Frame as PlaybarFrame
 from .select_bar import SelectBar
 from .replay_speed import ReplaySpeed
-from .btn_forward import ForwardButton
 from .btn_play import PlayButton
-from .btn_go_to_now import GotoNow
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:

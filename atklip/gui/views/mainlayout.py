@@ -21,10 +21,7 @@ class MainWidget(QWidget,Ui_MainWidget):
         self.setObjectName(name)
         self.setupUi(self)
         
-        self.TabInterface = TabInterface(self)
         
-        self.layout_bottom.setContentsMargins(0,0,0,0)
-        self.layout_bottom.addWidget(self.TabInterface) #,0,alignment=Qt.AlignmentFlag.AlignVCenter
                 
         self.maxExtend = 250
 
@@ -76,11 +73,14 @@ class MainWidget(QWidget,Ui_MainWidget):
         self.topbar.setup_indicator_menu()
         self.topbar.setup_symbol_menu()
         
+        self.TabInterface = TabInterface(self)
+        
+        self.layout_bottom.setContentsMargins(0,0,0,0)
+        self.layout_bottom.addWidget(self.TabInterface) #,0,alignment=Qt.AlignmentFlag.AlignVCenter
+        
         self.press_time = None
         self.release_time = None
         
-        FluentStyleSheet.SPLITTER.apply(self.chartbox_splitter)
-
     def show_favorite_draw_btn(self):
         "Drawbar ---------start"
         "show favorite draw tools on chart when start"
