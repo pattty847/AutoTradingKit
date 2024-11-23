@@ -794,7 +794,7 @@ class Chart(ViewPlotWidget):
         y0 = y1 - height
         self.setYRange(y1, y0, padding=0.2)
         x1 = self.jp_candle.candles[-1].index
-        self.setXRange(x1, x1-150, padding=0.5)
+        self.setXRange(x1, x1-200, padding=0.5)
         self.auto_xrange()
 
     def keyPressEvent(self, ev: QKeyEvent):

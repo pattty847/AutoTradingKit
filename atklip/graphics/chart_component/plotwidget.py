@@ -200,16 +200,6 @@ class ViewPlotWidget(PlotWidget):
         else:
             item = args       
         if isinstance(item,ATKBOT):
-            if item.list_pos:
-                for obj in item.list_pos.values():
-                    self.removeItem(obj["obj"])
-                    if hasattr(obj["obj"], "deleteLater"):
-                        obj["obj"].deleteLater()
-                    
-                    self.removeItem(obj["entry"])
-                    if hasattr(obj["entry"], "deleteLater"):
-                        obj["entry"].deleteLater()
-                        
             self.atkobj = None
 
         if item in self.indicators:
@@ -243,20 +233,20 @@ class ViewPlotWidget(PlotWidget):
         timedata = np.clip(timedata, -1e30, 1e30)
         # Optionally normalize data
         # timedata = (timedata - np.mean(timedata)) / np.std(timedata)
-        if len(timedata) >= 150:
+        if len(timedata) >= 200:
             x1 = np.float64(timedata[-1])
-            x2 = np.float64(timedata[-150])
+            x2 = np.float64(timedata[-200])
             self.setXRange(x1, x2, padding=0.2)
             
-            _min = data[2][-150:].min()
-            _max = data[1][-150:].max()
+            _min = data[2][-200:].min()
+            _max = data[1][-200:].max()
             self.setYRange(_max, _min, padding=0.2)
         else:
             x1 = np.float64(timedata[-1])
             x2 = np.float64(timedata[-1*len(timedata)])
             self.setXRange(x1, x2, padding=0.2)
-            _min = data[2][-150:].min()
-            _max = data[1][-150:].max()
+            _min = data[2][-200:].min()
+            _max = data[1][-200:].max()
             self.setYRange(_max, _min, padding=0.2)
     def removeItem(self, *args):
         return self.plotItem.removeItem(*args)

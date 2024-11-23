@@ -195,6 +195,10 @@ class BaseArrowItem(QGraphicsPathItem):
         opt = dict([(k,self.opts[k]) for k in arrowOpts if k in self.opts])
         tr = QTransform()
         tr.rotate(self.opts['angle'])
+        
+        print(self.opts['angle'])
+        print(opt)
+        
         self.path = tr.map(fn.makeArrowPath(**opt))
 
         self.setPath(self.path)

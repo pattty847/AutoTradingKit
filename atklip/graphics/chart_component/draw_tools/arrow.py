@@ -2,7 +2,12 @@ from PySide6.QtWidgets import QApplication, QWidget
 from PySide6.QtGui import QPainter, QPolygonF, QColor, QBrush
 from PySide6.QtCore import QPoint, Qt
 import math
-
+from math import hypot
+from atklip.app_utils import functions as fn
+from PySide6.QtCore import Qt,QPointF
+from psygnal import Signal
+from PySide6.QtGui import QTransform,QPainter
+from PySide6.QtWidgets import QGraphicsPathItem
 from typing import Dict, Tuple, List,TYPE_CHECKING
 import numpy as np
 
@@ -337,21 +342,34 @@ class Arrow(QGraphicsObject):
         self.draw_arrow_up(painter,t,_max)
 
     
-    def draw_arrow_up(self, painter, x, y, tail_width=10, tail_length=20, triangle_width=20, triangle_length=20):
+    def draw_arrow_up(self, painter: QPainter, x, y, tail_width=10, tail_length=20, triangle_width=20, triangle_length=20):
         """
         Vẽ mũi tên hướng lên trên tại vị trí (x, y).
         - x, y: Tọa độ của phần dưới của mũi tên.
         """
         # Vẽ đuôi mũi tên (hình chữ nhật)
-        painter.drawRect(x - tail_width / 2, y - tail_length, tail_width, tail_length)
+        # painter.drawRect(x - tail_width / 2, y - tail_length, tail_width, tail_length)
 
-        # Vẽ đầu mũi tên (hình tam giác hướng lên trên)
-        points = QPolygonF([
-            QPointF(x, y - tail_length - triangle_length),    # Đỉnh nhọn của tam giác
-            QPointF(x - triangle_width / 2, y - tail_length),  # Góc trái
-            QPointF(x + triangle_width / 2, y - tail_length)   # Góc phải
-        ])
-        painter.drawPolygon(points)
+        # # Vẽ đầu mũi tên (hình tam giác hướng lên trên)
+        # points = QPolygonF([
+        #     QPointF(x, y - tail_length - triangle_length),    # Đỉnh nhọn của tam giác
+        #     QPointF(x - triangle_width / 2, y - tail_length),  # Góc trái
+        #     QPointF(x + triangle_width / 2, y - tail_length)   # Góc phải
+        # ])
+        # painter.drawPolygon(points)
+        
+        # angle=90, tipAngle=60, headLen=10, tailLen=10, tailWidth=5
+        tr = QTransform()
+        tr.rotate(90)
+        path = tr.map(fn.makeArrowPath(headLen= 10,
+                                            headWidth = 5,
+                                            tipAngle= 60,
+                                            tailLen= 10,
+                                            tailWidth = 5,
+                                            baseAngle = 90))
+        
+        painter.drawPath(path)
+        
 
     def draw_arrow_down(self, painter, x, y,tail_width=10, tail_length=20, triangle_width=20, triangle_length=20):
         """
@@ -413,6 +431,8 @@ class Arrow(QGraphicsObject):
             self._is_change_source = False
         self.picture = QPicture()
         painter = QPainter(self.picture)
+        painter.setPen(mkPen("red"))
+        painter.setBrush(mkBrush("red"))
         [self.draw_candle(painter,_open[index],_max[index],_min[index],close[index],w,x_data[index]) for index in range(len(x_data)-1)]
         painter.end()
         self._to_update = True
