@@ -10,7 +10,7 @@ from atklip.controls import OHLCV,IndicatorType
 from atklip.controls.candle import JAPAN_CANDLE
 
 from atklip.appmanager import FastWorker
-
+from atklip.graphics.chart_component.base_items.plotdataitem import PlotDataItem
 if TYPE_CHECKING:
     from atklip.graphics.chart_component.viewchart import Chart
     from atklip.graphics.chart_component.sub_panel_indicator import ViewSubPanel
@@ -46,14 +46,14 @@ class Volume(GraphicsObject):
                     }
                 }
         self.id = self.chart.objmanager.add(self)
-        self.chart.jp_candle.signal_delete.connect(self.signal_delete)
-        if not isinstance(self.chart.jp_candle,JAPAN_CANDLE):
-            self.chart.jp_candle.setParent(self)
-            self.signal_delete.connect(self.chart.jp_candle.signal_delete)
+
         self.precision = precision
         self.output_y_data: List[float] = []
-        self.historic_volume = SingleVolume(self.chart,self.has)
-        self.historic_volume.setParentItem(self)
+        
+        # self.ma_line = PlotDataItem(pen="orange")
+        # self.ma_line.setFlag(QGraphicsItem.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
+        # self.ma_line.setParentItem(self)
+        
         self.type_picture = "volume"
 
         self.picture = QPicture()
@@ -69,7 +69,8 @@ class Volume(GraphicsObject):
         self._is_change_source: bool = False
         
         self.chart.jp_candle.sig_reset_all.connect(self.fisrt_gen_data,Qt.ConnectionType.AutoConnection)
-        self.chart.jp_candle.sig_add_candle.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
+        self.chart.jp_candle.sig_add_candle.connect(self.update_asyncworker,Qt.ConnectionType.AutoConnection)
+        self.chart.jp_candle.sig_update_candle.connect(self.update_asyncworker,Qt.ConnectionType.AutoConnection)
         self.chart.jp_candle.sig_add_historic.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
         self.sig_change_yaxis_range.connect(get_last_pos_worker, Qt.ConnectionType.AutoConnection)
         
@@ -101,7 +102,6 @@ class Volume(GraphicsObject):
             self.has["styles"]["brush_highcolor"] = mkBrush(_style,width=0.7)
         elif _input == "brush_lowcolor":
             self.has["styles"]["brush_lowcolor"] = mkBrush(_style,width=0.7)
-        self.historic_volume.fisrt_gen_data()
         self.threadpool_asyncworker(True)
     
     def get_min_max(self):
@@ -123,7 +123,33 @@ class Volume(GraphicsObject):
         self.worker = FastWorker(self.update_last_data,candle)
         self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.QueuedConnection)
         self.worker.start()
-        #self.threadpool.start(self.worker)
+    
+    def update_asyncworker(self,candles=None):
+        self.worker = None
+        self.worker = FastWorker(self.update_last_data,candles)
+        self.worker.signals.setdata.connect(self.updateData,Qt.ConnectionType.QueuedConnection)
+        self.worker.start()    
+    
+    def updateData(self, data) -> None:
+        """y_data must be in format [[open, close, min, max], ...]"""
+        self._to_update = False
+        x_data, y_data = data[0],data[1]
+        w = (x_data[-1] - x_data[-2]) / 5
+        pre_t = x_data[-2]
+        t = x_data[-1]
+        
+        pre_open,pre_close, pre_volume = y_data[0][-2],y_data[1][-2],y_data[2][-2]
+        _open,_close, _volume = y_data[0][-1],y_data[1][-1],y_data[2][-1]
+        
+        self.draw_single_volume(pre_open,pre_close, pre_volume,w,pre_t)
+        self.draw_single_volume(_open,_close, _volume,w,t)
+        
+        self._to_update = True
+        self._panel.sig_update_y_axis.emit()
+        # self.prepareGeometryChange()
+        # self.informViewBoundsChanged()
+        self.update(self.boundingRect())
+    
     def get_yaxis_param(self):
         if len(self.chart.jp_candle.candles) > 0:
             last_candle = self.chart.jp_candle.last_data()
@@ -145,31 +171,6 @@ class Volume(GraphicsObject):
 
         This function is called by external QGraphicsView.
         """
-        if self._start is None or self._stop is None:
-            x_left,x_right = int(self._panel.xAxis.range[0]),int(self._panel.xAxis.range[1])
-            
-            start_index = self.chart.jp_candle.candles[0].index
-            stop_index = self.chart.jp_candle.candles[-1].index
-            if x_left > start_index:
-                self._start = x_left
-            else:
-                self._start = start_index
-            if x_right < stop_index:
-                self._stop = x_right
-            else:
-                self._stop = stop_index
-                
-        rect_area: tuple = (self._start, self._stop)
-        if self._to_update:
-            self._draw_item_picture(self._start, self._stop)
-            self._to_update = False
-        elif (rect_area != self._rect_area):
-            self._rect_area = rect_area
-            self._draw_item_picture(self._start, self._stop)
-        elif self.picture == None:
-            self._rect_area = rect_area
-            self._draw_item_picture(self._start, self._stop)
-            
         self.picture.play(painter)
 
     def _draw_item_picture(self, min_ix: int, max_ix: int) -> None:
@@ -182,14 +183,15 @@ class Volume(GraphicsObject):
         painter.end()
     
     def play_bar(self,painter,ix):
-        bar_picture = self._bar_picutures.get(ix)
-        if bar_picture is not None:
-            bar_picture.play(painter)    
+        bar_picture = self._bar_picutures.get(ix,None)
+        if bar_picture:
+            bar_picture.play(painter)   
+    
     
     def boundingRect(self) -> QRectF:
-        x_left,x_right = int(self.chart.xAxis.range[0]),int(self.chart.xAxis.range[1])  
-        start_index = self.chart.jp_candle.candles[0].index
-        stop_index = self.chart.jp_candle.candles[-1].index
+        x_left,x_right = int(self.chart.xAxis.range[0]),int(self.chart.xAxis.range[1])   
+        start_index = self.chart.jp_candle.start_index
+        stop_index = self.chart.jp_candle.stop_index
         if x_left > start_index:
             self._start = x_left+2
         elif x_left > stop_index:
@@ -198,68 +200,81 @@ class Volume(GraphicsObject):
             self._start = start_index+2
             
         if x_right < stop_index:
-            self._stop = x_right
+            self._stop = x_right+2
         else:
-            self._stop = stop_index
-        h_high =  self.chart.jp_candle.get_df()["volume"].iloc[self._start:self._stop].max()
-        h_low = self.chart.jp_candle.get_df()["volume"].iloc[self._start:self._stop].min()
-        rect = QRectF(self._start,h_low,self._stop-self._start,h_high-h_low)
-        return rect
+            self._stop = stop_index+2
+
+        rect_area: tuple = (self._start, self._stop)
+        if self._to_update:
+            self._rect_area = rect_area
+            self._draw_item_picture(self._start, self._stop)
+            self._to_update = False
+        elif rect_area != self._rect_area:
+            self._rect_area = rect_area
+            self._draw_item_picture(self._start, self._stop)
+        return self.picture.boundingRect()
 
     def draw_volume(self,_open,close,volume,w,t):
-        if self._bar_picutures.get(t) == None:
-            candle_picture:QPicture =QPicture()
-            p:QPainter =QPainter(candle_picture)
-            if _open > close:
-                self.outline_pen = mkPen(color=self.has["styles"]["pen_lowcolor"],width=0.7) #,width=0.7
-                p.setPen(self.outline_pen)
-                p.setBrush(self.has["styles"]["brush_lowcolor"])
-            else:
-                self.outline_pen = mkPen(color=self.has["styles"]["pen_highcolor"],width=0.7) #,width=0.7
-                p.setPen(self.outline_pen)
-                p.setBrush(self.has["styles"]["brush_highcolor"])
+        "dieu kien de han che viec ve lai khi add new candle"
+        if not self._bar_picutures.get(t):
+            self.draw_single_volume(_open,close,volume,w,t)
+            return True
+        return False
+        
+    def draw_single_volume(self,_open,close,volume,w,t):
+        candle_picture:QPicture =QPicture()
+        p:QPainter =QPainter(candle_picture)
+        if _open > close:
+            self.outline_pen = mkPen(color=self.has["styles"]["pen_lowcolor"],width=0.7) #,width=0.7
+            p.setPen(self.outline_pen)
+            p.setBrush(self.has["styles"]["brush_lowcolor"])
+        else:
+            self.outline_pen = mkPen(color=self.has["styles"]["pen_highcolor"],width=0.7) #,width=0.7
+            p.setPen(self.outline_pen)
+            p.setBrush(self.has["styles"]["brush_highcolor"])
 
-            if volume == 0:
-                _line = QLineF(QPointF(t - w, 0), QPointF(t + w, 0))
-                p.drawLine(_line)
-            else:
-                rect = QRectF(t - w, 0, w * 2, volume)  
-                p.drawRect(rect)
-            self._bar_picutures[t] = candle_picture
+        if volume == 0:
+            _line = QLineF(QPointF(t - w, 0), QPointF(t + w, 0))
+            p.drawLine(_line)
+        else:
+            rect = QRectF(t - w, 0, w * 2, volume)  
+            p.drawRect(rect)
+        p.end()
+        self._bar_picutures[t] = candle_picture
+        
 
     def setData(self, data) -> None:
         """y_data must be in format [[open, close, min, max], ...]"""
-        
-        x_data, y_data = data[0], data[1]
-        # self.picture = QPicture()
-        # p = QPainter(self.picture)
-        _open,_close, _volume = y_data[0],y_data[1],y_data[2]
         self._to_update = False
-        w = 1 / 5
+        
+        x_data, y_data = data[0],data[1]
+        w = (x_data[-1] - x_data[-2]) / 5
+
         if self._is_change_source:
             self._bar_picutures.clear()
             self._is_change_source = False
-        [self.draw_volume(_open[index],_close[index],_volume[index],w,x_data[index]) for index in range(len(x_data))]
-        # p.end()
-        self._to_update = True
+        _open,_close, _volume = y_data[0],y_data[1],y_data[2]
         
-        self.prepareGeometryChange()
-        self.informViewBoundsChanged()
+        [self.draw_volume(_open[index],_close[index],_volume[index],w,x_data[index]) for index in range(len(x_data))]
+        
+        self._to_update = True
+        # self.prepareGeometryChange()
+        # self.informViewBoundsChanged()
+        self.update(self.boundingRect())
     
-    def update_last_data(self, candles,setdata) -> None:
+    
+    def update_last_data(self,candles, setdata) -> None:
         if candles is None or isinstance(candles,list):
-            x_data, y_data = self.chart.jp_candle.get_index_volumes(start=-3,stop=-1)
+            x_data, y_data = self.chart.jp_candle.get_index_volumes(start=-2)
         elif candles == True:
-            x_data, y_data = self.chart.jp_candle.get_index_volumes(stop=-1)
+            x_data, y_data = self.chart.jp_candle.get_index_volumes()
         else:
-            x_data, y_data = self.chart.jp_candle.get_index_volumes(stop=candles+1)
-        try:
-            if len(x_data) != len(y_data[0]):
-                raise Exception("Len of x_data must be the same as y_data")
-            setdata.emit((x_data, y_data))
-            # self.setData((x_data, y_data))
-        except Exception as e:
-            print(e)
+            n = len(self._bar_picutures)
+            x_data, y_data = self.chart.jp_candle.get_index_volumes(stop=n) 
+        if len(x_data) != len(y_data[0]):
+            raise Exception("Len of x_data must be the same as y_data")
+        setdata.emit((x_data, y_data))
+    
       
 class SingleVolume(GraphicsObject):
     """Live candlestick plot, plotting data [[open, close, min, max], ...]"""

@@ -116,13 +116,11 @@ class ViewPlotWidget(PlotWidget):
         
         Signal_Proxy(self.crosshair_y_value_change,slot=self.yAxis.change_value,connect_type = Qt.ConnectionType.AutoConnection)
         Signal_Proxy(self.sig_update_y_axis,self.yAxis.change_view)
+        
         # if self.crosshair_enabled:
         #     self._add_crosshair()
   
-    
         self.disableAutoRange()
-        # self.addItem = addItem
-        # self.removeItem = removeItem
         
         """Modified _______________________________________ """
 
@@ -132,7 +130,7 @@ class ViewPlotWidget(PlotWidget):
         self.yAxis.setWidth(60)
         self.xAxis.hide()
         
-        self.vb:PlotViewBox = self.getViewBox()
+        self.vb:PlotViewBox = self.PlotItem.view_box
         self.lastMousePositon = None
         self.nearest_value = None
         self.is_mouse_pressed = False
@@ -214,19 +212,8 @@ class ViewPlotWidget(PlotWidget):
             item.deleteLater()
             
     def addItem(self, *args: Any, **kwargs: Any) -> None:
-        if hasattr(args[0], "_vl_kwargs") and args[0]._vl_kwargs is not None:
-            self.plotItem.addItem(args[0]._vl_kwargs["line"], ignoreBounds=True)
-            self.plotItem.addItem(args[0]._vl_kwargs["text"], ignoreBounds=True)
-            args[0].plot_widget = self
-            return
-        elif hasattr(args[0], "_hl_kwargs") and args[0]._hl_kwargs is not None:
-            self.plotItem.addItem(args[0]._hl_kwargs["line"], ignoreBounds=True)
-            self.plotItem.addItem(args[0]._hl_kwargs["text"], ignoreBounds=True)
-            args[0].plot_widget = self
-            return
-  
-        self.plotItem.addItem(*args)
-        args[0].plot_widget = self
+        self.vb.addItem(*args)
+        # args[0].plot_widget = self
     def auto_xrange(self):
         timedata,data = self.jp_candle.get_index_data()
         # Clip values to avoid overflow
@@ -249,7 +236,7 @@ class ViewPlotWidget(PlotWidget):
             _max = data[1][-200:].max()
             self.setYRange(_max, _min, padding=0.2)
     def removeItem(self, *args):
-        return self.plotItem.removeItem(*args)
+        return self.vb.removeItem(*args)
 
     def set_replay_data(self, data):
         #print(data)
@@ -351,7 +338,7 @@ class ViewPlotWidget(PlotWidget):
             self.ev_pos = ev.position()
         except:
             self.ev_pos = ev.pos()
-        self.lastMousePositon = self.plotItem.vb.mapSceneToView(self.ev_pos)
+        self.lastMousePositon = self.PlotItem.vb.mapSceneToView(self.ev_pos)
         
         if self.drawtool.drawing_object:
             self.emit_mouse_position(self.lastMousePositon)

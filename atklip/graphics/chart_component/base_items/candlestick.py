@@ -92,13 +92,8 @@ class CandleStick(GraphicsObject):
         self._start:int = None
         self._stop:int = None
 
-        self.current_candle = SingleCandleStick(self.chart,self.source,has=self.has)
-        self.current_candle.setParentItem(self)
-        
-        
         self.price_line = PriceLine()  # for z value
         self.price_line.setParentItem(self)
-        self.destroyed.connect(self.price_line.deleteLater)
         
         self.signal_delete.connect(self.delete_source)
         self.sig_deleted_source.connect(self.chart.remove_source)
@@ -250,7 +245,6 @@ class CandleStick(GraphicsObject):
             self.has["styles"]["brush_highcolor"] = mkBrush(_style,width=0.7)
         elif _input == "brush_lowcolor":
             self.has["styles"]["brush_lowcolor"] = mkBrush(_style,width=0.7)
-        self.current_candle.reset_threadpool_asyncworker()
         self.threadpool_asyncworker(True)
         
     def set_price_line(self):
@@ -260,7 +254,7 @@ class CandleStick(GraphicsObject):
     def first_setup_candle(self):
         self.threadpool_asyncworker(True)
   
-    def threadpool_asyncworker(self,candles=None):
+    def threadpool_asyncworker(self,candles=None|bool|list|int):
         self.worker = None
         self.worker = FastWorker(self.update_last_data,candles)
         self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.QueuedConnection)
@@ -321,9 +315,9 @@ class CandleStick(GraphicsObject):
             self._start = start_index+2
             
         if x_right < stop_index:
-            self._stop = x_right
+            self._stop = x_right+2
         else:
-            self._stop = stop_index
+            self._stop = stop_index+2
 
         rect_area: tuple = (self._start, self._stop)
         if self._to_update:
@@ -380,24 +374,29 @@ class CandleStick(GraphicsObject):
         if self._is_change_source:
             self._bar_picutures.clear()
             self._is_change_source = False
-        [self.draw_candle(_open[index],_max[index],_min[index],close[index],w,x_data[index]) for index in range(len(x_data)-1)]
+        [self.draw_candle(_open[index],_max[index],_min[index],close[index],w,x_data[index]) for index in range(len(x_data))]
         self._to_update = True
-        self.current_candle.setData(data[-2:])
         self.chart.sig_update_y_axis.emit()
-        self.prepareGeometryChange()
-        self.informViewBoundsChanged()
+        # self.prepareGeometryChange()
+        # self.informViewBoundsChanged()
+        self.update(self.boundingRect())
     
     def updateData(self, data) -> None:
         """y_data must be in format [[open, close, min, max], ...]"""
         self._to_update = False
         x_data, y_data = data[0],data[1]
         w = (x_data[-1] - x_data[-2]) / 5
-        t = x_data[-2]
-        _open, _max, _min, close = y_data[0][-2],y_data[1][-2],y_data[2][-2],y_data[3][-2]
-        self.draw_single_candle(_open,_max,_min,close,w,t)
+        pre_t = x_data[-2]
+        t = x_data[-1]
+        pre_open, pre_max, pre_min, pre_close = y_data[0][-2],y_data[1][-2],y_data[2][-2],y_data[3][-2]
+        _open, _max, _min, _close = y_data[0][-1],y_data[1][-1],y_data[2][-1],y_data[3][-1]
+        self.draw_single_candle(pre_open,pre_max,pre_min,pre_close,w,pre_t)
+        self.draw_single_candle(_open,_max,_min,_close,w,t)
         self._to_update = True
-        self.current_candle.setData(data)
         self.chart.sig_update_y_axis.emit()
+        # self.prepareGeometryChange()
+        # self.informViewBoundsChanged()
+        self.update(self.boundingRect())
         
         
     def update_last_data(self,candles, setdata) -> None:

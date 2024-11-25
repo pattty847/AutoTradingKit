@@ -665,10 +665,10 @@ class Chart(ViewPlotWidget):
         if _group_indicator == "Basic Indicator":
             indicator = BasicMA(self,indicator_type=_indicator_type,length=30,_type="close",pen="#ffaa00")
             
-            panel = IndicatorPanel(self.mainwindow,self, indicator)
-            self.container_indicator_wg.add_indicator_panel(panel)
-            self.add_item(indicator)
-            indicator.fisrt_gen_data()
+            # panel = IndicatorPanel(self.mainwindow,self, indicator)
+            # self.container_indicator_wg.add_indicator_panel(panel)
+            # self.add_item(indicator)
+            # indicator.fisrt_gen_data()
 
         elif _group_indicator == "Candle Indicator":
             candle:CandleStick = self.get_candle(_indicator_type)
@@ -687,32 +687,35 @@ class Chart(ViewPlotWidget):
             
             if _indicator_type==IndicatorType.BB:
                 indicator = BasicBB(self)
-                panel = IndicatorPanel(self.mainwindow,self, indicator)
-                self.container_indicator_wg.add_indicator_panel(panel)
-                self.add_item(indicator)
-                indicator.fisrt_gen_data()
+                # panel = IndicatorPanel(self.mainwindow,self, indicator)
+                # self.container_indicator_wg.add_indicator_panel(panel)
+                # self.add_item(indicator)
+                # indicator.fisrt_gen_data()
                 
             elif _indicator_type==IndicatorType.DonchianChannels:
                 indicator = BasicDonchianChannels(self)
-                panel = IndicatorPanel(self.mainwindow,self, indicator)
-                self.container_indicator_wg.add_indicator_panel(panel)
-                self.add_item(indicator)
-                indicator.fisrt_gen_data()
+                # panel = IndicatorPanel(self.mainwindow,self, indicator)
+                # self.container_indicator_wg.add_indicator_panel(panel)
+                # self.add_item(indicator)
+                # indicator.fisrt_gen_data()
             elif _indicator_type==IndicatorType.ZIGZAG:
                 indicator = BasicZIGZAG(self)
-                panel = IndicatorPanel(self.mainwindow,self, indicator)
-                self.container_indicator_wg.add_indicator_panel(panel)
-                self.add_item(indicator)
-                indicator.fisrt_gen_data()
+                # panel = IndicatorPanel(self.mainwindow,self, indicator)
+                # self.container_indicator_wg.add_indicator_panel(panel)
+                # self.add_item(indicator)
+                # indicator.fisrt_gen_data()
             elif _indicator_type==IndicatorType.ATKPRO:
                 indicator = ATKBOT(self)
-                panel = IndicatorPanel(self.mainwindow,self, indicator)
-                self.container_indicator_wg.add_indicator_panel(panel)
-                self.add_item(indicator)
-                indicator.fisrt_gen_data()
+                # panel = IndicatorPanel(self.mainwindow,self, indicator)
+                # self.container_indicator_wg.add_indicator_panel(panel)
+                # self.add_item(indicator)
+                # indicator.fisrt_gen_data()
         if indicator:
             self.indicators.append(indicator) 
-                    
+            self.add_item(indicator)
+            panel = IndicatorPanel(self.mainwindow,self, indicator)
+            self.container_indicator_wg.add_indicator_panel(panel)
+            indicator.fisrt_gen_data()
 
     def set_data_dataconnect(self):
         if self.indicators == []:

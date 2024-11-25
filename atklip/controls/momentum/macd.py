@@ -285,7 +285,7 @@ class MACD(QObject):
         self.worker.submit(self.add,candle)
 
     
-    def add_historic_worker(self,n):
+    def add_historic_worker(self,n):        
         self.worker.submit(self.add_historic,n)
 
     def started_worker(self):
@@ -329,7 +329,10 @@ class MACD(QObject):
         df:pd.DataFrame = self._candles.get_df()
         
         macd_data,histogram,signalma = self.calculate(df)
-        _len = min([len(histogram),len(macd_data),len(signalma)])
+        _len = min([len(histogram),len(macd_data),len(signalma), int(len(df)-self.slow_period)])
+        
+        print([_len,len(histogram),len(macd_data),len(signalma), int(len(df)-self.slow_period),len(df),self.slow_period])
+        
         _index = df["index"]
         self.df = pd.DataFrame({
                             'index':_index.tail(_len),
@@ -355,28 +358,32 @@ class MACD(QObject):
         self.is_genering = True
         self.is_histocric_load = False
         _pre_len = len(self.df)
-        df:pd.DataFrame = self._candles.get_df().iloc[:-1*_pre_len]
+        candle_df = self._candles.get_df()
+        df:pd.DataFrame = candle_df.head(-_pre_len)
         
         macd_data,histogram,signalma = self.calculate(df)
 
-        _len = min([len(histogram),len(macd_data),len(signalma)])
+        _len = min([len(histogram),len(macd_data),len(signalma), int(len(df)-self.slow_period)])
+        
+        print([_len,len(histogram),len(macd_data),len(signalma), int(len(df)-self.slow_period),len(df),self.slow_period])
         
         _index = df["index"]
+        
         _df = pd.DataFrame({
                             'index':_index.tail(_len),
                             "macd":macd_data.tail(_len),
                             "histogram":histogram.tail(_len),
                             "signalma":signalma.tail(_len)
                             })
-                
-        self.df = pd.concat([_df,self.df],ignore_index=True)
+        
+        
+        self.df = pd.concat([_df,self.df],ignore_index=True)        
         
         self.xdata = np.concatenate((_df["index"].to_numpy(), self.xdata)) 
-        self.macd_data = np.concatenate((_df["macd_data"].to_numpy(), self.macd_data))   
+        self.macd_data = np.concatenate((_df["macd"].to_numpy(), self.macd_data))   
         self.histogram = np.concatenate((_df["histogram"].to_numpy(), self.histogram))
         self.signalma = np.concatenate((_df["signalma"].to_numpy(), self.signalma))
-        
-
+                
         self.is_genering = False
         if self.first_gen == False:
             self.first_gen = True

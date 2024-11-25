@@ -6,6 +6,7 @@ from PySide6.QtWidgets import QGraphicsItem
 from PySide6.QtGui import QPainter,QPicture
 
 from atklip.graphics.chart_component.base_items.plotdataitem import PlotDataItem
+from atklip.graphics.pyqtgraph import GraphicsObject
 
 from .fillbetweenitem import FillBetweenItem
 from atklip.controls import PD_MAType,IndicatorType,DONCHIAN
@@ -18,7 +19,7 @@ from atklip.app_utils import *
 if TYPE_CHECKING:
     from atklip.graphics.chart_component.viewchart import Chart
 
-class BasicDonchianChannels(PlotDataItem):
+class BasicDonchianChannels(GraphicsObject):
     on_click = Signal(object)
     signal_visible = Signal(bool)
     signal_delete = Signal()
@@ -28,9 +29,9 @@ class BasicDonchianChannels(PlotDataItem):
     signal_change_type = Signal(str)
     sig_change_indicator_name = Signal(str)
     def __init__(self,chart) -> None:
-        super().__init__()
-        # GraphicsObject.__init__(self)
-        self.setFlag(self.GraphicsItemFlag.ItemHasNoContents)
+        # super().__init__()
+        GraphicsObject.__init__(self)
+        # self.setFlag(self.GraphicsItemFlag.ItemHasNoContents)
         self.setFlag(self.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
         
         self.chart:Chart = chart
@@ -65,11 +66,10 @@ class BasicDonchianChannels(PlotDataItem):
         
         self.id = self.chart.objmanager.add(self)
         
-        self.setPen(color=self.has["styles"]['pen_center_line'])
         self.lowline = PlotDataItem(pen=self.has["styles"]['pen_low_line'])  # for z value
         self.lowline.setParentItem(self)
-        # self.centerline = PlotDataItem(pen=self.has["styles"]['pen_center_line'])
-        # self.centerline.setParentItem(self)
+        self.centerline = PlotDataItem(pen=self.has["styles"]['pen_center_line'])
+        self.centerline.setParentItem(self)
         self.highline = PlotDataItem(pen=self.has["styles"]['pen_high_line'])
         self.highline.setParentItem(self)
         
@@ -192,8 +192,8 @@ class BasicDonchianChannels(PlotDataItem):
         if _input == "pen_high_line" or _input == "width_high_line" or _input == "style_high_line":
             self.highline.setPen(color=self.has["styles"]["pen_high_line"], width=self.has["styles"]["width_high_line"],style=self.has["styles"]["style_high_line"])
         elif _input == "pen_center_line" or _input == "width_center_line" or _input == "style_center_line":
-            # self.centerline.setPen(color=self.has["styles"]["pen_center_line"], width=self.has["styles"]["width_center_line"],style=self.has["styles"]["style_center_line"])
-            self.setPen(color=self.has["styles"]["pen_center_line"], width=self.has["styles"]["width_center_line"],style=self.has["styles"]["style_center_line"])
+            self.centerline.setPen(color=self.has["styles"]["pen_center_line"], width=self.has["styles"]["width_center_line"],style=self.has["styles"]["style_center_line"])
+            # self.setPen(color=self.has["styles"]["pen_center_line"], width=self.has["styles"]["width_center_line"],style=self.has["styles"]["style_center_line"])
         elif _input == "pen_low_line" or _input == "width_low_line" or _input == "style_low_line":
             self.lowline.setPen(color=self.has["styles"]["pen_low_line"], width=self.has["styles"]["width_low_line"],style=self.has["styles"]["style_low_line"])
         elif _input == "brush_color":
@@ -216,7 +216,7 @@ class BasicDonchianChannels(PlotDataItem):
         cb = data[2]
         ub = data[3]
         self.lowline.setData(xData,lb)
-        self.setData(xData,cb)
+        self.centerline.setData(xData,cb)
         self.highline.setData(xData,ub)
     
     def add_historic_Data(self,data):
@@ -225,7 +225,7 @@ class BasicDonchianChannels(PlotDataItem):
         cb = data[2]
         ub = data[3]
         self.lowline.addHistoricData(xData,lb)
-        self.addHistoricData(xData,cb)
+        self.centerline.addHistoricData(xData,cb)
         self.highline.addHistoricData(xData,ub)
         
     def update_Data(self,data):
@@ -234,7 +234,7 @@ class BasicDonchianChannels(PlotDataItem):
         cb = data[2]
         ub = data[3]
         self.lowline.updateData(xData,lb)
-        self.updateData(xData,cb)
+        self.centerline.updateData(xData,cb)
         self.highline.updateData(xData,ub)
         
     def setdata_worker(self):
@@ -267,34 +267,36 @@ class BasicDonchianChannels(PlotDataItem):
         setdata.emit((xdata,lb,cb,ub))    
 
     def boundingRect(self) -> QRectF:
-        x_left,x_right = int(self.chart.xAxis.range[0]),int(self.chart.xAxis.range[1])
-        start_index = self.chart.jp_candle.candles[0].index
-        stop_index = self.chart.jp_candle.candles[-1].index
-        if x_left > start_index:
-            _start = x_left+2
-            x_range_left = x_left - start_index
-        else:
-            _start = start_index+2
-            x_range_left = 0
-        if x_right < stop_index:
-            _width = x_right-_start
-        else:
-            _width = stop_index-_start
-        if self.lowline.yData is not None:
-            if self.lowline.yData.size != 0:
-                try:
-                    h_low,h_high = np.nanmin(self.lowline.yData), np.nanmax(self.highline.yData)
-                except ValueError:
-                    h_low,h_high = self.chart.yAxis.range[0],self.chart.yAxis.range[1]  
-            else:
-                h_low,h_high = self.chart.yAxis.range[0],self.chart.yAxis.range[1]
-        else:
-            h_low,h_high = self.chart.yAxis.range[0],self.chart.yAxis.range[1]
-        rect = QRectF(_start,h_low,_width,h_high-h_low)
-        return rect
+        # x_left,x_right = int(self.chart.xAxis.range[0]),int(self.chart.xAxis.range[1])
+        # start_index = self.chart.jp_candle.candles[0].index
+        # stop_index = self.chart.jp_candle.candles[-1].index
+        # if x_left > start_index:
+        #     _start = x_left+2
+        # else:
+        #     _start = start_index+2
+        # if x_right < stop_index:
+        #     _width = x_right-_start
+        #     _stop = x_right
+        # else:
+        #     _width = stop_index-_start
+        #     _stop = stop_index
+        # if self.lowline.yData is not None:
+        #     if self.lowline.yData.size != 0:
+        #         try:
+        #             h_low,h_high = np.nanmin(self.lowline.yData[_start:_stop]), np.nanmax(self.highline.yData[_start:_stop])
+        #         except ValueError:
+        #             h_low,h_high = self.chart.yAxis.range[0],self.chart.yAxis.range[1]
+        #     else:
+        #         h_low,h_high = self.chart.yAxis.range[0],self.chart.yAxis.range[1]
+        # else:
+        #     h_low,h_high = self.chart.yAxis.range[0],self.chart.yAxis.range[1]
+        # rect = QRectF(_start,h_low,_width,h_high-h_low)
+        # return rect
+        return self.centerline.boundingRect()
     
     def paint(self, p:QPainter, *args):
-        self.picture.play(p)
+        # self.picture.play(p)
+        p.drawRect(self.boundingRect())
     
     def get_yaxis_param(self):
         _value = None

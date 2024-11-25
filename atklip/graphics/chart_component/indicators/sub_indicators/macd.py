@@ -85,8 +85,6 @@ class BasicMACD(GraphicsObject):
         self.signal.setFlag(QGraphicsItem.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
         self.signal.setParentItem(self)
         
-        
-
         self.price_line = PriceLine()  # for z value
         self.price_line.setParentItem(self)
         
@@ -252,15 +250,13 @@ class BasicMACD(GraphicsObject):
         else:
             self.hide()
     
-
-    
     def set_Data(self,data):
         xData = data[0]
         lb = data[1]
         cb = data[2]
         histogram = data[3]
 
-        self.histogram.sig_update_histogram.emit((xData[-2:],histogram[-2:]))
+        self.histogram.sig_update_histogram.emit((xData[-2:],histogram[-2:]),"add")
         
         self.macd_line.setData(xData,lb)
         self.signal.setData(xData,cb)
@@ -275,6 +271,9 @@ class BasicMACD(GraphicsObject):
         lb = data[1]
         cb = data[2]
         histogram = data[3]
+        
+        print(len(xData),len(lb),len(cb),len(histogram))
+        
         self.histogram.sig_load_historic_histogram.emit((xData,histogram),"load_historic")
         self.macd_line.addHistoricData(xData,lb)
         self.signal.addHistoricData(xData,cb)
@@ -286,7 +285,7 @@ class BasicMACD(GraphicsObject):
         cb = data[2]
         histogram = data[3]
         
-        self.histogram.sig_update_histogram.emit((xData,histogram))
+        self.histogram.sig_update_histogram.emit((xData,histogram),"add")
         
         self.macd_line.updateData(xData,lb)
         self.signal.updateData(xData,cb)
@@ -320,13 +319,13 @@ class BasicMACD(GraphicsObject):
         self.worker.signals.setdata.connect(self.add_Data,Qt.ConnectionType.QueuedConnection)
         self.worker.start()    
     
-    def load_historic_data(self,_len,setdata):
+    def load_historic_data(self,_len,setdata):        
         xdata,macd,signalma,histogram= self.INDICATOR.get_data(stop=_len)
         setdata.emit((xdata,macd,signalma,histogram))
 
     
     def update_data(self,setdata):
-        xdata,macd,signalma,histogram= self.INDICATOR.get_data(start=-1)
+        xdata,macd,signalma,histogram= self.INDICATOR.get_data(start=-2)
         setdata.emit((xdata,macd,signalma,histogram))
         self.last_pos.emit((self.has["inputs"]["indicator_type"],signalma[-1]))
         self._panel.sig_update_y_axis.emit() 

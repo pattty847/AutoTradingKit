@@ -148,7 +148,7 @@ class BaSicSqeeze(GraphicsObject):
         self.histogram.sig_reset_histogram.emit((xdata,histogram),"reset")
         
     def reset_indicator(self):
-        self.fisrt_setup = True
+        self.fisrt_setup = False
         self.worker = None
         self.worker = FastWorker(self.regen_indicator)
         self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
@@ -231,9 +231,9 @@ class BaSicSqeeze(GraphicsObject):
     def set_Data(self,data):
         xData = data[0]
         histogram = data[1]
-        self.histogram.sig_update_histogram.emit((xData[-2:],histogram[-2:]))
-        if self.fisrt_setup:
-            self.fisrt_setup = False
+        self.histogram.sig_update_histogram.emit((xData[-2:],histogram[-2:]),"add")
+        if not self.fisrt_setup:
+            self.fisrt_setup = True
             self.sig_change_yaxis_range.emit()
         self.prepareGeometryChange()
         self.informViewBoundsChanged()
@@ -242,13 +242,11 @@ class BaSicSqeeze(GraphicsObject):
         xData = data[0]
         histogram = data[1]
         self.histogram.sig_load_historic_histogram.emit((xData,histogram),"load_historic")
-
-
-        
+  
     def update_Data(self,data):
         xData = data[0]
         histogram = data[1]
-        self.histogram.sig_update_histogram.emit((xData,histogram))
+        self.histogram.sig_update_histogram.emit((xData,histogram),"add")
         
     
     def add_Data(self,data):
@@ -280,7 +278,7 @@ class BaSicSqeeze(GraphicsObject):
 
     
     def update_data(self,setdata):
-        xdata,histogram= self.INDICATOR.get_data(start=-1)
+        xdata,histogram= self.INDICATOR.get_data(start=-2)
         setdata.emit((xdata,histogram))
         self.last_pos.emit((self.has["inputs"]["indicator_type"],histogram[-1]))
         self._panel.sig_update_y_axis.emit() 
@@ -290,6 +288,14 @@ class BaSicSqeeze(GraphicsObject):
     
     def paint(self, p:QPainter, *args):
         self.picture.play(p)
+    
+    
+    
+    
+    
+    
+    
+    
     
     def get_yaxis_param(self):
         _value = None
