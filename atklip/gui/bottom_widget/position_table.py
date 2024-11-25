@@ -200,6 +200,7 @@ class PositionModel(QAbstractTableModel):
     def __init__(self, data):
         super().__init__()
         self._data = data
+        self._headers = ["Trades", "Type", "Signal", "Date/Time", "Price", "Contracts", "Profit", "Cum. Profit", "Run-up", "Drawdown"]
 
     def rowCount(self, index):
         return len(self._data)
@@ -211,9 +212,18 @@ class PositionModel(QAbstractTableModel):
         "để thêm các vai trò cho cell, column, row theo dựa vào index, quy định nội dung và cách thức hiện thị cho bảng"
         if role == Qt.CheckStateRole:
             return Qt.CheckState.Checked if self._data[index.row()][index.column()] else Qt.CheckState.Unchecked
-        if role == Qt.DisplayRole:
+        elif role == Qt.DisplayRole:
             return self._data[index.row()][index.column()]
-        
+        elif role == Qt.TextAlignmentRole:
+            return Qt.AlignCenter
+    
+    def headerData(self, section, orientation, role=Qt.DisplayRole):
+        if role == Qt.DisplayRole:
+            if orientation == Qt.Horizontal:
+                return self._headers[section]
+            else:
+                return section + 1
+        return None 
 
     def update_row(self,row,column, value):
         index = self.index(row, column)
