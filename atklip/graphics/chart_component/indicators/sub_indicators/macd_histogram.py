@@ -11,14 +11,13 @@ from atklip.appmanager import FastWorker
 if TYPE_CHECKING:
     from atklip.graphics.chart_component.viewchart import Chart
     from atklip.graphics.chart_component.sub_panel_indicator import ViewSubPanel
-    from atklip.graphics.chart_component.indicators.sub_indicators.macd import BasicMACD
 
 class MACDHistogram(GraphicsObject):
     """Live candlestick plot, plotting data [[open, close, min, max], ...]"""
     sigPlotChanged = Signal(object)
     sig_change_yaxis_range = Signal()
     
-    sig_update_histogram = Signal(tuple)
+    sig_update_histogram = Signal(tuple,str)
     sig_reset_histogram = Signal(tuple,str)
     sig_add_histogram = Signal(tuple,str)
     sig_load_historic_histogram = Signal(tuple,str)
@@ -36,8 +35,7 @@ class MACDHistogram(GraphicsObject):
 
         self.precision = precision
         self.output_y_data: List[float] = []
-        self.historic_histogram = SingleMACDHistogram(self.sig_update_histogram,self.has)
-        self.historic_histogram.setParentItem(self)
+
 
         self.x_data, self.y_data = np.array([]),np.array([])
         
@@ -50,7 +48,8 @@ class MACDHistogram(GraphicsObject):
         self._stop:int = None
         
         self.sig_reset_histogram.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
-        self.sig_add_histogram.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
+        self.sig_add_histogram.connect(self.update_asyncworker,Qt.ConnectionType.AutoConnection)
+        self.sig_update_histogram.connect(self.update_asyncworker,Qt.ConnectionType.AutoConnection)
         self.sig_load_historic_histogram.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
 
     def get_inputs(self):
@@ -88,6 +87,34 @@ class MACDHistogram(GraphicsObject):
         self.worker.start()
     
     
+    def update_asyncworker(self,data,_type):
+        self.worker = None
+        self.worker = FastWorker(self.update_last_data,data,_type)
+        self.worker.signals.setdata.connect(self.updateData,Qt.ConnectionType.QueuedConnection)
+        self.worker.start()    
+    
+    def updateData(self, data) -> None:
+        """y_data must be in format [[open, close, min, max], ...]"""
+        self._to_update = False
+        x_data, y_data = data[0],data[1]
+                
+        w = (x_data[-1] - x_data[-2]) / 5
+        pre_t = x_data[-2]
+        t = x_data[-1]
+        
+        pre_value= y_data[-2]
+        _value = y_data[-1]
+        
+        self.draw_single_volume(pre_value,w,pre_t)
+        self.draw_single_volume(_value,w,t)
+        
+        self._to_update = True
+        # self._panel.sig_update_y_axis.emit()
+        # self.prepareGeometryChange()
+        # self.informViewBoundsChanged()
+        self.update(self.boundingRect())
+    
+    
     def get_yaxis_param(self):
         if len(self.has["inputs"]["source"].candles) > 0:
             last_candle = self.has["inputs"]["source"].last_data()
@@ -102,35 +129,28 @@ class MACDHistogram(GraphicsObject):
             return None,None
     def get_xaxis_param(self):
         return None,None
+    
 
+    def update_last_data(self,data,_type, setdata) -> None:
+        x_data, y_data = data[0],data[1]
+        try:
+            if _type == "reset":
+                self._is_change_source = True
+                setdata.emit((x_data, y_data))
+            if _type == "load_historic":
+                _len = len(self._bar_picutures)
+                setdata.emit((x_data, y_data))
+            if _type == "add":
+                setdata.emit((x_data, y_data))
+        except Exception as e:
+            pass
+    
     def paint(self,painter: QPainter,opt: QStyleOptionGraphicsItem,w: QWidget) -> None:
         """
         Reimplement the paint method of parent class.
 
         This function is called by external QGraphicsView.
         """
-        if self._start is None or self._stop is None:
-            x_left,x_right = int(self._panel.xAxis.range[0]),int(self._panel.xAxis.range[1])
-            start_index = self.chart.jp_candle.candles[0].index
-            stop_index = self.chart.jp_candle.candles[-1].index
-            if x_left > start_index:
-                self._start = x_left+2
-            else:
-                self._start = start_index+2
-            if x_right < stop_index:
-                self._stop = x_right+1
-            else:
-                self._stop = stop_index+1
-        rect_area: tuple = (self._start, self._stop)
-        if self._to_update:
-            self._draw_item_picture(self._start, self._stop)
-            self._to_update = False
-        elif (rect_area != self._rect_area):
-            self._rect_area = rect_area
-            self._draw_item_picture(self._start, self._stop)
-        elif self.picture == None:
-            self._rect_area = rect_area
-            self._draw_item_picture(self._start, self._stop)
         self.picture.play(painter)
 
     def _draw_item_picture(self, min_ix: int, max_ix: int) -> None:
@@ -143,84 +163,86 @@ class MACDHistogram(GraphicsObject):
         painter.end()
     
     def play_bar(self,painter,ix):
-        bar_picture = self._bar_picutures.get(ix)
-        if bar_picture is not None:
-            bar_picture.play(painter)    
+        bar_picture = self._bar_picutures.get(ix,None)
+        if bar_picture:
+            bar_picture.play(painter)   
+    
     
     def boundingRect(self) -> QRectF:
-        x_left,x_right = int(self._panel.xAxis.range[0]),int(self._panel.xAxis.range[1])
-        start_index = self.chart.jp_candle.candles[0].index
-        stop_index = self.chart.jp_candle.candles[-1].index
+        x_left,x_right = int(self.chart.xAxis.range[0]),int(self.chart.xAxis.range[1])   
+        start_index = self.chart.jp_candle.start_index
+        stop_index = self.chart.jp_candle.stop_index
         if x_left > start_index:
             self._start = x_left+2
+        elif x_left > stop_index:
+            self._start = start_index+2
         else:
             self._start = start_index+2
+            
         if x_right < stop_index:
-            self._stop = x_right
+            self._stop = x_right+2
         else:
-            self._stop = stop_index
-        if self.y_data.size != 0:
-            h_low,h_high = np.nanmin(self.y_data), np.nanmax(self.y_data)
-        else:
-            h_low,h_high = self.chart.yAxis.range[0],self.chart.yAxis.range[1]
-        rect = QRectF(self._start,h_low,self._stop-self._start,h_high-h_low)
-        return rect# 
-    
+            self._stop = stop_index+2
+
+        rect_area: tuple = (self._start, self._stop)
+        if self._to_update:
+            self._rect_area = rect_area
+            self._draw_item_picture(self._start, self._stop)
+            self._to_update = False
+        elif rect_area != self._rect_area:
+            self._rect_area = rect_area
+            self._draw_item_picture(self._start, self._stop)
+        return self.picture.boundingRect()
+
     def draw_volume(self,value,w,x_data,index):
-        t = x_data[index]
         "dieu kien de han che viec ve lai khi add new candle"
-        if self._bar_picutures.get(t) == None:
-            candle_picture:QPicture =QPicture()
-            p:QPainter =QPainter(candle_picture)
-            if value < 0:
-                self.outline_pen = mkPen(color=self.has["styles"]["pen_low_historgram"],width=0.7) 
-                p.setPen(self.outline_pen)
-                p.setBrush(self.has["styles"]["brush_low_historgram"])
-            else:
-                self.outline_pen = mkPen(color=self.has["styles"]["pen_high_historgram"],width=0.7) 
-                p.setPen(self.outline_pen)
-                p.setBrush(self.has["styles"]["brush_high_historgram"])
-            if value == 0:
-                _line = QLineF(QPointF(t - w, 0), QPointF(t + w, 0))
-                p.drawLine(_line)
-            else:
-                rect = QRectF(t - w, 0, w * 2, value)  
-                p.drawRect(rect)
-            self._bar_picutures[t] = candle_picture
+        t = x_data[index]
+        if not self._bar_picutures.get(t):
+            self.draw_single_volume(value,w,t)
+            return True
+        return False
+        
+    def draw_single_volume(self,value,w,t):
+        candle_picture:QPicture =QPicture()
+        p:QPainter =QPainter(candle_picture)
+        if value < 0:
+            self.outline_pen = mkPen(color=self.has["styles"]["pen_low_historgram"],width=0.7) 
+            p.setPen(self.outline_pen)
+            p.setBrush(self.has["styles"]["brush_low_historgram"])
+        else:
+            self.outline_pen = mkPen(color=self.has["styles"]["pen_high_historgram"],width=0.7) 
+            p.setPen(self.outline_pen)
+            p.setBrush(self.has["styles"]["brush_high_historgram"])
+        if value == 0:
+            _line = QLineF(QPointF(t - w, 0), QPointF(t + w, 0))
+            p.drawLine(_line)
+        else:
+            rect = QRectF(t - w, 0, w * 2, value)  
+            p.drawRect(rect)
+        p.end()
+        self._bar_picutures[t] = candle_picture
+        
 
     def setData(self, data) -> None:
         """y_data must be in format [[open, close, min, max], ...]"""
-        x_data, y_data = data[0], data[1]
-        self.x_data, self.y_data = x_data, y_data
         self._to_update = False
         
+        x_data, y_data = data[0],data[1]
+        w = (x_data[-1] - x_data[-2]) / 5
+        
+        
+        self.x_data, self.y_data = x_data, y_data
+
         if self._is_change_source:
             self._bar_picutures.clear()
             self._is_change_source = False
-        w = 1 / 5
         [self.draw_volume(value,w,x_data,index) for index, value in enumerate(y_data)]
         self._to_update = True
-        # 
+        self._panel.sig_update_y_axis.emit()
         # self.prepareGeometryChange()
         # self.informViewBoundsChanged()
-
-    def update_last_data(self,data,_type, setdata) -> None:
-        x_data, y_data = data[0],data[1]
-        try:
-            if _type == "reset":
-                self._is_change_source = True
-                setdata.emit((x_data, y_data))
-                # self.setData((x_data[:-1], y_data[:-1]))
-            if _type == "load_historic":
-                _len = len(self._bar_picutures)
-                setdata.emit((x_data, y_data))
-                # self.setData((x_data[:-1*_len], y_data[:-1*_len]))
-            if _type == "add":
-                setdata.emit((x_data, y_data))
-                # self.setData((x_data[-2:], y_data[-2:]))
-            #QCoreApplication.processEvents()
-        except Exception as e:
-            pass
+        self.update(self.boundingRect())
+         
     def getData(self) -> Tuple[List[float], List[Tuple[float, ...]]]:
         return self.x_data, self.y_data
     

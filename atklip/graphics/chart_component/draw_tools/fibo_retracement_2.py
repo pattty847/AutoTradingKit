@@ -47,24 +47,24 @@ class FiboROI2(SpecialROI):
             
             "inputs":{
                 "data":{
-                        -0.786: Line("-0.786",[],TextItem("",color=(255, 51, 69, 255), anchor=(1, 0)),(255, 51, 69, 255),QColor(255, 51, 69, 60),True),
-                        -0.618: Line("-0.618",[],TextItem("",color=(255, 51, 69, 255), anchor=(1, 0)),(255, 51, 69, 255),QColor(255, 51, 69, 60),True),
-                        -0.5: Line("-0.5",[],TextItem("",color=(255, 51, 69, 255), anchor=(1, 0)),(255, 51, 69, 255),QColor(255, 51, 69, 60),True),
-                        -0.238: Line("-0.238",[],TextItem("",color=(255, 51, 69, 255), anchor=(1, 0)),(255, 51, 69, 255),QColor(255, 51, 69, 60),True),
-                        -0.146: Line("-0.146",[],TextItem("",color=(255, 51, 69, 255), anchor=(1, 0)),(255, 51, 69, 255),QColor(255, 51, 69, 60),True),
-                        0: Line("0",[],TextItem("",color=(255,152,0,255), anchor=(1, 0)),(255,152,0,255),QColor(255,152,0,60),True),
-                        0.236: Line("0.236",[],TextItem("",color=(242,54,69,255), anchor=(1, 0)),(242,54,69,255),QColor(242,54,69,60),True),
-                        0.382: Line("0.382",[],TextItem("",color=(120,123,134,255), anchor=(1, 0)),(120,123,134,255),QColor(120,123,134,60),True),
-                        0.5: Line("0.5",[],TextItem("",color=(229,115,115,255), anchor=(1, 0)),(229,115,115,255),QColor(229,115,115,60),True),
-                        0.618: Line("0.618",[],TextItem("",color=(244,142,177,255), anchor=(1, 0)),(244,142,177,255),QColor(244,142,177,60),True),
-                        0.786: Line("0.786",[],TextItem("", color=(66, 135, 245, 255),anchor=(1, 0)),(66, 135, 245,255),QColor(66, 135, 245,60),True),
-                        1.0: Line("1",[],TextItem("", color=(180, 0, 0, 255),anchor=(1, 0)),(180, 0, 0, 255),QColor(180, 0, 0, 60),True),
-                        1.146: Line("1.146",[],TextItem("",color=(255, 51, 69, 255), anchor=(1, 0)),(255, 51, 69, 255),QColor(255, 51, 69, 60),True),
-                        1.236: Line("1.236",[],TextItem("",color=(255, 51, 69, 255), anchor=(1, 0)),(255, 51, 69, 255),QColor(255, 51, 69, 60),True),
-                        1.382: Line("1.382",[],TextItem("",color=(255, 51, 69, 255), anchor=(1, 0)),(255, 51, 69, 255),QColor(255, 51, 69, 60),True),
-                        1.5: Line("1.5",[],TextItem("",color=(255, 51, 69, 255), anchor=(1, 0)),(255, 51, 69, 255),QColor(255, 51, 69, 60),True),
-                        1.618: Line("1.618",[],TextItem("",color=(255, 51, 69, 255), anchor=(1, 0)),(255, 51, 69, 255),QColor(255, 51, 69, 60),True),
-                        1.786: Line("1.786",[],TextItem("",color=(255, 51, 69, 255), anchor=(1, 0)),(255, 51, 69, 255),QColor(255, 51, 69, 60),True),
+                        -0.786: Line("-0.786",[],None,TextItem("",color=(255, 51, 69, 255), anchor=(1, 0)),(255, 51, 69, 255),QColor(255, 51, 69, 60),True),
+                        -0.618: Line("-0.618",[],None,TextItem("",color=(255, 51, 69, 255), anchor=(1, 0)),(255, 51, 69, 255),QColor(255, 51, 69, 60),True),
+                        -0.5: Line("-0.5",[],None,TextItem("",color=(255, 51, 69, 255), anchor=(1, 0)),(255, 51, 69, 255),QColor(255, 51, 69, 60),True),
+                        -0.238: Line("-0.238",[],None,TextItem("",color=(255, 51, 69, 255), anchor=(1, 0)),(255, 51, 69, 255),QColor(255, 51, 69, 60),True),
+                        -0.146: Line("-0.146",[],None,TextItem("",color=(255, 51, 69, 255), anchor=(1, 0)),(255, 51, 69, 255),QColor(255, 51, 69, 60),True),
+                        0: Line("0",[],None,TextItem("",color=(255,152,0,255), anchor=(1, 0)),(255,152,0,255),QColor(255,152,0,60),True),
+                        0.236: Line("0.236",[],None,TextItem("",color=(242,54,69,255), anchor=(1, 0)),(242,54,69,255),QColor(242,54,69,60),True),
+                        0.382: Line("0.382",[],None,TextItem("",color=(120,123,134,255), anchor=(1, 0)),(120,123,134,255),QColor(120,123,134,60),True),
+                        0.5: Line("0.5",[],None,TextItem("",color=(229,115,115,255), anchor=(1, 0)),(229,115,115,255),QColor(229,115,115,60),True),
+                        0.618: Line("0.618",[],None,TextItem("",color=(244,142,177,255), anchor=(1, 0)),(244,142,177,255),QColor(244,142,177,60),True),
+                        0.786: Line("0.786",[],None,TextItem("", color=(66, 135, 245, 255),anchor=(1, 0)),(66, 135, 245,255),QColor(66, 135, 245,60),True),
+                        1.0: Line("1",[],None,TextItem("", color=(180, 0, 0, 255),anchor=(1, 0)),(180, 0, 0, 255),QColor(180, 0, 0, 60),True),
+                        1.146: Line("1.146",[],None,TextItem("",color=(255, 51, 69, 255), anchor=(1, 0)),(255, 51, 69, 255),QColor(255, 51, 69, 60),True),
+                        1.236: Line("1.236",[],None,TextItem("",color=(255, 51, 69, 255), anchor=(1, 0)),(255, 51, 69, 255),QColor(255, 51, 69, 60),True),
+                        1.382: Line("1.382",[],None,TextItem("",color=(255, 51, 69, 255), anchor=(1, 0)),(255, 51, 69, 255),QColor(255, 51, 69, 60),True),
+                        1.5: Line("1.5",[],None,TextItem("",color=(255, 51, 69, 255), anchor=(1, 0)),(255, 51, 69, 255),QColor(255, 51, 69, 60),True),
+                        1.618: Line("1.618",[],None,TextItem("",color=(255, 51, 69, 255), anchor=(1, 0)),(255, 51, 69, 255),QColor(255, 51, 69, 60),True),
+                        1.786: Line("1.786",[],None,TextItem("",color=(255, 51, 69, 255), anchor=(1, 0)),(255, 51, 69, 255),QColor(255, 51, 69, 60),True),
                         }
                     },
             "styles":{
@@ -76,9 +76,11 @@ class FiboROI2(SpecialROI):
                     "setting": False,
                     "delete":True,}
         }
-        self.addScaleHandle([0, 0], [1, 1])
         
-        self.addScaleHandle([1, 1], [0, 0])
+        self.picture:QPicture =QPicture()
+        self.handle_left = self.addScaleHandle([0, 0], [1, 1])
+        
+        self.handle_right = self.addScaleHandle([1, 1], [0, 0])
 
         self.signal_visible.connect(self.setVisible)
         self.signal_delete.connect(self.delete)
@@ -88,7 +90,7 @@ class FiboROI2(SpecialROI):
         self.h1 = None
         self.h0 = None
         self.last_point = None
-        self.picture:QPicture =QPicture()
+        
         
         self.sigRegionChangeStarted.connect(self.drag_change)
         for level in list(self.has["inputs"]["data"].keys()):
@@ -159,8 +161,10 @@ class FiboROI2(SpecialROI):
                 pos_x, pos_y = self.drawtool.get_position_crosshair()
             self.last_point = (pos_x, pos_y)
             if self.reverse:
+                # self.handle_right.movePoint(QPointF(pos_x, pos_y))
                 self.movePoint(-1, QPointF(pos_x, pos_y))
             else:
+                # self.handle_right.movePoint(QPointF(pos_x, pos_y))
                 self.movePoint(0, QPointF(pos_x, pos_y))
             self.stateChanged()
     
@@ -274,8 +278,9 @@ class FiboROI2(SpecialROI):
                 # painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
                 self.update_text(painter)
                 painter.end()
+            return QRectF(self.picture.boundingRect())
         
-        return QRectF(self.picture.boundingRect())
+        return QRectF(0,0,0,0)
     
     def drag_change(self,obj):
         diff = self.h1 - self.h0

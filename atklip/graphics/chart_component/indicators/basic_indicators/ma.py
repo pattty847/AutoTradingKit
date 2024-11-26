@@ -41,7 +41,7 @@ class BasicMA(PlotDataItem):
                     "source":self.chart.jp_candle,
                     "source_name":self.chart.jp_candle.source_name,
                     "type":_type,
-                    "ma_type":indicator_type,
+                    "mamode":indicator_type,
                     "length":length,
                     "show":True
                     },
@@ -75,7 +75,7 @@ class BasicMA(PlotDataItem):
         
     @property
     def model(self) -> dict:
-        return MAModel(self.id,"MA",self.chart.jp_candle.source_name,self.has["inputs"]["ma_type"].name.lower(),
+        return MAModel(self.id,"MA",self.chart.jp_candle.source_name,self.has["inputs"]["mamode"].name.lower(),
                               self.has["inputs"]["type"],self.has["inputs"]["length"])
     
     def disconnect_signals(self):
@@ -113,7 +113,7 @@ class BasicMA(PlotDataItem):
         _index,_data = self.INDICATOR.get_data()
         setdata.emit((_index,_data))
         self.sig_change_yaxis_range.emit()
-        self.has["name"] = f"{self.has["inputs"]["ma_type"].name} {self.has["inputs"]["length"]} {self.has["inputs"]["type"]}"
+        self.has["name"] = f"{self.has["inputs"]["mamode"].name} {self.has["inputs"]["length"]} {self.has["inputs"]["type"]}"
         self.sig_change_indicator_name.emit(self.has["name"])
 
     def replace_source(self):
@@ -129,7 +129,7 @@ class BasicMA(PlotDataItem):
     def get_inputs(self):
         inputs =  {"source":self.has["inputs"]["source"],
                     "type":self.has["inputs"]["type"],
-                    "ma_type":self.has["inputs"]["ma_type"],
+                    "mamode":self.has["inputs"]["mamode"],
                     "length":self.has["inputs"]["length"],}
         return inputs
     
@@ -149,7 +149,7 @@ class BasicMA(PlotDataItem):
             if _source != self.has["inputs"][_input]:
                 self.has["inputs"][_input] = _source
                 is_update = True
-        elif _input == "ma_type":
+        elif _input == "mamode":
             if _source != self.has["inputs"][_input]:
                 self.has["inputs"][_input] = _source
                 is_update = True
@@ -158,7 +158,7 @@ class BasicMA(PlotDataItem):
                 self.has["inputs"][_input] = _source
                 is_update = True
         if is_update:
-            self.has["name"] = f"{self.has["inputs"]["ma_type"].name} {self.has["inputs"]["length"]} {self.has["inputs"]["type"]}"
+            self.has["name"] = f"{self.has["inputs"]["mamode"].name} {self.has["inputs"]["length"]} {self.has["inputs"]["type"]}"
             self.sig_change_indicator_name.emit(self.has["name"])
             
             self.INDICATOR.change_input(dict_ta_params=self.model.__dict__)

@@ -135,7 +135,7 @@ class SuperTrend(QObject):
         self.slow_period:int = dict_ta_params.get("slow_period") 
         self.fast_period:int = dict_ta_params.get("fast_period") 
         self.signal_period:int = dict_ta_params.get("signal_period") 
-        self.ma_type: str = dict_ta_params.get("ma_type") 
+        self.mamode: str = dict_ta_params.get("mamode") 
         self.offset :int=dict_ta_params.get("drift",0)
 
         #self.signal_delete.connect(self.deleteLater)
@@ -143,12 +143,12 @@ class SuperTrend(QObject):
         self.is_genering = True
         self.is_current_update = False
         self.is_histocric_load = False
-        self.name = f"MACD {self.source} {self.ma_type} {self.slow_period} {self.fast_period} {self.signal_period}"
+        self.name = f"MACD {self.source} {self.mamode} {self.slow_period} {self.fast_period} {self.signal_period}"
 
         self.df = pd.DataFrame([])
         self.worker = ApiThreadPool
         
-        self.xdata,self.macd_data,self.histogram,self.signalma = [],[],[],[]
+        self.xdata,self.macd_data,self.histogram,self.signalma = np.array([]),np.array([]),np.array([]),np.array([])
 
         self.connect_signals()
     
@@ -170,13 +170,13 @@ class SuperTrend(QObject):
             self.slow_period:int = dict_ta_params.get("slow_period") 
             self.fast_period:int = dict_ta_params.get("fast_period") 
             self.signal_period:int = dict_ta_params.get("signal_period") 
-            self.ma_type: str = dict_ta_params.get("ma_type") 
+            self.mamode: str = dict_ta_params.get("mamode") 
             self.offset :int=dict_ta_params.get("drift",0)
             
             ta_name:str=dict_ta_params.get("ta_name")
             obj_id:str=dict_ta_params.get("obj_id") 
             
-            ta_param = f"{obj_id}-{ta_name}-{self.source}-{self.ma_type}-{self.slow_period}-{self.fast_period}-{self.signal_period}"
+            ta_param = f"{obj_id}-{ta_name}-{self.source}-{self.mamode}-{self.slow_period}-{self.fast_period}-{self.signal_period}"
 
             self.indicator_name = ta_param
         
@@ -224,7 +224,7 @@ class SuperTrend(QObject):
         return self.df.tail(n)
     
     def get_data(self,start:int=0,stop:int=0):
-        if self.xdata == []:
+        if len(self.xdata) == 0:
             return [],[],[],[]
         if start == 0 and stop == 0:
             x_data = self.xdata
@@ -238,7 +238,7 @@ class SuperTrend(QObject):
         else:
             x_data = self.xdata[start:stop]
             macd_data,signalma,histogram=self.macd_data[start:stop],self.signalma[start:stop],self.histogram[start:stop]
-        return np.array(x_data),np.array(macd_data),np.array(signalma),np.array(histogram)
+        return x_data,macd_data,signalma,histogram
     
     def get_last_row_df(self):
         return self.df.iloc[-1] 
@@ -290,7 +290,7 @@ class SuperTrend(QObject):
                                 length = self.length, 
                                 atr_length = self.atr_length,
                                 multiplier = self.multiplier,
-                                atr_mamode = self.ma_type,
+                                atr_mamode = self.mamode,
                                 )
         return self.paire_data(INDICATOR)
     
@@ -312,11 +312,11 @@ class SuperTrend(QObject):
                             "SUPERTs":SUPERTs.tail(_len)
                             })
         
-        self.xdata,self.SUPERTt,self.SUPERTd,self.SUPERTl,self.SUPERTs = self.df["index"].to_list(),\
-                                                                    self.df["SUPERTt"].to_list(),\
-                                                                    self.df["SUPERTd"].to_list(),\
-                                                                    self.df["SUPERTl"].to_list(),\
-                                                                    self.df["SUPERTs"].to_list(),
+        self.xdata,self.SUPERTt,self.SUPERTd,self.SUPERTl,self.SUPERTs = self.df["index"].to_numpy(),\
+                                                                    self.df["SUPERTt"].to_numpy(),\
+                                                                    self.df["SUPERTd"].to_numpy(),\
+                                                                    self.df["SUPERTl"].to_numpy(),\
+                                                                    self.df["SUPERTs"].to_numpy(),
         
         self.is_genering = False
         if self.first_gen == False:
@@ -343,11 +343,12 @@ class SuperTrend(QObject):
         
         self.df = pd.concat([_df,self.df],ignore_index=True)
         
-        self.xdata = _df["index"].to_list() + self.xdata
-        self.SUPERTt = _df["SUPERTt"].to_list() + self.SUPERTt
-        self.SUPERTd = _df["SUPERTd"].to_list() + self.SUPERTd
-        self.SUPERTl = _df["SUPERTl"].to_list() + self.SUPERTl
-        self.SUPERTs = _df["SUPERTs"].to_list() + self.SUPERTs
+
+        self.xdata = np.concatenate((_df["index"].to_numpy(), self.xdata)) 
+        self.SUPERTd = np.concatenate((_df["SUPERTd"].to_numpy(), self.SUPERTd))   
+        self.SUPERTl = np.concatenate((_df["SUPERTl"].to_numpy(), self.SUPERTl))
+        self.SUPERTs = np.concatenate((_df["SUPERTs"].to_numpy(), self.SUPERTs))
+        self.SUPERTt = np.concatenate((_df["SUPERTt"].to_numpy(), self.SUPERTt))
 
         self.is_genering = False
         if self.first_gen == False:
@@ -374,11 +375,16 @@ class SuperTrend(QObject):
             
             self.df = pd.concat([self.df,new_frame],ignore_index=True)
                                 
-            self.xdata,self.macd_data,self.histogram,self.signalma = self.df["index"].to_list(),self.df["macd"].to_list(),\
-                                                self.df["histogram"].to_list(),self.df["signalma"].to_list()
+            self.xdata,self.macd_data,self.histogram,self.signalma = self.df["index"].to_numpy(),self.df["macd"].to_numpy(),\
+                                                self.df["histogram"].to_numpy(),self.df["signalma"].to_numpy()
+            
+            
+            self.xdata = np.concatenate((self.xdata,np.array([new_candle.index])))
+            self.macd_data = np.concatenate((self.macd_data,np.array([macd_data.iloc[-1]])))
             
             self.sig_add_candle.emit()
-            self.is_current_update = True
+        self.is_current_update = True
+            
         
     def update(self, new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]
@@ -390,10 +396,10 @@ class SuperTrend(QObject):
                     
             self.df.iloc[-1] = [new_candle.index,macd_data.iloc[-1],histogram.iloc[-1],signalma.iloc[-1]]
                     
-            self.xdata,self.macd_data,self.histogram,self.signalma = self.df["index"].to_list(),self.df["macd"].to_list(),\
-                                                self.df["histogram"].to_list(),self.df["signalma"].to_list()
+            self.xdata[-1],self.macd_data[-1],self.histogram[-1],self.signalma[-1] = new_candle.index,macd_data.iloc[-1],histogram.iloc[-1],signalma.iloc[-1]
             
             self.sig_update_candle.emit()
-            self.is_current_update = True
+        self.is_current_update = True
+            
             
 

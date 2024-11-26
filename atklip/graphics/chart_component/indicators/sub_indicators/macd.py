@@ -52,7 +52,7 @@ class BasicMACD(GraphicsObject):
                     "fast_period":12,
                     "slow_period":26,
                     "signal_period":9,
-                    "ma_type":PD_MAType.RMA,
+                    "mamode":PD_MAType.RMA,
                     "price_high":60,
                     "price_low":-60,
                     "show":True},
@@ -85,8 +85,6 @@ class BasicMACD(GraphicsObject):
         self.signal.setFlag(QGraphicsItem.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
         self.signal.setParentItem(self)
         
-        
-
         self.price_line = PriceLine()  # for z value
         self.price_line.setParentItem(self)
         
@@ -127,7 +125,7 @@ class BasicMACD(GraphicsObject):
                         self.has["inputs"]["slow_period"],
                         self.has["inputs"]["fast_period"],
                         self.has["inputs"]["signal_period"],
-                        self.has["inputs"]["ma_type"].name.lower())
+                        self.has["inputs"]["mamode"].name.lower())
     
     
     def disconnect_signals(self):
@@ -170,7 +168,7 @@ class BasicMACD(GraphicsObject):
         xdata,lb,cb,ub= self.INDICATOR.get_data()
         self.reset_histogram((xdata,lb,cb,ub))
         setdata.emit((xdata,lb,cb,ub))
-        self.has["name"] = f"MACD {self.has["inputs"]["ma_type"].name} {self.has["inputs"]["fast_period"]} {self.has["inputs"]["slow_period"]} {self.has["inputs"]["signal_period"]} {self.has["inputs"]["type"]}"
+        self.has["name"] = f"MACD {self.has["inputs"]["mamode"].name} {self.has["inputs"]["fast_period"]} {self.has["inputs"]["slow_period"]} {self.has["inputs"]["signal_period"]} {self.has["inputs"]["type"]}"
         self.sig_change_indicator_name.emit(self.has["name"])
         
     def replace_source(self):
@@ -187,7 +185,7 @@ class BasicMACD(GraphicsObject):
                     "fast_period":self.has["inputs"]["fast_period"],
                     "slow_period":self.has["inputs"]["slow_period"],
                     "signal_period":self.has["inputs"]["signal_period"],
-                    "ma_type":self.has["inputs"]["ma_type"],
+                    "mamode":self.has["inputs"]["mamode"],
                     "price_high":self.has["inputs"]["price_high"],
                     "price_low":self.has["inputs"]["price_low"]}
         return inputs
@@ -207,7 +205,7 @@ class BasicMACD(GraphicsObject):
     
     def update_inputs(self,_input,_source):
         """"source":self.has["inputs"]["source"],
-                "ma_type":self.has["inputs"]["ma_type"],
+                "mamode":self.has["inputs"]["mamode"],
                 "ma_period":self.has["inputs"]["ma_period"]"""
         update = False
         if _input == "source":
@@ -227,7 +225,7 @@ class BasicMACD(GraphicsObject):
                 self.has["inputs"][_input] = _source
                 update = True
         if update:
-            self.has["name"] = f"MACD {self.has["inputs"]["ma_type"].name} {self.has["inputs"]["fast_period"]} {self.has["inputs"]["slow_period"]} {self.has["inputs"]["signal_period"]} {self.has["inputs"]["type"]}"
+            self.has["name"] = f"MACD {self.has["inputs"]["mamode"].name} {self.has["inputs"]["fast_period"]} {self.has["inputs"]["slow_period"]} {self.has["inputs"]["signal_period"]} {self.has["inputs"]["type"]}"
             self.sig_change_indicator_name.emit(self.has["name"])
             self.INDICATOR.change_input(dict_ta_params=self.model.__dict__)
     
@@ -252,15 +250,13 @@ class BasicMACD(GraphicsObject):
         else:
             self.hide()
     
-
-    
     def set_Data(self,data):
         xData = data[0]
         lb = data[1]
         cb = data[2]
         histogram = data[3]
 
-        self.histogram.sig_update_histogram.emit((xData[-2:],histogram[-2:]))
+        self.histogram.sig_update_histogram.emit((xData[-2:],histogram[-2:]),"add")
         
         self.macd_line.setData(xData,lb)
         self.signal.setData(xData,cb)
@@ -275,6 +271,9 @@ class BasicMACD(GraphicsObject):
         lb = data[1]
         cb = data[2]
         histogram = data[3]
+        
+        print(len(xData),len(lb),len(cb),len(histogram))
+        
         self.histogram.sig_load_historic_histogram.emit((xData,histogram),"load_historic")
         self.macd_line.addHistoricData(xData,lb)
         self.signal.addHistoricData(xData,cb)
@@ -286,7 +285,7 @@ class BasicMACD(GraphicsObject):
         cb = data[2]
         histogram = data[3]
         
-        self.histogram.sig_update_histogram.emit((xData,histogram))
+        self.histogram.sig_update_histogram.emit((xData,histogram),"add")
         
         self.macd_line.updateData(xData,lb)
         self.signal.updateData(xData,cb)
@@ -320,13 +319,13 @@ class BasicMACD(GraphicsObject):
         self.worker.signals.setdata.connect(self.add_Data,Qt.ConnectionType.QueuedConnection)
         self.worker.start()    
     
-    def load_historic_data(self,_len,setdata):
+    def load_historic_data(self,_len,setdata):        
         xdata,macd,signalma,histogram= self.INDICATOR.get_data(stop=_len)
         setdata.emit((xdata,macd,signalma,histogram))
 
     
     def update_data(self,setdata):
-        xdata,macd,signalma,histogram= self.INDICATOR.get_data(start=-1)
+        xdata,macd,signalma,histogram= self.INDICATOR.get_data(start=-2)
         setdata.emit((xdata,macd,signalma,histogram))
         self.last_pos.emit((self.has["inputs"]["indicator_type"],signalma[-1]))
         self._panel.sig_update_y_axis.emit() 
@@ -370,7 +369,7 @@ class BasicMACD(GraphicsObject):
         return _min,_max
 
     def on_click_event(self):
-        print("zooo day__________________")
+        #print("zooo day__________________")
         pass
 
     def mousePressEvent(self, ev):

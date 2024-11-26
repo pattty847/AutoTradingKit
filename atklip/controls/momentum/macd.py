@@ -169,7 +169,7 @@ class MACD(QObject):
         self.slow_period:int = dict_ta_params.get("slow_period") 
         self.fast_period:int = dict_ta_params.get("fast_period") 
         self.signal_period:int = dict_ta_params.get("signal_period") 
-        self.ma_type: str = dict_ta_params.get("ma_type") 
+        self.mamode: str = dict_ta_params.get("mamode") 
         self.offset :int=dict_ta_params.get("drift",0)
 
         #self.signal_delete.connect(self.deleteLater)
@@ -177,12 +177,12 @@ class MACD(QObject):
         self.is_genering = True
         self.is_current_update = False
         self.is_histocric_load = False
-        self.name = f"MACD {self.source} {self.ma_type} {self.slow_period} {self.fast_period} {self.signal_period}"
+        self.name = f"MACD {self.source} {self.mamode} {self.slow_period} {self.fast_period} {self.signal_period}"
 
         self.df = pd.DataFrame([])
         self.worker = ApiThreadPool
         
-        self.xdata,self.macd_data,self.histogram,self.signalma = [],[],[],[]
+        self.xdata,self.macd_data,self.histogram,self.signalma = np.array([]),np.array([]),np.array([]),np.array([])
 
         self.connect_signals()
     
@@ -204,13 +204,13 @@ class MACD(QObject):
             self.slow_period:int = dict_ta_params.get("slow_period") 
             self.fast_period:int = dict_ta_params.get("fast_period") 
             self.signal_period:int = dict_ta_params.get("signal_period") 
-            self.ma_type: str = dict_ta_params.get("ma_type") 
+            self.mamode: str = dict_ta_params.get("mamode") 
             self.offset :int=dict_ta_params.get("drift",0)
             
             ta_name:str=dict_ta_params.get("ta_name")
             obj_id:str=dict_ta_params.get("obj_id") 
             
-            ta_param = f"{obj_id}-{ta_name}-{self.source}-{self.ma_type}-{self.slow_period}-{self.fast_period}-{self.signal_period}"
+            ta_param = f"{obj_id}-{ta_name}-{self.source}-{self.mamode}-{self.slow_period}-{self.fast_period}-{self.signal_period}"
 
             self.indicator_name = ta_param
         
@@ -258,7 +258,7 @@ class MACD(QObject):
         return self.df.tail(n)
     
     def get_data(self,start:int=0,stop:int=0):
-        if self.xdata == []:
+        if len(self.xdata) == 0:
             return [],[],[],[]
         if start == 0 and stop == 0:
             x_data = self.xdata
@@ -272,7 +272,7 @@ class MACD(QObject):
         else:
             x_data = self.xdata[start:stop]
             macd_data,signalma,histogram=self.macd_data[start:stop],self.signalma[start:stop],self.histogram[start:stop]
-        return np.array(x_data),np.array(macd_data),np.array(signalma),np.array(histogram)
+        return x_data,macd_data,signalma,histogram
     
     def get_last_row_df(self):
         return self.df.iloc[-1] 
@@ -285,7 +285,7 @@ class MACD(QObject):
         self.worker.submit(self.add,candle)
 
     
-    def add_historic_worker(self,n):
+    def add_historic_worker(self,n):        
         self.worker.submit(self.add_historic,n)
 
     def started_worker(self):
@@ -317,7 +317,7 @@ class MACD(QObject):
                         fast=self.fast_period,
                         slow=self.slow_period,
                         signal = self.signal_period,
-                        mamode=self.ma_type,
+                        mamode=self.mamode,
                         offset=self.offset)
         return self.paire_data(INDICATOR)
     
@@ -329,7 +329,10 @@ class MACD(QObject):
         df:pd.DataFrame = self._candles.get_df()
         
         macd_data,histogram,signalma = self.calculate(df)
-        _len = min([len(histogram),len(macd_data),len(signalma)])
+        _len = min([len(histogram),len(macd_data),len(signalma), int(len(df)-self.slow_period)])
+        
+        print([_len,len(histogram),len(macd_data),len(signalma), int(len(df)-self.slow_period),len(df),self.slow_period])
+        
         _index = df["index"]
         self.df = pd.DataFrame({
                             'index':_index.tail(_len),
@@ -338,43 +341,49 @@ class MACD(QObject):
                             "signalma":signalma.tail(_len)
                             })
         
-        self.xdata,self.macd_data,self.histogram,self.signalma = self.df["index"].to_list(),\
-                                                                    self.df["macd"].to_list(),\
-                                                                    self.df["histogram"].to_list(),\
-                                                                    self.df["signalma"].to_list()
+        self.xdata,self.macd_data,self.histogram,self.signalma = self.df["index"].to_numpy(),\
+                                                                    self.df["macd"].to_numpy(),\
+                                                                    self.df["histogram"].to_numpy(),\
+                                                                    self.df["signalma"].to_numpy()
         
         self.is_genering = False
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
-        self.sig_reset_all.emit()
         self.is_current_update = True
+        self.sig_reset_all.emit()
+        
     
     def add_historic(self,n:int):
         self.is_genering = True
         self.is_histocric_load = False
         _pre_len = len(self.df)
-        df:pd.DataFrame = self._candles.get_df().iloc[:-1*_pre_len]
+        candle_df = self._candles.get_df()
+        df:pd.DataFrame = candle_df.head(-_pre_len)
         
         macd_data,histogram,signalma = self.calculate(df)
 
-        _len = min([len(histogram),len(macd_data),len(signalma)])
+        _len = min([len(histogram),len(macd_data),len(signalma), int(len(df)-self.slow_period)])
+        
+        print([_len,len(histogram),len(macd_data),len(signalma), int(len(df)-self.slow_period),len(df),self.slow_period])
         
         _index = df["index"]
+        
         _df = pd.DataFrame({
                             'index':_index.tail(_len),
                             "macd":macd_data.tail(_len),
                             "histogram":histogram.tail(_len),
                             "signalma":signalma.tail(_len)
                             })
-                
-        self.df = pd.concat([_df,self.df],ignore_index=True)
         
-        self.xdata = _df["index"].to_list() + self.xdata
-        self.macd_data = _df["macd"].to_list() + self.macd_data
-        self.histogram = _df["histogram"].to_list() + self.histogram
-        self.signalma = _df["signalma"].to_list() + self.signalma
-
+        
+        self.df = pd.concat([_df,self.df],ignore_index=True)        
+        
+        self.xdata = np.concatenate((_df["index"].to_numpy(), self.xdata)) 
+        self.macd_data = np.concatenate((_df["macd"].to_numpy(), self.macd_data))   
+        self.histogram = np.concatenate((_df["histogram"].to_numpy(), self.histogram))
+        self.signalma = np.concatenate((_df["signalma"].to_numpy(), self.signalma))
+                
         self.is_genering = False
         if self.first_gen == False:
             self.first_gen = True
@@ -400,11 +409,13 @@ class MACD(QObject):
             
             self.df = pd.concat([self.df,new_frame],ignore_index=True)
                                 
-            self.xdata,self.macd_data,self.histogram,self.signalma = self.df["index"].to_list(),self.df["macd"].to_list(),\
-                                                self.df["histogram"].to_list(),self.df["signalma"].to_list()
-            
+            self.xdata = np.concatenate((self.xdata,np.array([new_candle.index])))
+            self.macd_data = np.concatenate((self.macd_data,np.array([macd_data.iloc[-1]])))
+            self.histogram = np.concatenate((self.histogram,np.array([histogram.iloc[-1]])))
+            self.signalma = np.concatenate((self.signalma,np.array([signalma.iloc[-1]])))
+
             self.sig_add_candle.emit()
-            self.is_current_update = True
+        self.is_current_update = True
         
     def update(self, new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]
@@ -416,9 +427,9 @@ class MACD(QObject):
                     
             self.df.iloc[-1] = [new_candle.index,macd_data.iloc[-1],histogram.iloc[-1],signalma.iloc[-1]]
                     
-            self.xdata,self.macd_data,self.histogram,self.signalma = self.df["index"].to_list(),self.df["macd"].to_list(),\
-                                                self.df["histogram"].to_list(),self.df["signalma"].to_list()
-            
+            self.xdata[-1],self.macd_data[-1],self.histogram[-1],self.signalma[-1] = new_candle.index,macd_data.iloc[-1],histogram.iloc[-1],signalma.iloc[-1]
+
             self.sig_update_candle.emit()
-            self.is_current_update = True
+        self.is_current_update = True
+            
             

@@ -112,7 +112,7 @@ class DONCHIAN(QObject):
         self.df = pd.DataFrame([])
         self.worker = ApiThreadPool
         
-        self.xdata,self.lb,self.cb,self.ub = [],[],[],[]
+        self.xdata,self.lb,self.cb,self.ub = np.array([]),np.array([]),np.array([]),np.array([])
 
         self.connect_signals()
     
@@ -184,7 +184,7 @@ class DONCHIAN(QObject):
         return self.df.tail(n)
     
     def get_data(self,start:int=0,stop:int=0):
-        if self.xdata == []:
+        if len(self.xdata) == 0:
             return [],[],[],[]
         if start == 0 and stop == 0:
             x_data = self.xdata
@@ -198,7 +198,7 @@ class DONCHIAN(QObject):
         else:
             x_data = self.xdata[start:stop]
             lb,cb,ub=self.lb[start:stop],self.cb[start:stop],self.ub[start:stop]
-        return np.array(x_data),np.array(lb),np.array(cb),np.array(ub)
+        return x_data,lb,cb,ub
     
     def get_last_row_df(self):
         return self.df.iloc[-1] 
@@ -258,14 +258,15 @@ class DONCHIAN(QObject):
                             "ub":ub.tail(_len)
                             })
                 
-        self.xdata,self.lb,self.cb,self.ub = self.df["index"].to_list(),self.df["lb"].to_list(),self.df["cb"].to_list(),self.df["ub"].to_list()
+        self.xdata,self.lb,self.cb,self.ub = self.df["index"].to_numpy(),self.df["lb"].to_numpy(),self.df["cb"].to_numpy(),self.df["ub"].to_numpy()
         
         self.is_genering = False
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
-        self.sig_reset_all.emit()
+        
         self.is_current_update = True
+        self.sig_reset_all.emit()
     
     def add_historic(self,n:int):
         self.is_genering = True
@@ -288,12 +289,15 @@ class DONCHIAN(QObject):
         self.df = pd.concat([_df,self.df],ignore_index=True)
         
         
-        self.xdata = _df["index"].to_list() + self.xdata
-        self.lb = _df["lb"].to_list() + self.lb
-        self.cb = _df["cb"].to_list() + self.cb
-        self.ub = _df["ub"].to_list() + self.ub
+        self.xdata = _df["index"].to_numpy() + self.xdata
+        self.lb = _df["lb"].to_numpy() + self.lb
+        self.cb = _df["cb"].to_numpy() + self.cb
+        self.ub = _df["ub"].to_numpy() + self.ub
         
-        # self.xdata,self.lb,self.cb,self.ub = self.df["index"].to_list(),self.df["lb"].to_list(),self.df["cb"].to_list(),self.df["ub"].to_list()
+        self.xdata = np.concatenate((_df["index"].to_numpy(), self.xdata)) 
+        self.lb = np.concatenate((_df["lb"].to_numpy(), self.lb))   
+        self.cb = np.concatenate((_df["cb"].to_numpy(), self.cb))
+        self.ub = np.concatenate((_df["ub"].to_numpy(), self.ub))
         
         self.is_genering = False
         if self.first_gen == False:
@@ -319,12 +323,15 @@ class DONCHIAN(QObject):
             
             self.df = pd.concat([self.df,new_frame],ignore_index=True)
                                 
-            self.xdata,self.lb,self.cb,self.ub = self.df["index"].to_list(),self.df["lb"].to_list(),\
-                                                self.df["cb"].to_list(),self.df["ub"].to_list()
+            self.xdata = np.concatenate((self.xdata,np.array([new_candle.index])))
+            self.lb = np.concatenate((self.lb,np.array([lb.iloc[-1]])))
+            self.cb = np.concatenate((self.cb,np.array([cb.iloc[-1]])))
+            self.ub = np.concatenate((self.ub,np.array([ub.iloc[-1]])))
             
-           
             self.sig_add_candle.emit()
-            self.is_current_update = True
+            
+        self.is_current_update = True
+            
         
     def update(self, new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]
@@ -336,9 +343,9 @@ class DONCHIAN(QObject):
 
             self.df.iloc[-1] = [new_candle.index,lb.iloc[-1],cb.iloc[-1],ub.iloc[-1]]
                     
-            self.xdata,self.lb,self.cb,self.ub = self.df["index"].to_list(),self.df["lb"].to_list(),\
-                                                self.df["cb"].to_list(),self.df["ub"].to_list()
-            
+            self.xdata[-1],self.lb[-1],self.cb[-1],self.ub[-1] = new_candle.index,lb.iloc[-1],cb.iloc[-1],ub.iloc[-1]
             self.sig_update_candle.emit()
-            self.is_current_update = True
+            
+        self.is_current_update = True
+            
             

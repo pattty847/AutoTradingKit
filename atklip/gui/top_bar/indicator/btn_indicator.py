@@ -1,9 +1,7 @@
-from typing import TYPE_CHECKING,List
+from typing import TYPE_CHECKING
 from PySide6.QtCore import Signal, Qt, QSize, QPoint,QRectF
 from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import QPushButton, QWidget
 
-from atklip.gui.qfluentwidgets.common import isDarkTheme
 from atklip.gui.qfluentwidgets.common.icon import FluentIcon as FIF
 from atklip.gui.components._pushbutton import IconTextChangeButton
 

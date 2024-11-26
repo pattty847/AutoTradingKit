@@ -53,7 +53,7 @@ class BasicSTOCHRSI(GraphicsObject):
                     "rsi_period":14,
                     "k_period":3,
                     "d_period":3,
-                    "ma_type":PD_MAType.SMA,
+                    "mamode":PD_MAType.SMA,
                     "price_high":80,
                     "price_low":20,
                     "show":True},
@@ -120,7 +120,7 @@ class BasicSTOCHRSI(GraphicsObject):
                         self.has["inputs"]["k_period"],
                         self.has["inputs"]["d_period"],
                         self.has["inputs"]["type"],
-                        self.has["inputs"]["ma_type"].name.lower())
+                        self.has["inputs"]["mamode"].name.lower())
     
     def disconnect_signals(self):
         try:
@@ -156,7 +156,7 @@ class BasicSTOCHRSI(GraphicsObject):
 
     def regen_indicator(self,setdata):
         xdata,stochrsi,signalma= self.INDICATOR.get_data()  
-        self.has["name"] = f"STOCHRSI {self.has["inputs"]["ma_type"].name} {self.has["inputs"]["period"]} {self.has["inputs"]["k_period"]} {self.has["inputs"]["d_period"]} {self.has["inputs"]["type"]}"
+        self.has["name"] = f"STOCHRSI {self.has["inputs"]["mamode"].name} {self.has["inputs"]["period"]} {self.has["inputs"]["k_period"]} {self.has["inputs"]["d_period"]} {self.has["inputs"]["type"]}"
         self.sig_change_indicator_name.emit(self.has["name"])
         setdata.emit((xdata,stochrsi,signalma))
         self.sig_change_yaxis_range.emit()
@@ -173,7 +173,7 @@ class BasicSTOCHRSI(GraphicsObject):
     
     def update_inputs(self,_input,_source):
         """"source":self.has["inputs"]["source"],
-                "ma_type":self.has["inputs"]["ma_type"],
+                "mamode":self.has["inputs"]["mamode"],
                 "ma_period":self.has["inputs"]["ma_period"]"""
         update = False
         if _input == "source":
@@ -193,7 +193,7 @@ class BasicSTOCHRSI(GraphicsObject):
                 self.has["inputs"][_input] = _source
                 update = True
         if update:
-            self.has["name"] = f"STOCHRSI {self.has["inputs"]["ma_type"].name} {self.has["inputs"]["period"]} {self.has["inputs"]["k_period"]} {self.has["inputs"]["d_period"]} {self.has["inputs"]["type"]}"
+            self.has["name"] = f"STOCHRSI {self.has["inputs"]["mamode"].name} {self.has["inputs"]["period"]} {self.has["inputs"]["k_period"]} {self.has["inputs"]["d_period"]} {self.has["inputs"]["type"]}"
             self.sig_change_indicator_name.emit(self.has["name"])
             self.INDICATOR.change_input(dict_ta_params=self.model.__dict__)
 
@@ -246,7 +246,7 @@ class BasicSTOCHRSI(GraphicsObject):
         super().mousePressEvent(ev)
 
     def on_click_event(self):
-        print("zooo day__________________")
+        #print("zooo day__________________")
         pass
 
 
@@ -257,7 +257,7 @@ class BasicSTOCHRSI(GraphicsObject):
                     "rsi_period":self.has["inputs"]["rsi_period"],
                     "k_period":self.has["inputs"]["k_period"],
                     "d_period":self.has["inputs"]["d_period"],
-                    "ma_type":self.has["inputs"]["ma_type"],
+                    "mamode":self.has["inputs"]["mamode"],
                     "price_high":self.has["inputs"]["price_high"],
                     "price_low":self.has["inputs"]["price_low"]}
         return inputs

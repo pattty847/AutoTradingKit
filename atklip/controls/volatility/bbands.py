@@ -138,7 +138,7 @@ class BBANDS(QObject):
         
         self._candles: JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE =_candles
         
-        self.ma_type:str = dict_ta_params["ma_type"]
+        self.mamode:str = dict_ta_params["mamode"]
         self.source:str = dict_ta_params["source"]
         self.length:int = dict_ta_params["length"]
         self.std_dev_mult:float = dict_ta_params["std_dev_mult"]
@@ -150,12 +150,12 @@ class BBANDS(QObject):
         self.is_genering = True
         self.is_current_update = False
         self.is_histocric_load = False
-        self.name = f"{self.ma_type.lower()} {self.source} {self.length} {self.std_dev_mult}"
+        self.name = f"{self.mamode.lower()} {self.source} {self.length} {self.std_dev_mult}"
 
         self.df = pd.DataFrame([])
         self.worker = ApiThreadPool
         
-        self.xdata,self.lb,self.cb,self.ub = [],[],[],[]
+        self.xdata,self.lb,self.cb,self.ub = np.array([]),np.array([]),np.array([]),np.array([])
 
         self.connect_signals()
     
@@ -173,7 +173,7 @@ class BBANDS(QObject):
             self.connect_signals()
             
         if dict_ta_params != {}:
-            self.ma_type:str = dict_ta_params["ma_type"]
+            self.mamode:str = dict_ta_params["mamode"]
             self.source:str = dict_ta_params["source"]
             self.length:int = dict_ta_params["length"]
             self.std_dev_mult:float = dict_ta_params["std_dev_mult"]
@@ -183,7 +183,7 @@ class BBANDS(QObject):
             ta_name:str=dict_ta_params.get("ta_name")
             obj_id:str=dict_ta_params.get("obj_id") 
             
-            ta_param = f"{obj_id}-{ta_name}-{self.source}-{self.ma_type}-{self.length}-{self.std_dev_mult}"
+            ta_param = f"{obj_id}-{ta_name}-{self.source}-{self.mamode}-{self.length}-{self.std_dev_mult}"
 
             self.indicator_name = ta_param
         
@@ -230,7 +230,7 @@ class BBANDS(QObject):
         return self.df.tail(n)
     
     def get_data(self,start:int=0,stop:int=0):
-        if self.xdata == []:
+        if len(self.xdata) == 0:
             return [],[],[],[]
         if start == 0 and stop == 0:
             x_data = self.xdata
@@ -244,7 +244,7 @@ class BBANDS(QObject):
         else:
             x_data = self.xdata[start:stop]
             lb,cb,ub=self.lb[start:stop],self.cb[start:stop],self.ub[start:stop]
-        return np.array(x_data),np.array(lb),np.array(cb),np.array(ub)
+        return x_data,lb,cb,ub
     
     def get_last_row_df(self):
         return self.df.iloc[-1] 
@@ -284,7 +284,7 @@ class BBANDS(QObject):
         INDICATOR = bbands(df[self.source],
                            length=self.length,
                            std=self.std_dev_mult,
-                           mamode=self.ma_type.lower(),
+                           mamode=self.mamode.lower(),
                            ddof=self.ddof,
                            offset=self.offset)
         return self.paire_data(INDICATOR)
@@ -307,14 +307,15 @@ class BBANDS(QObject):
                             "ub":ub.tail(_len)
                             })
                 
-        self.xdata,self.lb,self.cb,self.ub = self.df["index"].to_list(),self.df["lb"].to_list(),self.df["cb"].to_list(),self.df["ub"].to_list()
+        self.xdata,self.lb,self.cb,self.ub = self.df["index"].to_numpy(),self.df["lb"].to_numpy(),self.df["cb"].to_numpy(),self.df["ub"].to_numpy()
         
         self.is_genering = False
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
-        self.sig_reset_all.emit()
+        
         self.is_current_update = True
+        self.sig_reset_all.emit()
     
     def add_historic(self,n:int):
         self.is_genering = True
@@ -337,13 +338,11 @@ class BBANDS(QObject):
         self.df = pd.concat([_df,self.df],ignore_index=True)
         
         
-        self.xdata = _df["index"].to_list() + self.xdata
-        self.lb = _df["lb"].to_list() + self.lb
-        self.cb = _df["cb"].to_list() + self.cb
-        self.ub = _df["ub"].to_list() + self.ub
-        
-        # self.xdata,self.lb,self.cb,self.ub = self.df["index"].to_list(),self.df["lb"].to_list(),self.df["cb"].to_list(),self.df["ub"].to_list()
-        
+        self.xdata = np.concatenate((_df["index"].to_numpy(), self.xdata)) 
+        self.lb = np.concatenate((_df["lb"].to_numpy(), self.lb))   
+        self.cb = np.concatenate((_df["cb"].to_numpy(), self.cb))
+        self.ub = np.concatenate((_df["ub"].to_numpy(), self.ub))
+                
         self.is_genering = False
         if self.first_gen == False:
             self.first_gen = True
@@ -368,12 +367,14 @@ class BBANDS(QObject):
             
             self.df = pd.concat([self.df,new_frame],ignore_index=True)
                                 
-            self.xdata,self.lb,self.cb,self.ub = self.df["index"].to_list(),self.df["lb"].to_list(),\
-                                                self.df["cb"].to_list(),self.df["ub"].to_list()
+            self.xdata = np.concatenate((self.xdata,np.array([new_candle.index])))
+            self.lb = np.concatenate((self.lb,np.array([lb.iloc[-1]])))
+            self.cb = np.concatenate((self.cb,np.array([cb.iloc[-1]])))
+            self.ub = np.concatenate((self.ub,np.array([ub.iloc[-1]])))
             
-           
             self.sig_add_candle.emit()
-            self.is_current_update = True
+        self.is_current_update = True
+            
         
     def update(self, new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]
@@ -385,9 +386,9 @@ class BBANDS(QObject):
                     
             self.df.iloc[-1] = [new_candle.index,lb.iloc[-1],cb.iloc[-1],ub.iloc[-1]]
                     
-            self.xdata,self.lb,self.cb,self.ub = self.df["index"].to_list(),self.df["lb"].to_list(),\
-                                                self.df["cb"].to_list(),self.df["ub"].to_list()
+            self.xdata[-1],self.lb[-1],self.cb[-1],self.ub[-1] = new_candle.index,lb.iloc[-1],cb.iloc[-1],ub.iloc[-1]
             
             self.sig_update_candle.emit()
-            self.is_current_update = True
+        self.is_current_update = True
+            
             

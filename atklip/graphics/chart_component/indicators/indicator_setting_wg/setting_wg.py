@@ -70,8 +70,6 @@ class BasicMenu(ScrollInterface):
         # self.setMaximumHeight(200)
         # self._parent.setFixedHeight(self.height())
     
-
-    
     def name(self):
         return self.objectName()
     def setup_setting_indicator(self):
@@ -91,30 +89,15 @@ class BasicMenu(ScrollInterface):
                         type_indicator.set_name(_input)
                         self.sig_add_indicator.emit(type_indicator)
                     continue
-                elif "period" in _input:
+                elif "period" in _input or "length" in _input or "legs" in _input or "smooth" in _input:
                     period = PeriodEdit(self,self.indicator, _input)
                     period.set_name(_input)
                     self.sig_add_indicator.emit(period)
                     continue
-                elif "length" in _input:
-                    length = PeriodEdit(self,self.indicator, _input)
-                    length.set_name(_input)
-                    self.sig_add_indicator.emit(length)
-                    continue
-                elif "legs" in _input:
-                    length = PeriodEdit(self,self.indicator, _input)
-                    length.set_name(_input)
-                    self.sig_add_indicator.emit(length)
-                    continue
-                elif "value" in _input:
-                    value = PriceEdit(self,self.indicator, _input)
-                    value.set_name(_input)
-                    self.sig_add_indicator.emit(value)
-                    continue
-                elif "ma_type" in _input or "macd_type" in _input:
-                    ma_type = MaTypeEdit(self,self.indicator, _input)
-                    ma_type.set_name(_input)
-                    self.sig_add_indicator.emit(ma_type)
+                elif "mamode" in _input or "macd_type" in _input:
+                    mamode = MaTypeEdit(self,self.indicator, _input)
+                    mamode.set_name(_input)
+                    self.sig_add_indicator.emit(mamode)
                     continue
                 elif "interval" in _input:
                     interval = MaIntervalEdit(self,self.indicator, _input)
@@ -125,7 +108,7 @@ class BasicMenu(ScrollInterface):
                     pass
                 elif "indicator_type" in _input:
                     pass
-                elif "price" in _input:
+                elif "price" in _input or "scalar" in _input or "value" in _input or "std" in _input :
                     price = PriceEdit(self,self.indicator, _input)
                     price.set_name(_input)
                     self.sig_add_indicator.emit(price)

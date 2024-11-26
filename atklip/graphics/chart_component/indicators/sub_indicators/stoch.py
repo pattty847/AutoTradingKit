@@ -50,7 +50,7 @@ class BasicSTOCH(GraphicsObject):
                     "smooth_k_period":3,
                     "k_period":14,
                     "d_period":3,
-                    "ma_type":PD_MAType.SMA,
+                    "mamode":PD_MAType.SMA,
                     "price_high":80,
                     "price_low":20,
                     "show":True},
@@ -114,7 +114,7 @@ class BasicSTOCH(GraphicsObject):
                         self.has["inputs"]["smooth_k_period"],
                         self.has["inputs"]["k_period"],
                         self.has["inputs"]["d_period"],
-                        self.has["inputs"]["ma_type"].name.lower())
+                        self.has["inputs"]["mamode"].name.lower())
     
     def disconnect_signals(self):
         try:
@@ -150,7 +150,7 @@ class BasicSTOCH(GraphicsObject):
 
     def regen_indicator(self,setdata):
         xdata,stoch,signalma= self.INDICATOR.get_data()  
-        self.has["name"] = f"STOCH {self.has["inputs"]["ma_type"].name} {self.has["inputs"]["smooth_k_period"]} {self.has["inputs"]["k_period"]} {self.has["inputs"]["d_period"]}"
+        self.has["name"] = f"STOCH {self.has["inputs"]["mamode"].name} {self.has["inputs"]["smooth_k_period"]} {self.has["inputs"]["k_period"]} {self.has["inputs"]["d_period"]}"
         self.sig_change_indicator_name.emit(self.has["name"])
         setdata.emit((xdata,stoch,signalma))
         self.sig_change_yaxis_range.emit()
@@ -170,14 +170,14 @@ class BasicSTOCH(GraphicsObject):
                     "smooth_k_period":self.has["inputs"]["smooth_k_period"],
                     "k_period":self.has["inputs"]["k_period"],
                     "d_period":self.has["inputs"]["d_period"],
-                    "ma_type":self.has["inputs"]["ma_type"],
+                    "mamode":self.has["inputs"]["mamode"],
                     "price_high":self.has["inputs"]["price_high"],
                     "price_low":self.has["inputs"]["price_low"]}
         return inputs
     
     def update_inputs(self,_input,_source):
         """"source":self.has["inputs"]["source"],
-                "ma_type":self.has["inputs"]["ma_type"],
+                "mamode":self.has["inputs"]["mamode"],
                 "ma_period":self.has["inputs"]["ma_period"]"""
         update = False
         if _input == "source":
@@ -197,7 +197,7 @@ class BasicSTOCH(GraphicsObject):
                 self.has["inputs"][_input] = _source
                 update = True
         if update:
-            self.has["name"] = f"STOCH {self.has["inputs"]["ma_type"].name} {self.has["inputs"]["smooth_k_period"]} {self.has["inputs"]["k_period"]} {self.has["inputs"]["d_period"]}"
+            self.has["name"] = f"STOCH {self.has["inputs"]["mamode"].name} {self.has["inputs"]["smooth_k_period"]} {self.has["inputs"]["k_period"]} {self.has["inputs"]["d_period"]}"
             self.sig_change_indicator_name.emit(self.has["name"])
             self.INDICATOR.change_input(dict_ta_params=self.model.__dict__)
     
@@ -327,7 +327,7 @@ class BasicSTOCH(GraphicsObject):
         return rect      
 
     def on_click_event(self):
-        print("zooo day__________________")
+        #print("zooo day__________________")
         pass
 
         

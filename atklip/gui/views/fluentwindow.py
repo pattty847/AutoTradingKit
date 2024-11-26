@@ -53,23 +53,20 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
         
         self.onTabAddRequested()
         self.initWindow()
-        
-
+    
     def initWindow(self):
         self.setMinimumWidth(1200)
         self.setMinimumHeight(800)
         desktop = QApplication.screens()[0].availableGeometry()
         w, h = desktop.width(), desktop.height()
-        # self.move(w//2 - self.width()//2, h//2 - self.height()//2)
-        self.resize(1200, 800)
+        self.resize(1260, 800)
         self.move(w//2 - self.width()//2, h//2 - self.height()//2)
-        # self.showMaximized()
-        # self.resize(self.width(), self.height())
-        # if self.TabInterface:
-        #     self.TabInterface.progress.run_process(True)
-        self.show()
-        # QApplication.processEvents()
-    
+        
+        if self.TabInterface:
+            h =  self.TabInterface.splitter.height()
+            self.TabInterface.splitter.setSizes([800,0])
+        
+        self.show()    
 
     def load_pre_config(self):
         curent_tab = AppConfig.get_config_value("profiles.current_tab")
@@ -133,14 +130,21 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
             icon_path = CI.BTC.path()
 
         routeKey = f'{current_symbol}-{curent_interval}-{self.tabBar.count()}'
+        print(routeKey)
         self.addTab(routeKey, f"{current_symbol} {curent_interval}", icon_path,current_ex,current_symbol,curent_interval)
         
 
     def addTab(self, routeKey, text, icon,current_ex,current_symbol,curent_interval):
         tabItem = self.tabBar.addTab(routeKey, text, icon)
         self.tabBar.setCurrentTab(routeKey)
+        
+        print("tabItem",tabItem)
+        
         # self.stackedWidget.resize(self.width(), self.height() - self.titleBar.height())
+        
         self.TabInterface = MainWidget(self,tabItem,routeKey,current_ex,current_symbol,curent_interval)
+        
+        print("self.TabInterface",self.TabInterface)
         
         # old_interface = self.stackedWidget.currentWidget()
         # if isinstance(old_interface,MainWidget):
@@ -203,15 +207,11 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
         """ set whether the mica effect is enabled, only available on Win11 """
         if sys.platform != 'win32' or sys.getwindowsversion().build < 22000:
             return
-
         self._isMicaEnabled = isEnabled
-
         if isEnabled:
             self.windowEffect.setMicaEffect(self.winId(), isDarkTheme())
         else:
             self.windowEffect.removeBackgroundEffect(self.winId())
-
         self.setBackgroundColor(self._normalBackgroundColor())
-
     def isMicaEffectEnabled(self):
         return self._isMicaEnabled

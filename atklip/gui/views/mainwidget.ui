@@ -382,7 +382,7 @@
                </property>
                <widget class="GraphSplitter" name="chartbox_splitter" native="true">
                 <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
                   <horstretch>0</horstretch>
                   <verstretch>0</verstretch>
                  </sizepolicy>
@@ -404,7 +404,7 @@
                 <property name="minimumSize">
                  <size>
                   <width>0</width>
-                  <height>35</height>
+                  <height>90</height>
                  </size>
                 </property>
                 <property name="maximumSize">
@@ -464,6 +464,28 @@
             </property>
             <property name="styleSheet">
              <string notr="true"/>
+            </property>
+            <property name="frameShape">
+             <enum>QFrame::NoFrame</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QFrame" name="frame_9">
+            <property name="minimumSize">
+             <size>
+              <width>2</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>2</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">background-color: #474747;</string>
             </property>
             <property name="frameShape">
              <enum>QFrame::NoFrame</enum>

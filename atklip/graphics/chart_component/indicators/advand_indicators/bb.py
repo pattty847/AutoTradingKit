@@ -7,6 +7,7 @@ from PySide6.QtGui import QPainter,QPicture
 
 from .fillbetweenitem import FillBetweenItem
 from atklip.graphics.chart_component.base_items.plotdataitem import PlotDataItem
+from atklip.graphics.pyqtgraph import GraphicsObject
 
 from atklip.controls import PD_MAType,IndicatorType,BBANDS
 from atklip.controls.models import BBandsModel
@@ -18,7 +19,7 @@ if TYPE_CHECKING:
     from atklip.graphics.chart_component.viewchart import Chart
 
 
-class BasicBB(PlotDataItem):
+class BasicBB(GraphicsObject):
     on_click = Signal(object)
     signal_visible = Signal(bool)
     signal_delete = Signal()
@@ -28,8 +29,10 @@ class BasicBB(PlotDataItem):
     signal_change_type = Signal(str)
     sig_change_indicator_name = Signal(str)
     def __init__(self,chart) -> None:
-        super().__init__()
-        self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
+        GraphicsObject.__init__(self)
+        # super().__init__()
+        # self.setFlag(self.GraphicsItemFlag.ItemHasNoContents)
+        self.setFlag(self.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
         self.chart:Chart = chart
         self.has = {
             "name": f"BB 20 2",
@@ -38,7 +41,7 @@ class BasicBB(PlotDataItem):
                     "source":self.chart.jp_candle,
                     "source_name": self.chart.jp_candle.source_name,
                     "type":"close",
-                    "ma_type":PD_MAType.SMA,
+                    "mamode":PD_MAType.SMA,
                     "length":20,
                     "std_dev_mult":2,
                     "indicator_type":IndicatorType.BB,
@@ -61,11 +64,10 @@ class BasicBB(PlotDataItem):
                     }
                     }
         self.id = self.chart.objmanager.add(self)
-        self.setPen(color=self.has["styles"]['pen_center_line'])
         self.lowline = PlotDataItem(pen=self.has["styles"]['pen_low_line'])  # for z value
         self.lowline.setParentItem(self)
-        # self.centerline = PlotDataItem(pen=self.has["styles"]['pen_center_line'])
-        # self.centerline.setParentItem(self)
+        self.centerline = PlotDataItem(pen=self.has["styles"]['pen_center_line'])
+        self.centerline.setParentItem(self)
         self.highline = PlotDataItem(pen=self.has["styles"]['pen_high_line'])
         self.highline.setParentItem(self)
         
@@ -90,7 +92,7 @@ class BasicBB(PlotDataItem):
         
     @property
     def model(self) -> dict:
-        return BBandsModel(self.id,"BBands",self.chart.jp_candle.source_name,self.has["inputs"]["ma_type"].name.lower(),
+        return BBandsModel(self.id,"BBands",self.chart.jp_candle.source_name,self.has["inputs"]["mamode"].name.lower(),
                               self.has["inputs"]["type"],self.has["inputs"]["length"],
                               self.has["inputs"]["std_dev_mult"])
     
@@ -131,7 +133,7 @@ class BasicBB(PlotDataItem):
         xdata,lb,cb,ub= self.INDICATOR.get_data()
         setdata.emit((xdata,lb,cb,ub))
         self.sig_change_yaxis_range.emit()
-        self.has["name"] = f"BB {self.has["inputs"]["length"]} {self.has["inputs"]["std_dev_mult"]} {self.has["inputs"]["type"]} {self.has["inputs"]["ma_type"].name}"
+        self.has["name"] = f"BB {self.has["inputs"]["length"]} {self.has["inputs"]["std_dev_mult"]} {self.has["inputs"]["type"]} {self.has["inputs"]["mamode"].name}"
         self.sig_change_indicator_name.emit(self.has["name"])
         
     def replace_source(self):
@@ -150,7 +152,7 @@ class BasicBB(PlotDataItem):
                     "type":self.has["inputs"]["type"],
                     "length":self.has["inputs"]["length"],
                     "std_dev_mult":self.has["inputs"]["std_dev_mult"],
-                    "ma_type":self.has["inputs"]["ma_type"],}
+                    "mamode":self.has["inputs"]["mamode"],}
         return inputs
     
     def get_styles(self):
@@ -182,7 +184,7 @@ class BasicBB(PlotDataItem):
                 is_update = True
         
         if is_update:
-            self.has["name"] = f"BB {self.has["inputs"]["length"]} {self.has["inputs"]["std_dev_mult"]} {self.has["inputs"]["type"]} {self.has["inputs"]["ma_type"].name}"
+            self.has["name"] = f"BB {self.has["inputs"]["length"]} {self.has["inputs"]["std_dev_mult"]} {self.has["inputs"]["type"]} {self.has["inputs"]["mamode"].name}"
             self.sig_change_indicator_name.emit(self.has["name"])
             self.INDICATOR.change_input(dict_ta_params=self.model.__dict__)
     
@@ -191,8 +193,8 @@ class BasicBB(PlotDataItem):
         if _input == "pen_high_line" or _input == "width_high_line" or _input == "style_high_line":
             self.highline.setPen(color=self.has["styles"]["pen_high_line"], width=self.has["styles"]["width_high_line"],style=self.has["styles"]["style_high_line"])
         elif _input == "pen_center_line" or _input == "width_center_line" or _input == "style_center_line":
-            # self.centerline.setPen(color=self.has["styles"]["pen_center_line"], width=self.has["styles"]["width_center_line"],style=self.has["styles"]["style_center_line"])
-            self.setPen(color=self.has["styles"]["pen_center_line"], width=self.has["styles"]["width_center_line"],style=self.has["styles"]["style_center_line"])
+            self.centerline.setPen(color=self.has["styles"]["pen_center_line"], width=self.has["styles"]["width_center_line"],style=self.has["styles"]["style_center_line"])
+            # self.setPen(color=self.has["styles"]["pen_center_line"], width=self.has["styles"]["width_center_line"],style=self.has["styles"]["style_center_line"])
         elif _input == "pen_low_line" or _input == "width_low_line" or _input == "style_low_line":
             self.lowline.setPen(color=self.has["styles"]["pen_low_line"], width=self.has["styles"]["width_low_line"],style=self.has["styles"]["style_low_line"])
         elif _input == "brush_color":
@@ -216,8 +218,8 @@ class BasicBB(PlotDataItem):
         cb = data[2]
         ub = data[3]
         self.lowline.setData(xData,lb)
-        self.setData(xData,cb)
         self.highline.setData(xData,ub)
+        self.centerline.setData(xData,ub)
     
     def add_historic_Data(self,data):
         xData = data[0]
@@ -225,7 +227,7 @@ class BasicBB(PlotDataItem):
         cb = data[2]
         ub = data[3]
         self.lowline.addHistoricData(xData,lb)
-        self.addHistoricData(xData,cb)
+        self.centerline.addHistoricData(xData,cb)
         self.highline.addHistoricData(xData,ub)
         
     def update_Data(self,data):
@@ -234,7 +236,7 @@ class BasicBB(PlotDataItem):
         cb = data[2]
         ub = data[3]
         self.lowline.updateData(xData,lb)
-        self.updateData(xData,cb)
+        self.centerline.updateData(xData,cb)
         self.highline.updateData(xData,ub)
     
     def setdata_worker(self):
@@ -267,32 +269,36 @@ class BasicBB(PlotDataItem):
 
        
     def boundingRect(self) -> QRectF:
-        x_left,x_right = int(self.chart.xAxis.range[0]),int(self.chart.xAxis.range[1])
-        start_index = self.chart.jp_candle.candles[0].index
-        stop_index = self.chart.jp_candle.candles[-1].index
-        if x_left > start_index:
-            _start = x_left+2
-        else:
-            _start = start_index+2
-        if x_right < stop_index:
-            _width = x_right-_start
-        else:
-            _width = stop_index-_start
-        if self.lowline.yData is not None:
-            if self.lowline.yData.size != 0:
-                try:
-                    h_low,h_high = np.nanmin(self.lowline.yData), np.nanmax(self.highline.yData)
-                except ValueError:
-                    h_low,h_high = self.chart.yAxis.range[0],self.chart.yAxis.range[1]  
-            else:
-                h_low,h_high = self.chart.yAxis.range[0],self.chart.yAxis.range[1]
-        else:
-            h_low,h_high = self.chart.yAxis.range[0],self.chart.yAxis.range[1]
-        rect = QRectF(_start,h_low,_width,h_high-h_low)
-        return rect
+        # x_left,x_right = int(self.chart.xAxis.range[0]),int(self.chart.xAxis.range[1])
+        # start_index = self.chart.jp_candle.candles[0].index
+        # stop_index = self.chart.jp_candle.candles[-1].index
+        # if x_left > start_index:
+        #     _start = x_left+2
+        # else:
+        #     _start = start_index+2
+        # if x_right < stop_index:
+        #     _width = x_right-_start
+        #     _stop = x_right
+        # else:
+        #     _width = stop_index-_start
+        #     _stop = stop_index
+        # if self.lowline.yData is not None:
+        #     if self.lowline.yData.size != 0:
+        #         try:
+        #             h_low,h_high = np.nanmin(self.lowline.yData[_start:_stop]), np.nanmax(self.highline.yData[_start:_stop])
+        #         except ValueError:
+        #             h_low,h_high = int(self.chart.yAxis.range[0]),int(self.chart.yAxis.range[1])  
+        #     else:
+        #         h_low,h_high = self.chart.yAxis.range[0],self.chart.yAxis.range[1]
+        # else:
+        #     h_low,h_high = self.chart.yAxis.range[0],self.chart.yAxis.range[1]
+        # rect = QRectF(_start,h_low,_width,h_high-h_low)
+        # return rect
+        return self.centerline.boundingRect()
     
     def paint(self, p:QPainter, *args):
-        self.picture.play(p)
+        # self.picture.play(p)
+        p.drawRect(self.boundingRect())
     
     def get_yaxis_param(self):
         _value = None
@@ -324,7 +330,7 @@ class BasicBB(PlotDataItem):
         return _min,_max
 
     def on_click_event(self):
-        print("zooo day__________________")
+        #print("zooo day__________________")
         pass
 
     def mousePressEvent(self, ev):

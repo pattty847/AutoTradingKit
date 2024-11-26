@@ -156,14 +156,14 @@ class Chart(ViewPlotWidget):
             if btn.isChecked():
                 self.replay_obj = ReplayObject(self)
                 self.add_item(self.replay_obj)
-                self.replay_mode = True
+                # self.replay_mode = True
                 self.drawtool.drawing_object = self.replay_obj
             else:
                 if isinstance(self.replay_obj,ReplayObject):
                     self.drawtool.drawing_object = None
                     self.remove_item(self.replay_obj)
                     self.replay_obj = None
-                self.replay_mode = False
+                # self.replay_mode = False
         elif btn_name == "btn_close_playbar":
             self.is_running_replay = False
             self.replay_data:list = []
@@ -271,18 +271,25 @@ class Chart(ViewPlotWidget):
                             round((self.replay_data[self.replay_pos_i][2]+self.replay_data[self.replay_pos_i][3])/2,self._precision) , 
                             round((self.replay_data[self.replay_pos_i][2]+self.replay_data[self.replay_pos_i][3]+self.replay_data[self.replay_pos_i][4])/3,self._precision), 
                             round((self.replay_data[self.replay_pos_i][1]+self.replay_data[self.replay_pos_i][2]+self.replay_data[self.replay_pos_i][3]+self.replay_data[self.replay_pos_i][4])/4,self._precision),self.replay_data[self.replay_pos_i][5],self.replay_data[self.replay_pos_i][0]/1000,0)
-        is_updated =  self.check_all_indicator_updated()
-        while not is_updated:
-            is_updated =  self.check_all_indicator_updated()
-            time.sleep(0.01)
-
-            if self.trading_mode or not self.exchange_name:
-                self.replay_mode = False
-                break
-
+        
         _is_add_candle = self.jp_candle.update([pre_ohlcv,last_ohlcv])
         self.heikinashi.update(self.jp_candle.candles[-2:],_is_add_candle)   
         self.replay_pos_i += 1
+        
+        is_updated =  self.check_all_indicator_updated()
+        while not is_updated:
+            print("dsadsad",is_updated)
+            is_updated =  self.check_all_indicator_updated()
+            time.sleep(0.01)
+            if self.replay_mode or not self.exchange_name:
+                self.trading_mode = False
+                break
+            if is_updated:
+                break
+                    
+        
+        
+        
     
     def replay_loop_start(self):
         _ohlcv = []
@@ -327,12 +334,9 @@ class Chart(ViewPlotWidget):
                                             round((self.replay_data[self.replay_pos_i][2]+self.replay_data[self.replay_pos_i][3])/2,self._precision) , 
                                             round((self.replay_data[self.replay_pos_i][2]+self.replay_data[self.replay_pos_i][3]+self.replay_data[self.replay_pos_i][4])/3,self._precision), 
                                             round((self.replay_data[self.replay_pos_i][1]+self.replay_data[self.replay_pos_i][2]+self.replay_data[self.replay_pos_i][3]+self.replay_data[self.replay_pos_i][4])/4,self._precision),self.replay_data[self.replay_pos_i][5],self.replay_data[self.replay_pos_i][0]/1000,0)
-                        is_updated =  self.check_all_indicator_updated()
-                        while not is_updated:
-                            is_updated =  self.check_all_indicator_updated()
-                            time.sleep(0.01)
-                            if self.trading_mode or not self.exchange_name:
-                                break
+                        
+                        
+                        
                         _is_add_candle = self.jp_candle.update([pre_ohlcv,last_ohlcv])
                         self.heikinashi.update(self.jp_candle.candles[-2:],_is_add_candle)   
                         self.replay_pos_i = i
@@ -342,6 +346,16 @@ class Chart(ViewPlotWidget):
                         if self.atkobj:
                             self.atkobj.move_entry(last_point.index,last_point.high,last_point.low)
                         
+                        is_updated =  self.check_all_indicator_updated()
+                        while not is_updated:
+                            print("dsadsad",is_updated)
+                            is_updated =  self.check_all_indicator_updated()
+                            time.sleep(0.01)
+                            if self.replay_mode or not self.exchange_name:
+                                self.trading_mode = False
+                                break
+                            if is_updated:
+                                break   
                     else:
                         break
                     try:
@@ -488,31 +502,27 @@ class Chart(ViewPlotWidget):
         await self.loop_watch_ohlcv(self.symbol,self.interval,self.exchange_name)
     
     def check_all_indicator_updated(self):
-        is_updated = True
         if self.indicators:
             for indicator in self.indicators:
                 if isinstance(indicator,CandleStick):
-                    if isinstance(indicator.source,SMOOTH_CANDLE) or isinstance(indicator.source,N_SMOOTH_CANDLE):
-                        if indicator.source.is_current_update == False:
-                            is_updated = False
-                            return is_updated
+                    if indicator.source.is_current_update == False:
+                        # print(indicator)
+                        return False
                 
                 elif isinstance(indicator,Volume) or isinstance(indicator,BasicZIGZAG):
-                    pass
+                    continue
                 elif indicator.INDICATOR.is_current_update == False:
-                    is_updated = False
-                    return is_updated
-        if self.indicators:
-            for indicator in self.indicators:
-                if isinstance(indicator,CandleStick):
-                    if isinstance(indicator.source,SMOOTH_CANDLE) or isinstance(indicator.source,N_SMOOTH_CANDLE):
-                        indicator.source.is_current_update = False
-                elif isinstance(indicator,Volume) or isinstance(indicator,BasicZIGZAG):
-                    pass
-                # elif indicator.INDICATOR.is_current_update == False:
-                else:
-                    indicator.INDICATOR.is_current_update = False
-        return is_updated
+                    # print(indicator)
+                    return False
+        # if self.indicators:
+        #     for indicator in self.indicators:
+        #         if isinstance(indicator,CandleStick):
+        #             indicator.source.is_current_update = False
+        #         elif isinstance(indicator,Volume) or isinstance(indicator,BasicZIGZAG):
+        #             continue
+        #         else:
+        #             indicator.INDICATOR.is_current_update = False
+        return True
     
     async def loop_watch_ohlcv(self,symbol,interval,exchange_name):
         self.trading_mode = True
@@ -586,16 +596,18 @@ class Chart(ViewPlotWidget):
                                        round((_ohlcv[-1][2]+_ohlcv[-1][3]+_ohlcv[-1][4])/3,self._precision), 
                                        round((_ohlcv[-1][1]+_ohlcv[-1][2]+_ohlcv[-1][3]+_ohlcv[-1][4])/4,self._precision),_ohlcv[-1][5],_ohlcv[-1][0]/1000,0)
                     
-                    is_updated =  self.check_all_indicator_updated()
-                    while not is_updated:
-                            is_updated =  self.check_all_indicator_updated()
-                            time.sleep(0.01)
-                            if self.replay_mode or not self.exchange_name:
-                                self.trading_mode = False
-                                break
                     _is_add_candle = self.jp_candle.update([pre_ohlcv,last_ohlcv])
                     self.heikinashi.update(self.jp_candle.candles[-2:],_is_add_candle)
                     
+                    is_updated =  self.check_all_indicator_updated()
+                    while not is_updated:
+                        is_updated =  self.check_all_indicator_updated()
+                        time.sleep(0.3)
+                        if self.replay_mode or not self.exchange_name:
+                            self.trading_mode = False
+                            break
+                        if is_updated:
+                            break
                     
                     if _is_add_candle:
                         last_point = self.jp_candle.candles[-1]
@@ -653,10 +665,10 @@ class Chart(ViewPlotWidget):
         if _group_indicator == "Basic Indicator":
             indicator = BasicMA(self,indicator_type=_indicator_type,length=30,_type="close",pen="#ffaa00")
             
-            panel = IndicatorPanel(self.mainwindow,self, indicator)
-            self.container_indicator_wg.add_indicator_panel(panel)
-            self.add_item(indicator)
-            indicator.fisrt_gen_data()
+            # panel = IndicatorPanel(self.mainwindow,self, indicator)
+            # self.container_indicator_wg.add_indicator_panel(panel)
+            # self.add_item(indicator)
+            # indicator.fisrt_gen_data()
 
         elif _group_indicator == "Candle Indicator":
             candle:CandleStick = self.get_candle(_indicator_type)
@@ -675,32 +687,35 @@ class Chart(ViewPlotWidget):
             
             if _indicator_type==IndicatorType.BB:
                 indicator = BasicBB(self)
-                panel = IndicatorPanel(self.mainwindow,self, indicator)
-                self.container_indicator_wg.add_indicator_panel(panel)
-                self.add_item(indicator)
-                indicator.fisrt_gen_data()
+                # panel = IndicatorPanel(self.mainwindow,self, indicator)
+                # self.container_indicator_wg.add_indicator_panel(panel)
+                # self.add_item(indicator)
+                # indicator.fisrt_gen_data()
                 
             elif _indicator_type==IndicatorType.DonchianChannels:
                 indicator = BasicDonchianChannels(self)
-                panel = IndicatorPanel(self.mainwindow,self, indicator)
-                self.container_indicator_wg.add_indicator_panel(panel)
-                self.add_item(indicator)
-                indicator.fisrt_gen_data()
+                # panel = IndicatorPanel(self.mainwindow,self, indicator)
+                # self.container_indicator_wg.add_indicator_panel(panel)
+                # self.add_item(indicator)
+                # indicator.fisrt_gen_data()
             elif _indicator_type==IndicatorType.ZIGZAG:
                 indicator = BasicZIGZAG(self)
-                panel = IndicatorPanel(self.mainwindow,self, indicator)
-                self.container_indicator_wg.add_indicator_panel(panel)
-                self.add_item(indicator)
-                indicator.fisrt_gen_data()
+                # panel = IndicatorPanel(self.mainwindow,self, indicator)
+                # self.container_indicator_wg.add_indicator_panel(panel)
+                # self.add_item(indicator)
+                # indicator.fisrt_gen_data()
             elif _indicator_type==IndicatorType.ATKPRO:
                 indicator = ATKBOT(self)
-                panel = IndicatorPanel(self.mainwindow,self, indicator)
-                self.container_indicator_wg.add_indicator_panel(panel)
-                self.add_item(indicator)
-                indicator.fisrt_gen_data()
+                # panel = IndicatorPanel(self.mainwindow,self, indicator)
+                # self.container_indicator_wg.add_indicator_panel(panel)
+                # self.add_item(indicator)
+                # indicator.fisrt_gen_data()
         if indicator:
             self.indicators.append(indicator) 
-                    
+            self.add_item(indicator)
+            panel = IndicatorPanel(self.mainwindow,self, indicator)
+            self.container_indicator_wg.add_indicator_panel(panel)
+            indicator.fisrt_gen_data()
 
     def set_data_dataconnect(self):
         if self.indicators == []:
@@ -782,7 +797,7 @@ class Chart(ViewPlotWidget):
         y0 = y1 - height
         self.setYRange(y1, y0, padding=0.2)
         x1 = self.jp_candle.candles[-1].index
-        self.setXRange(x1, x1-150, padding=0.5)
+        self.setXRange(x1, x1-200, padding=0.5)
         self.auto_xrange()
 
     def keyPressEvent(self, ev: QKeyEvent):

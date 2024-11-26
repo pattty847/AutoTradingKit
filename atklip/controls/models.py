@@ -17,14 +17,14 @@ class BaseCandleModel():
 #@evented
 @dataclass
 class SmoothCandleModel(BaseCandleModel):
-    ma_type:str
+    mamode:str
     ma_leng:int
     source:str
     precision:float
 #@evented
 @dataclass
 class SuperSmoothCandleModel(BaseCandleModel):
-    ma_type:str
+    mamode:str
     ma_leng:int
     n_smooth:int
     source:str
@@ -50,17 +50,33 @@ class MACDModel(IndicatorBase):
     slow_period:int 
     fast_period:int
     signal_period:int
-    ma_type: str 
+    mamode: str 
+
+
+@dataclass
+class SQeezeModel(IndicatorBase):
+    bb_length:int 
+    bb_std:float 
+    kc_length:int
+    kc_scalar:float
+    mom_length:int
+    mom_smooth:int
+    mamode: str 
+    use_tr:bool
+    lazybear:bool
+    detailed:bool
+    
+
 #@evented
 @dataclass
 class MAModel(IndicatorBase):
-    ma_type:str 
+    mamode:str 
     source:str 
     length:int
 #@evented
 @dataclass
 class BBandsModel(IndicatorBase):
-    ma_type:str 
+    mamode:str 
     source:str 
     length:int 
     std_dev_mult:float 
@@ -94,7 +110,7 @@ class ROCModel(IndicatorBase):
 class RSIModel(IndicatorBase):
     source:str    
     length:int 
-    ma_type:str 
+    mamode:str 
 
 @dataclass
 class CCIModel(IndicatorBase):
@@ -108,14 +124,14 @@ class STCModel(IndicatorBase):
     tclength:int
     fast:int 
     slow:int 
-    ma_type:str 
+    mamode:str 
 #@evented
 @dataclass
 class STOCHModel(IndicatorBase):
     smooth_k_period:int 
     k_period:int 
     d_period:int 
-    ma_type:str 
+    mamode:str 
 #@evented
 @dataclass
 class STOCHRSIModel(IndicatorBase):
@@ -124,7 +140,7 @@ class STOCHRSIModel(IndicatorBase):
     k_period:int
     d_period:int 
     source:str 
-    ma_type:str 
+    mamode:str 
 #@evented
 @dataclass 
 class VORTEXModel(IndicatorBase):
@@ -136,7 +152,7 @@ class TRIXModel(IndicatorBase):
     length_period :int 
     signal_period:int 
     source:str 
-    ma_type:str
+    mamode:str
 #@evented
 @dataclass          
 class TSIModel(IndicatorBase):
@@ -144,7 +160,7 @@ class TSIModel(IndicatorBase):
     slow_period :int 
     signal_period:int 
     source:str 
-    ma_type:str 
+    mamode:str 
 #@evented
 @dataclass
 class UOModel(IndicatorBase):

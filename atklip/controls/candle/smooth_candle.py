@@ -25,7 +25,7 @@ class SMOOTH_CANDLE(QObject):
     """
     _candles: JAPAN_CANDLE|HEIKINASHI 
     lastcandle: signal(list)  - the list of 2 last candle of para "_candles: JAPAN_CANDLE|HEIKINASHI"
-    ma_type: IndicatorType  - IndicatorType.SMA
+    mamode: IndicatorType  - IndicatorType.SMA
     ma_leng: int - 20
     """
     sig_update_candle = Signal(list)
@@ -36,14 +36,14 @@ class SMOOTH_CANDLE(QObject):
     dict_index_time = {}
     signal_delete = Signal()
     sig_update_source = Signal()
-    def __init__(self,precision,_candles,ma_type,ma_leng,dict_candle_params:dict={}) -> None:
+    def __init__(self,precision,_candles,mamode,ma_leng,dict_candle_params:dict={}) -> None:
         super().__init__(parent=None)
 
         if dict_candle_params !={}:
             self.id_exchange:str = dict_candle_params["id_exchange"]
             self.symbol:str = dict_candle_params["symbol"]
             self.interval:str = dict_candle_params["interval"]
-            self.ma_type:str = dict_candle_params["ma_type"]
+            self.mamode:str = dict_candle_params["mamode"]
             self.ma_leng:int= dict_candle_params["ma_leng"]
             self.source:str = dict_candle_params["source"]
             self._precision = dict_candle_params["precision"]
@@ -51,7 +51,7 @@ class SMOOTH_CANDLE(QObject):
             self.chart_id = dict_candle_params["chart_id"]
             self.name:str=dict_candle_params.get("name")
         else:
-            self.ma_type:PD_MAType = ma_type
+            self.mamode:PD_MAType = mamode
             self.ma_leng:int= ma_leng
             self._precision = precision
         
@@ -80,19 +80,18 @@ class SMOOTH_CANDLE(QObject):
             self.id_exchange:str = dict_candle_params["id_exchange"]
             self.symbol:str = dict_candle_params["symbol"]
             self.interval:str = dict_candle_params["interval"]
-            self.ma_type:str = dict_candle_params["ma_type"]
+            self.mamode:str = dict_candle_params["mamode"]
             self.ma_leng:int= dict_candle_params["ma_leng"]
             self.source:str = dict_candle_params["source"]
             self._precision = dict_candle_params["precision"]
             self.canlde_id = dict_candle_params["canlde_id"]
             self.chart_id = dict_candle_params["chart_id"]
             self.name:str=dict_candle_params.get("name")
-            source_name = f"{self.chart_id}-{self.canlde_id}-{self.id_exchange}-{self.source}-{self.name}-{self.symbol}-{self.interval}-{self.ma_type}-{self.ma_leng}"
+            source_name = f"{self.chart_id}-{self.canlde_id}-{self.id_exchange}-{self.source}-{self.name}-{self.symbol}-{self.interval}-{self.mamode}-{self.ma_leng}"
             self.source_name = source_name
         
         self.first_gen = False
         self.is_genering = True
-        self.is_current_update = False
         self.fisrt_gen_data()
             
 
@@ -369,13 +368,13 @@ class SMOOTH_CANDLE(QObject):
         _new_time = lastcandle.time
         _last_time = self.df["time"].iloc[-1]
         df:pd.DataFrame = self._candles.get_df(self.ma_leng*5)
-        highs = ta.ma(self.ma_type, df["high"],length=self.ma_leng).dropna().round(4)
-        lows = ta.ma(self.ma_type, df["low"],length=self.ma_leng).dropna().round(4)
-        closes = ta.ma(self.ma_type, df["close"],length=self.ma_leng).dropna().round(4)
-        opens = ta.ma(self.ma_type, df["open"],length=self.ma_leng).dropna().round(4)
-        hl2s = ta.ma(self.ma_type, df["hl2"],length=self.ma_leng).dropna().round(4)
-        hlc3s = ta.ma(self.ma_type, df["hlc3"],length=self.ma_leng).dropna().round(4)
-        ohlc4s = ta.ma(self.ma_type, df["ohlc4"],length=self.ma_leng).dropna().round(4)
+        highs = ta.ma(self.mamode, df["high"],length=self.ma_leng).dropna().round(4)
+        lows = ta.ma(self.mamode, df["low"],length=self.ma_leng).dropna().round(4)
+        closes = ta.ma(self.mamode, df["close"],length=self.ma_leng).dropna().round(4)
+        opens = ta.ma(self.mamode, df["open"],length=self.ma_leng).dropna().round(4)
+        hl2s = ta.ma(self.mamode, df["hl2"],length=self.ma_leng).dropna().round(4)
+        hlc3s = ta.ma(self.mamode, df["hlc3"],length=self.ma_leng).dropna().round(4)
+        ohlc4s = ta.ma(self.mamode, df["ohlc4"],length=self.ma_leng).dropna().round(4)
 
         if _new_time == _last_time:
             
@@ -431,12 +430,12 @@ class SMOOTH_CANDLE(QObject):
             self.candles.insert(i,ha_candle)
     
     
-    def refresh_data(self,ma_type,ma_ma_leng,n_smooth_ma_leng):
-        self.reset_parameters(ma_type,ma_ma_leng,n_smooth_ma_leng)
+    def refresh_data(self,mamode,ma_ma_leng,n_smooth_ma_leng):
+        self.reset_parameters(mamode,ma_ma_leng,n_smooth_ma_leng)
         self.fisrt_gen_data()
     
-    def reset_parameters(self,ma_type,ma_ma_leng,n_smooth_ma_leng = None):
-        self.ma_type = ma_type
+    def reset_parameters(self,mamode,ma_ma_leng,n_smooth_ma_leng = None):
+        self.mamode = mamode
         self.ma_leng = ma_ma_leng
         # self.n = n_smooth_ma_leng    
     
@@ -446,19 +445,19 @@ class SMOOTH_CANDLE(QObject):
         _pre_len = len(self.df)
 
         df:pd.DataFrame = self._candles.get_df().iloc[:-1*_pre_len]
-        highs = ta.ma(self.ma_type, df["high"],length=self.ma_leng).dropna().round(4)
+        highs = ta.ma(self.mamode, df["high"],length=self.ma_leng).dropna().round(4)
 
-        lows = ta.ma(self.ma_type, df["low"],length=self.ma_leng).dropna().round(4)
+        lows = ta.ma(self.mamode, df["low"],length=self.ma_leng).dropna().round(4)
 
-        closes = ta.ma(self.ma_type, df["close"],length=self.ma_leng).dropna().round(4)
+        closes = ta.ma(self.mamode, df["close"],length=self.ma_leng).dropna().round(4)
 
-        opens = ta.ma(self.ma_type, df["open"],length=self.ma_leng).dropna().round(4)
+        opens = ta.ma(self.mamode, df["open"],length=self.ma_leng).dropna().round(4)
 
-        hl2s = ta.ma(self.ma_type, df["hl2"],length=self.ma_leng).dropna().round(4)
+        hl2s = ta.ma(self.mamode, df["hl2"],length=self.ma_leng).dropna().round(4)
 
-        hlc3s = ta.ma(self.ma_type, df["hlc3"],length=self.ma_leng).dropna().round(4)
+        hlc3s = ta.ma(self.mamode, df["hlc3"],length=self.ma_leng).dropna().round(4)
 
-        ohlc4s = ta.ma(self.ma_type, df["ohlc4"],length=self.ma_leng).dropna().round(4)
+        ohlc4s = ta.ma(self.mamode, df["ohlc4"],length=self.ma_leng).dropna().round(4)
 
         _len = len(ohlc4s)
         
@@ -494,19 +493,19 @@ class SMOOTH_CANDLE(QObject):
         self.map_time_ohlcv: Dict[int, OHLCV] = {}
         
         df:pd.DataFrame = self._candles.get_df()
-        highs = ta.ma(self.ma_type, df["high"],length=self.ma_leng).dropna().round(4)
+        highs = ta.ma(self.mamode, df["high"],length=self.ma_leng).dropna().round(4)
 
-        lows = ta.ma(self.ma_type, df["low"],length=self.ma_leng).dropna().round(4)
+        lows = ta.ma(self.mamode, df["low"],length=self.ma_leng).dropna().round(4)
 
-        closes = ta.ma(self.ma_type, df["close"],length=self.ma_leng).dropna().round(4)
+        closes = ta.ma(self.mamode, df["close"],length=self.ma_leng).dropna().round(4)
 
-        opens = ta.ma(self.ma_type, df["open"],length=self.ma_leng).dropna().round(4)
+        opens = ta.ma(self.mamode, df["open"],length=self.ma_leng).dropna().round(4)
 
-        hl2s = ta.ma(self.ma_type, df["hl2"],length=self.ma_leng).dropna().round(4)
+        hl2s = ta.ma(self.mamode, df["hl2"],length=self.ma_leng).dropna().round(4)
 
-        hlc3s = ta.ma(self.ma_type, df["hlc3"],length=self.ma_leng).dropna().round(4)
+        hlc3s = ta.ma(self.mamode, df["hlc3"],length=self.ma_leng).dropna().round(4)
 
-        ohlc4s = ta.ma(self.ma_type, df["ohlc4"],length=self.ma_leng).dropna().round(4)
+        ohlc4s = ta.ma(self.mamode, df["ohlc4"],length=self.ma_leng).dropna().round(4)
 
         _len = len(ohlc4s)
         
@@ -528,8 +527,9 @@ class SMOOTH_CANDLE(QObject):
             self.is_genering = False
         self.start_index:int = self.df["index"].iloc[0]
         self.stop_index:int = self.df["index"].iloc[-1]
-        self.sig_reset_all.emit()
+        
         self.is_current_update = True
+        self.sig_reset_all.emit()
         return self.candles
     
     def update(self, _candle:List[OHLCV]):
@@ -543,15 +543,18 @@ class SMOOTH_CANDLE(QObject):
             if is_update:
                 self.start_index:int = self.df["index"].iloc[0]
                 self.stop_index:int = self.df["index"].iloc[-1]
-                self.sig_update_candle.emit([ha_candle])
+                
                 self.is_current_update = True
+                self.sig_update_candle.emit([ha_candle])
                 return False
             else:
                 self.start_index:int = self.df["index"].iloc[0]
                 self.stop_index:int = self.df["index"].iloc[-1]
-                self.sig_add_candle.emit([ha_candle])
+                
                 self.is_current_update = True
+                self.sig_add_candle.emit([ha_candle])
                 return True
+        self.is_current_update = True
         return False
 
 

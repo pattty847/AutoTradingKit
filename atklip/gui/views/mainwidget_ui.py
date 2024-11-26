@@ -178,15 +178,18 @@ class Ui_MainWidget(object):
         self.splitter.setOrientation(Qt.Vertical)
         self.chartbox_splitter = GraphSplitter(self.splitter)
         self.chartbox_splitter.setObjectName(u"chartbox_splitter")
-        sizePolicy.setHeightForWidth(self.chartbox_splitter.sizePolicy().hasHeightForWidth())
-        self.chartbox_splitter.setSizePolicy(sizePolicy)
+        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
+        sizePolicy1.setHorizontalStretch(0)
+        sizePolicy1.setVerticalStretch(0)
+        sizePolicy1.setHeightForWidth(self.chartbox_splitter.sizePolicy().hasHeightForWidth())
+        self.chartbox_splitter.setSizePolicy(sizePolicy1)
         self.chartbox_splitter.setMinimumSize(QSize(800, 0))
         self.splitter.addWidget(self.chartbox_splitter)
         self.bottom_frame = QWidget(self.splitter)
         self.bottom_frame.setObjectName(u"bottom_frame")
         sizePolicy.setHeightForWidth(self.bottom_frame.sizePolicy().hasHeightForWidth())
         self.bottom_frame.setSizePolicy(sizePolicy)
-        self.bottom_frame.setMinimumSize(QSize(0, 35))
+        self.bottom_frame.setMinimumSize(QSize(0, 90))
         self.bottom_frame.setMaximumSize(QSize(16777215, 16777215))
         self.verticalLayout_7 = QVBoxLayout(self.bottom_frame)
         self.verticalLayout_7.setSpacing(0)
@@ -215,6 +218,15 @@ class Ui_MainWidget(object):
         self.rightview.setFrameShape(QFrame.NoFrame)
 
         self.horizontalLayout_3.addWidget(self.rightview)
+
+        self.frame_9 = QFrame(self.chartview)
+        self.frame_9.setObjectName(u"frame_9")
+        self.frame_9.setMinimumSize(QSize(2, 0))
+        self.frame_9.setMaximumSize(QSize(2, 16777215))
+        self.frame_9.setStyleSheet(u"background-color: #474747;")
+        self.frame_9.setFrameShape(QFrame.NoFrame)
+
+        self.horizontalLayout_3.addWidget(self.frame_9)
 
 
         self.horizontalLayout.addWidget(self.chartview)

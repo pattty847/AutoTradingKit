@@ -54,7 +54,7 @@ class Entry(SpecialROI):
                         2.5: Line("1.5R",[],None,TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
                         3: Line("2R",[],None,TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
                         # 3.5: Line("2.5R",[],None,TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
-                        4: Line("3R",[],None,TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
+                        # 4: Line("3R",[],None,TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
                         }
                     },
             "styles":{

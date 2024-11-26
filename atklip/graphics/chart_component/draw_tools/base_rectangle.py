@@ -5,7 +5,20 @@ from PySide6.QtGui import QPainter,QPicture
 from PySide6.QtCore import Signal, Qt,QRectF,QPointF
 
 from atklip.app_utils.functions import mkBrush, mkColor, mkPen
+from .roi import BaseHandle
+from pyqtgraph.graphicsItems.ROI import Handle
 
+class posHandle(Handle):
+    def __init__(self, radius, typ=None, pen=(200, 200, 220),
+                 hoverPen=(255, 255, 0), parent=None, deletable=False, antialias=True):
+        super().__init__(radius, typ, pen,
+                 hoverPen, parent, deletable, antialias)
+    
+    def paint(self, p, opt, widget):
+        p.setRenderHints(p.RenderHint.Antialiasing, True)
+        p.setPen(mkPen("#2962ff"))
+        p.setBrush(mkBrush("#2962ff"))
+        p.drawPath(self.shape())
 
 class BaseRect(ROI):
     on_click = Signal(object)
@@ -24,7 +37,7 @@ class BaseRect(ROI):
         self.brush = self.has["styles"]['brush']
         self.is_short:bool = is_short
         self.is_long:bool = is_long
-        self.handleSize = 7
+        self.handleSize = 5
         self.yoff = False
         self.xoff =False
         self.locked = False
@@ -33,6 +46,29 @@ class BaseRect(ROI):
         self.is_size_change = False
         self.picture:QPicture =QPicture()
     
+    def addHandle(self, info, index=None):
+        ## If a Handle was not supplied, create it now
+        if 'item' not in info or info['item'] is None:
+            h = posHandle(self.handleSize, typ="r", pen=self.handlePen,
+                       hoverPen=self.handleHoverPen, parent=self, antialias=self._antialias)
+            info['item'] = h
+        else:
+            h = info['item']
+            if info['pos'] is None:
+                info['pos'] = h.pos()
+        h.setPos(info['pos'] * self.state['size'])
+
+        ## connect the handle to this ROI
+        #iid = len(self.handles)
+        h.connectROI(self)
+        if index is None:
+            self.handles.append(info)
+        else:
+            self.handles.insert(index, info)
+        
+        h.setZValue(self.zValue()+1)
+        self.stateChanged()
+        return h
     
     def hoverEvent(self, ev):
         if not ev.exit: # and not self.boundingRect().contains(ev.pos()):

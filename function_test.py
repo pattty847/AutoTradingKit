@@ -1,104 +1,121 @@
+# coding:utf-8
+from PySide6.QtCore import Qt, QEasingCurve
+from PySide6.QtWidgets import QWidget, QStackedWidget, QVBoxLayout, QLabel, QHBoxLayout, QFrame, QSizePolicy
+
+import random
 import sys
-import math
-import time
-from PySide6.QtWidgets import QApplication, QGraphicsView, QGraphicsScene, QGraphicsEllipseItem
-from PySide6.QtCore import QTimer, Qt, QPointF
-from PySide6.QtGui import QBrush, QPen, QColor, QKeyEvent
+from typing import List, Union
 
-class CircleBall(QGraphicsView):
-    def __init__(self):
-        super().__init__()
+from PySide6.QtCore import Qt, QMargins, QModelIndex, QItemSelectionModel, Property, QRectF,Qt, \
+    QAbstractTableModel, QTimer, QModelIndex,QPointF,QPoint
+from PySide6.QtGui import QPainter, QColor, QKeyEvent, QPalette, QBrush, QStandardItemModel,QMouseEvent
+from PySide6.QtWidgets import (QStyledItemDelegate, QApplication, QStyleOptionViewItem,QHeaderView,
+                             QTableView, QTableWidget, QWidget, QTableWidgetItem, QStyle,QVBoxLayout,
+                             QStyleOptionButton)
 
-        # Tạo một cảnh (scene) để vẽ vòng tròn và bi
-        self.scene = QGraphicsScene()
-        self.setScene(self.scene)
 
-        # Vẽ vòng tròn
-        self.circle_radius = 100
-        self.circle = QGraphicsEllipseItem(-self.circle_radius, -self.circle_radius, 
-                                           self.circle_radius * 2, self.circle_radius * 2)
-        self.circle.setPen(QPen(Qt.black, 2))
-        self.scene.addItem(self.circle)
+from app.common.style_sheet import StyleSheet
+from atklip.gui.qfluentwidgets.common.router import qrouter
+from atklip.gui.qfluentwidgets.components import  TabBar
 
-        # Vẽ bi màu xanh
-        self.ball_radius = 10
-        self.ball = QGraphicsEllipseItem(-self.ball_radius, -self.ball_radius, 
-                                         self.ball_radius * 2, self.ball_radius * 2)
-        self.ball.setBrush(QBrush(QColor("blue")))
-        self.scene.addItem(self.ball)
+from atklip.gui.qfluentwidgets.common.config import Theme
+from atklip.gui.qfluentwidgets.common.style_sheet import setTheme
 
-        # Vẽ một điểm cố định bất kỳ trên vòng tròn
-        self.fixed_point_radius = 5
-        self.fixed_angle = math.pi / 4  # Chọn vị trí cố định tại góc 45 độ
-        fixed_x = self.circle_radius * math.cos(self.fixed_angle)
-        fixed_y = self.circle_radius * math.sin(self.fixed_angle)
-        self.fixed_point = QGraphicsEllipseItem(-self.fixed_point_radius, -self.fixed_point_radius,
-                                                self.fixed_point_radius * 2, self.fixed_point_radius * 2)
-        self.fixed_point.setBrush(QBrush(QColor("red")))
-        self.fixed_point.setPos(QPointF(fixed_x, fixed_y))
-        self.scene.addItem(self.fixed_point)
 
-        # Biến thời gian và tốc độ góc
-        self.angle = 0
-        self.angular_velocity = 0.05  # Tốc độ góc
+class TabInterface(QWidget):
+    """ Tab interface """
 
-        # Cập nhật vị trí của bi mỗi 20ms
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.update_position)
-        self.timer.start(20)
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
+        self.tabCount = 1
 
-        # Biến để lưu thời gian viên bi đi qua chính giữa điểm cố định
-        self.last_passed_time = None
+        self.tabBar = TabBar(self)
+        self.tabBar.addButton.hide()
+        self.stackedWidget = QStackedWidget(self)
+        self.tabView = QWidget(self)
+        self.vBoxLayout = QVBoxLayout(self.tabView)
+        self.songInterface = QLabel('Song Interface', self)
+        self.albumInterface = QLabel('Album Interface', self)
+        self.artistInterface = QLabel('Artist Interface', self)
 
-    def update_position(self):
-        # Tính toán vị trí của bi trên đường tròn
-        x = self.circle_radius * math.cos(self.angle)
-        y = self.circle_radius * math.sin(self.angle)
+        # add items to pivot
+        self.__initWidget()
 
-        # Cập nhật vị trí của bi
-        self.ball.setPos(QPointF(x, y))
+    def __initWidget(self):
+        self.initLayout()
 
-        # Kiểm tra xem bi có chạy qua điểm cố định không
-        self.check_ball_passed_fixed_point(x, y)
+        self.tabBar.setCloseButtonDisplayMode(2)
+        self.addSubInterface(self.songInterface,
+                             'tabSongInterface', self.tr('Song'))
+        self.addSubInterface(self.albumInterface,
+                             'tabAlbumInterface', self.tr('Album'))
+        self.addSubInterface(self.artistInterface,
+                             'tabArtistInterface', self.tr('Artist'))
 
-        # Tăng góc theo tốc độ góc
-        self.angle += self.angular_velocity
+        # StyleSheet.NAVIGATION_VIEW_INTERFACE.apply(self)
 
-    def check_ball_passed_fixed_point(self, x, y):
-        # Lấy tọa độ của điểm cố định
-        fixed_x = self.circle_radius * math.cos(self.fixed_angle)
-        fixed_y = self.circle_radius * math.sin(self.fixed_angle)
+        self.connectSignalToSlot()
 
-        # Tính khoảng cách giữa bi và điểm cố định
-        distance = math.sqrt((x - fixed_x) ** 2 + (y - fixed_y) ** 2)
+        qrouter.setDefaultRouteKey(
+            self.stackedWidget, self.songInterface.objectName())
 
-        # Chỉ lưu thời gian khi bi chạy qua chính giữa điểm cố định
-        if distance < self.ball_radius / 2:  # Giả sử chính giữa là khi khoảng cách nhỏ hơn bán kính của bi
-            current_time_ms = int(time.time() * 1000)  # Thời gian hiện tại tính theo ms
-            self.last_passed_time = current_time_ms  # Lưu lại thời gian này
-            print(f"Vừa chạy qua lúc {current_time_ms} ms")
+    def connectSignalToSlot(self):
+        # self.tabBar.tabAddRequested.connect(self.addTab)
+        # self.tabBar.tabCloseRequested.connect(self.removeTab)
+        self.stackedWidget.currentChanged.connect(self.onCurrentIndexChanged)
 
-    def keyPressEvent(self, event: QKeyEvent):
-        # Kiểm tra khi nhấn phím Z, X, C
-        if event.key() == Qt.Key_Z:
-            self.print_time('Z')
-        elif event.key() == Qt.Key_X:
-            self.print_time('X')
-        elif event.key() == Qt.Key_C:
-            self.print_time('C')
+    def initLayout(self):
+        self.tabBar.setTabMaximumWidth(200)
+        self.tabBar.setTabMinimumWidth(150)
+        self.setFixedHeight(280)
+        self.vBoxLayout.addWidget(self.tabBar)
+        self.vBoxLayout.addWidget(self.stackedWidget)
+        self.vBoxLayout.setContentsMargins(0, 0, 0, 0)
 
-    def print_time(self, key):
-        # In ra thời gian khi nhấn phím
-        current_time_ms = int(time.time() * 1000)  # Lấy thời gian hiện tại theo ms
-        print(f"Phím {key} được nhấn lúc {current_time_ms} ms")
 
-        # Tính toán độ lệch thời gian nếu viên bi đã đi qua điểm cố định
-        if self.last_passed_time is not None:
-            time_diff = abs(current_time_ms - self.last_passed_time)
-            print(f"Độ lệch thời gian giữa lúc ấn phím và viên bi chạy qua: {time_diff} ms")
+    def addSubInterface(self, widget: QLabel, objectName, text, icon=None):
+        widget.setObjectName(objectName)
+        widget.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+        self.stackedWidget.addWidget(widget)
+        self.tabBar.addTab(
+            routeKey=objectName,
+            text=text,
+            icon=icon,
+            onClick=lambda: self.stackedWidget.setCurrentWidget(widget)
+        )
 
-# Chạy ứng dụng
-app = QApplication(sys.argv)
-window = CircleBall()
-window.show()
-sys.exit(app.exec())
+    def onDisplayModeChanged(self, index):
+        mode = self.closeDisplayModeComboBox.itemData(index)
+        self.tabBar.setCloseButtonDisplayMode(mode)
+
+    def onCurrentIndexChanged(self, index):
+        widget = self.stackedWidget.widget(index)
+        if not widget:
+            return
+
+        self.tabBar.setCurrentTab(widget.objectName())
+        qrouter.push(self.stackedWidget, widget.objectName())
+
+    def addTab(self):
+        text = f'硝子酱一级棒卡哇伊×{self.tabCount}'
+        self.addSubInterface(QLabel('🥰 ' + text), text, text, ':/gallery/images/Smiling_with_heart.png')
+        self.tabCount += 1
+
+    def removeTab(self, index):
+        item = self.tabBar.tabItem(index)
+        widget = self.findChild(QLabel, item.routeKey())
+
+        self.stackedWidget.removeWidget(widget)
+        self.tabBar.removeTab(index)
+        widget.deleteLater()
+
+
+if __name__ == "__main__":
+    setTheme(Theme.DARK,True,True)
+    app = QApplication(sys.argv)
+    
+    window = TabInterface()
+    window.resize(600, 400)
+    window.show()
+    sys.exit(app.exec())
+

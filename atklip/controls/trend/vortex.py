@@ -187,7 +187,7 @@ class VORTEX(QObject):
     
     
     def get_data(self,start:int=0,stop:int=0):
-        if self.xdata == []:
+        if len(self.xdata) == 0:
             return [],[],[]
         if start == 0 and stop == 0:
             x_data = self.xdata
@@ -201,7 +201,7 @@ class VORTEX(QObject):
         else:
             x_data = self.xdata[start:stop]
             vortex_,signalma=self.vortex_[start:stop],self.signalma[start:stop]
-        return np.array(x_data),np.array(vortex_),np.array(signalma)
+        return x_data,vortex_,signalma
     
     def get_last_row_df(self):
         return self.df.iloc[-1] 
@@ -260,14 +260,15 @@ class VORTEX(QObject):
                             "vortex":vortex_.tail(_len),
                             "signalma":signalma.tail(_len)
                             })
-        self.xdata,self.vortex_, self.signalma = self.df["index"].to_list(),self.df["vortex"].to_list(),self.df["signalma"].to_list()
+        self.xdata,self.vortex_, self.signalma = self.df["index"].to_numpy(),self.df["vortex"].to_numpy(),self.df["signalma"].to_numpy()
         
         self.is_genering = False
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
-        self.sig_reset_all.emit()
+        
         self.is_current_update = True
+        self.sig_reset_all.emit()
     
     def add_historic(self,n:int):
         self.is_genering = True
@@ -289,12 +290,10 @@ class VORTEX(QObject):
         
         self.df = pd.concat([_df,self.df],ignore_index=True)
         
-        self.xdata = _df["index"].to_list() + self.xdata
-        self.vortex_ = _df["vortex"].to_list() + self.vortex_
-        self.signalma = _df["signalma"].to_list() + self.signalma
+        self.xdata = np.concatenate((_df["index"].to_numpy(), self.xdata)) 
+        self.vortex_ = np.concatenate((_df["vortex"].to_numpy(), self.vortex_))
+        self.signalma = np.concatenate((_df["signalma"].to_numpy(), self.signalma))
         
-        # self.xdata,self.vortex_, self.signalma = self.df["index"].to_list(),self.df["vortex"].to_list(),self.df["signalma"].to_list()
-
         self.is_genering = False
         if self.first_gen == False:
             self.first_gen = True
@@ -318,10 +317,13 @@ class VORTEX(QObject):
             
             self.df = pd.concat([self.df,new_frame],ignore_index=True)
             
-            self.xdata,self.vortex_, self.signalma  = self.df["index"].to_list(),self.df["vortex"].to_list(),self.df["signalma"].to_list()
-                                            
+            self.xdata = np.concatenate((self.xdata,np.array([new_candle.index])))
+            self.vortex_ = np.concatenate((self.vortex_,np.array([vortex_.iloc[-1]])))
+            self.signalma = np.concatenate((self.signalma,np.array([signalma.iloc[-1]])))
+                     
             self.sig_add_candle.emit()
-            self.is_current_update = True
+        self.is_current_update = True
+            
         
     def update(self, new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]
@@ -330,6 +332,7 @@ class VORTEX(QObject):
             df:pd.DataFrame = self._candles.get_df(self.period*5)
             vortex_,signalma = self.calculate(df)
             self.df.iloc[-1] = [new_candle.index,vortex_.iloc[-1],signalma.iloc[-1]]
-            self.xdata,self.vortex_, self.signalma = self.df["index"].to_list(),self.df["vortex"].to_list(),self.df["signalma"].to_list()
+            self.xdata[-1],self.vortex_[-1], self.signalma[-1] = new_candle.index,vortex_.iloc[-1],signalma.iloc[-1]
             self.sig_update_candle.emit()
-            self.is_current_update = True
+        self.is_current_update = True
+            

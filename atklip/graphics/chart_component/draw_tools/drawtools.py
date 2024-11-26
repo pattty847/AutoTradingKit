@@ -21,6 +21,9 @@ from .circle import Circle
 from .long_possiton import Longposition
 from .short_possiton import Shortposition
 
+from atklip.graphics.chart_component.draw_tools.TargetItem import ArrowItem
+
+
 from .draw_tool_setting_wg import PopUpSettingMenu
 
 if TYPE_CHECKING:
@@ -318,8 +321,9 @@ class DrawTool(QObject):
         obj.setObjectName(module_name)
         self.draw_object_name = None
         uid_obj = self.chart.objmanager.add(obj)
-        obj.on_click.connect(self.show_popup_menu)
         self.chart.sig_reset_drawbar_favorite_btn.emit(obj)
+        obj.on_click.connect(self.show_popup_menu)
+        
 
     def draw_date_price_range(self, ev):
         pos_x, pos_y = self.get_position_mouse_on_chart(ev)
@@ -338,7 +342,7 @@ class DrawTool(QObject):
     
     def draw_up_arrow(self, ev):
         pos_x, pos_y = self.get_position_crosshair()
-        obj = BaseArrowItem(drawtool=self,angle=90, tipAngle=60, headLen=10, tailLen=10, tailWidth=5, pen=None, brush='green')
+        obj = ArrowItem(drawtool=self,angle=90,pen="green",brush = "green")
         obj.setPos(pos_x, pos_y)
         self.chart.add_item(obj)
         self.chart.drawtools.append(obj)
@@ -352,7 +356,7 @@ class DrawTool(QObject):
     
     def draw_down_arrow(self, ev):
         pos_x, pos_y = self.get_position_crosshair()
-        obj = BaseArrowItem(drawtool=self,angle=270, tipAngle=60, headLen=10, tailLen=10, tailWidth=5, pen=None, brush='red')
+        obj = ArrowItem(drawtool=self,angle=270,pen="red",brush = "red")
         obj.setPos(pos_x, pos_y)
         self.chart.add_item(obj)
         self.chart.drawtools.append(obj)
@@ -366,7 +370,9 @@ class DrawTool(QObject):
     
     def draw_arrow(self, ev):
         pos_x, pos_y = self.get_position_crosshair()
-        obj = BaseArrowItem(drawtool=self,angle=180, tipAngle=60, headLen=5, tailLen=2, tailWidth=2, pen=None, brush='red')
+        
+        obj = ArrowItem(drawtool=self,angle=180,pen="pink",brush = "pink")
+        
         obj.setPos(pos_x, pos_y)
         self.chart.add_item(obj)
         self.chart.drawtools.append(obj)

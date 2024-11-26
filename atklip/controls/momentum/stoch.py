@@ -151,7 +151,7 @@ class STOCH(QObject):
         self.smooth_k_period:int = dict_ta_params["smooth_k_period"]
         self.k_period:int = dict_ta_params["k_period"]
         self.d_period:int = dict_ta_params["d_period"]
-        self.ma_type:str = dict_ta_params["ma_type"]
+        self.mamode:str = dict_ta_params["mamode"]
         self.offset :int=dict_ta_params.get("offset",0)
 
         #self.signal_delete.connect(self.deleteLater)
@@ -159,12 +159,12 @@ class STOCH(QObject):
         self.is_genering = True
         self.is_current_update = False
         self.is_histocric_load = False
-        self.name = f"STOCH {self.smooth_k_period} {self.k_period} {self.d_period} {self.ma_type}"
+        self.name = f"STOCH {self.smooth_k_period} {self.k_period} {self.d_period} {self.mamode}"
 
         self.df = pd.DataFrame([])
         self.worker = ApiThreadPool
         
-        self.xdata,self.stoch_,self.signalma = [],[],[]
+        self.xdata,self.stoch_,self.signalma = np.array([]),np.array([]),np.array([])
 
         self.connect_signals()
     
@@ -186,13 +186,13 @@ class STOCH(QObject):
             self.smooth_k_period:int = dict_ta_params["smooth_k_period"]
             self.k_period:int = dict_ta_params["k_period"]
             self.d_period:int = dict_ta_params["d_period"]
-            self.ma_type:str = dict_ta_params["ma_type"]
+            self.mamode:str = dict_ta_params["mamode"]
             self.offset :int=dict_ta_params.get("offset",0)
             
             ta_name:str=dict_ta_params.get("ta_name")
             obj_id:str=dict_ta_params.get("obj_id") 
             
-            ta_param = f"{obj_id}-{ta_name}-{self.ma_type}-{self.smooth_k_period}-{self.k_period}-{self.d_period}"
+            ta_param = f"{obj_id}-{ta_name}-{self.mamode}-{self.smooth_k_period}-{self.k_period}-{self.d_period}"
 
             self.indicator_name = ta_param
             
@@ -239,7 +239,7 @@ class STOCH(QObject):
         return self.df.tail(n)
     
     def get_data(self,start:int=0,stop:int=0):
-        if self.xdata == []:
+        if len(self.xdata) == 0:
             return {"x_data":[],"stoch_":[],"signalma":[]}
         if start == 0 and stop == 0:
             x_data = self.xdata
@@ -253,7 +253,7 @@ class STOCH(QObject):
         else:
             x_data = self.xdata[start:stop]
             stoch_,signalma=self.stoch_[start:stop],self.signalma[start:stop]
-        return np.array(x_data),np.array(stoch_),np.array(signalma)
+        return x_data,stoch_,signalma
     
     def get_last_row_df(self):
         return self.df.iloc[-1] 
@@ -291,7 +291,7 @@ class STOCH(QObject):
                         smooth_k=self.smooth_k_period,
                         k = self.k_period,
                         d = self.d_period,
-                        mamode=self.ma_type,
+                        mamode=self.mamode,
                         offset=self.offset).dropna().round(4)
         return self.paire_data(INDICATOR)
     
@@ -315,16 +315,17 @@ class STOCH(QObject):
                             "signalma":signalma.tail(_len)
                             })
                 
-        self.xdata,self.stoch_,self.signalma = self.df["index"].to_list(),\
-                                                self.df["stoch"].to_list(),\
-                                                self.df["signalma"].to_list()
+        self.xdata,self.stoch_,self.signalma = self.df["index"].to_numpy(),\
+                                                self.df["stoch"].to_numpy(),\
+                                                self.df["signalma"].to_numpy()
         
         self.is_genering = False
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
-        self.sig_reset_all.emit()
+        
         self.is_current_update = True
+        self.sig_reset_all.emit()
     
     
     def add_historic(self,n:int):
@@ -346,14 +347,10 @@ class STOCH(QObject):
         
         self.df = pd.concat([_df,self.df],ignore_index=True)
         
-        self.xdata = _df["index"].to_list() + self.xdata
-        self.stoch_ = _df["stoch"].to_list() + self.stoch_
-        self.signalma = _df["signalma"].to_list() + self.signalma
-           
-        # self.xdata,self.stoch_,self.signalma = self.df["index"].to_list(),\
-        #                                         self.df["stoch"].to_list(),\
-        #                                         self.df["signalma"].to_list()
         
+        self.xdata = np.concatenate((_df["index"].to_numpy(), self.xdata))
+        self.stoch_ = np.concatenate((_df["stoch"].to_numpy(), self.stoch_))
+        self.signalma = np.concatenate((_df["signalma"].to_numpy(), self.signalma))
         
         self.is_genering = False
         if self.first_gen == False:
@@ -379,12 +376,14 @@ class STOCH(QObject):
             
             self.df = pd.concat([self.df,new_frame],ignore_index=True)
             
-            self.xdata,self.stoch_,self.signalma  = self.df["index"].to_list(),\
-                                                    self.df["stoch"].to_list(),\
-                                                    self.df["signalma"].to_list()
-                                            
+            self.xdata = np.concatenate((self.xdata,np.array([new_candle.index])))
+            self.stoch_ = np.concatenate((self.stoch_,np.array([stoch_.iloc[-1]])))
+            self.signalma = np.concatenate((self.signalma,np.array([signalma.iloc[-1]])))             
+            
+            
             self.sig_add_candle.emit()
-            self.is_current_update = True
+        self.is_current_update = True
+            
         
     def update(self, new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]
@@ -396,8 +395,7 @@ class STOCH(QObject):
                     
             self.df.iloc[-1] = [new_candle.index,stoch_.iloc[-1],signalma.iloc[-1]]
                     
-            self.xdata,self.stoch_,self.signalma  = self.df["index"].to_list(),\
-                                                    self.df["stoch"].to_list(),\
-                                                    self.df["signalma"].to_list()
+            self.xdata[-1],self.stoch_[-1],self.signalma[-1]  = new_candle.index,stoch_.iloc[-1],signalma.iloc[-1]
             self.sig_update_candle.emit()
-            self.is_current_update = True
+        self.is_current_update = True
+            

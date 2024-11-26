@@ -114,7 +114,7 @@ class SubChart(PlotWidget):
         self.yAxis.setWidth(60)
         self.xAxis.hide()
         
-        self.vb:PlotViewBox = self.getViewBox()
+        self.vb:PlotViewBox = self.PlotItem.view_box
 
         self.lastMousePositon = None
         #self.ObjectManager = UniqueObjectManager()
@@ -419,18 +419,11 @@ class SubChart(PlotWidget):
         # self.vb.informViewBoundsChanged()
     # Override addItem method
     def addItem(self, *args: Any, **kwargs: Any) -> None:
-        if hasattr(args[0], "_vl_kwargs") and args[0]._vl_kwargs is not None:
-            self.plotItem.addItem(args[0]._vl_kwargs["line"], ignoreBounds=True)
-            self.plotItem.addItem(args[0]._vl_kwargs["text"], ignoreBounds=True)
-        if hasattr(args[0], "_hl_kwargs") and args[0]._hl_kwargs is not None:
-            self.plotItem.addItem(args[0]._hl_kwargs["line"], ignoreBounds=True)
-            self.plotItem.addItem(args[0]._hl_kwargs["text"], ignoreBounds=True)
-
-        self.plotItem.addItem(*args)
-        args[0].plot_widget = self
+        self.vb.addItem(*args)
+        # args[0].plot_widget = self
     
     def removeItem(self, *args):
-        return self.plotItem.removeItem(*args)
+        return self.vb.removeItem(*args)
 
     def _update_crosshair_position(self, pos) -> None:
         """Update position of crosshair based on mouse position"""
@@ -513,7 +506,7 @@ class SubChart(PlotWidget):
                 self.ev_pos = ev.position()
             except:
                 self.ev_pos = ev.pos()
-            self.lastMousePositon = self.plotItem.vb.mapSceneToView(self.ev_pos)
+            self.lastMousePositon = self.PlotItem.vb.mapSceneToView(self.ev_pos)
             if self.crosshair_enabled and self.sceneBoundingRect().contains(self.ev_pos):
                 self.mouse_on_vb = True
                 try:

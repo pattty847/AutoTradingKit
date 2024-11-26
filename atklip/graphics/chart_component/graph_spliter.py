@@ -163,7 +163,7 @@ class ViewSplitter(QFrame,Ui_Form):
         self.DockArea.addDock(_dock)
   
     def addItem(self,item:QWidget):
-        self.axis_layout.addWidget(item)
+        self.axis_layout.addWidget(item,0,Qt.AlignmentFlag.AlignTop)
     
     def removeItem(self,item: QWidget):
         self.axis_layout.removeWidget(item)
@@ -260,13 +260,13 @@ class GraphSplitter(ViewSplitter):
                                            showValues=True, axisPen="#5b626f", textPen="#5b626f",
                                             **{Axis.TICK_FORMAT: Axis.DATETIME})
         
-        self.dateAxis.setHeight(30)
+        self.dateAxis.setHeight(25)
         self.xaxisview = GraphicsView(self,background="#161616")
-        self.xaxisview.setFixedHeight(30)
+        self.xaxisview.setFixedHeight(25)
         self.xaxisview.setContentsMargins(0,0,0,0)
         self.xaxislayout = GraphicsLayout()
         self.xaxisview.setCentralItem(self.xaxislayout)
-        self.xaxislayout.setContentsMargins(0,0,60,0)
+        self.xaxislayout.setContentsMargins(0,0,61,0)
         self.xaxislayout.addItem(self.dateAxis, row=0, col=0)
         self.addItem(self.xaxisview)
         self.dateAxis.linkToView(self.chart.vb)
@@ -291,19 +291,19 @@ class GraphSplitter(ViewSplitter):
             self.replay_bar.forward.clicked.connect(self.chart.replay_forward_update)
             
             
-            self.frame.setMaximumSize(QSize(16777215, 70))
-            self.frame.setContentsMargins(0,0,0,5)
+            self.frame.setMaximumSize(QSize(16777215, 60))
+            self.frame.setContentsMargins(0,0,0,0)
             self.addItem(self.replay_bar)
             self.replay_bar.show()
         else:
             self.frame.setContentsMargins(0,0,0,0)
-            self.frame.setMaximumSize(QSize(16777215, 30))
+            self.frame.setMaximumSize(QSize(16777215, 25))
             self.removeItem(self.replay_bar)
     
     def remove_replay_bar(self):
         btn = self.sender()
         self.frame.setContentsMargins(0,0,0,0)
-        self.frame.setMaximumSize(QSize(16777215, 30))
+        self.frame.setMaximumSize(QSize(16777215, 25))
         self.removeItem(self.replay_bar)
         self.mainwindow.topbar.replay.setChecked(False)
         self.mainwindow.topbar.replay.set_icon_color()

@@ -1,9 +1,7 @@
 
-from typing import TYPE_CHECKING
 from .color_dialog_ui import Ui_color_picker as ColorWidget
 
 from PySide6.QtWidgets import QWidget
-from PySide6.QtGui import QColor
 from atklip.gui.qfluentwidgets.common.color import *
 
 from .color_button import ColorButton

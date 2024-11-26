@@ -109,7 +109,7 @@ class CCI(QObject):
         self.df = pd.DataFrame([])
         self.worker = ApiThreadPool
         
-        self.xdata,self.data = [],[]
+        self.xdata,self.data = np.array([]),np.array([])
 
         self.connect_signals()
     
@@ -182,7 +182,7 @@ class CCI(QObject):
         return self.df.tail(n)
     
     def get_data(self,start:int=0,stop:int=0):
-        if self.xdata == []:
+        if len(self.xdata) == 0:
             return [],[]
         if start == 0 and stop == 0:
             x_data = self.xdata
@@ -196,7 +196,7 @@ class CCI(QObject):
         else:
             x_data = self.xdata[start:stop]
             y_data = self.data[start:stop]
-        return np.array(x_data),np.array(y_data)
+        return x_data,y_data
     
     
     def get_last_row_df(self):
@@ -253,14 +253,15 @@ class CCI(QObject):
                             "data":data,
                             })
                 
-        self.xdata,self.data = self.df["index"].to_list(),self.df["data"].to_list()
+        self.xdata,self.data = self.df["index"].to_numpy(),self.df["data"].to_numpy()
         
         self.is_genering = False
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
-        self.sig_reset_all.emit()
         self.is_current_update = True
+        self.sig_reset_all.emit()
+        
     
     def add_historic(self,n:int):
         self.is_histocric_load = False
@@ -280,10 +281,8 @@ class CCI(QObject):
         
         self.df = pd.concat([_df,self.df],ignore_index=True)
         
-        self.xdata = _df["index"].to_list() + self.xdata
-        self.data = _df["data"].to_list() + self.data
-
-        # self.xdata,self.data = self.df["index"].to_list(),self.df["data"].to_list()
+        self.xdata = np.concatenate((_df["index"].to_numpy(), self.xdata)) 
+        self.data = np.concatenate((_df["data"].to_numpy(), self.data))  
         
         self.is_genering = False
         if self.first_gen == False:
@@ -299,32 +298,30 @@ class CCI(QObject):
             df:pd.DataFrame = self._candles.get_df(self.length*5)
                     
             data = self.calculate(df)
-            
+            _data=data.iloc[-1]
             new_frame = pd.DataFrame({
                                     'index':[new_candle.index],
-                                    "data":[data.iloc[-1]]
+                                    "data":[_data]
                                     })
             
             self.df = pd.concat([self.df,new_frame],ignore_index=True)
                                 
-            self.xdata,self.data = self.df["index"].to_list(),self.df["data"].to_list()
-            
+            self.xdata = np.concatenate((self.xdata,np.array([new_candle.index])))
+            self.data = np.concatenate((self.data,np.array([_data])))
             self.sig_add_candle.emit()
-            self.is_current_update = True
+        self.is_current_update = True
+            
         
     def update(self, new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]
         self.is_current_update = False
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.length*5)
-                    
             data = self.calculate(df)
-                    
             self.df.iloc[-1] = [new_candle.index,data.iloc[-1]]
-                    
-            self.xdata,self.data = self.df["index"].to_list(),self.df["data"].to_list()
-            
+            self.xdata[-1] = new_candle.index
+            self.data[-1] = data.iloc[-1]
             self.sig_update_candle.emit()
-            self.is_current_update = True
+        self.is_current_update = True
             
 

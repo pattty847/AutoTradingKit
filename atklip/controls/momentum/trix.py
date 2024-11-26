@@ -120,7 +120,7 @@ class TRIX(QObject):
         self.length_period :int = dict_ta_params["length_period"]
         self.signal_period:int = dict_ta_params["signal_period"]
         self.source:str = dict_ta_params["source"]
-        self.ma_type:str = dict_ta_params["ma_type"]
+        self.mamode:str = dict_ta_params["mamode"]
         self.drift  :int=dict_ta_params.get("drift",1)
         self.offset :int=dict_ta_params.get("offset",0)
 
@@ -129,12 +129,12 @@ class TRIX(QObject):
         self.is_genering = True
         self.is_current_update = False
         self.is_histocric_load = False
-        self.name = f"TRIX {self.source} {self.length_period} {self.signal_period} {self.ma_type.lower()}"
+        self.name = f"TRIX {self.source} {self.length_period} {self.signal_period} {self.mamode.lower()}"
 
         self.df = pd.DataFrame([])
         self.worker = ApiThreadPool
         
-        self.xdata,self.trix_ , self.signalma = [],[],[]
+        self.xdata,self.trix_ , self.signalma = np.array([]),np.array([]),np.array([])
 
         self.connect_signals()
     
@@ -155,14 +155,14 @@ class TRIX(QObject):
             self.length_period :int = dict_ta_params["length_period"]
             self.signal_period:int = dict_ta_params["signal_period"]
             self.source:str = dict_ta_params["source"]
-            self.ma_type:str = dict_ta_params["ma_type"]
+            self.mamode:str = dict_ta_params["mamode"]
             self.drift  :int=dict_ta_params.get("drift",1)
             self.offset :int=dict_ta_params.get("offset",0)
             
             ta_name:str=dict_ta_params.get("ta_name")
             obj_id:str=dict_ta_params.get("obj_id") 
             
-            ta_param = f"{obj_id}-{ta_name}-{self.source}-{self.ma_type}-{self.signal_period}-{self.length_period}"
+            ta_param = f"{obj_id}-{ta_name}-{self.source}-{self.mamode}-{self.signal_period}-{self.length_period}"
 
             self.indicator_name = ta_param
         
@@ -208,7 +208,7 @@ class TRIX(QObject):
         return self.df.tail(n)
     
     def get_data(self,start:int=0,stop:int=0):
-        if self.xdata == []:
+        if len(self.xdata) == 0:
             return [],[],[]
         if start == 0 and stop == 0:
             x_data = self.xdata
@@ -222,7 +222,7 @@ class TRIX(QObject):
         else:
             x_data = self.xdata[start:stop]
             trix_,signalma=self.trix_[start:stop],self.signalma[start:stop]
-        return np.array(x_data),np.array(trix_),np.array(signalma)
+        return x_data,trix_,signalma
     
     def get_last_row_df(self):
         return self.df.iloc[-1] 
@@ -259,7 +259,7 @@ class TRIX(QObject):
         INDICATOR = trix(close=df[self.source],
                             length=self.length_period,
                             signal = self.signal_period,
-                            mamode=self.ma_type.lower(),
+                            mamode=self.mamode.lower(),
                             drift=self.drift,
                             offset=self.offset
                             ).dropna().round(4)
@@ -283,16 +283,17 @@ class TRIX(QObject):
                             "signalma":signalma.tail(_len)
                             })
                 
-        self.xdata,self.trix_ , self.signalma = self.df["index"].to_list(),\
-                                                self.df["trix"].to_list(),\
-                                                self.df["signalma"].to_list()
+        self.xdata,self.trix_ , self.signalma = self.df["index"].to_numpy(),\
+                                                self.df["trix"].to_numpy(),\
+                                                self.df["signalma"].to_numpy()
         
         self.is_genering = False
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
-        self.sig_reset_all.emit()
+        
         self.is_current_update = True
+        self.sig_reset_all.emit()
     
     def add_historic(self,n:int):
         self.is_genering = True
@@ -313,13 +314,10 @@ class TRIX(QObject):
         self.df = pd.concat([_df,self.df],ignore_index=True)
         
         
-        self.xdata = _df["index"].to_list() + self.xdata
-        self.trix_ = _df["trix"].to_list() + self.trix_
-        self.signalma = _df["signalma"].to_list() + self.signalma
+        self.xdata = np.concatenate((_df["index"].to_numpy(), self.xdata)) 
+        self.trix_ = np.concatenate((_df["trix"].to_numpy(), self.trix_))   
+        self.signalma = np.concatenate((_df["signalma"].to_numpy(), self.signalma)) 
         
-        # self.xdata,self.trix_ , self.signalma = self.df["index"].to_list(),\
-        #                                         self.df["trix"].to_list(),\
-        #                                         self.df["signalma"].to_list()
         
         self.is_genering = False
         if self.first_gen == False:
@@ -343,13 +341,14 @@ class TRIX(QObject):
                                     })
             
             self.df = pd.concat([self.df,new_frame],ignore_index=True)
-            
-            self.xdata,self.trix_ , self.signalma  = self.df["index"].to_list(),\
-                                                    self.df["trix"].to_list(),\
-                                                    self.df["signalma"].to_list()
                                             
+            self.xdata = np.concatenate((self.xdata,np.array([new_candle.index])))
+            self.trix_ = np.concatenate((self.trix_,np.array([trix_.iloc[-1]])))
+            self.signalma = np.concatenate((self.signalma,np.array([signalma.iloc[-1]]))) 
+            
             self.sig_add_candle.emit()
-            self.is_current_update = True
+        self.is_current_update = True
+            
         
     def update(self, new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]
@@ -361,9 +360,8 @@ class TRIX(QObject):
                     
             self.df.iloc[-1] = [new_candle.index,trix_.iloc[-1],signalma.iloc[-1]]
                     
-            self.xdata,self.trix_ , self.signalma  = self.df["index"].to_list(),\
-                                                    self.df["trix"].to_list(),\
-                                                    self.df["signalma"].to_list()
+            self.xdata[-1],self.trix_[-1], self.signalma[-1]  = new_candle.index,trix_.iloc[-1],signalma.iloc[-1]
             self.sig_update_candle.emit()
-            self.is_current_update = True
+        self.is_current_update = True
+            
 

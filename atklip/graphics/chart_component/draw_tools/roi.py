@@ -5,6 +5,7 @@ from PySide6 import QtCore
 from PySide6.QtCore import Signal, QPointF, Qt, QCoreApplication, QPoint
 from PySide6.QtGui import QPainter, QPainterPath, QTransform
 from PySide6.QtWidgets import QMenu
+from atklip.app_utils.functions import mkBrush, mkPen
 from atklip.graphics.pyqtgraph import functions as fn, LineSegmentROI, ROI, UIGraphicsItem, GraphicsObject
 from atklip.graphics.pyqtgraph.Point import Point
 from atklip.graphics.pyqtgraph.graphicsItems.ROI import Handle
@@ -218,13 +219,14 @@ class BaseHandle(Handle, UIGraphicsItem):
                 self.path.moveTo(x, y)
             else:
                 self.path.lineTo(x, y)            
-            
+    
+    
     def paint(self, p, opt, widget):
         p.setRenderHints(p.RenderHint.Antialiasing, True)
-        p.setPen(self.currentPen)
-        p.setBrush(self.currentBrush)
-        
+        p.setPen(mkPen("#2962ff"))
+        p.setBrush(mkBrush("#2962ff"))
         p.drawPath(self.shape())
+    
             
     def shape(self):
         if self._shape is None:

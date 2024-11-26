@@ -143,7 +143,7 @@ class BasicZIGZAG(PlotDataItem):
     
     def update_inputs(self,_input,_source):
         """"source":self.has["inputs"]["source"],
-                "ma_type":self.has["inputs"]["ma_type"],
+                "mamode":self.has["inputs"]["mamode"],
                 "ma_period":self.has["inputs"]["ma_period"]"""
         update = False
         if _input == "source":
@@ -269,5 +269,5 @@ class BasicZIGZAG(PlotDataItem):
         return _min,_max
 
     def on_click_event(self):
-        print("zooo day__________________")
+        #print("zooo day__________________")
         pass

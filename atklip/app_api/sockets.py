@@ -105,7 +105,7 @@ async def goto_date(request: Request):
 @limiter.limit("5000000/minute")
 async def add_smooth_candle(request: Request):
     """_summary_
-        ma_type:requied for both (smoothcandle or supersmoothcandle)
+        mamode:requied for both (smoothcandle or supersmoothcandle)
         ma_leng:requied for both (smoothcandle or supersmoothcandle)
         n_smooth:requied for only supersmoothcandle
         name: smoothcandle or supersmoothcandle
@@ -340,7 +340,7 @@ async def delete_smooth_candle(request: Request):
         "id_exchange":"binanceusdm",
         "symbol":"ETHUSDT",
         "interval":"3m",
-        "ma_type":"ema",
+        "mamode":"ema",
         "ma_leng":3,
         "n_smooth":13,
         "name":"supersmoothcandle",

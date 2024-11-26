@@ -78,7 +78,7 @@ class PlotViewBox(ViewBox):
                 'yRange': [None, None],   # Maximum and minimum Y range
                 }
         })
-        self.setLimits(minXRange=100, maxXRange=1440)
+        self.setLimits(minXRange=200, maxXRange=1000)
     def makepen(self,color, style=None, width=1):
         if style is None or style == '-':
             return mkPen(color=color, width=width)

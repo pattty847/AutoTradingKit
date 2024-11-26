@@ -67,7 +67,7 @@ class TopBar(QFrame,TopFrame):
         self.left_layout.addWidget(self.mode)
         self.right_layout.addWidget(self.LayoutButton)
         
-        self.setContentsMargins(0,0,0,0)
+        # self.left_layout.setSpacing(10)
         
         self._parent.mouse_clicked_signal.connect(self.gotodate.delete)
         self._parent.mouse_clicked_signal.connect(self.symbol.delete)
@@ -75,9 +75,9 @@ class TopBar(QFrame,TopFrame):
          
         self.setSizePolicy(QSizePolicy.Preferred,QSizePolicy.Preferred)
         
-        _w = self.width()
-        _interval_w = self.interval.width()
-        _interval_with_btn = self.interval._w
+        # _w = self.width()
+        # _interval_w = self.interval.width()
+        # _interval_with_btn = self.interval._w
         
         # print(_w,_interval_w,_interval_with_btn)
         

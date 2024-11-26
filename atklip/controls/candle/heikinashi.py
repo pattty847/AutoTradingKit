@@ -44,7 +44,7 @@ class HEIKINASHI(QObject):
         self.precision = precision
         self.df = pd.DataFrame([])
         self.worker = ApiThreadPool
-        
+        self.is_current_update = False
         # self.signal_delete.connect(self.delete)
     
     def set_candle_infor(self,exchange_id,symbol,interval):
@@ -320,6 +320,7 @@ class HEIKINASHI(QObject):
     
     
     def fisrt_gen_data(self):
+        self.is_current_update = False
         self.first_gen = False
         self.candles = []
         self.map_index_ohlcv: Dict[int, OHLCV] = {}
@@ -331,6 +332,7 @@ class HEIKINASHI(QObject):
         self.first_gen = True
         self.start_index:int = self.candles[0].index
         self.stop_index:int = self.candles[-1].index
+        self.is_current_update = True
         self.sig_reset_all.emit()
         return self.candles
     
@@ -383,6 +385,7 @@ class HEIKINASHI(QObject):
             new_candle.insert(i,ha_candle)
             
     def update(self, _candles:List[OHLCV],_is_add_candle):
+        self.is_current_update = False
         if self.first_gen:
             new_candle = _candles[-1] #    _candle[-1]
             if len(self.candles) < 2:
@@ -413,6 +416,7 @@ class HEIKINASHI(QObject):
                     self.df = pd.concat([self.df, new_row], ignore_index=True)
                     self.start_index:int = self.candles[0].index
                     self.stop_index:int = self.candles[-1].index
+                    self.is_current_update = True
                     self.sig_add_candle.emit(self.candles[-2:])
                     #QCoreApplication.processEvents()
                     return True
@@ -454,8 +458,10 @@ class HEIKINASHI(QObject):
                         
                         self.start_index:int = self.candles[0].index
                         self.stop_index:int = self.candles[-1].index
+                        self.is_current_update = True
                         self.sig_update_candle.emit(self.candles[-2:])
                         #QCoreApplication.processEvents()
                         return False
+        self.is_current_update = True
                     
                     

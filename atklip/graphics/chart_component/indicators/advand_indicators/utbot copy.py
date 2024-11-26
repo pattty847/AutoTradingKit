@@ -57,7 +57,7 @@ class ATKBOT(PlotDataItem):
                     
                     "n_smooth_period":2,
                     "ma_smooth_period":2,
-                    "ma_type":PD_MAType.EMA,
+                    "mamode":PD_MAType.EMA,
                     
                     
                     # "legs":5,
@@ -104,7 +104,7 @@ class ATKBOT(PlotDataItem):
         
         self.super_smoothcandle = N_SMOOTH_CANDLE(self.chart._precision,self.has["inputs"]["source"],
                                                   self.has["inputs"]["n_smooth_period"],
-                                                  self.has["inputs"]["ma_type"].value,
+                                                  self.has["inputs"]["mamode"].value,
                                                   self.has["inputs"]["ma_smooth_period"])
         self.super_smoothcandle.fisrt_gen_data()
         
@@ -216,7 +216,7 @@ class ATKBOT(PlotDataItem):
                     "ema_short_period":self.has["inputs"]["ema_short_period"],
                     "n_smooth_period":self.has["inputs"]["n_smooth_period"],
                     "ma_smooth_period":self.has["inputs"]["ma_smooth_period"],
-                    "ma_type":self.has["inputs"]["ma_type"],
+                    "mamode":self.has["inputs"]["mamode"],
 
 
                     "type":self.has["inputs"]["type"],
@@ -263,8 +263,8 @@ class ATKBOT(PlotDataItem):
             self.has["name"] = f"ATKPRO Ver_1.0"
             self.sig_change_indicator_name.emit(self.has["name"])
             
-            if _input == "n_smooth_period" or _input == "ma_smooth_period" or _input == "ma_type":
-                self.super_smoothcandle.refresh_data(self.has["inputs"]["ma_type"].value,self.has["inputs"]["ma_smooth_period"],self.has["inputs"]["n_smooth_period"])
+            if _input == "n_smooth_period" or _input == "ma_smooth_period" or _input == "mamode":
+                self.super_smoothcandle.refresh_data(self.has["inputs"]["mamode"].value,self.has["inputs"]["ma_smooth_period"],self.has["inputs"]["n_smooth_period"])
             # elif  _input == "deviation":
             #     self.zigzag.change_inputs(self.has["inputs"][_input],_source)
             elif  _input == "type" or _input == "fast_period" or _input == "slow_period" or _input == "signal_period" or _input == "macd_type":
@@ -706,7 +706,7 @@ class ATKBOT(PlotDataItem):
         return _min,_max
 
     def on_click_event(self):
-        print("zooo day__________________")
+        #print("zooo day__________________")
         pass
 
     def mousePressEvent(self, ev):

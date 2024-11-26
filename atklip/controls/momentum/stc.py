@@ -221,7 +221,7 @@ class STC(QObject):
         self.tclength:int= dict_ta_params["tclength"]
         self.fast:int = dict_ta_params["fast"]
         self.slow:int = dict_ta_params["slow"]
-        self.ma_type:str = dict_ta_params["ma_type"]
+        self.mamode:str = dict_ta_params["mamode"]
         self.factor  :float=dict_ta_params.get("factor",0.5)
         self.offset :int=dict_ta_params.get("offset",0)
 
@@ -230,12 +230,12 @@ class STC(QObject):
         self.is_genering = True
         self.is_current_update = False
         self.is_histocric_load = False
-        self.name = f"STC {self.source} {self.slow} {self.fast} {self.tclength} {self.ma_type}"
+        self.name = f"STC {self.source} {self.slow} {self.fast} {self.tclength} {self.mamode}"
 
         self.df = pd.DataFrame([])
         self.worker = ApiThreadPool
         
-        self.xdata,self.stc_,self.macd,self.stoch = [],[],[],[]
+        self.xdata,self.stc_,self.macd,self.stoch = np.array([]),np.array([]),np.array([]),np.array([])
 
         self.connect_signals()
     
@@ -259,14 +259,14 @@ class STC(QObject):
             self.tclength:int= dict_ta_params["tclength"]
             self.fast:int = dict_ta_params["fast"]
             self.slow:int = dict_ta_params["slow"]
-            self.ma_type:str = dict_ta_params["ma_type"]
+            self.mamode:str = dict_ta_params["mamode"]
             self.factor  :float=dict_ta_params.get("factor",0.5)
             self.offset :int=dict_ta_params.get("offset",0)
             
             ta_name:str=dict_ta_params.get("ta_name")
             obj_id:str=dict_ta_params.get("obj_id") 
             
-            ta_param = f"{obj_id}-{ta_name}-{self.source}-{self.ma_type}-{self.tclength}-{self.fast}-{self.slow}"
+            ta_param = f"{obj_id}-{ta_name}-{self.source}-{self.mamode}-{self.tclength}-{self.fast}-{self.slow}"
 
             self.indicator_name = ta_param
         
@@ -314,7 +314,7 @@ class STC(QObject):
         return self.df.tail(n)
     
     def get_data(self,start:int=0,stop:int=0):
-        if self.xdata == []:
+        if len(self.xdata) == 0:
             return {"x_data":[],"stc_":[],"macd":[],"stoch":[]}
         if start == 0 and stop == 0:
             x_data = self.xdata
@@ -328,7 +328,7 @@ class STC(QObject):
         else:
             x_data = self.xdata[start:stop]
             stc_,macd,stoch=self.stc_[start:stop],self.macd[start:stop],self.stoch[start:stop]
-        return np.array(x_data),np.array(stc_),np.array(macd),np.array(stoch)
+        return x_data,stc_,macd,stoch
     
     def get_last_row_df(self):
         return self.df.iloc[-1] 
@@ -369,7 +369,7 @@ class STC(QObject):
                         tclength= self.tclength,
                         fast = self.fast,
                         slow = self.slow,
-                        mamode= self.ma_type,
+                        mamode= self.mamode,
                         factor=self.factor,
                         offset=self.offset
                         ).dropna().round(4)
@@ -394,13 +394,14 @@ class STC(QObject):
                             "stoch":stoch.tail(_len)
                             })
                 
-        self.xdata,self.stc_,self.macd,self.stoch = self.df["index"].to_list(),self.df["stc"].to_list(),self.df["macd"].to_list(),self.df["stoch"].to_list()
+        self.xdata,self.stc_,self.macd,self.stoch = self.df["index"].to_numpy(),self.df["stc"].to_numpy(),self.df["macd"].to_numpy(),self.df["stoch"].to_numpy()
         self.is_genering = False
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
-        self.sig_reset_all.emit()
+        
         self.is_current_update = True
+        self.sig_reset_all.emit()
     
     def add_historic(self,n:int):
         self.is_genering = True
@@ -420,12 +421,11 @@ class STC(QObject):
                             })
         self.df = pd.concat([_df,self.df],ignore_index=True)
         
-        self.xdata = _df["index"].to_list() + self.xdata
-        self.stc_ = _df["stc"].to_list() + self.stc_
-        self.macd = _df["macd"].to_list() + self.macd
-        self.stoch = _df["stoch"].to_list() + self.stoch
+        self.xdata = np.concatenate((_df["index"].to_numpy(), self.xdata))
+        self.stc_ = np.concatenate((_df["stc"].to_numpy(), self.stc_))
+        self.macd = np.concatenate((_df["macd"].to_numpy(), self.macd))
+        self.stoch = np.concatenate((_df["stoch"].to_numpy(), self.stoch))
         
-        # self.xdata,self.stc_,self.macd,self.stoch = self.df["index"].to_list(),self.df["stc"].to_list(),self.df["macd"].to_list(),self.df["stoch"].to_list()
         self.is_genering = False
         if self.first_gen == False:
             self.first_gen = True
@@ -449,11 +449,15 @@ class STC(QObject):
                                     })
             
             self.df = pd.concat([self.df,new_frame],ignore_index=True)
+                        
+            self.xdata = np.concatenate((self.xdata,np.array([new_candle.index])))
+            self.stc_ = np.concatenate((self.stc_,np.array([stc_.iloc[-1]])))
+            self.macd = np.concatenate((self.macd,np.array([macd.iloc[-1]])))             
+            self.stoch = np.concatenate((self.stoch,np.array([stoch.iloc[-1]])))             
             
-            self.xdata,self.stc_,self.macd,self.stoch = self.df["index"].to_list(),self.df["stc"].to_list(),self.df["macd"].to_list(),self.df["stoch"].to_list()
-                                            
+            
             self.sig_add_candle.emit()
-            self.is_current_update = True
+        self.is_current_update = True
         
     def update(self, new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]
@@ -465,7 +469,9 @@ class STC(QObject):
                     
             self.df.iloc[-1] = [new_candle.index,stc_.iloc[-1],macd.iloc[-1],stoch.iloc[-1]]
                     
-            self.xdata,self.stc_,self.macd,self.stoch = self.df["index"].to_list(),self.df["stc"].to_list(),self.df["macd"].to_list(),self.df["stoch"].to_list()
+            self.xdata[-1],self.stc_[-1],self.macd[-1],self.stoch[-1] = new_candle.index,stc_.iloc[-1],macd.iloc[-1],stoch.iloc[-1]
+            
+            
             
             self.sig_update_candle.emit()
-            self.is_current_update = True
+        self.is_current_update = True

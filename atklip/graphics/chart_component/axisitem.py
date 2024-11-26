@@ -29,22 +29,6 @@ class Axis:
     DF_LONG = "long"
 
 
-class signal_worker_paint(QObject):
-    specs_data = Signal(tuple)
-
-class worker_paint(QRunnable):
-    def __init__(self, fn, *args, **kwargs):
-        super(worker_paint, self).__init__()
-        self.fn = fn
-        self.args = args
-        self.kwargs = kwargs
-        self.signal = signal_worker_paint()
-    @Slot()
-    def run(self):
-        resuft = self.fn(*self.args, **self.kwargs)
-        self.signal.specs_data.emit((resuft,*self.args))
-
-
 class CustomDateAxisItem(AxisItem):
 
     def __init__(self, orientation,context=None, pen=None, textPen=None, axisPen=None, linkView=None, parent=None, maxTickLength=-5,
@@ -53,6 +37,19 @@ class CustomDateAxisItem(AxisItem):
         super().__init__(orientation, pen=pen, textPen=textPen, linkView=linkView, parent=parent,
                          maxTickLength=maxTickLength, showValues=showValues, text=text, units=units,
                          unitPrefix=unitPrefix, **kwargs)
+        
+        self.style['tickTextOffset'] = [1, 1]
+        # self.style['textFillLimits'] = [ 
+        #                                 # (0, 0.8),  
+        #                                 (2, 0.8),   
+        #                                 (4, 0.6),    
+        #                                 ]
+        self.style['maxTickLevel'] = 2
+        self.style['maxTextLevel'] = 2
+        
+        self.setFixedHeight(25)
+        self.setContentsMargins(1,1,1,1)
+        
         self.setCursor(QCursor(Qt.CursorShape.SizeHorCursor))
         self.setTickFont("Segoe UI")
         self.context:Chart = context
@@ -76,7 +73,7 @@ class CustomDateAxisItem(AxisItem):
         self.df_short = kwargs.get(Axis.DURATION_FORMAT, Axis.DF_SHORT) == Axis.DF_SHORT
         if self.tick_format == Axis.CATEGORY:
             # Override ticks spacing and set spacing 1 with step 1
-            self.setTickSpacing(1, 1)
+            self.setTickSpacing(3, 1)
 
         self.setCursor(QCursor(Qt.CursorShape.SizeHorCursor))
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
@@ -224,7 +221,7 @@ class CustomDateAxisItem(AxisItem):
                 range1, range2 = self.range[0], self.range[1]
                 position = (price-range1)*(w-x)/(range2-range1)
                 # print(245, l_price, self.vb.price_line_color)
-                price_rect = QRectF(position-58,2,116,18)
+                price_rect = QRectF(position-58,2,116,22)
                 tz = datetime.datetime.now().astimezone().tzinfo
                 tick_strings = datetime.datetime.fromtimestamp(self.get_times_via_indexs(price), tz=tz).strftime("%Y-%m-%d %H:%M:%S")
                 self.draw_value(p,price_rect,color,str(tick_strings))
@@ -282,7 +279,7 @@ class CustomDateAxisItem(AxisItem):
                 # print(242, global_var.last_price[global_var.symbol], self.vb.price_line.getPos())
                 position = (price-range1)*(w-x)/(range2-range1)
                 # print(245, l_price, self.vb.price_line_color)
-                price_rect = QRectF(position-58,2,116,18)
+                price_rect = QRectF(position-58,2,116,22)
                 #self.draw_lastprice(p,price_rect,global_var.last_color,str(global_var.last_price[global_var.symbol]))
                 tz = datetime.datetime.now().astimezone().tzinfo
                 tick_strings = datetime.datetime.fromtimestamp(price, tz=tz).strftime("%Y-%m-%d %H:%M:%S")
@@ -304,7 +301,7 @@ class CustomDateAxisItem(AxisItem):
                     # print(242, global_var.last_price[global_var.symbol], self.vb.price_line.getPos())
                     position = (price-range1)*(w-x)/(range2-range1)
                     # print(245, l_price, self.vb.price_line_color)
-                    price_rect = QRectF(position-58,2,116,18)
+                    price_rect = QRectF(position-58,2,116,22)
                     #self.draw_lastprice(p,price_rect,global_var.last_color,str(global_var.last_price[global_var.symbol]))
                     tz = datetime.datetime.now().astimezone().tzinfo
                     tick_strings = datetime.datetime.fromtimestamp(price, tz=tz).strftime("%Y-%m-%d %H:%M:%S")
@@ -365,7 +362,7 @@ class CustomDateAxisItem(AxisItem):
                         range1, range2 = self.range[0], self.range[1]
                         step = (w-x)/(range2-range1)
                         position = (price-range1)*step 
-                        price_rect = QRectF(position-58,y,116,h)
+                        price_rect = QRectF(position-58,y,116,22)
                         tz = datetime.datetime.now().astimezone().tzinfo
                         tick_strings = datetime.datetime.fromtimestamp(price, tz=tz).strftime("%Y-%m-%d %H:%M:%S")
 
@@ -873,7 +870,7 @@ class CustomPriceAxisItem(AxisItem):
                 range1, range2 = self.range[0], self.range[1]
                 step = (h-y)/(range2-range1)
                 position = (range2-price)*step 
-                price_rect = QRectF(x,position-9,w,18)
+                price_rect = QRectF(x,position-11,w,22)
                 self.draw_value(p,price_rect,color,str(price))
             except Exception as e:
                 # traceback.print_exc(e)
@@ -902,7 +899,7 @@ class CustomPriceAxisItem(AxisItem):
         step = (h-y)/(range2-range1)
         #print(range2,price)
         position = (range2-price)*step 
-        price_rect = QRectF(x,position-9,w,18)
+        price_rect = QRectF(x,position-11,w,22)
         self.draw_value(p,price_rect,color,str(price))
                 
     def paint(self, p, opt, widget):

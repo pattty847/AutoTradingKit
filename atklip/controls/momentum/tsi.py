@@ -133,7 +133,7 @@ class TSI(QObject):
         self.slow_period :int = dict_ta_params["slow_period"]
         self.signal_period:int = dict_ta_params["signal_period"]
         self.source:str = dict_ta_params["source"]
-        self.ma_type:str = dict_ta_params["ma_type"]
+        self.mamode:str = dict_ta_params["mamode"]
         self.drift  :int=dict_ta_params.get("drift",1)
         self.offset :int=dict_ta_params.get("offset",0)
 
@@ -142,12 +142,12 @@ class TSI(QObject):
         self.is_genering = True
         self.is_current_update = False
         self.is_histocric_load = False
-        self.name = f"TSI {self.source} {self.fast_period} {self.slow_period} {self.signal_period} {self.ma_type.lower()}"
+        self.name = f"TSI {self.source} {self.fast_period} {self.slow_period} {self.signal_period} {self.mamode.lower()}"
 
         self.df = pd.DataFrame([])
         self.worker = ApiThreadPool
         
-        self.xdata,self.tsi_ , self.signalma = [],[],[]
+        self.xdata,self.tsi_ , self.signalma = np.array([]),np.array([]),np.array([])
 
         self.connect_signals()
     
@@ -170,7 +170,7 @@ class TSI(QObject):
             self.slow_period :int = dict_ta_params["slow_period"]
             self.signal_period:int = dict_ta_params["signal_period"]
             self.source:str = dict_ta_params["source"]
-            self.ma_type:str = dict_ta_params["ma_type"]
+            self.mamode:str = dict_ta_params["mamode"]
             self.drift  :int=dict_ta_params.get("drift",1)
             self.offset :int=dict_ta_params.get("offset",0)
             
@@ -178,7 +178,7 @@ class TSI(QObject):
             ta_name:str=dict_ta_params.get("ta_name")
             obj_id:str=dict_ta_params.get("obj_id") 
             
-            ta_param = f"{obj_id}-{ta_name}-{self.source}-{self.ma_type}-{self.signal_period}-{self.slow_period}-{self.fast_period}"
+            ta_param = f"{obj_id}-{ta_name}-{self.source}-{self.mamode}-{self.signal_period}-{self.slow_period}-{self.fast_period}"
 
             self.indicator_name = ta_param
         
@@ -225,7 +225,7 @@ class TSI(QObject):
         return self.df.tail(n)
     
     def get_data(self,start:int=0,stop:int=0):
-        if self.xdata == []:
+        if len(self.xdata) == 0:
             return [],[],[]
         if start == 0 and stop == 0:
             x_data = self.xdata
@@ -239,7 +239,7 @@ class TSI(QObject):
         else:
             x_data = self.xdata[start:stop]
             tsi_,signalma=self.tsi_[start:stop],self.signalma[start:stop]
-        return np.array(x_data),np.array(tsi_),np.array(signalma)
+        return x_data,tsi_,signalma
     
     
     def get_last_row_df(self):
@@ -276,7 +276,7 @@ class TSI(QObject):
                         fast=self.fast_period,
                         slow=self.slow_period,
                         signal = self.signal_period,
-                        mamode=self.ma_type.lower(),
+                        mamode=self.mamode.lower(),
                         drift=self.drift,
                         offset=self.offset
                             ).dropna().round(4)
@@ -300,16 +300,17 @@ class TSI(QObject):
                             "signalma":signalma.tail(_len)
                             })
                 
-        self.xdata,self.tsi_ , self.signalma = self.df["index"].to_list(),\
-                                                self.df["tsi"].to_list(),\
-                                                self.df["signalma"].to_list()
+        self.xdata,self.tsi_ , self.signalma = self.df["index"].to_numpy(),\
+                                                self.df["tsi"].to_numpy(),\
+                                                self.df["signalma"].to_numpy()
         
         self.is_genering = False
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
-        self.sig_reset_all.emit()
+        
         self.is_current_update = True
+        self.sig_reset_all.emit()
     
     
     def add_historic(self,n:int):
@@ -332,13 +333,9 @@ class TSI(QObject):
         self.df = pd.concat([_df,self.df],ignore_index=True)
         
         
-        self.xdata = _df["index"].to_list() + self.xdata
-        self.tsi_ = _df["tsi"].to_list() + self.tsi_
-        self.signalma = _df["signalma"].to_list() + self.signalma
-        
-        # self.xdata,self.tsi_ , self.signalma = self.df["index"].to_list(),\
-        #                                         self.df["tsi"].to_list(),\
-        #                                         self.df["signalma"].to_list()
+        self.xdata = np.concatenate((_df["index"].to_numpy(), self.xdata)) 
+        self.tsi_ = np.concatenate((_df["tsi"].to_numpy(), self.tsi_))   
+        self.signalma = np.concatenate((_df["signalma"].to_numpy(), self.signalma))
         
         self.is_genering = False
         if self.first_gen == False:
@@ -363,12 +360,13 @@ class TSI(QObject):
             
             self.df = pd.concat([self.df,new_frame],ignore_index=True)
             
-            self.xdata,self.tsi_ , self.signalma  = self.df["index"].to_list(),\
-                                                    self.df["tsi"].to_list(),\
-                                                    self.df["signalma"].to_list()
                                             
-            self.sig_add_candle.emit()
+            self.xdata = np.concatenate((self.xdata,np.array([new_candle.index])))
+            self.tsi_ = np.concatenate((self.tsi_,np.array([tsi_.iloc[-1]])))
+            self.signalma = np.concatenate((self.signalma,np.array([signalma.iloc[-1]])))
+            
             self.is_current_update = True
+            self.sig_add_candle.emit()
         
     def update(self, new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]
@@ -380,8 +378,7 @@ class TSI(QObject):
                     
             self.df.iloc[-1] = [new_candle.index,tsi_.iloc[-1],signalma.iloc[-1]]
                     
-            self.xdata,self.tsi_ , self.signalma  = self.df["index"].to_list(),\
-                                                    self.df["tsi"].to_list(),\
-                                                    self.df["signalma"].to_list()
-            self.sig_update_candle.emit()
+            self.xdata[-1],self.tsi_[-1] , self.signalma[-1]  = new_candle.index,tsi_.iloc[-1],signalma.iloc[-1]
+            
             self.is_current_update = True
+            self.sig_update_candle.emit()
