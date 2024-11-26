@@ -54,7 +54,7 @@ class ATKBOT(GraphicsObject):
                     "key_value_short":0.1,
                     
                     "atr_long_period":1,
-                    "ema_long_period":2,
+                    "ema_long_period":100,
                     
                     "atr_short_period":1,
                     "ema_short_period":2,
@@ -344,7 +344,7 @@ class ATKBOT(GraphicsObject):
             signalma = None
             histogram = None
             macd_long_signal = False
-            macd_short_signal = False
+            macd_short_signal = True
             if len(macd_df) > 0:
                 macd = macd_df.iloc[-1]['macd']
                 signalma = macd_df.iloc[-1]['signalma']
@@ -357,12 +357,12 @@ class ATKBOT(GraphicsObject):
             sqeezee_df = self.sqeeze.df.loc[(self.sqeeze.df['index'] <= _x-1) & (self.sqeeze.df['index'] >= _x-4)]
             sqz_histogram = None
             sqz_long_signal = False
-            sqz_short_signal = False
+            sqz_short_signal = True
             if len(sqeezee_df) >= 3:
                 sqz_histogram = sqeezee_df.iloc[-1]['SQZ_data']
                 sqz_histogram_pre_1 = sqeezee_df.iloc[-2]['SQZ_data']
                 sqz_histogram_pre_2 = sqeezee_df.iloc[-3]['SQZ_data']
-                sqz_long_signal = sqz_histogram > 0 #and sqz_histogram_pre_1 < sqz_histogram_pre_2
+                sqz_long_signal = sqz_histogram < 0 #and sqz_histogram_pre_1 < sqz_histogram_pre_2
                 sqz_short_signal = sqz_histogram > 0
                 
             if df.iloc[i-1]['long'] == True:
@@ -379,27 +379,26 @@ class ATKBOT(GraphicsObject):
                 pv_df =  self.chart.jp_candle.df.loc[(self.chart.jp_candle.df['index'] < _x) & (self.chart.jp_candle.df['index'] >= _x-self.has["inputs"]["n_period"]-self.has["inputs"]["m_period"]-1)]   
                 pivot_point = self.check_pivot_points(pv_df,"low",self.has["inputs"]["n_period"],self.has["inputs"]["m_period"])
                 if self.list_pos.get(pivot_point[2]):
-                    pass
-                    #continue
+                    continue
                 
-                #if pivot_point[0]:
-                _val = self.chart.jp_candle.map_index_ohlcv[_x].open
-                if macd_long_signal and sqz_long_signal:                        
-                    obj = ArrowItem(drawtool=self,angle=90,pen="green",brush = "green")
-                    obj.setFlags(obj.flags() | self.GraphicsItemFlag.ItemIgnoresTransformations)
-                    # obj.setParentItem(self)
-                    obj.setPos(_x, _val)
-                    obj.locked_handle()
-                    # self.chart.sig_add_item.emit(obj)
-                    # stop_loss =  self.calculate_stop_loss("long",pivot_point[1])
-                    # entry = Entry([_x, stop_loss], [0, 0],invertible=True,movable=True, resizable=False, removable=True, pen="#2962ff",parent=None, drawtool=self.chart.drawtool)
-                    # entry.setPoint(_x,_val)
-                    # obj.setFlags(obj.flags() | self.GraphicsItemFlag.ItemIgnoresTransformations)
-                    # entry.locked_handle()
-                    # entry.setParentItem(self)
-                    # self.chart.sig_add_item.emit(entry)
-                    self.list_pos[_x] = {"pivot_value":None,"entry_x":_x,"entry_y":_val,"type":"long","obj":obj, "entry":None, "is_stoploss":False, "take_profit_1_5R":None,"take_profit_2R":None}
-                    # self.list_pos[_x] = {"pivot_value":stop_loss,"entry_x":_x,"entry_y":_val,"type":"long","obj":obj, "entry":None, "is_stoploss":False, "take_profit_1_5R":None,"take_profit_2R":None}
+                if pivot_point[0]:
+                    _val = self.chart.jp_candle.map_index_ohlcv[_x].open
+                    if macd_long_signal and sqz_long_signal:                        
+                        obj = ArrowItem(drawtool=self,angle=90,pen="green",brush = "green")
+                        obj.setFlags(obj.flags() | self.GraphicsItemFlag.ItemIgnoresTransformations)
+                        # obj.setParentItem(self)
+                        obj.setPos(_x, _val)
+                        obj.locked_handle()
+                        # self.chart.sig_add_item.emit(obj)
+                        stop_loss =  self.calculate_stop_loss("long",pivot_point[1])
+                        # entry = Entry([_x, stop_loss], [0, 0],invertible=True,movable=True, resizable=False, removable=True, pen="#2962ff",parent=None, drawtool=self.chart.drawtool)
+                        # entry.setPoint(_x,_val)
+                        # obj.setFlags(obj.flags() | self.GraphicsItemFlag.ItemIgnoresTransformations)
+                        # entry.locked_handle()
+                        # entry.setParentItem(self)
+                        # self.chart.sig_add_item.emit(entry)
+                        self.list_pos[pivot_point[2]] = {"pivot_value":stop_loss,"entry_x":_x,"entry_y":_val,"type":"long","obj":obj, "entry":None, "is_stoploss":False, "take_profit_1_5R":None,"take_profit_2R":None}
+                        # self.list_pos[_x] = {"pivot_value":stop_loss,"entry_x":_x,"entry_y":_val,"type":"long","obj":obj, "entry":None, "is_stoploss":False, "take_profit_1_5R":None,"take_profit_2R":None}
             
         setdata.emit((xdata,_long,_short))
         self.sig_change_yaxis_range.emit()
