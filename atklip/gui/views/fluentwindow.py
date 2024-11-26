@@ -53,17 +53,6 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
         
         self.onTabAddRequested()
         self.initWindow()
-        
-    def dsdsdsad(self):
-        current_ex,current_symbol,curent_interval = self.load_pre_config()
-        _is_icon_exist = check_icon_exist(current_symbol)
-        if _is_icon_exist:
-            icon_path = CI.crypto_url(current_symbol)
-        else :
-            icon_path = CI.BTC.path()
-
-        routeKey = f'{current_symbol}-{curent_interval}-{self.tabBar.count()}'
-        print(routeKey)
     
     def initWindow(self):
         self.setMinimumWidth(1200)
@@ -75,7 +64,7 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
         
         if self.TabInterface:
             h =  self.TabInterface.splitter.height()
-            self.TabInterface.splitter.setSizes([800,80])
+            self.TabInterface.splitter.setSizes([800,0])
         
         self.show()    
 

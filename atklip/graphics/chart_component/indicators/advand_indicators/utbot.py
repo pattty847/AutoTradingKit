@@ -391,7 +391,6 @@ class ATKBOT(GraphicsObject):
                         obj.locked_handle()
                         # self.chart.sig_add_item.emit(obj)
                         stop_loss =  self.calculate_stop_loss("long",pivot_point[1])
-                        
                         # entry = Entry([_x, stop_loss], [0, 0],invertible=True,movable=True, resizable=False, removable=True, pen="#2962ff",parent=None, drawtool=self.chart.drawtool)
                         # entry.setPoint(_x,_val)
                         # obj.setFlags(obj.flags() | self.GraphicsItemFlag.ItemIgnoresTransformations)
@@ -587,7 +586,7 @@ class ATKBOT(GraphicsObject):
             for obj in self.list_pos.values():
                 obj["obj"].setParentItem(self)
                 # obj["entry"].setParentItem(self)
-                time.sleep(0.01)
+                # time.sleep(0.01)
         
         "df.loc[(df['max_speed'] > 1) & (df['shield'] < 8)]"
         # if self.list_pos:
