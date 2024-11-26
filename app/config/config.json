@@ -6,7 +6,7 @@
         "CheckUpdateAtStartUp": true
     },
     "Folders": {
-        "Download": "E:/AutoTradingKit/app/download",
+        "Download": "D:/AutoTradingKit/app/download",
         "LocalMusic": []
     },
     "MainWindow": {
