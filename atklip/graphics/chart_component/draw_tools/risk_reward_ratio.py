@@ -10,7 +10,7 @@ from .model_draw_tool import Line
 from typing import TYPE_CHECKING, List
 from pyqtgraph import TextItem
 
-from atklip.app_utils.calculate import cal_line_price_fibo
+from atklip.app_utils.calculate import cal_line_price_fibo, percent_caculator
 
 if TYPE_CHECKING:
     from atklip.graphics.chart_component.viewchart import Chart
@@ -48,6 +48,7 @@ class RickRewardRatio(SpecialROI):
             "inputs":{
                 "data":{
                         0: Line("R",[],None,TextItem("", anchor=(1, 0)),(180, 0, 0, 255),QColor(180, 0, 0, 60),True),
+                        0.5: Line("---",[],None,TextItem("", anchor=(1, 0)),(180, 0, 0, 255),QColor(180, 0, 0, 60),True),
                         1: Line("Entry",[],None,TextItem("", anchor=(1, 0)),(180, 0, 0, 255),QColor(180, 0, 0, 60),True),
                         1.5: Line("0.5R",[],None,TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
                         2: Line("1R",[],None,TextItem("", anchor=(1, 0)),(0, 180, 90, 255),QColor(0, 180, 90, 60),True),
@@ -154,7 +155,7 @@ class RickRewardRatio(SpecialROI):
             self.handles.insert(index, info)
         
         h.setZValue(self.zValue()+1)
-        self.stateChanged()
+        self.update()
         return h
 
     def setPoint(self,pos_x, pos_y):
@@ -166,7 +167,7 @@ class RickRewardRatio(SpecialROI):
                 self.movePoint(-1, QPointF(pos_x, pos_y))
             else:
                 self.movePoint(0, QPointF(pos_x, pos_y))
-            self.stateChanged()
+            self.update()
     
     def setObjectName(self, name):
         self.indicator_name = name
@@ -296,7 +297,24 @@ class RickRewardRatio(SpecialROI):
                 point = self.mapToParent(pointx)
                 line.chart_pos = point
                 price_level =  f"{point.y():{self.price_precision}}"
-                text = f"{line.text} ({price_level}) "
+                
+                self.has["inputs"]["data"][level] = line
+                
+                if level == 0:
+                    percent = "0%"
+                    pre_price = point.y()
+                else:
+                    pre_line:Line = self.has["inputs"]["data"][0]
+                    pre_pos = pre_line.chart_pos
+                    if pre_line.chart_pos:
+                        _percent = percent_caculator(pre_pos.y(),point.y())
+                        percent = f"{_percent:3}"
+                    else:
+                        _percent = percent_caculator(pre_price,point.y())
+                        percent = f"{_percent:3}"
+                
+                text = f"{line.text} ({price_level}) ({percent}) "
+                
                 textItem.setText(text)
                 
                 r = textItem.textItem.boundingRect()
@@ -322,7 +340,23 @@ class RickRewardRatio(SpecialROI):
                 line.pos = [pointx,pointy]
                 point = self.mapToParent(pointx)
                 price_level =  f"{point.y():{self.price_precision}}"
-                text = f"{line.text} ({price_level}) "
+                
+                self.has["inputs"]["data"][level] = line
+                
+                if level == 0:
+                    percent = "0%"
+                    pre_price = point.y()
+                else:
+                    pre_line:Line = self.has["inputs"]["data"][0]
+                    pre_pos = pre_line.chart_pos
+                    if pre_line.chart_pos:
+                        _percent = percent_caculator(pre_pos.y(),point.y())
+                        percent = f"{_percent:3}"
+                    else:
+                        _percent = percent_caculator(pre_price,point.y())
+                        percent = f"{_percent:3}"
+                
+                text = f"{line.text} ({price_level}) ({percent}) "
                 textItem.setText(text)
                 
                 r = textItem.textItem.boundingRect()

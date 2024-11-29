@@ -151,7 +151,7 @@ class MA(QObject):
         self.is_genering = True
         self.is_current_update = False
         
-        self.started_worker()
+        self.fisrt_gen_data()
             
     
     def disconnect_signals(self):

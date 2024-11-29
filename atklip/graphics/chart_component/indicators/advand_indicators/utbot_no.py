@@ -363,7 +363,7 @@ class ATKBOT(PlotDataItem):
     
     def move_entry(self,index: float, high: float,low: float):
         """
-        self.list_pos[pivot_point[2]] = {"pivot_value":pivot_point[1],"entry_x":_x,"entry_y":_val,"type":"long","obj":obj, 
+        self.list_pos[pivot_point[2]] = {"stop_loss":pivot_point[1],"entry_x":_x,"entry_y":_val,"type":"long","obj":obj, 
         "entry":entry, "is_stoploss":False, "take_profit_1_5R":None,"take_profit_2R":None}"""
         if self.list_pos:
             for x in self.list_pos.keys():
@@ -374,7 +374,7 @@ class ATKBOT(PlotDataItem):
                 
                 entry_type = entry_infor["type"]
                 
-                stoploss = entry_infor["pivot_value"]
+                stoploss = entry_infor["stop_loss"]
                 
                 entry:Entry = entry_infor["entry"]
                 
@@ -513,7 +513,7 @@ class ATKBOT(PlotDataItem):
                     # entry.locked_handle()
                     # entry.setParentItem(self)
                     # self.chart.sig_add_item.emit(entry)
-                    self.list_pos[pivot_point[2]] = {"pivot_value":stop_loss,"entry_x":_x,"entry_y":_val,"type":"long","obj":obj, "entry":None, "is_stoploss":False, "take_profit_1_5R":None,"take_profit_2R":None}
+                    self.list_pos[pivot_point[2]] = {"stop_loss":stop_loss,"entry_x":_x,"entry_y":_val,"type":"long","obj":obj, "entry":None, "is_stoploss":False, "take_profit_1_5R":None,"take_profit_2R":None}
             elif df.iloc[i-1]['short'] == True:
                 # if self.check_n_long_short_pos(True,"short",2):
                 #     continue
@@ -546,7 +546,7 @@ class ATKBOT(PlotDataItem):
                     # # entry.locked_handle()
                     # # entry.setParentItem(self)
                     # self.chart.sig_add_item.emit(entry)
-                    self.list_pos[pivot_point[2]] = {"pivot_value":stop_loss,"entry_x":_x,"entry_y":_val,"type":"short","obj":obj, "entry":None, "is_stoploss":False, "take_profit_1_5R":None,"take_profit_2R":None}
+                    self.list_pos[pivot_point[2]] = {"stop_loss":stop_loss,"entry_x":_x,"entry_y":_val,"type":"short","obj":obj, "entry":None, "is_stoploss":False, "take_profit_1_5R":None,"take_profit_2R":None}
 
     
     def add_historic_Data(self,data):
@@ -624,7 +624,7 @@ class ATKBOT(PlotDataItem):
                         entry.setParentItem(self)
                         self.chart.sig_add_item.emit(entry)
                         
-                        self.list_pos[pivot_point[2]] = {"pivot_value":pivot_point[1],"entry_x":_x,"entry_y":_val,"type":"long","obj":obj, "entry":entry}
+                        self.list_pos[pivot_point[2]] = {"stop_loss":pivot_point[1],"entry_x":_x,"entry_y":_val,"type":"long","obj":obj, "entry":entry}
             elif df.iloc[i-1]['short'] == True:
                 # if self.check_n_long_short_pos(True,"short",1):
                 #     continue
@@ -648,7 +648,7 @@ class ATKBOT(PlotDataItem):
                         entry.setParentItem(self)
                         self.chart.sig_add_item.emit(entry)
                         
-                        self.list_pos[pivot_point[2]] = {"pivot_value":pivot_point[1],"entry_x":_x,"entry_y":_val,"type":"long","obj":obj, "entry":entry}
+                        self.list_pos[pivot_point[2]] = {"stop_loss":pivot_point[1],"entry_x":_x,"entry_y":_val,"type":"long","obj":obj, "entry":entry}
         
     
     def update_Data(self,data):
@@ -732,7 +732,7 @@ class ATKBOT(PlotDataItem):
     #                     # entry.setParentItem(self)
     #                     self.chart.sig_add_item.emit(entry)
                         
-    #                     self.list_pos[pivot_point[2]] = {"pivot_value":stop_loss,"entry_x":_x,"entry_y":_val,"type":"long","obj":None, "entry":entry, "is_stoploss":False, "take_profit_1_5R":None,"take_profit_2R":None}
+    #                     self.list_pos[pivot_point[2]] = {"stop_loss":stop_loss,"entry_x":_x,"entry_y":_val,"type":"long","obj":None, "entry":entry, "is_stoploss":False, "take_profit_1_5R":None,"take_profit_2R":None}
     #         elif df.iloc[i-1]['short'] == True:
     #             # if self.check_n_long_short_pos(True,"short",1):
     #             #     continue
@@ -763,7 +763,7 @@ class ATKBOT(PlotDataItem):
     #                     # entry.setParentItem(self)
     #                     self.chart.sig_add_item.emit(entry)
                         
-    #                     self.list_pos[pivot_point[2]] = {"pivot_value":stop_loss,"entry_x":_x,"entry_y":_val,"type":"short","obj":None, "entry":entry, "is_stoploss":False, "take_profit_1_5R":None,"take_profit_2R":None}
+    #                     self.list_pos[pivot_point[2]] = {"stop_loss":stop_loss,"entry_x":_x,"entry_y":_val,"type":"short","obj":None, "entry":entry, "is_stoploss":False, "take_profit_1_5R":None,"take_profit_2R":None}
         
     def setdata_worker(self):
         self.worker = None

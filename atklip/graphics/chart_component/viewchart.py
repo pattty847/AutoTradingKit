@@ -509,19 +509,15 @@ class Chart(ViewPlotWidget):
                         # print(indicator)
                         return False
                 
+                elif isinstance(indicator,ATKBOT):
+                    if not indicator.is_all_updated():
+                        return False
+                
                 elif isinstance(indicator,Volume) or isinstance(indicator,BasicZIGZAG):
                     continue
                 elif indicator.INDICATOR.is_current_update == False:
                     # print(indicator)
                     return False
-        # if self.indicators:
-        #     for indicator in self.indicators:
-        #         if isinstance(indicator,CandleStick):
-        #             indicator.source.is_current_update = False
-        #         elif isinstance(indicator,Volume) or isinstance(indicator,BasicZIGZAG):
-        #             continue
-        #         else:
-        #             indicator.INDICATOR.is_current_update = False
         return True
     
     async def loop_watch_ohlcv(self,symbol,interval,exchange_name):
@@ -601,6 +597,7 @@ class Chart(ViewPlotWidget):
                     
                     is_updated =  self.check_all_indicator_updated()
                     while not is_updated:
+                        print("dsadsad",is_updated)
                         is_updated =  self.check_all_indicator_updated()
                         time.sleep(0.3)
                         if self.replay_mode or not self.exchange_name:

@@ -130,25 +130,23 @@ class SuperTrend(QObject):
         super().__init__(parent=None)
 
         self._candles: JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE =_candles
-                
-        self.source:str = dict_ta_params.get("source")       
-        self.slow_period:int = dict_ta_params.get("slow_period") 
-        self.fast_period:int = dict_ta_params.get("fast_period") 
-        self.signal_period:int = dict_ta_params.get("signal_period") 
-        self.mamode: str = dict_ta_params.get("mamode") 
-        self.offset :int=dict_ta_params.get("drift",0)
+        
+        self.length = dict_ta_params.get("length",7)
+        self.atr_length = dict_ta_params.get("atr_length",7)
+        self.multiplier = dict_ta_params.get("multiplier",3.0)
+        self.atr_mamode = dict_ta_params.get("atr_mamode",'rma')
 
-        #self.signal_delete.connect(self.deleteLater)
+        
         self.first_gen = False
         self.is_genering = True
         self.is_current_update = False
         self.is_histocric_load = False
-        self.name = f"MACD {self.source} {self.mamode} {self.slow_period} {self.fast_period} {self.signal_period}"
+        self.name = f"SuperTrend {self.length} {self.atr_length} {self.multiplier} {self.atr_mamode}"
 
         self.df = pd.DataFrame([])
         self.worker = ApiThreadPool
         
-        self.xdata,self.macd_data,self.histogram,self.signalma = np.array([]),np.array([]),np.array([]),np.array([])
+        self.xdata,self.SUPERTt,self.SUPERTd,self.SUPERTl,self.SUPERTs = np.array([]),np.array([]),np.array([]),np.array([]),np.array([])
 
         self.connect_signals()
     
@@ -166,25 +164,24 @@ class SuperTrend(QObject):
             self.connect_signals()
         
         if dict_ta_params != {}:
-            self.source:str = dict_ta_params.get("source")       
-            self.slow_period:int = dict_ta_params.get("slow_period") 
-            self.fast_period:int = dict_ta_params.get("fast_period") 
-            self.signal_period:int = dict_ta_params.get("signal_period") 
-            self.mamode: str = dict_ta_params.get("mamode") 
-            self.offset :int=dict_ta_params.get("drift",0)
+            
+            self.length = dict_ta_params.get("length",7)
+            self.atr_length = dict_ta_params.get("atr_length",7)
+            self.multiplier = dict_ta_params.get("multiplier",3.0)
+            self.atr_mamode = dict_ta_params.get("atr_mamode",'rma')
             
             ta_name:str=dict_ta_params.get("ta_name")
             obj_id:str=dict_ta_params.get("obj_id") 
             
-            ta_param = f"{obj_id}-{ta_name}-{self.source}-{self.mamode}-{self.slow_period}-{self.fast_period}-{self.signal_period}"
+            ta_param = f"{obj_id}-{ta_name}-{self.length} {self.atr_length} {self.multiplier} {self.atr_mamode}"
 
             self.indicator_name = ta_param
         
         self.first_gen = False
         self.is_genering = True
-        self.is_current_update = False
         
-        self.started_worker()
+        
+        self.fisrt_gen_data()
     
     def disconnect_signals(self):
         try:
@@ -225,20 +222,20 @@ class SuperTrend(QObject):
     
     def get_data(self,start:int=0,stop:int=0):
         if len(self.xdata) == 0:
-            return [],[],[],[]
+            return [],[],[]
         if start == 0 and stop == 0:
             x_data = self.xdata
-            macd_data,signalma,histogram=self.macd_data,self.signalma,self.histogram
+            SUPERTt,SUPERTd=self.SUPERTt,self.SUPERTd
         elif start == 0 and stop != 0:
             x_data = self.xdata[:stop]
-            macd_data,signalma,histogram=self.macd_data[:stop],self.signalma[:stop],self.histogram[:stop]
+            SUPERTt,SUPERTd=self.SUPERTt[:stop],self.SUPERTd[:stop]  
         elif start != 0 and stop == 0:
             x_data = self.xdata[start:]
-            macd_data,signalma,histogram=self.macd_data[start:],self.signalma[start:],self.histogram[start:]
+            SUPERTt,SUPERTd=self.SUPERTt[start:],self.SUPERTd[start:]   
         else:
             x_data = self.xdata[start:stop]
-            macd_data,signalma,histogram=self.macd_data[start:stop],self.signalma[start:stop],self.histogram[start:stop]
-        return x_data,macd_data,signalma,histogram
+            SUPERTt,SUPERTd=self.SUPERTt[start:stop],self.SUPERTd[start:stop]    
+        return x_data,SUPERTt,SUPERTd
     
     def get_last_row_df(self):
         return self.df.iloc[-1] 
@@ -278,11 +275,11 @@ class SuperTrend(QObject):
 
             SUPERTt = INDICATOR[SUPERT_name].dropna().round(4)
             SUPERTd = INDICATOR[SUPERTd_name].dropna().round(4)
-            SUPERTl = INDICATOR[SUPERTl_name].dropna().round(4)
-            SUPERTs = INDICATOR[SUPERTs_name].dropna().round(4)
-            return SUPERTt,SUPERTd,SUPERTl,SUPERTs
+            SUPERTl = INDICATOR[SUPERTl_name].round(4)
+            SUPERTs = INDICATOR[SUPERTs_name].round(4)
+            return SUPERTt,SUPERTd
         except:
-            return Series([]),Series([]),Series([])
+            return Series([]),Series([])
     def calculate(self,df: pd.DataFrame):
         INDICATOR = supertrend(high=df["high"], 
                                 low=df["low"], 
@@ -290,38 +287,39 @@ class SuperTrend(QObject):
                                 length = self.length, 
                                 atr_length = self.atr_length,
                                 multiplier = self.multiplier,
-                                atr_mamode = self.mamode,
+                                atr_mamode = self.atr_mamode,
                                 )
         return self.paire_data(INDICATOR)
     
     def fisrt_gen_data(self):
+        
         self.is_current_update = False
         self.is_genering = True
         self.df = pd.DataFrame([])
         
         df:pd.DataFrame = self._candles.get_df()
         
-        SUPERTt,SUPERTd,SUPERTl,SUPERTs = self.calculate(df)
-        _len = min([len(SUPERTt),len(SUPERTd),len(SUPERTl),len(SUPERTs)])
+        SUPERTt,SUPERTd = self.calculate(df)
+        _len = min([len(SUPERTt),len(SUPERTd)])
         _index = df["index"]
         self.df = pd.DataFrame({
                             'index':_index.tail(_len),
                             "SUPERTt":SUPERTt.tail(_len),
-                            "SUPERTd":SUPERTd.tail(_len),
-                            "SUPERTl":SUPERTl.tail(_len),
-                            "SUPERTs":SUPERTs.tail(_len)
+                            "SUPERTd":SUPERTd.tail(_len)
                             })
         
-        self.xdata,self.SUPERTt,self.SUPERTd,self.SUPERTl,self.SUPERTs = self.df["index"].to_numpy(),\
-                                                                    self.df["SUPERTt"].to_numpy(),\
-                                                                    self.df["SUPERTd"].to_numpy(),\
-                                                                    self.df["SUPERTl"].to_numpy(),\
-                                                                    self.df["SUPERTs"].to_numpy(),
+        self.xdata,self.SUPERTt,self.SUPERTd = self.df["index"].to_numpy(),self.df["SUPERTt"].to_numpy(),self.df["SUPERTd"].to_numpy()
+        
+        
+        print(self.xdata,len(self.xdata))
+        print(self.SUPERTt,len(self.SUPERTt))
+        print(self.SUPERTd,len(self.SUPERTd))
         
         self.is_genering = False
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
+        self.is_current_update = True
         self.sig_reset_all.emit()
     
     def add_historic(self,n:int):
@@ -330,26 +328,26 @@ class SuperTrend(QObject):
         _pre_len = len(self.df)
         df:pd.DataFrame = self._candles.get_df().iloc[:-1*_pre_len]
         
-        SUPERTt,SUPERTd,SUPERTl,SUPERTs = self.calculate(df)
-        _len = min([len(SUPERTt),len(SUPERTd),len(SUPERTl),len(SUPERTs)])
+        SUPERTt,SUPERTd = self.calculate(df)
+        _len = min([len(SUPERTt),len(SUPERTd)])
         _index = df["index"]
         _df = pd.DataFrame({
                             'index':_index.tail(_len),
                             "SUPERTt":SUPERTt.tail(_len),
-                            "SUPERTd":SUPERTd.tail(_len),
-                            "SUPERTl":SUPERTl.tail(_len),
-                            "SUPERTs":SUPERTs.tail(_len)
+                            "SUPERTd":SUPERTd.tail(_len)
                             })
         
         self.df = pd.concat([_df,self.df],ignore_index=True)
         
-
         self.xdata = np.concatenate((_df["index"].to_numpy(), self.xdata)) 
         self.SUPERTd = np.concatenate((_df["SUPERTd"].to_numpy(), self.SUPERTd))   
-        self.SUPERTl = np.concatenate((_df["SUPERTl"].to_numpy(), self.SUPERTl))
-        self.SUPERTs = np.concatenate((_df["SUPERTs"].to_numpy(), self.SUPERTs))
         self.SUPERTt = np.concatenate((_df["SUPERTt"].to_numpy(), self.SUPERTt))
 
+        
+        print(self.xdata,len(self.xdata))
+        print(self.SUPERTt,len(self.SUPERTt))
+        print(self.SUPERTd,len(self.SUPERTd))
+        
         self.is_genering = False
         if self.first_gen == False:
             self.first_gen = True
@@ -362,25 +360,31 @@ class SuperTrend(QObject):
         new_candle:OHLCV = new_candles[-1]
         self.is_current_update = False
         if (self.first_gen == True) and (self.is_genering == False):
-            df:pd.DataFrame = self._candles.get_df(self.slow_period*5)
-                    
-            macd_data,histogram,signalma = self.calculate(df)
+            df:pd.DataFrame = self._candles.get_df(self.length*5)
             
+            SUPERTt,SUPERTd= self.calculate(df)
+            _len = min([len(SUPERTt),len(SUPERTd)])
+            _index = df["index"]
             new_frame = pd.DataFrame({
-                                    'index':[new_candle.index],
-                                    "macd":[macd_data.iloc[-1]],
-                                    "histogram":[histogram.iloc[-1]],
-                                    "signalma":[signalma.iloc[-1]]
-                                    })
+                                'index':[new_candle.index],
+                                "SUPERTt":[SUPERTt.iloc[-1]],
+                                "SUPERTd":[SUPERTd.iloc[-1]],
+                                })
+            
+            print("vao day", new_frame)
             
             self.df = pd.concat([self.df,new_frame],ignore_index=True)
-                                
-            self.xdata,self.macd_data,self.histogram,self.signalma = self.df["index"].to_numpy(),self.df["macd"].to_numpy(),\
-                                                self.df["histogram"].to_numpy(),self.df["signalma"].to_numpy()
+            
+            print("vao day------------", new_frame["SUPERTt"].iloc[-1],new_frame["SUPERTd"].iloc[-1], type(new_frame["SUPERTt"].iloc[-1]))
+            
+            self.xdata = np.append((self.xdata,new_candle.index)) 
+            self.SUPERTd = np.append(self.SUPERTd,new_frame["SUPERTd"].iloc[-1])   
+            self.SUPERTt = np.append(self.SUPERTt,new_frame["SUPERTt"].iloc[-1])
             
             
-            self.xdata = np.concatenate((self.xdata,np.array([new_candle.index])))
-            self.macd_data = np.concatenate((self.macd_data,np.array([macd_data.iloc[-1]])))
+            print(self.xdata,len(self.xdata))
+            print(self.SUPERTt,len(self.SUPERTt))
+            print(self.SUPERTd,len(self.SUPERTd))
             
             self.sig_add_candle.emit()
         self.is_current_update = True
@@ -390,13 +394,18 @@ class SuperTrend(QObject):
         new_candle:OHLCV = new_candles[-1]
         self.is_current_update = False
         if (self.first_gen == True) and (self.is_genering == False):
-            df:pd.DataFrame = self._candles.get_df(self.slow_period*5)
-                    
-            macd_data,histogram,signalma = self.calculate(df)
-                    
-            self.df.iloc[-1] = [new_candle.index,macd_data.iloc[-1],histogram.iloc[-1],signalma.iloc[-1]]
-                    
-            self.xdata[-1],self.macd_data[-1],self.histogram[-1],self.signalma[-1] = new_candle.index,macd_data.iloc[-1],histogram.iloc[-1],signalma.iloc[-1]
+            df:pd.DataFrame = self._candles.get_df(self.length*5)
+            
+            SUPERTt,SUPERTd = self.calculate(df)
+            
+            self.df.iloc[-1] = [new_candle.index,SUPERTt.iloc[-1],SUPERTd.iloc[-1]]
+            
+            self.xdata[-1],self.SUPERTt[-1],self.SUPERTd[-1] = new_candle.index,SUPERTt.iloc[-1],SUPERTd.iloc[-1]
+            
+            
+            print(self.xdata,len(self.xdata))
+            print(self.SUPERTt,len(self.SUPERTt))
+            print(self.SUPERTd,len(self.SUPERTd))
             
             self.sig_update_candle.emit()
         self.is_current_update = True

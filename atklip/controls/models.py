@@ -172,3 +172,12 @@ class UOModel(IndicatorBase):
     slow_w_value :float
     drift  :int
     offset :int
+
+
+@dataclass
+class SuperTrendModel(IndicatorBase):
+    length :int
+    atr_length :int
+    multiplier :float
+    atr_mamode :str
+
