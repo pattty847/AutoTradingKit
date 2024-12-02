@@ -7,15 +7,7 @@ from functools import wraps
 # polars.Series input
 try:
     from polars import Series as _pl_Series
-except ImportError as import_error:
-    try:
-        if not isinstance(import_error, ModuleNotFoundError) or import_error.name != 'polars':
-            # Propagate the error when the module exists but failed to be imported.
-            raise import_error
-    # `ModuleNotFoundError` was introduced in Python 3.6.
-    except NameError:
-        pass
-
+except ImportError:
     # polars not available, nothing to wrap
     _pl_Series = None
 
@@ -23,15 +15,7 @@ except ImportError as import_error:
 # pandas.Series input
 try:
     from pandas import Series as _pd_Series
-except ImportError as import_error:
-    try:
-        if not isinstance(import_error, ModuleNotFoundError) or import_error.name != 'pandas':
-            # Propagate the error when the module exists but failed to be imported.
-            raise import_error
-    # `ModuleNotFoundError` was introduced in Python 3.6.
-    except NameError:
-        pass
-
+except ImportError:
     # pandas not available, nothing to wrap
     _pd_Series = None
 
@@ -132,7 +116,7 @@ for func_name, stream_func_name in zip(__TA_FUNCTION_NAMES__, stream_func_names)
     setattr(stream, func_name, wrapped_func)
     globals()[stream_func_name] = wrapped_func
 
-__version__ = '0.5.1'
+__version__ = '0.4.32'
 
 # In order to use this python library, talib (i.e. this __file__) will be
 # imported at some point, either explicitly or indirectly via talib.func
