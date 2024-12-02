@@ -3,6 +3,9 @@ Real-time quotes charting components
 """
 import pyqtgraph as pg
 from PySide6 import QtCore, QtGui,QtWidgets
+from PySide6.QtGui import QPainter
+
+from atklip.app_utils.functions import mkBrush
 
 
 # TODO: test this out as our help menu
@@ -14,18 +17,18 @@ class CenteredTextItem(QtWidgets.QGraphicsTextItem):
         pos=(0, 0),
         pen=None,
         brush=None,
-        valign=None,
+        valign=QtCore.Qt.AlignBottom,
         opacity=0.1,
     ):
         super().__init__(text, parent)
 
         self.pen = pen
-        self.brush = brush
+        self.brush = mkBrush(brush)
         self.opacity = opacity
         self.valign = valign
         self.text_flags = QtCore.Qt.AlignCenter
         self.setPos(*pos)
-        self.setFlag(self.ItemIgnoresTransformations)
+        self.setFlag(self.GraphicsItemFlag.ItemIgnoresTransformations)
 
     def boundingRect(self):  # noqa
         r = super().boundingRect()
@@ -35,8 +38,8 @@ class CenteredTextItem(QtWidgets.QGraphicsTextItem):
             return QtCore.QRectF(-r.width() / 2, 15, r.width(), r.height())
 
     def paint(self, p, option, widget):
-        p.setRenderHint(p.Antialiasing, False)
-        p.setRenderHint(p.TextAntialiasing, True)
+        p.setRenderHint(QPainter.Antialiasing, False)
+        p.setRenderHint(QPainter.TextAntialiasing, True)
         p.setPen(self.pen)
         if self.brush.style() != QtCore.Qt.NoBrush:
             p.setOpacity(self.opacity)

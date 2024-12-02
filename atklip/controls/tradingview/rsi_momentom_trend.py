@@ -43,8 +43,8 @@ data.loc[data['p_mom'], 'positive'] = True
 data.loc[data['n_mom'], 'negative'] = True
 
 # Entry conditions
-data['pcondition'] = data['positive'] & ~data['positive'].shift(1).dropna()
-data['ncondition'] = data['negative'] & ~data['negative'].shift(1).dropna()
+data['pcondition'] = data['positive'] & ~data['positive'].shift(1).fillna(False)
+data['ncondition'] = data['negative'] & ~data['negative'].shift(1).fillna(False)
 
 # Results
 positive_signals = data.loc[data['pcondition'], ['close', 'rsi']]

@@ -20,7 +20,7 @@ from .elip import Ellipse
 from .circle import Circle
 from .long_possiton import Longposition
 from .short_possiton import Shortposition
-
+from atklip.graphics.chart_component.graph_items.CustomTextItem import CenteredTextItem
 from atklip.graphics.chart_component.draw_tools.TargetItem import ArrowItem
 
 
@@ -313,6 +313,7 @@ class DrawTool(QObject):
     def draw_text(self, ev: QEvent):
         pos_x, pos_y = self.get_position_mouse_on_chart(ev)
         obj = TextBoxROI(size=5,symbol="o",pen="green",brush = "green", drawtool=self)
+
         obj.setPos((pos_x, pos_y))
         self.chart.add_item(obj)
         self.chart.drawtools.append(obj)
@@ -324,7 +325,23 @@ class DrawTool(QObject):
         self.chart.sig_reset_drawbar_favorite_btn.emit(obj)
         obj.on_click.connect(self.show_popup_menu)
         
-
+    def draw_text_with_bg(self, ev: QEvent):
+        pos_x, pos_y = self.get_position_mouse_on_chart(ev)
+        obj = CenteredTextItem(text = 'text',
+                                parent=self.chart.vb,
+                                pen="green",brush = "green")
+        
+        obj.setPos(pos_x, pos_y)
+        self.chart.add_item(obj)
+        self.chart.drawtools.append(obj)
+        self.num_textbox += 1
+        module_name = "TextBox " + str(self.num_textbox)
+        obj.setObjectName(module_name)
+        self.draw_object_name = None
+        uid_obj = self.chart.objmanager.add(obj)
+        self.chart.sig_reset_drawbar_favorite_btn.emit(obj)
+        obj.on_click.connect(self.show_popup_menu)
+    
     def draw_date_price_range(self, ev):
         pos_x, pos_y = self.get_position_mouse_on_chart(ev)
         obj = RangePolyLine([pos_x, pos_y], [0, 0], pen='#2962ff', movable=True,drawtool=self)

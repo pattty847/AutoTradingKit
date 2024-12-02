@@ -17,7 +17,7 @@ from atklip.graphics.chart_component.draw_tools.entry import Entry
 
 from atklip.appmanager import FastWorker
 from atklip.app_utils import *
-from atklip.controls.candle.n_time_smooth_candle import N_SMOOTH_CANDLE
+from atklip.controls.candle import N_SMOOTH_CANDLE, SMOOTH_CANDLE
 from atklip.controls.ma import ma
 from atklip.controls.trend.zigzag import ZIGZAG
 from atklip.controls.momentum.macd import MACD
@@ -60,19 +60,19 @@ class ATKBOT(GraphicsObject):
                     "atr_short_period":1,
                     "ema_short_period":2,
                     
-                    "n_smooth_period":1,
-                    "ma_smooth_period":1,
+                    "n_smooth_period":3,
+                    "ma_smooth_period":3,
                     "mamode":PD_MAType.EMA,
                     
-                    "supertrend_length":2,
-                    "supertrend_atr_length":1,
-                    "supertrend_multiplier":0.1,
+                    "supertrend_length":3,
+                    "supertrend_atr_length":3,
+                    "supertrend_multiplier":0.3,
                     "supertrend_atr_mamode":PD_MAType.RMA,
 
                     "n_period": 10,
                     "m_period": 10,
                     
-                    "stoploss_price":0.1,
+                    "stoploss_price":0.01,
                     
                     "indicator_type":IndicatorType.ATKPRO,
                     
@@ -107,21 +107,28 @@ class ATKBOT(GraphicsObject):
 
         
         self.stoploss_smooth_heikin = N_SMOOTH_CANDLE(self.chart._precision,self.chart.heikinashi,
-                                                  3,
+                                                  self.has["inputs"]["n_smooth_period"],
                                                   self.has["inputs"]["mamode"].value,
-                                                  4)
+                                                  self.has["inputs"]["ma_smooth_period"])
         self.stoploss_smooth_heikin.fisrt_gen_data()
         
         
-        # self.super_smoothcandle = N_SMOOTH_CANDLE(self.chart._precision,self.chart.jp_candle,
-        #                                           self.has["inputs"]["n_smooth_period"],
+        # self.stoploss_smooth_heikin = SMOOTH_CANDLE(self.chart._precision,self.chart.heikinashi,
         #                                           self.has["inputs"]["mamode"].value,
         #                                           self.has["inputs"]["ma_smooth_period"])
+        # self.stoploss_smooth_heikin.fisrt_gen_data()
+        
+        
+        # self.super_smoothcandle = N_SMOOTH_CANDLE(self.chart._precision,self.chart.jp_candle,
+        #                                           2,
+        #                                           self.has["inputs"]["mamode"].value,
+        #                                           3)
         # self.super_smoothcandle.fisrt_gen_data()
+        # self.sqeeze = SQEEZE(self.stoploss_smooth_heikin, self.sqeeze_model.__dict__)
+        # self.sqeeze.fisrt_gen_data()
         
-        
-        self.super_trend = SuperTrend(self.has["inputs"]["source"], self.supertrend_model.__dict__)
-        self.super_trend.fisrt_gen_data()
+        # self.super_trend = SuperTrend(self.stoploss_smooth_heikin, self.supertrend_model.__dict__)
+        # self.super_trend.fisrt_gen_data()
         
         self.INDICATOR  = ATKBOT_ALERT(self.has["inputs"]["source"], self.model.__dict__)
                 
@@ -130,7 +137,7 @@ class ATKBOT(GraphicsObject):
     
     
     def is_all_updated(self):
-        is_updated = self.INDICATOR.is_current_update and self.super_trend.is_current_update and self.stoploss_smooth_heikin.is_current_update 
+        is_updated = self.INDICATOR.is_current_update 
         return True
     @property
     def id(self):
@@ -325,23 +332,7 @@ class ATKBOT(GraphicsObject):
                     "mamode":self.has["inputs"]["mamode"],
 
                     "stoploss_price": self.has["inputs"]["stoploss_price"],
-                    # "type":self.has["inputs"]["type"],
-                    # "fast_period":self.has["inputs"]["fast_period"],
-                    # "slow_period":self.has["inputs"]["slow_period"],
-                    # "signal_period":self.has["inputs"]["signal_period"],
-                    # "macd_type":self.has["inputs"]["macd_type"],
-                    
-                    # "price_high":self.has["inputs"]["price_high"],
-                    # "price_low":self.has["inputs"]["price_low"],
-                    
-                    # "max_price_high":self.has["inputs"]["max_price_high"],
-                    # "min_price_low":self.has["inputs"]["min_price_low"],
-                    
-                    
-                    # "rsi_period":self.has["inputs"]["rsi_period"],
-                    # "rsi_ma_type":self.has["inputs"]["rsi_ma_type"],
-                    # "rsi_price_high":self.has["inputs"]["rsi_price_high"],
-                    # "rsi_price_low":self.has["inputs"]["rsi_price_low"],
+
                     
                     "n_period":self.has["inputs"]["n_period"],
                     "m_period":self.has["inputs"]["m_period"],
@@ -375,17 +366,20 @@ class ATKBOT(GraphicsObject):
             self.has["name"] = f"ATKPRO Ver_1.0"
             self.sig_change_indicator_name.emit(self.has["name"])
             
-            # if _input == "n_smooth_period" or _input == "ma_smooth_period" or _input == "mamode":
-            #     self.super_smoothcandle.refresh_data(self.has["inputs"]["mamode"].value,self.has["inputs"]["ma_smooth_period"],self.has["inputs"]["n_smooth_period"])
-            
+            if _input == "n_smooth_period" or _input == "ma_smooth_period" or _input == "mamode":
+                self.stoploss_smooth_heikin.refresh_data(self.has["inputs"]["mamode"].value,self.has["inputs"]["ma_smooth_period"],self.has["inputs"]["n_smooth_period"])
+                # self.stoploss_smooth_heikin.fisrt_gen_data()
+                # self.super_trend.fisrt_gen_data()
+                self.sqeeze.fisrt_gen_data()
 
             
-            if  _input == "supertrend_length" or _input == "supertrend_atr_length" or \
-                    _input == "supertrend_multiplier" or _input == "supertrend_atr_mamode":
-                self.super_trend.change_input(dict_ta_params=self.supertrend_model.__dict__)
+            # if  _input == "supertrend_length" or _input == "supertrend_atr_length" or \
+            #         _input == "supertrend_multiplier" or _input == "supertrend_atr_mamode":
+            #     self.super_trend.change_input(dict_ta_params=self.supertrend_model.__dict__)
             
+            self.fisrt_gen_data()
             
-            self.INDICATOR.change_input(dict_ta_params=self.model.__dict__)
+            # self.INDICATOR.change_input(dict_ta_params=self.model.__dict__)
     
     def update_styles(self, _input):
         _style = self.has["styles"][_input]
@@ -525,9 +519,167 @@ class ATKBOT(GraphicsObject):
                 elif check_type == "green" and green and pre_red:
                     return True
         return False
-                
-                
+    
     def set_Data(self,data):
+        if self.list_pos:
+            for obj in self.list_pos.values():
+                if self.scene() is not None:
+                    self.scene().removeItem(obj["obj"])
+                    # self.scene().removeItem(obj["entry"])
+                    if hasattr(obj["obj"], "deleteLater"):
+                        obj["obj"].deleteLater()
+                    # if hasattr(obj["entry"], "deleteLater"):
+                    #     obj["entry"].deleteLater()
+                    # 
+        self.list_pos.clear()   
+        xdata,_long,_short = data[0],data[1],data[2]
+
+        for i in range(1,len(self.stoploss_smooth_heikin.df)):
+            _x = self.stoploss_smooth_heikin.df.iloc[i]['index']
+
+            pre_jp_high = self.chart.jp_candle.map_index_ohlcv[_x-1].high
+            pre_jp_low = self.chart.jp_candle.map_index_ohlcv[_x-1].low
+            pre_jp_open = self.chart.jp_candle.map_index_ohlcv[_x-1].open
+            pre_jp_close = self.chart.jp_candle.map_index_ohlcv[_x-1].close
+            
+            
+            pre_heikin_high = self.chart.heikinashi.map_index_ohlcv[_x-1].high
+            pre_heikin_low = self.chart.heikinashi.map_index_ohlcv[_x-1].low
+            pre_heikin_open = self.chart.heikinashi.map_index_ohlcv[_x-1].open
+            pre_heikin_close = self.chart.heikinashi.map_index_ohlcv[_x-1].close
+            
+            
+            cr_jp_open = self.chart.jp_candle.map_index_ohlcv[_x].open
+            cr_jp_high = self.chart.jp_candle.map_index_ohlcv[_x].high
+            cr_jp_low = self.chart.jp_candle.map_index_ohlcv[_x].low
+            
+            row_smooth_heikin = self.stoploss_smooth_heikin.df.loc[self.stoploss_smooth_heikin.df['index'] == _x-1]
+            # cr_row_smooth_heikin = self.smooth_heikin.df.loc[self.smooth_heikin.df['index'] == _x]
+            smooth_heikin_short_signal = False
+            smooth_heikin_long_signal = False
+            
+            sm_low = stoploss_long = None
+            sm_high = stoploss_short = None
+            sm_open = None
+            sm_close = None
+            if not row_smooth_heikin.empty:
+                sm_high = stoploss_short = _high = row_smooth_heikin.iloc[-1]["high"]
+                sm_low = stoploss_long = _low = row_smooth_heikin.iloc[-1]["low"]
+                sm_open = _open = row_smooth_heikin.iloc[-1]["open"]
+                sm_close = _close = row_smooth_heikin.iloc[-1]["close"]
+                smooth_heikin_long_signal = _open < _close  #and pre_jp_close > _close # and cr_jp_open > _close #and pre_jp_open < pre_jp_close
+                smooth_heikin_short_signal = _open > _close #and pre_jp_close < _close # and cr_jp_open < _close #and pre_jp_open > pre_jp_close
+                
+
+            
+            # super_trend_df = self.super_trend.df.loc[(self.super_trend.df['index'] <= _x-1) & (self.super_trend.df['index'] >= _x-4)]
+            # super_trend_long_signal = False
+            # super_trend_short_signal = False
+            # if len(super_trend_df) >= 3:
+            #     sqz_histogram = super_trend_df.iloc[-1]['SUPERTd']
+            #     super_trend_long_signal = sqz_histogram > 0 
+            #     super_trend_short_signal = sqz_histogram < 0
+            
+            
+            # sqeezee_df = self.sqeeze.df.loc[(self.sqeeze.df['index'] <= _x-1) & (self.sqeeze.df['index'] >= _x-4)]
+            # sqz_histogram = None
+            # sqz_long_signal = False
+            # sqz_short_signal = False
+            # if len(sqeezee_df) >= 3:
+            #     sqz_histogram = sqeezee_df.iloc[-1]['SQZ_data']
+            #     sqz_histogram_pre_1 = sqeezee_df.iloc[-2]['SQZ_data']
+            #     sqz_histogram_pre_2 = sqeezee_df.iloc[-3]['SQZ_data']
+
+            #     if sqz_histogram > 0 and sqz_histogram_pre_1 > 0:# and sqz_histogram_pre_2 > 0:
+            #         if sqz_histogram < sqz_histogram_pre_1:
+            #             sqz_long_signal = True
+            #         elif sqz_histogram > sqz_histogram_pre_1:
+            #             sqz_short_signal = True
+            #     elif sqz_histogram < 0 and sqz_histogram_pre_1 < 0:# and sqz_histogram_pre_2 < 0:
+            #         if sqz_histogram < sqz_histogram_pre_1:
+            #             sqz_short_signal = True
+            #         elif sqz_histogram > sqz_histogram_pre_1:
+            #             sqz_long_signal = True
+            
+            # self.move_entry(_x,cr_jp_high,cr_jp_low)
+            if smooth_heikin_long_signal:# and sqz_long_signal:     
+            # if super_trend_long_signal:     
+                _type,is_sl,is_tp = self.check_last_pos()
+                # if _type == "long":
+                #     continue
+                if sm_high < pre_jp_low:
+                    stoploss_percent = percent_caculator(sm_high, pre_jp_low)
+                    if stoploss_percent > self.has["inputs"]["stoploss_price"]:
+                        continue
+                # if pre_jp_low < sm_low:
+                #         continue
+
+                # if not self.check_pos_is_near_pivot(_x,"red"):
+                #     continue
+                
+                if not is_bearish(pre_jp_open,pre_jp_close):
+                    continue
+                
+                if not is_bearish(pre_heikin_open,pre_heikin_close):
+                    continue
+                
+                
+                _val = self.chart.jp_candle.map_index_ohlcv[_x].open
+                                    
+                obj = ArrowItem(drawtool=self,angle=90,pen="green",brush = "green")
+                obj.setFlags(obj.flags() | self.GraphicsItemFlag.ItemIgnoresTransformations)
+                obj.setParentItem(self)
+                obj.setPos(_x, _val)
+                obj.locked_handle()
+                # stop_loss =  self.calculate_stop_loss("long",pivot_point[1])
+                stop_loss =  stoploss_short
+                # entry = Entry([_x-1, stop_loss], [0, 0],invertible=True,movable=True, resizable=False, removable=True, pen="#2962ff",parent=None, drawtool=self.chart.drawtool)
+                # entry.setPoint(_x-1,_val)
+                # entry.setParentItem(self)
+                # entry.moveEntry(_x,_val)
+                # self.chart.sig_add_item.emit(entry)
+                self.list_pos[_x] = {"stop_loss":stop_loss,"entry_x":_x,"entry_y":_val,"type":"long","obj":obj, "entry":None, "is_stoploss":False, "take_profit_1_5R":None,"take_profit_2R":None}
+            elif  smooth_heikin_short_signal:# and sqz_short_signal:    
+            # elif  super_trend_short_signal:    
+                # _type,is_sl,is_tp = self.check_last_pos()
+                # if _type == "short":
+                #     continue
+                if sm_low > pre_jp_high:
+                    stoploss_percent = percent_caculator(sm_low, pre_jp_high)
+                    if stoploss_percent > self.has["inputs"]["stoploss_price"]:
+                        continue
+                # if pre_jp_high > sm_high:
+                #         continue
+                
+                # if not self.check_pos_is_near_pivot(_x,"green"):
+                #     continue
+                
+                if not is_bulllish(pre_jp_open,pre_jp_close):
+                    continue
+                
+                if not is_bulllish(pre_heikin_open,pre_heikin_close):
+                    continue
+                
+                _val = self.chart.jp_candle.map_index_ohlcv[_x].open
+                                    
+                obj = ArrowItem(drawtool=self,angle=270,pen="red",brush = "red")
+                obj.setFlags(obj.flags() | self.GraphicsItemFlag.ItemIgnoresTransformations)
+                obj.setParentItem(self)
+                obj.setPos(_x, _val)
+                obj.locked_handle()
+                # stop_loss =  self.calculate_stop_loss("long",pivot_point[1])
+                stop_loss =  stoploss_long
+                # entry = Entry([_x-1, stop_loss], [0, 0],invertible=True,movable=True, resizable=False, removable=True, pen="#2962ff",parent=None, drawtool=self.chart.drawtool)
+                # entry.setPoint(_x-1,_val)
+                # entry.setParentItem(self)
+                # entry.moveEntry(_x,_val)
+                # self.chart.sig_add_item.emit(entry)
+                self.list_pos[_x] = {"stop_loss":stop_loss,"entry_x":_x,"entry_y":_val,"type":"short","obj":obj, "entry":None, "is_stoploss":False, "take_profit_1_5R":None,"take_profit_2R":None}
+        
+    
+            
+                
+    def old_set_Data(self,data):
         if self.list_pos:
             for obj in self.list_pos.values():
                 if self.scene() is not None:
@@ -553,17 +705,6 @@ class ATKBOT(GraphicsObject):
             if i-self.has["inputs"]["n_period"]-self.has["inputs"]["m_period"]-1 <=0:
                     continue
             
-            # row = self.super_smoothcandle.df.loc[self.super_smoothcandle.df['index'] == _x-1]
-            # sm_candle_short_signal = False
-            # sm_candle_long_signal = False
-            # if not row.empty:
-            #     _high = row.iloc[-1]["high"]
-            #     _low = row.iloc[-1]["low"]
-            #     _open = row.iloc[-1]["open"]
-            #     _close = row.iloc[-1]["close"]
-            #     sm_candle_long_signal = _open < _close
-            #     sm_candle_short_signal = _open > _close
-            
             
             jp_high = self.chart.jp_candle.map_index_ohlcv[_x].high
             jp_low = self.chart.jp_candle.map_index_ohlcv[_x].low
@@ -571,17 +712,17 @@ class ATKBOT(GraphicsObject):
             jp_close = self.chart.jp_candle.map_index_ohlcv[_x].close
             
             
-            # row_smooth_heikin = self.smooth_heikin.df.loc[self.smooth_heikin.df['index'] == _x-1]
-            # # cr_row_smooth_heikin = self.smooth_heikin.df.loc[self.smooth_heikin.df['index'] == _x]
-            # smooth_heikin_short_signal = True
-            # smooth_heikin_long_signal = True
-            # if not row_smooth_heikin.empty:
-            #     _high = row_smooth_heikin.iloc[-1]["high"]
-            #     _low = row_smooth_heikin.iloc[-1]["low"]
-            #     _open = row_smooth_heikin.iloc[-1]["open"]
-            #     _close = row_smooth_heikin.iloc[-1]["close"]
-            #     # smooth_heikin_long_signal = _high < jp_low and jp_open < jp_close
-            #     # smooth_heikin_short_signal = _low > jp_high and jp_open > jp_close
+            row_smooth_heikin = self.stoploss_smooth_heikin.df.loc[self.stoploss_smooth_heikin.df['index'] == _x-1]
+            # cr_row_smooth_heikin = self.smooth_heikin.df.loc[self.smooth_heikin.df['index'] == _x]
+            smooth_heikin_short_signal = False
+            smooth_heikin_long_signal = False
+            if not row_smooth_heikin.empty:
+                _high = row_smooth_heikin.iloc[-1]["high"]
+                _low = row_smooth_heikin.iloc[-1]["low"]
+                _open = row_smooth_heikin.iloc[-1]["open"]
+                _close = row_smooth_heikin.iloc[-1]["close"]
+                smooth_heikin_long_signal = _open < _close #and jp_open < jp_close
+                smooth_heikin_short_signal = _open > _close #and jp_open > jp_close
 
             stoploss_smooth_heikin = self.stoploss_smooth_heikin.df.loc[self.stoploss_smooth_heikin.df['index'] == _x-1]
             sm_low = stoploss_long = None
@@ -596,13 +737,13 @@ class ATKBOT(GraphicsObject):
             
             # self.move_entry(_x,cr_jp_high,cr_jp_low)
             
-            super_trend_df = self.super_trend.df.loc[(self.super_trend.df['index'] <= _x-1)]
-            super_trend_long_signal = False
-            super_trend_short_signal = False
-            if not super_trend_df.empty:
-                sqz_histogram = super_trend_df.iloc[-1]['SUPERTd']
-                super_trend_long_signal = sqz_histogram > 0 
-                super_trend_short_signal = sqz_histogram < 0
+            # super_trend_df = self.super_trend.df.loc[(self.super_trend.df['index'] <= _x-1)]
+            # super_trend_long_signal = True
+            # super_trend_short_signal = True
+            # if not super_trend_df.empty:
+            #     sqz_histogram = super_trend_df.iloc[-1]['SUPERTd']
+                # super_trend_long_signal = sqz_histogram > 0 
+                # super_trend_short_signal = sqz_histogram < 0
             
 
             if df.iloc[i-1]['long'] == True:
@@ -618,14 +759,14 @@ class ATKBOT(GraphicsObject):
                 if stoploss_percent > self.has["inputs"]["stoploss_price"]:
                     continue
                 
-                if jp_open < sm_high:
-                    continue
+                # if jp_open < sm_high:
+                #     continue
                 
-                if not self.check_pos_is_near_pivot(_x,"red"):
-                    continue
+                # if not self.check_pos_is_near_pivot(_x,"red"):
+                #     continue
                 
                 
-                if super_trend_long_signal:     
+                if smooth_heikin_long_signal:     
                     
                     _val = self.chart.jp_candle.map_index_ohlcv[_x].open
                                        
@@ -650,11 +791,11 @@ class ATKBOT(GraphicsObject):
                 if stoploss_percent > self.has["inputs"]["stoploss_price"]:
                     continue
                 
-                if jp_open > sm_low:
-                    continue
+                # if jp_open > sm_low:
+                #     continue
                 
-                if not self.check_pos_is_near_pivot(_x,"green"):
-                    continue
+                # if not self.check_pos_is_near_pivot(_x,"green"):
+                #     continue
                 
                 # if _type == "short":
                 #     if is_sl:
@@ -662,7 +803,7 @@ class ATKBOT(GraphicsObject):
                 #     else:
                 #         continue
                 
-                if  super_trend_short_signal:     
+                if  smooth_heikin_short_signal:     
                     
                     _val = self.chart.jp_candle.map_index_ohlcv[_x].open
                                        

@@ -408,38 +408,6 @@ def key(exchange: str, symbol: str, timeframe: str = None):
     return f'{exchange}-{symbol}-{timeframe}'
 
 
-def max_timeframe(timeframes_list: list) -> str:
-    from jesse.enums import timeframes
-
-    if timeframes.DAY_1 in timeframes_list:
-        return timeframes.DAY_1
-    if timeframes.HOUR_12 in timeframes_list:
-        return timeframes.HOUR_12
-    if timeframes.HOUR_8 in timeframes_list:
-        return timeframes.HOUR_8
-    if timeframes.HOUR_6 in timeframes_list:
-        return timeframes.HOUR_6
-    if timeframes.HOUR_4 in timeframes_list:
-        return timeframes.HOUR_4
-    if timeframes.HOUR_3 in timeframes_list:
-        return timeframes.HOUR_3
-    if timeframes.HOUR_2 in timeframes_list:
-        return timeframes.HOUR_2
-    if timeframes.HOUR_1 in timeframes_list:
-        return timeframes.HOUR_1
-    if timeframes.MINUTE_45 in timeframes_list:
-        return timeframes.MINUTE_45
-    if timeframes.MINUTE_30 in timeframes_list:
-        return timeframes.MINUTE_30
-    if timeframes.MINUTE_15 in timeframes_list:
-        return timeframes.MINUTE_15
-    if timeframes.MINUTE_5 in timeframes_list:
-        return timeframes.MINUTE_5
-    if timeframes.MINUTE_3 in timeframes_list:
-        return timeframes.MINUTE_3
-
-    return timeframes.MINUTE_1
-
 
 def normalize(x: float, x_min: float, x_max: float) -> float:
     """
@@ -489,28 +457,6 @@ def np_shift(arr: np.ndarray, num: int, fill_value=0) -> np.ndarray:
 
     return result
 
-
-@lru_cache
-def opposite_side(s: str) -> str:
-    from jesse.enums import sides
-
-    if s == sides.BUY:
-        return sides.SELL
-    elif s == sides.SELL:
-        return sides.BUY
-    else:
-        raise ValueError(f'{s} is not a valid input for side')
-
-
-@lru_cache
-def opposite_type(t: str) -> str:
-    from jesse.enums import trade_types
-
-    if t == trade_types.LONG:
-        return trade_types.SHORT
-    if t == trade_types.SHORT:
-        return trade_types.LONG
-    raise ValueError('unsupported type')
 
 
 def orderbook_insertion_index_search(arr, target: int, ascending: bool = True) -> Tuple[bool, int]:
@@ -676,19 +622,6 @@ def same_length(bigger: np.ndarray, shorter: np.ndarray) -> np.ndarray:
 def secure_hash(msg: str) -> str:
     return hashlib.sha256(msg.encode()).hexdigest()
 
-@lru_cache
-def side_to_type(s: str) -> str:
-    from jesse.enums import trade_types, sides
-
-    # make sure string is lowercase
-    s = s.lower()
-
-    if s == sides.BUY:
-        return trade_types.LONG
-    if s == sides.SELL:
-        return trade_types.SHORT
-    raise ValueError
-
 
 def string_after_character(s: str, character: str) -> str:
     try:
@@ -748,17 +681,6 @@ def today_to_timestamp() -> int:
     :return: int
     """
     return arrow.utcnow().floor('day').int_timestamp * 1000
-
-
-@lru_cache
-def type_to_side(t: str) -> str:
-    from jesse.enums import trade_types, sides
-
-    if t == trade_types.LONG:
-        return sides.BUY
-    if t == trade_types.SHORT:
-        return sides.SELL
-    raise ValueError(f'unsupported type: "{t}". Only "long" and "short" are supported.')
 
 
 def unique_list(arr) -> list:
@@ -919,3 +841,5 @@ def gzip_compress(data):
     json_data = json.dumps(data).encode('utf-8')
     # Compress the JSON string
     return gzip.compress(json_data)
+
+

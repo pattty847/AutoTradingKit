@@ -1,7 +1,7 @@
 # coding: utf-8
 from typing import List, Union
 from PySide6.QtCore import QSize, Qt, QRectF, Signal, QPoint, QTimer, QEvent, QAbstractItemModel, Property
-from PySide6.QtGui import QPainter, QPainterPath, QIcon, QCursor, QAction
+from PySide6.QtGui import QPainter, QPainterPath, QIcon, QColor, QAction
 from PySide6.QtWidgets import (QApplication, QHBoxLayout, QLineEdit, QToolButton, QTextEdit,
                                QPlainTextEdit, QCompleter, QStyle, QWidget, QTextBrowser)
 
@@ -89,6 +89,7 @@ class LineEdit(QLineEdit):
         self._isClearButtonEnabled = False
         self._completer = None  # type: QCompleter
         self._completerMenu = None  # type: CompleterMenu
+        self._isError = False
 
         self.leftButtons = []   # type: List[LineEditButton]
         self.rightButtons = []  # type: List[LineEditButton]
@@ -113,6 +114,22 @@ class LineEdit(QLineEdit):
         self.clearButton.clicked.connect(self.clear)
         self.textChanged.connect(self.__onTextChanged)
         self.textEdited.connect(self.__onTextEdited)
+
+    def isError(self):
+        return self._isError
+
+    def setError(self, isError: bool):
+        if isError == self.isError():
+            return
+
+        self._isError = isError
+        self.update()
+
+    def focusedBorderColor(self):
+        if not self.isError():
+            return themeColor()
+
+        return QColor("#ff99a4") if isDarkTheme() else QColor("#c42b1c")
 
     def setClearButtonEnabled(self, enable: bool):
         self._isClearButtonEnabled = enable
@@ -229,7 +246,7 @@ class LineEdit(QLineEdit):
         rectPath.addRect(m.left(), h-10, w, 8)
         path = path.subtracted(rectPath)
 
-        painter.fillPath(path, themeColor())
+        painter.fillPath(path, self.focusedBorderColor())
 
 
 class CompleterMenu(RoundMenu):

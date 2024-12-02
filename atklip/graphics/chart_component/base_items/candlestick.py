@@ -40,10 +40,16 @@ class CandleStick(GraphicsObject):
         self.source, mamode, period, n = self.get_source(self._type)
         
     
-        if mamode != None:
+        if not isinstance(self.source,JAPAN_CANDLE):# mamode != None:
+            if isinstance(self.source,HEIKINASHI):
+                name = f"{self.source.source_name}"
+            else:
+                name = f"{self.source.source_name} {mamode.name} {period} {n}"
+            
+            
             self.has = {
             "is_candle": True,
-            "name": f"{self.source.source_name} {mamode.name} {period} {n}",
+            "name": name,
             "y_axis_show":True,
             "inputs":{
                     "source":self.source,

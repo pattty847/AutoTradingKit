@@ -34,6 +34,8 @@ class MessageBoxBase(MaskDialogBase):
         # fixes https://github.com/zhiyiYo/PyQt-Fluent-Widgets/issues/19
         self.yesButton.setAttribute(Qt.WA_LayoutUsesWidgetRect)
         self.cancelButton.setAttribute(Qt.WA_LayoutUsesWidgetRect)
+        
+        self.yesButton.setAttribute(Qt.WA_MacShowFocusRect, False)
 
         self.yesButton.setFocus()
         self.buttonGroup.setFixedHeight(81)
@@ -58,11 +60,22 @@ class MessageBoxBase(MaskDialogBase):
         self.buttonLayout.addWidget(self.yesButton, 1, Qt.AlignVCenter)
         self.buttonLayout.addWidget(self.cancelButton, 1, Qt.AlignVCenter)
 
+    def validate(self) -> bool:
+        """ validate the data of form before closing dialog
+
+        Returns
+        -------
+        isValid: bool
+            whether the data of form is legal
+        """
+        return True
+
     def __onCancelButtonClicked(self):
         self.reject()
 
     def __onYesButtonClicked(self):
-        self.accept()
+        if self.validate():
+            self.accept()
 
     def __setQss(self):
         self.buttonGroup.setObjectName('buttonGroup')
