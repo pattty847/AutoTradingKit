@@ -6,19 +6,19 @@ from PySide6.QtCore import Signal, QRect, QRectF, QPointF,QThreadPool,Qt,QLineF,
 from PySide6.QtGui import QPainter, QPicture,QPainterPath
 from PySide6.QtWidgets import QGraphicsItem,QStyleOptionGraphicsItem,QWidget
 import pandas as pd
-from atklip.graph_objects.pyqtgraph import mkPen, GraphicsObject, mkBrush,PlotDataItem,functions as fn
+from atklip.graphics.pyqtgraph import mkPen, GraphicsObject, mkBrush,PlotDataItem,functions as fn
 
-from atklip.indicators import PD_MAType
+from atklip.controls import PD_MAType
 
-from atklip.indicators import pandas_ta as ta
+from atklip.controls import pandas_ta as ta
 
-from atklip.indicators import OHLCV
-from atklip.indicators.candle import JAPAN_CANDLE,HEIKINASHI,SMOOTH_CANDLE
-from atklip.graph_objects.chart_component.base_items import PlotLineItem
+from atklip.controls import OHLCV
+
+from atklip.graphics.chart_component.base_items import PlotLineItem
 from atklip.appmanager import FastWorker
 from atklip.app_utils import *
 if TYPE_CHECKING:
-    from atklip.graph_objects.chart_component.viewchart import Chart
+    from atklip.graphics.chart_component.viewchart import Chart
     
 class BasicMA(GraphicsObject):
     """DEMA EMA HMA SMA SMMA TEMA TRIX ZLEMA WMA"""

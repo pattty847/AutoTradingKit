@@ -310,7 +310,7 @@ class DrawTool(QObject):
         self.chart.sig_reset_drawbar_favorite_btn.emit(obj)
     
 
-    def draw_text(self, ev: QEvent):
+    def draw_text_(self, ev: QEvent):
         pos_x, pos_y = self.get_position_mouse_on_chart(ev)
         obj = TextBoxROI(size=5,symbol="o",pen="green",brush = "green", drawtool=self)
 
@@ -325,7 +325,7 @@ class DrawTool(QObject):
         self.chart.sig_reset_drawbar_favorite_btn.emit(obj)
         obj.on_click.connect(self.show_popup_menu)
         
-    def draw_text_with_bg(self, ev: QEvent):
+    def draw_text(self, ev: QEvent):
         pos_x, pos_y = self.get_position_mouse_on_chart(ev)
         obj = CenteredTextItem(text = 'text',
                                 parent=self.chart.vb,
@@ -340,7 +340,7 @@ class DrawTool(QObject):
         self.draw_object_name = None
         uid_obj = self.chart.objmanager.add(obj)
         self.chart.sig_reset_drawbar_favorite_btn.emit(obj)
-        obj.on_click.connect(self.show_popup_menu)
+        # obj.on_click.connect(self.show_popup_menu)
     
     def draw_date_price_range(self, ev):
         pos_x, pos_y = self.get_position_mouse_on_chart(ev)

@@ -3,7 +3,7 @@ Real-time quotes charting components
 """
 import pyqtgraph as pg
 from PySide6 import QtCore, QtGui,QtWidgets
-from PySide6.QtGui import QPainter
+from PySide6.QtGui import QPainter,QPicture
 
 from atklip.app_utils.functions import mkBrush
 
@@ -29,6 +29,23 @@ class CenteredTextItem(QtWidgets.QGraphicsTextItem):
         self.text_flags = QtCore.Qt.AlignCenter
         self.setPos(*pos)
         self.setFlag(self.GraphicsItemFlag.ItemIgnoresTransformations)
+        
+        self.has = {
+            "x_axis_show":True,
+            "name": "rectangle",
+            "type": "drawtool",
+            "id": id,
+            "inputs":{
+                    },
+            "styles":{
+                    'brush': pen,
+                    "lock":True,
+                    "setting": False,
+                    "delete":True,}
+        }
+        
+        self.picture = QPicture()
+        self.setdata()
 
     def boundingRect(self):  # noqa
         r = super().boundingRect()
@@ -38,11 +55,16 @@ class CenteredTextItem(QtWidgets.QGraphicsTextItem):
             return QtCore.QRectF(-r.width() / 2, 15, r.width(), r.height())
 
     def paint(self, p, option, widget):
+        self.picture.play(p)
+    
+    def setdata(self):
+        p = QPainter(self.picture)
+        
         p.setRenderHint(QPainter.Antialiasing, False)
         p.setRenderHint(QPainter.TextAntialiasing, True)
         p.setPen(self.pen)
         if self.brush.style() != QtCore.Qt.NoBrush:
             p.setOpacity(self.opacity)
-            p.fillRect(option.rect, self.brush)
+            p.fillRect(self.boundingRect(), self.brush)
             p.setOpacity(1)
-        p.drawText(option.rect, self.text_flags, self.toPlainText())
+        p.drawText(self.boundingRect(), self.text_flags, self.toPlainText())
