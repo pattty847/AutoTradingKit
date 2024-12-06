@@ -203,6 +203,8 @@ class GraphSplitter(ViewSplitter):
             self.create_sub_chart(data)
         elif indicator_type =="Strategies":
             self.create_strategy(data)
+        elif indicator_type =="Parttens Indicator":
+            self.create_advand_indicator(data)  
         else:
             print("Unknown Indicator Type")
 

@@ -28,7 +28,7 @@ from atklip.graphics.chart_component.base_items.replay_cut import ReplayObject
 
 from atklip.controls.exchangemanager import ExchangeManager
 
-from atklip.graphics.chart_component.indicators import BasicMA,BasicBB,BasicDonchianChannels,BasicZIGZAG,ATKBOT,Volume
+from atklip.graphics.chart_component.indicators import BasicMA,BasicBB,BasicDonchianChannels,BasicZIGZAG,ATKBOT,Volume,CandlePattern
 
 class Chart(ViewPlotWidget):
     def __init__(self, parent=None,apikey:str="", secretkey:str="",exchange_name:str="binanceusdm",
@@ -684,29 +684,21 @@ class Chart(ViewPlotWidget):
             
             if _indicator_type==IndicatorType.BB:
                 indicator = BasicBB(self)
-                # panel = IndicatorPanel(self.mainwindow,self, indicator)
-                # self.container_indicator_wg.add_indicator_panel(panel)
-                # self.add_item(indicator)
-                # indicator.fisrt_gen_data()
-                
+   
             elif _indicator_type==IndicatorType.DonchianChannels:
                 indicator = BasicDonchianChannels(self)
-                # panel = IndicatorPanel(self.mainwindow,self, indicator)
-                # self.container_indicator_wg.add_indicator_panel(panel)
-                # self.add_item(indicator)
-                # indicator.fisrt_gen_data()
+
             elif _indicator_type==IndicatorType.ZIGZAG:
                 indicator = BasicZIGZAG(self)
-                # panel = IndicatorPanel(self.mainwindow,self, indicator)
-                # self.container_indicator_wg.add_indicator_panel(panel)
-                # self.add_item(indicator)
-                # indicator.fisrt_gen_data()
+
             elif _indicator_type==IndicatorType.ATKPRO:
                 indicator = ATKBOT(self)
-                # panel = IndicatorPanel(self.mainwindow,self, indicator)
-                # self.container_indicator_wg.add_indicator_panel(panel)
-                # self.add_item(indicator)
-                # indicator.fisrt_gen_data()
+                
+        elif _group_indicator == "Parttens Indicator":
+            if _indicator_type==IndicatorType.CANDLE_PATTERN:
+                indicator = CandlePattern(self)
+                
+            
         if indicator:
             self.indicators.append(indicator) 
             self.add_item(indicator)

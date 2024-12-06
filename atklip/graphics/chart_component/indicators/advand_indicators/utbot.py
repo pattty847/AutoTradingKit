@@ -1086,15 +1086,15 @@ class ATKBOT(GraphicsObject):
         setdata.emit((xdata,_long,_short))
 
     def boundingRect(self) -> QRectF:
-        # if self.list_pos:
-        #     x_left,x_right = int(self.chart.xAxis.range[0]),int(self.chart.xAxis.range[1])
-        #     for _x in self.list_pos.keys():
-        #         obj = self.list_pos.get(_x)
-        #         if obj:
-        #             if x_left < _x < x_right:
-        #                 obj["obj"].show()
-        #             else:
-        #                 obj["obj"].hide()
+        if self.list_pos:
+            x_left,x_right = int(self.chart.xAxis.range[0]),int(self.chart.xAxis.range[1])
+            for _x in list(self.list_pos.keys()):
+                obj = self.list_pos.get(_x)
+                if obj:
+                    if x_left < _x < x_right:
+                        obj["obj"].show()
+                    else:
+                        obj["obj"].hide()
 
         return self.picture.boundingRect()
     

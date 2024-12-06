@@ -572,7 +572,7 @@ class TextBoxROI(UIGraphicsItem):
         self.picture:QPicture = QPicture()
         self.signal_change_font_size.connect(self.change_font_size)
         self.color =  "#F4511E"
-        self.font_size = 14
+        self.font_size = 10
         self.name = ''
         self.setLabel("Text",
                         {

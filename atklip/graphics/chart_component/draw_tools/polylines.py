@@ -272,6 +272,7 @@ class RangePolyLine(SpecialROI):     # for date price range
         diff_y, percent,fsecs,ts = _draw_line_segment_text(self.chart.interval,self.chart._precision,point0, point1)
         
         if diff.y() < 0:
+            # print("<0")
             self.textitem.setAnchor((0.5,0))
         else:
             self.textitem.setAnchor((0.5,1))
