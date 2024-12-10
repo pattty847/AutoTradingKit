@@ -8,6 +8,7 @@ import pandas as pd
 
 from atklip.graphics.pyqtgraph.Point import Point
 from atklip.graphics.pyqtgraph.graphicsItems.TextItem import TextItem
+# from atklip.graphics.chart_component.graph_items.CustomTextItem import TextItem
 
 from .fillbetweenitem import FillBetweenItem
 from atklip.graphics.chart_component.base_items.plotdataitem import PlotDataItem
@@ -233,7 +234,7 @@ class CandlePattern(GraphicsObject):
                     #     obj["entry"].deleteLater()
                     # 
         self.list_patterns.clear()   
-        
+        "CDL_DOJISTAR  CDL_EVENINGDOJISTAR  CDL_ENGULFING  CDL_EVENINGSTAR  CDL_MORNINGDOJISTAR  CDL_MORNINGSTAR  CDL_SHOOTINGSTAR  CDL_HARAMI  CDL_HARAMICROSS  CDL_KICKING  CDL_KICKINGBYLENGTH"
         # print(df)
         sells = df.loc[(df['evening_star'] == True)|(df['shooting_star'] == True)|(df['bearish_harami'] == True)|(df['bearish_engulfing'] == True)|(df['bearish_kicker'] == True)] 
         buys = df.loc[(df['morning_star'] == True)|(df['bullish_harami'] == True)|(df['bullish_engulfing'] == True)|(df['bullish_kicker'] == True)] 
@@ -262,7 +263,7 @@ class CandlePattern(GraphicsObject):
                 index = row['index']
                 text = 'bearish_kicker'
                 
-            if index:
+            if index and text:
                 ohlc =  self.chart.jp_candle.map_index_ohlcv.get(index)
                 if ohlc:
                     obj = TextItem("",color="green")
@@ -274,7 +275,7 @@ class CandlePattern(GraphicsObject):
                 <span style="color: red; font-size: {10}pt;">{txt1}</span><br><span style="color: red; font-size: {10}pt;">{txt2}</span>"""
                     obj.setHtml(html)
                     obj.setPos(Point(index, ohlc.high))
-                    # obj.hide()
+                    obj.hide()
                     self.list_patterns[index] = {"cdl_pattern":obj}
                 
         for i in range(len(buys)):
@@ -297,14 +298,13 @@ class CandlePattern(GraphicsObject):
                 text = 'bullish_kicker'
             
             
-            if index:
+            if index and text:
                 ohlc =  self.chart.jp_candle.map_index_ohlcv.get(index)
                 if ohlc:
                     # obj = TextBoxROI(size=5,symbol="o",pen="green",brush = "green", drawtool=self.chart.drawtool)
                     obj = TextItem("",color="green")
                     obj.setParentItem(self)
-                    
-                    
+
                     txt = text.split("_")
                     txt1,txt2 = txt[0],txt[1]
                     html = f"""<div style="text-align: center">
@@ -323,7 +323,7 @@ class CandlePattern(GraphicsObject):
                     obj.setPos(Point(index,_y))
                     self.list_patterns[index] = {"cdl_pattern":obj}
                     
-                    # obj.hide()
+                    obj.hide()
                     
 
     def add_historic_Data(self,df):
@@ -331,32 +331,33 @@ class CandlePattern(GraphicsObject):
         buys = df.loc[(df['morning_star'] == True)|(df['bullish_harami'] == True)|(df['bullish_engulfing'] == True)|(df['bullish_kicker'] == True)] 
         for i in range(len(sells)):
             index, text = None,None
+            row = sells.iloc[i]
+            index = row['index']
             
             if self.list_patterns.get(index):
                 continue
-            row = sells.iloc[i]
+            
             if row['evening_star'] == True:
                 # print(row['index'],row['evening_star'])
-                index = row['index']
                 text = 'evening_star'
             elif row['shooting_star'] == True:
                 # print(row['index'],row['shooting_star'])
-                index = row['index']
+                
                 text = 'shooting_star'
             elif row['bearish_harami'] == True:
                 # print(row['index'],row['bearish_harami'])
-                index = row['index']
+               
                 text = 'bearish_harami'
             elif row['bearish_engulfing'] == True:
                 # print(row['index'],row['bearish_engulfing'])
-                index = row['index']
+                
                 text = 'bearish_engulfing'
             elif row['bearish_kicker'] == True:
                 # print(row['index'],row['bearish_kicker'])
-                index = row['index']
+                
                 text = 'bearish_kicker'
                 
-            if index:
+            if index and text:
                 ohlc =  self.chart.jp_candle.map_index_ohlcv.get(index)
                 if ohlc:
                     obj = TextItem("",color="green")
@@ -373,27 +374,29 @@ class CandlePattern(GraphicsObject):
                 
         for i in range(len(buys)):
             index, text = None,None
+            row = buys.iloc[i]
+            index = row['index']
             if self.list_patterns.get(index):
                 continue
-            row = buys.iloc[i]
+            
             if row['morning_star'] == True:
                 # print(row['index'],row['morning_star'])
-                index = row['index']
+                
                 text = 'morning_star'
             elif row['bullish_harami'] == True:
                 # print(row['index'],row['bullish_harami'])
-                index = row['index']
+                
                 text = 'bullish_harami'
             elif row['bullish_engulfing'] == True:
-                index = row['index']
+                
                 text = 'bullish_engulfing'
             elif row['bullish_kicker'] == True:
                 # print(row['index'],row['bullish_kicker'])
-                index = row['index']
+                
                 text = 'bullish_kicker'
             
             
-            if index:
+            if index and text:
                 ohlc =  self.chart.jp_candle.map_index_ohlcv.get(index)
                 if ohlc:
                     # obj = TextBoxROI(size=5,symbol="o",pen="green",brush = "green", drawtool=self.chart.drawtool)
@@ -423,99 +426,92 @@ class CandlePattern(GraphicsObject):
 
         
     def update_Data(self,df):
-        sells = df.loc[(df['evening_star'] == True)|(df['shooting_star'] == True)|(df['bearish_harami'] == True)|(df['bearish_engulfing'] == True)|(df['bearish_kicker'] == True)] 
-        buys = df.loc[(df['morning_star'] == True)|(df['bullish_harami'] == True)|(df['bullish_engulfing'] == True)|(df['bullish_kicker'] == True)] 
-        for i in range(len(sells)):
-            index, text = None,None
+        # sells = df.loc[(df['evening_star'] == True)|(df['shooting_star'] == True)|(df['bearish_harami'] == True)|(df['bearish_engulfing'] == True)|(df['bearish_kicker'] == True)] 
+        # buys = df.loc[(df['morning_star'] == True)|(df['bullish_harami'] == True)|(df['bullish_engulfing'] == True)|(df['bullish_kicker'] == True)] 
+        # for i in range(len(sells)):
+        index, text = None,None
+        row = df.iloc[0]
+        index = row['index']
+        if self.list_patterns.get(index):
+            return
+        if row['evening_star'] == True:
+            # print(row['index'],row['evening_star'])
+            text = 'evening_star'
+        elif row['shooting_star'] == True:
+            # print(row['index'],row['shooting_star'])
+            text = 'shooting_star'
+        elif row['bearish_harami'] == True:
+            # print(row['index'],row['bearish_harami'])
+            text = 'bearish_harami'
+        elif row['bearish_engulfing'] == True:
+            # print(row['index'],row['bearish_engulfing'])
+            text = 'bearish_engulfing'
+        elif row['bearish_kicker'] == True:
+            # print(row['index'],row['bearish_kicker'])
+            text = 'bearish_kicker'
             
-            if self.list_patterns.get(index):
-                continue
-            row = sells.iloc[i]
-            if row['evening_star'] == True:
-                # print(row['index'],row['evening_star'])
-                index = row['index']
-                text = 'evening_star'
-            elif row['shooting_star'] == True:
-                # print(row['index'],row['shooting_star'])
-                index = row['index']
-                text = 'shooting_star'
-            elif row['bearish_harami'] == True:
-                # print(row['index'],row['bearish_harami'])
-                index = row['index']
-                text = 'bearish_harami'
-            elif row['bearish_engulfing'] == True:
-                # print(row['index'],row['bearish_engulfing'])
-                index = row['index']
-                text = 'bearish_engulfing'
-            elif row['bearish_kicker'] == True:
-                # print(row['index'],row['bearish_kicker'])
-                index = row['index']
-                text = 'bearish_kicker'
+        if index and text:
+            ohlc =  self.chart.jp_candle.map_index_ohlcv.get(index)
+            if ohlc:
+                obj = TextItem("",color="green")
+                obj.setParentItem(self)
+                obj.setAnchor((0.5,1))
+                txt = text.split("_")
+                txt1,txt2 = txt[0],txt[1]
+                html = f"""<div style="text-align: center">
+            <span style="color: red; font-size: {10}pt;">{txt1}</span><br><span style="color: red; font-size: {10}pt;">{txt2}</span>"""
+                obj.setHtml(html)
+                obj.setPos(Point(index, ohlc.high))
+                # obj.hide()
+                self.list_patterns[index] = {"cdl_pattern":obj}
                 
-            if index:
-                ohlc =  self.chart.jp_candle.map_index_ohlcv.get(index)
-                if ohlc:
-                    obj = TextItem("",color="green")
-                    obj.setParentItem(self)
-                    obj.setAnchor((0.5,1))
-                    txt = text.split("_")
-                    txt1,txt2 = txt[0],txt[1]
-                    html = f"""<div style="text-align: center">
-                <span style="color: red; font-size: {10}pt;">{txt1}</span><br><span style="color: red; font-size: {10}pt;">{txt2}</span>"""
-                    obj.setHtml(html)
-                    obj.setPos(Point(index, ohlc.high))
-                    # obj.hide()
-                    self.list_patterns[index] = {"cdl_pattern":obj}
+        # for i in range(len(buys)):
+        _index, _text = None,None
+        _row = df.iloc[0]
+        _index = row['index']
+        if self.list_patterns.get(_index):
+            return
+        
+        if _row['morning_star'] == True:
+            # print(row['index'],row['morning_star'])
+            _text = 'morning_star'
+        elif _row['bullish_harami'] == True:
+            # print(row['index'],row['bullish_harami'])
+            _text = 'bullish_harami'
+        elif _row['bullish_engulfing'] == True:
+            _text = 'bullish_engulfing'
+        elif _row['bullish_kicker'] == True:
+            # print(row['index'],row['bullish_kicker'])
+            _text = 'bullish_kicker'
+        
+        
+        if _index and _text:
+            ohlc =  self.chart.jp_candle.map_index_ohlcv.get(_index)
+            if ohlc:
+                # obj = TextBoxROI(size=5,symbol="o",pen="green",brush = "green", drawtool=self.chart.drawtool)
+                obj = TextItem("",color="green")
+                obj.setParentItem(self)
                 
-        for i in range(len(buys)):
-            index, text = None,None
-            if self.list_patterns.get(index):
-                continue
-            row = buys.iloc[i]
-            if row['morning_star'] == True:
-                # print(row['index'],row['morning_star'])
-                index = row['index']
-                text = 'morning_star'
-            elif row['bullish_harami'] == True:
-                # print(row['index'],row['bullish_harami'])
-                index = row['index']
-                text = 'bullish_harami'
-            elif row['bullish_engulfing'] == True:
-                index = row['index']
-                text = 'bullish_engulfing'
-            elif row['bullish_kicker'] == True:
-                # print(row['index'],row['bullish_kicker'])
-                index = row['index']
-                text = 'bullish_kicker'
-            
-            
-            if index:
-                ohlc =  self.chart.jp_candle.map_index_ohlcv.get(index)
-                if ohlc:
-                    # obj = TextBoxROI(size=5,symbol="o",pen="green",brush = "green", drawtool=self.chart.drawtool)
-                    obj = TextItem("",color="green")
-                    obj.setParentItem(self)
-                    
-                    
-                    txt = text.split("_")
-                    txt1,txt2 = txt[0],txt[1]
-                    html = f"""<div style="text-align: center">
-                <span style="color: green; font-size: {10}pt;">{txt1}</span><br><span style="color: green; font-size: {10}pt;">{txt2}</span>"""
-                    obj.setHtml(html)
-                    
-                    obj.setAnchor((0.5,0))
-                    
-                    r = obj.textItem.boundingRect()
-                    tl = obj.textItem.mapToParent(r.topLeft())
-                    br = obj.textItem.mapToParent(r.bottomRight())
-                    offset = (br - tl) * obj.anchor
+                
+                txt = _text.split("_")
+                txt1,txt2 = txt[0],txt[1]
+                html = f"""<div style="text-align: center">
+            <span style="color: green; font-size: {10}pt;">{txt1}</span><br><span style="color: green; font-size: {10}pt;">{txt2}</span>"""
+                obj.setHtml(html)
+                
+                obj.setAnchor((0.5,0))
+                
+                r = obj.textItem.boundingRect()
+                tl = obj.textItem.mapToParent(r.topLeft())
+                br = obj.textItem.mapToParent(r.bottomRight())
+                offset = (br - tl) * obj.anchor
 
-                    _y = ohlc.low-offset.y()/2
+                _y = ohlc.low-offset.y()/2
 
-                    obj.setPos(Point(index,_y))
-                    self.list_patterns[index] = {"cdl_pattern":obj}
-                    
-                    # obj.hide()
+                obj.setPos(Point(index,_y))
+                self.list_patterns[index] = {"cdl_pattern":obj}
+                
+                # obj.hide()
     
     def setdata_worker(self):
         self.worker = None
@@ -538,11 +534,11 @@ class CandlePattern(GraphicsObject):
         data = self.INDICATOR.get_data(stop=_len)
         setdata.emit(data)  
     def add_data(self,setdata):
-        data = self.INDICATOR.get_data(start=-1)
+        data = self.INDICATOR.get_data(start=-2)
         setdata.emit(data)   
     
     def update_data(self,setdata):
-        data = self.INDICATOR.get_data(start=-1)
+        data = self.INDICATOR.get_data(start=-2)
         setdata.emit(data)
 
        
@@ -557,11 +553,11 @@ class CandlePattern(GraphicsObject):
                     else:
                         obj["cdl_pattern"].hide()
 
-        return self.chart.vb.boundingRect()
+        return self.picture.boundingRect()
     
     def paint(self, p:QPainter, *args):
-        # self.picture.play(p)
-        p.drawRect(self.boundingRect())
+        self.picture.play(p)
+        # p.drawRect(self.boundingRect())
     
     def get_yaxis_param(self):
         _value = None
@@ -581,7 +577,7 @@ class CandlePattern(GraphicsObject):
         except Exception as e:
             pass
         time.sleep(0.1)
-        return _min,_max
+        return None,None
 
     def on_click_event(self):
         #print("zooo day__________________")

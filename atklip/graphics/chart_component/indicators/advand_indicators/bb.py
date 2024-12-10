@@ -102,6 +102,7 @@ class BasicBB(GraphicsObject):
             self.INDICATOR.sig_reset_all.disconnect(self.reset_threadpool_asyncworker)
             self.INDICATOR.sig_update_candle.disconnect(self.setdata_worker)
             self.INDICATOR.sig_add_candle.disconnect(self.setdata_worker)
+            self.INDICATOR.sig_add_historic.disconnect(self.add_historic_worker)
             self.INDICATOR.signal_delete.disconnect(self.replace_source)
         except RuntimeError:
                     pass

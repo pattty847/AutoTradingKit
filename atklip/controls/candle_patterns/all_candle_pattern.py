@@ -1,22 +1,91 @@
 import pandas as pd
 import numpy as np
+import pandas_ta as ta
 
 def candle_pattern(df:pd.DataFrame,doji_size: float= 0.05):
-    
+    """_summary_
+    // Created by Robert N. 030715
+    // Updated 031115
+    // Candle labels
+    study(title = "Candles", overlay = true)
+
+    DojiSize = input(0.05, minval=0.01, title="Doji size")
+    data=(abs(open - close) <= (high - low) * DojiSize)
+    plotchar(data, title="Doji", text='Doji', color=white)
+
+    data2=(close[2] > open[2] and min(open[1], close[1]) > close[2] and open < min(open[1], close[1]) and close < open )
+    plotshape(data2, title= "Evening Star", color=red, style=shape.arrowdown, text="Evening\nStar")
+
+    data3=(close[2] < open[2] and max(open[1], close[1]) < close[2] and open > max(open[1], close[1]) and close > open )
+    plotshape(data3,  title= "Morning Star", location=location.belowbar, color=lime, style=shape.arrowup, text="Morning\nStar")
+
+    data4=(open[1] < close[1] and open > close[1] and high - max(open, close) >= abs(open - close) * 3 and min(close, open) - low <= abs(open - close))
+    plotshape(data4, title= "Shooting Star", color=red, style=shape.arrowdown, text="Shooting\nStar")
+
+    data5=(((high - low)>3*(open -close)) and  ((close - low)/(.001 + high - low) > 0.6) and ((open - low)/(.001 + high - low) > 0.6))
+    plotshape(data5, title= "Hammer", location=location.belowbar, color=white, style=shape.diamond, text="H")
+
+    data5b=(((high - low)>3*(open -close)) and  ((high - close)/(.001 + high - low) > 0.6) and ((high - open)/(.001 + high - low) > 0.6))
+    plotshape(data5b, title= "Inverted Hammer", location=location.belowbar, color=white, style=shape.diamond, text="IH")
+
+
+    data6=(close[1] > open[1] and open > close and open <= close[1] and open[1] <= close and open - close < close[1] - open[1] )
+    plotshape(data6, title= "Bearish Harami",  color=red, style=shape.arrowdown, text="Bearish\nHarami")
+
+    data7=(open[1] > close[1] and close > open and close <= open[1] and close[1] <= open and close - open < open[1] - close[1] )
+    plotshape(data7,  title= "Bullish Harami", location=location.belowbar, color=lime, style=shape.arrowup, text="Bullish\nHarami")
+
+    data8=(close[1] > open[1] and open > close and open >= close[1] and open[1] >= close and open - close > close[1] - open[1] )
+    plotshape(data8,  title= "Bearish Engulfing", color=red, style=shape.arrowdown, text="Bearish\nEngulfing")
+
+    data9=(open[1] > close[1] and close > open and close >= open[1] and close[1] >= open and close - open > open[1] - close[1] )
+    plotshape(data9, title= "Bullish Engulfing", location=location.belowbar, color=lime, style=shape.arrowup, text="Bullish\nEngulfling")
+
+    upper = highest(10)[1]
+    data10=(close[1] < open[1] and  open < low[1] and close > close[1] + ((open[1] - close[1])/2) and close < open[1])
+    plotshape(data10, title= "Piercing Line", location=location.belowbar, color=lime, style=shape.arrowup, text="Piercing\nLine")
+
+    lower = lowest(10)[1]
+    data11=(low == open and  open < lower and open < close and close > ((high[1] - low[1]) / 2) + low[1])
+    plotshape(data11, title= "Bullish Belt", location=location.belowbar, color=lime, style=shape.arrowup, text="Bullish\nBelt")
+
+    data12=(open[1]>close[1] and open>=open[1] and close>open)
+    plotshape(data12, title= "Bullish Kicker", location=location.belowbar, color=lime, style=shape.arrowup, text="Bullish\nKicker")
+
+    data13=(open[1]<close[1] and open<=open[1] and close<=open)
+    plotshape(data13, title= "Bearish Kicker", color=red, style=shape.arrowdown, text="Bearish\nKicker")
+
+    data14=(((high-low>4*(open-close))and((close-low)/(.001+high-low)>=0.75)and((open-low)/(.001+high-low)>=0.75)) and high[1] < open and high[2] < open)
+    plotshape(data14,  title= "Hanging Man", color=red, style=shape.arrowdown, text="Hanging\nMan")
+
+    data15=((close[1]>open[1])and(((close[1]+open[1])/2)>close)and(open>close)and(open>close[1])and(close>open[1])and((open-close)/(.001+(high-low))>0.6))
+    plotshape(data15, title= "Dark Cloud Cover", color=red, style=shape.arrowdown, text="Dark\nCloudCover")
+
+
+
+    Args:
+        df (pd.DataFrame): _description_
+        doji_size (float, optional): _description_. Defaults to 0.05.
+
+    Returns:
+        _type_: _description_
+    """
     output_df = pd.DataFrame([])
     
     output_df["index"] = df["index"]
     # df['doji'] = (abs(df['open'] - df['close']) <= (df['high'] - df['low']) * doji_size)
+    
+
     output_df['evening_star'] = (df['close'].shift(2) > df['open'].shift(2)) & \
                         (np.minimum(df['open'].shift(1), df['close'].shift(1)) > df['close'].shift(2)) & \
                         (df['open'] < np.minimum(df['open'].shift(1), df['close'].shift(1))) & \
                         (df['close'] < df['open'])
-
+    "data3=(close[2] < open[2] and max(open[1], close[1]) < close[2] and open > max(open[1], close[1]) and close > open )"
     output_df['morning_star'] = (df['close'].shift(2) < df['open'].shift(2)) & \
                         (np.maximum(df['open'].shift(1), df['close'].shift(1)) < df['close'].shift(2)) & \
                         (df['open'] > np.maximum(df['open'].shift(1), df['close'].shift(1))) & \
                         (df['close'] > df['open'])
-
+    "data4=(open[1] < close[1] and open > close[1] and high - max(open, close) >= abs(open - close) * 3 and min(close, open) - low <= abs(open - close))"
     output_df['shooting_star'] = (df['open'].shift(1) < df['close'].shift(1)) & \
                         (df['open'] > df['close'].shift(1)) & \
                         ((df['high'] - np.maximum(df['open'], df['close'])) >= abs(df['open'] - df['close']) * 3) & \
@@ -29,25 +98,25 @@ def candle_pattern(df:pd.DataFrame,doji_size: float= 0.05):
     # df['inverted_hammer'] = ((df['high'] - df['low']) > 3 * abs(df['open'] - df['close'])) & \
     #                         (((df['high'] - df['close']) / (0.001 + df['high'] - df['low'])) > 0.6) & \
     #                         (((df['high'] - df['open']) / (0.001 + df['high'] - df['low'])) > 0.6)
-
+    "data6=(close[1] > open[1] and open > close and open <= close[1] and open[1] <= close and open - close < close[1] - open[1] )"
     output_df['bearish_harami'] = (df['close'].shift(1) > df['open'].shift(1)) & \
                         (df['open'] > df['close']) & \
                         (df['open'] <= df['close'].shift(1)) & \
                         (df['open'].shift(1) <= df['close']) & \
                         (abs(df['open'] - df['close']) < abs(df['close'].shift(1) - df['open'].shift(1)))
-
+    "data7=(open[1] > close[1] and close > open and close <= open[1] and close[1] <= open and close - open < open[1] - close[1] )"
     output_df['bullish_harami'] = (df['open'].shift(1) > df['close'].shift(1)) & \
                         (df['close'] > df['open']) & \
                         (df['close'] <= df['open'].shift(1)) & \
                         (df['close'].shift(1) <= df['open']) & \
                         (abs(df['close'] - df['open']) < abs(df['open'].shift(1) - df['close'].shift(1)))
-
+    "data8=(close[1] > open[1] and open > close and open >= close[1] and open[1] >= close and open - close > close[1] - open[1] )"
     output_df['bearish_engulfing'] = (df['close'].shift(1) > df['open'].shift(1)) & \
                             (df['open'] > df['close']) & \
                             (df['open'] >= df['close'].shift(1)) & \
                             (df['close'] <= df['open'].shift(1)) & \
                             (abs(df['open'] - df['close']) > abs(df['close'].shift(1) - df['open'].shift(1)))
-
+    "data9=(open[1] > close[1] and close > open and close >= open[1] and close[1] >= open and close - open > open[1] - close[1] )"
     output_df['bullish_engulfing'] = (df['open'].shift(1) > df['close'].shift(1)) & \
                             (df['close'] > df['open']) & \
                             (df['close'] >= df['open'].shift(1)) & \
@@ -88,6 +157,151 @@ def candle_pattern(df:pd.DataFrame,doji_size: float= 0.05):
 # patterns = ['doji', 'evening_star', 'morning_star', 'shooting_star', 'hammer', 'inverted_hammer', 'bearish_harami', 
 #             'bullish_harami', 'bearish_engulfing', 'bullish_engulfing', 'piercing_line', 'bullish_belt', 
 #             'bullish_kicker', 'bearish_kicker', 'hanging_man', 'dark_cloud_cover']
+# Constants
+C_Len = 14  # EMA depth for bodyAvg
+C_ShadowPercent = 5.0  # Size of shadows
+C_ShadowEqualsPercent = 100.0
+C_DojiBodyPercent = 5.0
+C_Factor = 2.0  # Number of times the shadow dominates the candlestick body
+
+def classify_candlestick_patterns(data: pd.DataFrame):
+    # Ensure necessary columns exist
+    required_columns = ['open', 'high', 'low', 'close']
+    if not all(col in data.columns for col in required_columns):
+        raise ValueError(f"Dataframe must contain {required_columns} columns.")
+    
+    """
+    Converts PineScript logic to Python using pandas and numpy.
+    :param df: DataFrame with columns ['open', 'high', 'low', 'close']
+    :return: DataFrame with calculated candle features.
+    """
+    # Candle Body Calculations
+    data['C_BodyHi'] = np.maximum(data['close'], data['open'])
+    data['C_BodyLo'] = np.minimum(data['close'], data['open'])
+    data['C_Body'] = data['C_BodyHi'] - data['C_BodyLo']
+    
+    # Average Body Size
+    data['C_BodyAvg'] = ta.ema(data['C_Body'], length=C_Len)
+    data['C_SmallBody'] = data['C_Body'] < data['C_BodyAvg']
+    data['C_LongBody'] = data['C_Body'] > data['C_BodyAvg']
+    
+    # Shadow Calculations
+    data['C_UpShadow'] = data['high'] - data['C_BodyHi']
+    data['C_DnShadow'] = data['C_BodyLo'] - data['low']
+    data['C_HasUpShadow'] = data['C_UpShadow'] > (C_ShadowPercent / 100) * data['C_Body']
+    data['C_HasDnShadow'] = data['C_DnShadow'] > (C_ShadowPercent / 100) * data['C_Body']
+    
+    # Body Characteristics
+    data['C_WhiteBody'] = data['open'] < data['close']
+    data['C_BlackBody'] = data['open'] > data['close']
+    data['C_Range'] = data['high'] - data['low']
+    
+    # Inside Bar
+    data['C_IsInsideBar'] = (data['C_BodyHi'].shift(1) > data['C_BodyHi']) & (data['C_BodyLo'].shift(1) < data['C_BodyLo'])
+    
+    # Mid-point Calculations
+    data['C_BodyMiddle'] = (data['C_Body'] / 2) + data['C_BodyLo']
+    
+    # Shadow Equality Check
+    data['C_ShadowEquals'] = (
+        (data['C_UpShadow'] == data['C_DnShadow']) |
+        ((np.abs(data['C_UpShadow'] - data['C_DnShadow']) / data['C_DnShadow'] * 100) < C_ShadowEqualsPercent) &
+        ((np.abs(data['C_DnShadow'] - data['C_UpShadow']) / data['C_UpShadow'] * 100) < C_ShadowEqualsPercent)
+    )
+    
+    # Doji Calculations
+    data['C_IsDojiBody'] = (data['C_Range'] > 0) & (data['C_Body'] <= data['C_Range'] * (C_DojiBodyPercent / 100))
+    data['C_Doji'] = data['C_IsDojiBody'] & data['C_ShadowEquals']
+    
+    # Identify trends
+    data['C_UpTrend'] = data['close'] > ta.sma(data['close'], length=50)
+    data['C_DownTrend'] = data['close'] < ta.sma(data['close'], length=50)
+    
+    # Patterns
+    data['C_Doji'] = (data['C_Body'] <= 0.05 * data['C_Range']) & \
+                     (np.abs(data['C_UpShadow'] - data['C_DnShadow']) <= 0.1 * data['C_Body'])
+    
+    # Hammer
+    data['C_HammerBullish'] = (
+        data['C_SmallBody'] & 
+        (data['C_BodyLo'] > (data['high'] + data['low']) / 2) & 
+        (data['C_DnShadow'] >= 2 * data['C_Body']) & 
+        ~data['C_HasUpShadow'] & 
+        data['C_DownTrend']
+    )
+    data['C_HammerBearish'] = (
+        data['C_SmallBody'] &
+        (data['C_BodyHi'] < (data['high'] + data['low']) / 2) &
+        (data['C_UpShadow'] >= 2 * data['C_Body']) &
+        ~data['C_HasDnShadow'] &
+        data['C_UpTrend']
+    )
+    
+    # Shooting Star
+    data['C_ShootingStarBullish'] = (
+        data['C_SmallBody'] &
+        (data['C_BodyLo'] > (data['high'] + data['low']) / 2) &
+        (data['C_UpShadow'] >= 2 * data['C_Body']) &
+        ~data['C_HasDnShadow'] &
+        data['C_UpTrend']
+    )
+    data['C_ShootingStarBearish'] = (
+        data['C_SmallBody'] &
+        (data['C_BodyHi'] < (data['high'] + data['low']) / 2) &
+        (data['C_UpShadow'] >= 2 * data['C_Body']) &
+        ~data['C_HasDnShadow'] &
+        data['C_UpTrend']
+    )
+    
+    # Engulfing
+    data['C_BullishEngulfing'] = (
+        (data['C_WhiteBody'] & data['C_BlackBody'].shift(1)) &
+        (data['close'] > data['open'].shift(1)) &
+        (data['open'] < data['close'].shift(1))
+    )
+    data['C_BearishEngulfing'] = (
+        (data['C_BlackBody'] & data['C_WhiteBody'].shift(1)) &
+        (data['close'] < data['open'].shift(1)) &
+        (data['open'] > data['close'].shift(1))
+    )
+    
+    # Harami
+    data['C_BullishHarami'] = (
+        (data['C_WhiteBody'] & data['C_BlackBody'].shift(1)) &
+        (data['open'] > data['close'].shift(1)) &
+        (data['close'] < data['open'].shift(1))
+    )
+    data['C_BearishHarami'] = (
+        (data['C_BlackBody'] & data['C_WhiteBody'].shift(1)) &
+        (data['open'] < data['close'].shift(1)) &
+        (data['close'] > data['open'].shift(1))
+    )
+    
+    # Morning Star
+    data['C_MorningStar'] = (
+        data['C_BlackBody'].shift(2) &
+        data['C_SmallBody'].shift(1) &
+        data['C_WhiteBody'] &
+        (data['close'] > (data['open'].shift(2) + data['close'].shift(2)) / 2)
+    )
+    
+    # Evening Star
+    data['C_EveningStar'] = (
+        data['C_WhiteBody'].shift(2) &
+        data['C_SmallBody'].shift(1) &
+        data['C_BlackBody'] &
+        (data['close'] < (data['open'].shift(2) + data['close'].shift(2)) / 2)
+    )
+    
+    return data
+
+# Usage Example
+# Assuming `df` is a pandas DataFrame with 'open', 'high', 'low', 'close' columns
+# df = pd.read_csv("your_data.csv")
+# result = classify_candlestick_patterns(df)
+# print(result.filter(like='C_'))
+
+
 
 
 import numpy as np
@@ -270,11 +484,9 @@ class AllCandlePattern(QObject):
             _df:pd.DataFrame  = self.calculate(df)
             
             _new_df = _df.iloc[[-1]]
-            
-            # print(type(_new_df),_new_df)
-            
             self.df = pd.concat([self.df,_new_df],ignore_index=True)
             self.sig_add_candle.emit()
+        
         self.is_current_update = True
             
     def update(self, new_candles:List[OHLCV]):

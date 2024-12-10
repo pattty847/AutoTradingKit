@@ -108,7 +108,7 @@ class BasicMenu(ScrollInterface):
                     pass
                 elif "indicator_type" in _input:
                     pass
-                elif "price" in _input or "scalar" in _input or "value" in _input or "std" in _input :
+                elif "price" in _input or "scalar" in _input or "value" in _input or "std" in _input or "mul" in _input:
                     price = PriceEdit(self,self.indicator, _input)
                     price.set_name(_input)
                     self.sig_add_indicator.emit(price)

@@ -24,6 +24,18 @@ ALL_PATTERNS = [
     "xsidegap3methods"
 ]
 
+list_cdl_patterns = ["dojistar",                   
+                "eveningdojistar",
+                "engulfing",
+                "eveningstar",
+                "morningdojistar",
+                "morningstar",
+                "shootingstar",
+                "harami",
+                "haramicross",
+                "kicking",
+                "kickingbylength",
+                "marubozu"]
 
 def cdl_pattern(
     open_: Series, high: Series, low: Series, close: Series,
@@ -128,3 +140,211 @@ def cdl_pattern(
     return df
 
 cdl = cdl_pattern  # Alias
+
+
+
+
+import numpy as np
+import pandas as pd
+from typing import List
+from atklip.controls.ohlcv import   OHLCV
+from atklip.controls.candle import JAPAN_CANDLE,HEIKINASHI,SMOOTH_CANDLE,N_SMOOTH_CANDLE
+from atklip.app_api.workers import ApiThreadPool
+from PySide6.QtCore import Signal,QObject
+
+class AllCandlePattern(QObject):
+    sig_update_candle = Signal()
+    sig_add_candle = Signal()
+    sig_reset_all = Signal()
+    signal_delete = Signal()    
+    sig_add_historic = Signal(int) 
+    def __init__(self,_candles,dict_ta_params:dict={}) -> None:
+        super().__init__(parent=None)
+        self._candles: JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE =_candles
+        
+        self.first_gen = False
+        self.is_genering = True
+        self.is_current_update = False
+        self.is_histocric_load = False
+        self.name = f"ALL CDL PATTERN"
+
+        self.df = pd.DataFrame([])
+        self.worker = ApiThreadPool
+
+        self.connect_signals()
+    
+    @property
+    def source_name(self)-> str:
+        return self._source_name
+    @source_name.setter
+    def source_name(self,source_name):
+        self._source_name = source_name
+    
+    def change_input(self,candles=None,dict_ta_params: dict={}):
+        if candles != None:
+            self.disconnect_signals()
+            self._candles : JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE= candles
+            self.connect_signals()
+        
+        self.first_gen = False
+        self.is_genering = True
+        self.is_current_update = False
+        
+        self.fisrt_gen_data()
+    
+    def disconnect_signals(self):
+        try:
+            self._candles.sig_reset_all.disconnect(self.started_worker)
+            self._candles.sig_update_candle.disconnect(self.update_worker)
+            self._candles.sig_add_candle.disconnect(self.add_worker)
+            self._candles.signal_delete.disconnect(self.signal_delete)
+            self._candles.sig_add_historic.disconnect(self.add_historic_worker)
+        except RuntimeError:
+                    pass
+    
+    def connect_signals(self):
+        self._candles.sig_reset_all.connect(self.started_worker)
+        self._candles.sig_update_candle.connect(self.update_worker)
+        self._candles.sig_add_candle.connect(self.add_worker)
+        self._candles.signal_delete.connect(self.signal_delete)
+        self._candles.sig_add_historic.connect(self.add_historic_worker)
+    
+    
+    def change_source(self,_candles:JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE):
+        self.disconnect_signals()
+        self._candles =_candles
+        self.connect_signals()
+        self.started_worker()
+    
+    @property
+    def indicator_name(self):
+        return self.name
+    @indicator_name.setter
+    def indicator_name(self,_name):
+        self.name = _name
+    
+    def get_df(self,n:int=None):
+        if not n:
+            return self.df
+        return self.df.tail(n)
+    
+    
+    def get_data(self,start:int=0,stop:int=0):
+        if len(self.df) == 0:
+            return []
+        if start == 0 and stop == 0:
+            df=self.df
+        elif start == 0 and stop != 0:
+            df=self.df.iloc[:stop]
+        elif start != 0 and stop == 0:
+            df=self.df.iloc[start:]
+        else:
+            df=self.df.iloc[start:stop]
+        return df
+    
+    def get_last_row_df(self):
+        return self.df.iloc[-1] 
+
+    def update_worker(self,candle):
+        self.worker.submit(self.update,candle)
+
+    def add_worker(self,candle):
+        self.worker.submit(self.add,candle)
+    
+    def add_historic_worker(self,n):
+        self.worker.submit(self.add_historic,n)
+
+    def started_worker(self):
+        self.worker.submit(self.fisrt_gen_data)
+    
+    def paire_data(self,INDICATOR:pd.DataFrame|pd.Series):
+        column_names = INDICATOR.columns.tolist()
+        
+        vortex_name = ''
+        signalma_name = ''
+        
+        patterns = ['doji', 'evening_star', 'morning_star', 'shooting_star', 'hammer', 'inverted_hammer', 'bearish_harami', 
+            'bullish_harami', 'bearish_engulfing', 'bullish_engulfing', 'piercing_line', 'bullish_belt', 
+            'bullish_kicker', 'bearish_kicker', 'hanging_man', 'dark_cloud_cover']
+        
+        
+        for name in column_names:
+            if name.__contains__("VTXP_"):
+                vortex_name = name
+            elif name.__contains__("VTXM_"):
+                signalma_name = name
+
+        vortex_ = INDICATOR[vortex_name].dropna().round(4)
+        signalma = INDICATOR[signalma_name].dropna().round(4)
+        
+        return vortex_,signalma
+    
+    def calculate(self,df: pd.DataFrame):
+        INDICATOR = cdl_pattern(open_=df["open"],
+                                high=df["high"],
+                                low=df["low"],
+                                close=df["close"],
+                                name=list_cdl_patterns)
+        return INDICATOR#self.paire_data(INDICATOR)
+    
+    def fisrt_gen_data(self):
+        self.is_current_update = False
+        self.is_genering = True
+        self.df = pd.DataFrame([])
+        df:pd.DataFrame = self._candles.get_df()
+        
+        self.df = self.calculate(df)
+        
+        
+        print(self.df)
+        
+        self.is_genering = False
+        if self.first_gen == False:
+            self.first_gen = True
+            self.is_genering = False
+        
+        self.is_current_update = True
+        self.sig_reset_all.emit()
+    
+    def add_historic(self,n:int):
+        self.is_genering = True
+        self.is_histocric_load = False
+        _pre_len = len(self.df)
+        df:pd.DataFrame = self._candles.get_df().iloc[:-1*_pre_len]
+        
+        _df= self.calculate(df)
+        _len = len(_df)
+        self.df = pd.concat([_df,self.df],ignore_index=True)
+        
+        self.is_genering = False
+        if self.first_gen == False:
+            self.first_gen = True
+            self.is_genering = False
+        self.is_histocric_load = True
+        self.sig_add_historic.emit(_len)
+    
+    def add(self,new_candles:List[OHLCV]):
+        new_candle:OHLCV = new_candles[-1]
+        self.is_current_update = False
+        if (self.first_gen == True) and (self.is_genering == False):
+            df:pd.DataFrame = self._candles.get_df(10)
+            _df:pd.DataFrame  = self.calculate(df)
+            
+            _new_df = _df.iloc[[-1]]
+            
+            # print(type(_new_df),_new_df)
+            
+            self.df = pd.concat([self.df,_new_df],ignore_index=True)
+            self.sig_add_candle.emit()
+        self.is_current_update = True
+            
+    def update(self, new_candles:List[OHLCV]):
+        new_candle:OHLCV = new_candles[-1]
+        self.is_current_update = False
+        if (self.first_gen == True) and (self.is_genering == False):
+            df:pd.DataFrame = self._candles.get_df(10)
+            _df = self.calculate(df)
+            self.df.iloc[-1] = _df.iloc[-1]
+            self.sig_update_candle.emit()
+        self.is_current_update = True
+           

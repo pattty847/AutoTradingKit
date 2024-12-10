@@ -1,49 +1,76 @@
-import itertools
+# Copyright (C) 2023 The Qt Company Ltd.
+# SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+from __future__ import annotations
 
-# Danh sách ban đầu
-_list = [1, 2, 3,3,4,4,5]
+"""PySide6 port of the location/mapviewer example from Qt v6.x"""
 
-# Tạo tất cả các hoán vị
-permutations = list(itertools.permutations(_list))
+import os
+import sys
+from pathlib import Path
 
-print(len(permutations))
-# In ra các hoán vị
-# for perm in permutations:
-#     print(perm)
+from PySide6.QtQml import QQmlApplicationEngine
+from PySide6.QtGui import QGuiApplication
+from PySide6.QtNetwork import QSslSocket
+from PySide6.QtCore import QCoreApplication, QMetaObject, Q_ARG
 
-my_list = []
-
-
-def swap_elements(lst, index1, index2):
-    lst[index1], lst[index2] = lst[index2], lst[index1]
-
-
-def calculate_list(input_list,compare_list,n = 0):
-    new_list = []
-    _leng = len(input_list)
-    for i in range(_leng):
-
-        my_list.append(input_list)
-        
-        print(input_list)
-        new_list= []
-        if i != 0:
-            swap_elements(input_list,0,i)
-            if my_list[0] == input_list:
-                break
-            calculate_list(input_list,compare_list)
-
-    
-    if n == _leng-1:
-        return
-    n+=1
-    swap_elements(input_list,0,n)
-    calculate_list(input_list,compare_list,n)
-            # if input_list == compare_list:
-            #     return
-            
-calculate_list(_list,_list)   
-    
-print(len(my_list))
+HELP = """Usage:
+plugin.<parameter_name> <parameter_value> - Sets parameter = value for plugin"""
 
 
+def parseArgs(args):
+    parameters = {}
+    while args:
+        param = args[0]
+        args = args[1:]
+        if param.startswith("--plugin."):
+            param = param[9:]
+            if not args or args[0].startswith("--"):
+                parameters[param] = True
+            else:
+                value = args[0]
+                args = args[1:]
+                if value in ("true", "on", "enabled"):
+                    parameters[param] = True
+                elif value in ("false", "off", "disable"):
+                    parameters[param] = False
+                else:
+                    parameters[param] = value
+    return parameters
+
+
+if __name__ == "__main__":
+    additionalLibraryPaths = os.environ.get("QTLOCATION_EXTRA_LIBRARY_PATH")
+    if additionalLibraryPaths:
+        for p in additionalLibraryPaths.split(':'):
+            QCoreApplication.addLibraryPath(p)
+
+    application = QGuiApplication(sys.argv)
+    name = "QtLocation Mapviewer example"
+    QCoreApplication.setApplicationName(name)
+
+    args = sys.argv[1:]
+    if "--help" in args:
+        print(f"{name}\n\n{HELP}")
+        sys.exit(0)
+
+    parameters = parseArgs(args)
+    if not parameters.get("osm.useragent"):
+        parameters["osm.useragent"] = name
+
+    engine = QQmlApplicationEngine()
+    engine.rootContext().setContextProperty("supportsSsl",
+                                            QSslSocket.supportsSsl())
+    engine.addImportPath(Path(__file__).parent)
+    engine.loadFromModule("MapViewer", "Main")
+    engine.quit.connect(QCoreApplication.quit)
+
+    items = engine.rootObjects()
+    if not items:
+        sys.exit(-1)
+
+    QMetaObject.invokeMethod(items[0], "initializeProviders",
+                             Q_ARG("QVariant", parameters))
+
+    exit_code = application.exec()
+    del engine
+    sys.exit(exit_code)

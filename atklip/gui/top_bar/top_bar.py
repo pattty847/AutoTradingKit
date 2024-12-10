@@ -48,7 +48,7 @@ class TopBar(QFrame,TopFrame):
         self.gotonow.setIconSize(QSize(27,27))
         
         self.LayoutButton = LayoutButton(self._parent)
-        self.left_layout.setSpacing(1)
+        # self.left_layout.setSpacing(1)
         self.left_layout.addWidget(self.profile)
         self.left_layout.addWidget(VerticalSeparator(self))
         self.left_layout.addWidget(self.exchange)
@@ -73,7 +73,7 @@ class TopBar(QFrame,TopFrame):
         self._parent.mouse_clicked_signal.connect(self.symbol.delete)
         self._parent.mouse_clicked_signal.connect(self.indicator.delete)
          
-        self.setSizePolicy(QSizePolicy.Preferred,QSizePolicy.Preferred)
+        # self.setSizePolicy(QSizePolicy.Preferred,QSizePolicy.Preferred)
         
         # _w = self.width()
         # _interval_w = self.interval.width()

@@ -4,7 +4,7 @@
 name = "pandas_ta"
 
 # Dictionaries and version
-from atklip.controls.pandas_ta.maps import EXCHANGE_TZ, RATE, Category, Imports, version
+from atklip.controls.pandas_ta.maps import EXCHANGE_TZ, RATE, Category, Imports
 from atklip.controls.pandas_ta.utils import *
 from atklip.controls.pandas_ta.utils import __all__ as utils_all
 
@@ -46,7 +46,7 @@ __all__ = [
     "RATE",
     "Category",
     "Imports",
-    "version",
+    # "version",
     "ma",
     "create_dir",
     "import_dir",

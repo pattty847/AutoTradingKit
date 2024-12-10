@@ -253,11 +253,13 @@ class PriceEdit(FloatEdit):
         self.setFixedHeight(35)
         _inputs = self.indicator.get_inputs()
         
-        if _input in ["price_high","price_low","fast_w_value","medium_w_value","min_price_low",
+        _ls_inputs = ["price_high","price_low","fast_w_value","medium_w_value","min_price_low",
                       "slow_w_value","key_value_long","key_value_short","max_price_high",
                       "capital","loss_capital","proportion_closed","risk_percentage","kc_scalar",
                       "leverage","taker_fee","rsi_price_high","rsi_price_low","bb_std",
-                      "maker_fee",]:
+                      "maker_fee","atr_multiplier"]
+        
+        if _input in _ls_inputs:
             _value = _inputs.get(_input)
             if _value != None:
                 self.set_value(_value)

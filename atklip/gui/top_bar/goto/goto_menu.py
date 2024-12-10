@@ -19,7 +19,10 @@ from atklip.gui.qfluentwidgets.components.date_time.fast_calendar_view import Fa
 class CalendarView(FastCalendarView):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setFixedSize(316,350)
+        self.setFixedSize(316,360)
+        # self.dayView.setFixedHeight(360)
+        # self.monthView.setFixedHeight(360)
+        # self.yearView.setFixedHeight(360)
     def setDate(self, date: QDate):
         """ set the selected date """
         self.dayView.setDate(date)

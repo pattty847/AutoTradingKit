@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'topbar.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.4.2
+## Created by: Qt User Interface Compiler version 6.8.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -22,7 +22,7 @@ class Ui_Frame(object):
     def setupUi(self, Frame):
         if not Frame.objectName():
             Frame.setObjectName(u"Frame")
-        Frame.resize(523, 45)
+        Frame.resize(616, 45)
         Frame.setMinimumSize(QSize(0, 45))
         Frame.setMaximumSize(QSize(16777215, 45))
         self.horizontalLayout = QHBoxLayout(Frame)
@@ -36,7 +36,7 @@ class Ui_Frame(object):
 
         self.horizontalLayout.addLayout(self.left_layout)
 
-        self.horizontalSpacer = QSpacerItem(380, 1, QSizePolicy.Preferred, QSizePolicy.Minimum)
+        self.horizontalSpacer = QSpacerItem(1000000000, 1, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout.addItem(self.horizontalSpacer)
 

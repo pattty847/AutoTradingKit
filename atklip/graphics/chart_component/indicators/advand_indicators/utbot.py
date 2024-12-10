@@ -24,6 +24,9 @@ from atklip.controls.momentum.macd import MACD
 from atklip.controls.momentum.rsi import RSI
 from atklip.controls import  SQEEZE
 from atklip.controls import SuperTrend
+from atklip.controls import AllCandlePattern
+from atklip.graphics.pyqtgraph.Point import Point
+from atklip.graphics.pyqtgraph.graphicsItems.TextItem import TextItem
 if TYPE_CHECKING:
     from atklip.graphics.chart_component.viewchart import Chart
 
@@ -72,7 +75,7 @@ class ATKBOT(GraphicsObject):
                     "n_period": 10,
                     "m_period": 10,
                     
-                    "stoploss_price":0.01,
+                    "stoploss_price":0.25,
                     
                     "indicator_type":IndicatorType.ATKPRO,
                     
@@ -104,6 +107,7 @@ class ATKBOT(GraphicsObject):
         
         self.list_pos:dict = {}
         self.picture: QPicture = QPicture()
+        self.cr_position:dict = {"type":None,"index":None,"side_count":0}
 
         
         self.stoploss_smooth_heikin = N_SMOOTH_CANDLE(self.chart._precision,self.chart.heikinashi,
@@ -130,15 +134,16 @@ class ATKBOT(GraphicsObject):
         # self.super_trend = SuperTrend(self.stoploss_smooth_heikin, self.supertrend_model.__dict__)
         # self.super_trend.fisrt_gen_data()
         
-        self.INDICATOR  = ATKBOT_ALERT(self.has["inputs"]["source"], self.model.__dict__)
+        # self.INDICATOR  = ATKBOT_ALERT(self.has["inputs"]["source"], self.model.__dict__)
+        self.INDICATOR  = AllCandlePattern(self.has["inputs"]["source"])
                 
         self.chart.sig_update_source.connect(self.change_source,Qt.ConnectionType.AutoConnection)   
         self.signal_delete.connect(self.delete)
     
     
     def is_all_updated(self):
-        is_updated = self.INDICATOR.is_current_update 
-        return True
+        is_updated = self.INDICATOR.is_current_update and self.stoploss_smooth_heikin.is_current_update
+        return is_updated
     @property
     def id(self):
         return self.chart_id
@@ -294,8 +299,8 @@ class ATKBOT(GraphicsObject):
         self.worker.start()
 
     def regen_indicator(self,setdata):
-        xdata,_long,_short= self.INDICATOR.get_data()
-        setdata.emit((xdata,_long,_short))
+        df= self.INDICATOR.get_data()
+        setdata.emit(df)
         self.sig_change_yaxis_range.emit()
         self.has["name"] = f"ATKPRO Ver_1.0"
         self.sig_change_indicator_name.emit(self.has["name"])
@@ -368,9 +373,9 @@ class ATKBOT(GraphicsObject):
             
             if _input == "n_smooth_period" or _input == "ma_smooth_period" or _input == "mamode":
                 self.stoploss_smooth_heikin.refresh_data(self.has["inputs"]["mamode"].value,self.has["inputs"]["ma_smooth_period"],self.has["inputs"]["n_smooth_period"])
-                # self.stoploss_smooth_heikin.fisrt_gen_data()
+                self.stoploss_smooth_heikin.fisrt_gen_data()
                 # self.super_trend.fisrt_gen_data()
-                self.sqeeze.fisrt_gen_data()
+                # self.sqeeze.fisrt_gen_data()
 
             
             # if  _input == "supertrend_length" or _input == "supertrend_atr_length" or \
@@ -435,6 +440,7 @@ class ATKBOT(GraphicsObject):
     
     
     def move_entry(self,index: float, high: float,low: float):
+        return
         """
         self.list_pos[pivot_point[2]] = {"stop_loss":pivot_point[1],"entry_x":_x,"entry_y":_val,"type":"long","obj":obj, 
         "entry":entry, "is_stoploss":False, "take_profit_1_5R":None,"take_profit_2R":None}"""
@@ -520,166 +526,7 @@ class ATKBOT(GraphicsObject):
                     return True
         return False
     
-    def set_Data(self,data):
-        if self.list_pos:
-            for obj in self.list_pos.values():
-                if self.scene() is not None:
-                    self.scene().removeItem(obj["obj"])
-                    # self.scene().removeItem(obj["entry"])
-                    if hasattr(obj["obj"], "deleteLater"):
-                        obj["obj"].deleteLater()
-                    # if hasattr(obj["entry"], "deleteLater"):
-                    #     obj["entry"].deleteLater()
-                    # 
-        self.list_pos.clear()   
-        xdata,_long,_short = data[0],data[1],data[2]
-
-        for i in range(1,len(self.stoploss_smooth_heikin.df)):
-            _x = self.stoploss_smooth_heikin.df.iloc[i]['index']
-
-            pre_jp_high = self.chart.jp_candle.map_index_ohlcv[_x-1].high
-            pre_jp_low = self.chart.jp_candle.map_index_ohlcv[_x-1].low
-            pre_jp_open = self.chart.jp_candle.map_index_ohlcv[_x-1].open
-            pre_jp_close = self.chart.jp_candle.map_index_ohlcv[_x-1].close
-            
-            
-            pre_heikin_high = self.chart.heikinashi.map_index_ohlcv[_x-1].high
-            pre_heikin_low = self.chart.heikinashi.map_index_ohlcv[_x-1].low
-            pre_heikin_open = self.chart.heikinashi.map_index_ohlcv[_x-1].open
-            pre_heikin_close = self.chart.heikinashi.map_index_ohlcv[_x-1].close
-            
-            
-            cr_jp_open = self.chart.jp_candle.map_index_ohlcv[_x].open
-            cr_jp_high = self.chart.jp_candle.map_index_ohlcv[_x].high
-            cr_jp_low = self.chart.jp_candle.map_index_ohlcv[_x].low
-            
-            row_smooth_heikin = self.stoploss_smooth_heikin.df.loc[self.stoploss_smooth_heikin.df['index'] == _x-1]
-            # cr_row_smooth_heikin = self.smooth_heikin.df.loc[self.smooth_heikin.df['index'] == _x]
-            smooth_heikin_short_signal = False
-            smooth_heikin_long_signal = False
-            
-            sm_low = stoploss_long = None
-            sm_high = stoploss_short = None
-            sm_open = None
-            sm_close = None
-            if not row_smooth_heikin.empty:
-                sm_high = stoploss_short = _high = row_smooth_heikin.iloc[-1]["high"]
-                sm_low = stoploss_long = _low = row_smooth_heikin.iloc[-1]["low"]
-                sm_open = _open = row_smooth_heikin.iloc[-1]["open"]
-                sm_close = _close = row_smooth_heikin.iloc[-1]["close"]
-                smooth_heikin_long_signal = _open < _close  #and pre_jp_close > _close # and cr_jp_open > _close #and pre_jp_open < pre_jp_close
-                smooth_heikin_short_signal = _open > _close #and pre_jp_close < _close # and cr_jp_open < _close #and pre_jp_open > pre_jp_close
-                
-
-            
-            # super_trend_df = self.super_trend.df.loc[(self.super_trend.df['index'] <= _x-1) & (self.super_trend.df['index'] >= _x-4)]
-            # super_trend_long_signal = False
-            # super_trend_short_signal = False
-            # if len(super_trend_df) >= 3:
-            #     sqz_histogram = super_trend_df.iloc[-1]['SUPERTd']
-            #     super_trend_long_signal = sqz_histogram > 0 
-            #     super_trend_short_signal = sqz_histogram < 0
-            
-            
-            # sqeezee_df = self.sqeeze.df.loc[(self.sqeeze.df['index'] <= _x-1) & (self.sqeeze.df['index'] >= _x-4)]
-            # sqz_histogram = None
-            # sqz_long_signal = False
-            # sqz_short_signal = False
-            # if len(sqeezee_df) >= 3:
-            #     sqz_histogram = sqeezee_df.iloc[-1]['SQZ_data']
-            #     sqz_histogram_pre_1 = sqeezee_df.iloc[-2]['SQZ_data']
-            #     sqz_histogram_pre_2 = sqeezee_df.iloc[-3]['SQZ_data']
-
-            #     if sqz_histogram > 0 and sqz_histogram_pre_1 > 0:# and sqz_histogram_pre_2 > 0:
-            #         if sqz_histogram < sqz_histogram_pre_1:
-            #             sqz_long_signal = True
-            #         elif sqz_histogram > sqz_histogram_pre_1:
-            #             sqz_short_signal = True
-            #     elif sqz_histogram < 0 and sqz_histogram_pre_1 < 0:# and sqz_histogram_pre_2 < 0:
-            #         if sqz_histogram < sqz_histogram_pre_1:
-            #             sqz_short_signal = True
-            #         elif sqz_histogram > sqz_histogram_pre_1:
-            #             sqz_long_signal = True
-            
-            # self.move_entry(_x,cr_jp_high,cr_jp_low)
-            if smooth_heikin_long_signal:# and sqz_long_signal:     
-            # if super_trend_long_signal:     
-                _type,is_sl,is_tp = self.check_last_pos()
-                # if _type == "long":
-                #     continue
-                if sm_high < pre_jp_low:
-                    stoploss_percent = percent_caculator(sm_high, pre_jp_low)
-                    if stoploss_percent > self.has["inputs"]["stoploss_price"]:
-                        continue
-                # if pre_jp_low < sm_low:
-                #         continue
-
-                # if not self.check_pos_is_near_pivot(_x,"red"):
-                #     continue
-                
-                if not is_bearish(pre_jp_open,pre_jp_close):
-                    continue
-                
-                if not is_bearish(pre_heikin_open,pre_heikin_close):
-                    continue
-                
-                
-                _val = self.chart.jp_candle.map_index_ohlcv[_x].open
-                                    
-                obj = ArrowItem(drawtool=self,angle=90,pen="green",brush = "green")
-                obj.setFlags(obj.flags() | self.GraphicsItemFlag.ItemIgnoresTransformations)
-                obj.setParentItem(self)
-                obj.setPos(_x, _val)
-                obj.locked_handle()
-                # stop_loss =  self.calculate_stop_loss("long",pivot_point[1])
-                stop_loss =  stoploss_short
-                # entry = Entry([_x-1, stop_loss], [0, 0],invertible=True,movable=True, resizable=False, removable=True, pen="#2962ff",parent=None, drawtool=self.chart.drawtool)
-                # entry.setPoint(_x-1,_val)
-                # entry.setParentItem(self)
-                # entry.moveEntry(_x,_val)
-                # self.chart.sig_add_item.emit(entry)
-                self.list_pos[_x] = {"stop_loss":stop_loss,"entry_x":_x,"entry_y":_val,"type":"long","obj":obj, "entry":None, "is_stoploss":False, "take_profit_1_5R":None,"take_profit_2R":None}
-            elif  smooth_heikin_short_signal:# and sqz_short_signal:    
-            # elif  super_trend_short_signal:    
-                # _type,is_sl,is_tp = self.check_last_pos()
-                # if _type == "short":
-                #     continue
-                if sm_low > pre_jp_high:
-                    stoploss_percent = percent_caculator(sm_low, pre_jp_high)
-                    if stoploss_percent > self.has["inputs"]["stoploss_price"]:
-                        continue
-                # if pre_jp_high > sm_high:
-                #         continue
-                
-                # if not self.check_pos_is_near_pivot(_x,"green"):
-                #     continue
-                
-                if not is_bulllish(pre_jp_open,pre_jp_close):
-                    continue
-                
-                if not is_bulllish(pre_heikin_open,pre_heikin_close):
-                    continue
-                
-                _val = self.chart.jp_candle.map_index_ohlcv[_x].open
-                                    
-                obj = ArrowItem(drawtool=self,angle=270,pen="red",brush = "red")
-                obj.setFlags(obj.flags() | self.GraphicsItemFlag.ItemIgnoresTransformations)
-                obj.setParentItem(self)
-                obj.setPos(_x, _val)
-                obj.locked_handle()
-                # stop_loss =  self.calculate_stop_loss("long",pivot_point[1])
-                stop_loss =  stoploss_long
-                # entry = Entry([_x-1, stop_loss], [0, 0],invertible=True,movable=True, resizable=False, removable=True, pen="#2962ff",parent=None, drawtool=self.chart.drawtool)
-                # entry.setPoint(_x-1,_val)
-                # entry.setParentItem(self)
-                # entry.moveEntry(_x,_val)
-                # self.chart.sig_add_item.emit(entry)
-                self.list_pos[_x] = {"stop_loss":stop_loss,"entry_x":_x,"entry_y":_val,"type":"short","obj":obj, "entry":None, "is_stoploss":False, "take_profit_1_5R":None,"take_profit_2R":None}
-        
-    
-            
-                
-    def old_set_Data(self,data):
+    def set_Data(self,df):
         if self.list_pos:
             for obj in self.list_pos.values():
                 if self.scene() is not None:
@@ -692,324 +539,565 @@ class ATKBOT(GraphicsObject):
                     # 
         self.list_pos.clear()   
         
-        xdata,_long,_short = data[0],data[1],data[2]
-             
-        df = pd.DataFrame({
-            "x":xdata,
-            "long":_long,
-            "short":_short,
-        })
+        
         for i in range(1,len(df)):
-            _x = df.iloc[i]['x']
+            
+            _x = df.iloc[i]['index']
 
-            if i-self.has["inputs"]["n_period"]-self.has["inputs"]["m_period"]-1 <=0:
-                    continue
-            
-            
             jp_high = self.chart.jp_candle.map_index_ohlcv[_x].high
             jp_low = self.chart.jp_candle.map_index_ohlcv[_x].low
             jp_open = self.chart.jp_candle.map_index_ohlcv[_x].open
             jp_close = self.chart.jp_candle.map_index_ohlcv[_x].close
             
             
-            row_smooth_heikin = self.stoploss_smooth_heikin.df.loc[self.stoploss_smooth_heikin.df['index'] == _x-1]
-            # cr_row_smooth_heikin = self.smooth_heikin.df.loc[self.smooth_heikin.df['index'] == _x]
+            pre_jp_high = self.chart.jp_candle.map_index_ohlcv[_x-1].high
+            pre_jp_low = self.chart.jp_candle.map_index_ohlcv[_x-1].low
+            pre_jp_open = self.chart.jp_candle.map_index_ohlcv[_x-1].open
+            pre_jp_close = self.chart.jp_candle.map_index_ohlcv[_x-1].close
+            
+            pre_smooth_heikin = self.stoploss_smooth_heikin.df.loc[self.stoploss_smooth_heikin.df['index'] == _x-1]
+            # cr_smooth_heikin = self.smooth_heikin.df.loc[self.smooth_heikin.df['index'] == _x]
             smooth_heikin_short_signal = False
             smooth_heikin_long_signal = False
-            if not row_smooth_heikin.empty:
-                _high = row_smooth_heikin.iloc[-1]["high"]
-                _low = row_smooth_heikin.iloc[-1]["low"]
-                _open = row_smooth_heikin.iloc[-1]["open"]
-                _close = row_smooth_heikin.iloc[-1]["close"]
-                smooth_heikin_long_signal = _open < _close #and jp_open < jp_close
-                smooth_heikin_short_signal = _open > _close #and jp_open > jp_close
-
-            stoploss_smooth_heikin = self.stoploss_smooth_heikin.df.loc[self.stoploss_smooth_heikin.df['index'] == _x-1]
-            sm_low = stoploss_long = None
-            sm_high = stoploss_short = None
-            if not stoploss_smooth_heikin.empty:
-                sm_low = stoploss_long = stoploss_smooth_heikin.iloc[-1]["low"]
-                sm_high = stoploss_short = stoploss_smooth_heikin.iloc[-1]["high"]
-                
-                
-                
-                
             
+            pre_sm_low = stoploss_long = None
+            pre_sm_high = stoploss_short = None
+            pre_sm_open = None
+            pre_sm_close = None
+            if not pre_smooth_heikin.empty:
+                pre_sm_high = stoploss_short = pre_smooth_heikin.iloc[-1]["high"]
+                pre_sm_low = stoploss_long = pre_smooth_heikin.iloc[-1]["low"]
+                pre_sm_open = _open = pre_smooth_heikin.iloc[-1]["open"]
+                pre_sm_close = _close = pre_smooth_heikin.iloc[-1]["close"]
+                smooth_heikin_long_signal = _open < _close  #and pre_jp_close > _close # and cr_jp_open > _close #and pre_jp_open < pre_jp_close
+                smooth_heikin_short_signal = _open > _close #and pre_jp_close < _close # and cr_jp_open < _close #and pre_jp_open > pre_jp_close
+                
             # self.move_entry(_x,cr_jp_high,cr_jp_low)
-            
-            # super_trend_df = self.super_trend.df.loc[(self.super_trend.df['index'] <= _x-1)]
-            # super_trend_long_signal = True
-            # super_trend_short_signal = True
-            # if not super_trend_df.empty:
-            #     sqz_histogram = super_trend_df.iloc[-1]['SUPERTd']
-                # super_trend_long_signal = sqz_histogram > 0 
-                # super_trend_short_signal = sqz_histogram < 0
-            
-
-            if df.iloc[i-1]['long'] == True:
-                _type,is_sl,is_tp = self.check_last_pos()
+            if smooth_heikin_long_signal:# and sqz_long_signal:     
+            # if super_trend_long_signal:     
+                # _type,is_sl,is_tp = self.check_last_pos()
                 # if _type == "long":
-                #     if is_sl == True:
-                #         pass
-                #     else:
-                #         continue
-                
-                stoploss_percent = percent_caculator(stoploss_long, jp_open)
-                
-                if stoploss_percent > self.has["inputs"]["stoploss_price"]:
-                    continue
-                
-                # if jp_open < sm_high:
                 #     continue
                 
+                if self.cr_position["type"] != "long":
+                    self.cr_position = {"type":"long","index":_x-1,"side_count":1}
+                else:
+                    self.cr_position["side_count"] = self.cr_position["side_count"] + 1
+                
+                if self.cr_position["side_count"] < 2:
+                    continue
+                
+                if self.list_pos.get(self.cr_position["index"]):
+                    continue
+                
+                is_small_change = False
+                _max = max([pre_sm_close , pre_jp_close])
+                _min = min([pre_sm_close , pre_jp_close])
+                # if pre_sm_close < pre_jp_close:
+                stoploss_percent = percent_caculator(_min, _max)
+                if stoploss_percent < self.has["inputs"]["stoploss_price"]:
+                    # continue
+                    is_small_change = True
+                    
+                if pre_jp_close < pre_sm_low:
+                        continue
+
                 # if not self.check_pos_is_near_pivot(_x,"red"):
                 #     continue
                 
+                # if not is_bearish(pre_jp_open,pre_jp_close):
+                #     continue
                 
-                if smooth_heikin_long_signal:     
-                    
-                    _val = self.chart.jp_candle.map_index_ohlcv[_x].open
-                                       
-                    obj = ArrowItem(drawtool=self,angle=90,pen="green",brush = "green")
-                    obj.setFlags(obj.flags() | self.GraphicsItemFlag.ItemIgnoresTransformations)
-                    obj.setParentItem(self)
-                    obj.setPos(_x, _val)
-                    obj.locked_handle()
-                    # stop_loss =  self.calculate_stop_loss("long",pivot_point[1])
-                    stop_loss =  stoploss_short
-                    # entry = Entry([_x-1, stop_loss], [0, 0],invertible=True,movable=True, resizable=False, removable=True, pen="#2962ff",parent=None, drawtool=self.chart.drawtool)
-                    # entry.setPoint(_x-1,_val)
-                    # entry.setParentItem(self)
-                    # entry.moveEntry(_x,_val)
-                    # self.chart.sig_add_item.emit(entry)
-                    self.list_pos[_x] = {"stop_loss":stop_loss,"entry_x":_x,"entry_y":_val,"type":"long","obj":obj, "entry":None, "is_stoploss":False, "take_profit_1_5R":None,"take_profit_2R":None}
-            elif df.iloc[i-1]['short'] == True:
-                _type,is_sl,is_tp = self.check_last_pos()
+                # if not is_bearish(pre_heikin_open,pre_heikin_close):
+                #     continue
+
+                index, text = None,None
+                row = df.iloc[i-1]
                 
-                stoploss_percent = percent_caculator(stoploss_short, jp_open)
+                if row['evening_star'] == True:
+                    # print(row['index'],row['evening_star'])
+                    index = row['index']
+                    text = 'evening_star'
+                elif row['shooting_star'] == True:
+                    # print(row['index'],row['shooting_star'])
+                    index = row['index']
+                    text = 'shooting_star'
+                # elif row['bearish_harami'] == True:
+                #     # print(row['index'],row['bearish_harami'])
+                #     index = row['index']
+                #     text = 'bearish_harami'
+                elif row['bearish_engulfing'] == True:
+                    # print(row['index'],row['bearish_engulfing'])
+                    index = row['index']
+                    text = 'bearish_engulfing'
+                elif row['bearish_kicker'] == True:
+                    # print(row['index'],row['bearish_kicker'])
+                    index = row['index']
+                    text = 'bearish_kicker'
                 
-                if stoploss_percent > self.has["inputs"]["stoploss_price"]:
+                if (index and text) or is_small_change:
+                    ohlc =  self.chart.jp_candle.map_index_ohlcv.get(index)
+                    if ohlc:
+                        # obj = TextBoxROI(size=5,symbol="o",pen="green",brush = "green", drawtool=self.chart.drawtool)
+                    #     obj = TextItem("",color="green")
+                    #     obj.setParentItem(self)
+                    #     txt = text.split("_")
+                    #     txt1,txt2 = txt[0],txt[1]
+                    #     html = f"""<div style="text-align: center">
+                    # <span style="color: green; font-size: {10}pt;">{txt1}</span><br><span style="color: green; font-size: {10}pt;">{txt2}</span>"""
+                    #     obj.setHtml(html)
+                    #     obj.setAnchor((0.5,0))
+                    #     r = obj.textItem.boundingRect()
+                    #     tl = obj.textItem.mapToParent(r.topLeft())
+                    #     br = obj.textItem.mapToParent(r.bottomRight())
+                    #     offset = (br - tl) * obj.anchor
+                    #     _y = ohlc.low-offset.y()/2
+                    #     obj.setPos(Point(index,_y))
+                        _val = self.chart.jp_candle.map_index_ohlcv[_x].low
+                                            
+                        obj = ArrowItem(drawtool=self,angle=90,pen="green",brush = "green")
+                        obj.setFlags(obj.flags() | self.GraphicsItemFlag.ItemIgnoresTransformations)
+                        obj.setParentItem(self)
+                        obj.setPos(_x, _val)
+                        obj.locked_handle()
+                        # stop_loss =  self.calculate_stop_loss("long",pivot_point[1])
+                        stop_loss =  stoploss_short
+                        # entry = Entry([_x-1, stop_loss], [0, 0],invertible=True,movable=True, resizable=False, removable=True, pen="#2962ff",parent=None, drawtool=self.chart.drawtool)
+                        # entry.setPoint(_x-1,_val)
+                        # entry.setParentItem(self)
+                        # entry.moveEntry(_x,_val)
+                        # self.chart.sig_add_item.emit(entry)
+                        self.list_pos[self.cr_position["index"]] = {"stop_loss":stop_loss,"entry_x":_x,"entry_y":_val,"type":"long","obj":obj, "entry":None, "is_stoploss":False, "take_profit_1_5R":None,"take_profit_2R":None}
+            
+            elif  smooth_heikin_short_signal:# and sqz_short_signal:    
+            # elif  super_trend_short_signal:    
+                # _type,is_sl,is_tp = self.check_last_pos()
+                # if _type == "short":
+                #     continue
+                
+                if self.cr_position["type"] != "short":
+                    self.cr_position = {"type":"short","index":_x-1,"side_count":1}
+                else:
+                    self.cr_position["side_count"] = self.cr_position["side_count"] + 1
+                
+                if self.cr_position["side_count"] < 2:
                     continue
                 
-                # if jp_open > sm_low:
-                #     continue
+                
+                if self.list_pos.get(self.cr_position["index"]):
+                    continue
+                
+                is_small_change = False
+                _max = max([pre_sm_close , pre_jp_close])
+                _min = min([pre_sm_close , pre_jp_close])
+                # if pre_sm_close < pre_jp_close:
+                stoploss_percent = percent_caculator(_max, _min)
+                if stoploss_percent < self.has["inputs"]["stoploss_price"]:
+                    # continue
+                    is_small_change = True
+                
+                if pre_jp_close > pre_sm_high:
+                        continue
                 
                 # if not self.check_pos_is_near_pivot(_x,"green"):
                 #     continue
                 
-                # if _type == "short":
-                #     if is_sl:
-                #         pass
-                #     else:
-                #         continue
-                
-                if  smooth_heikin_short_signal:     
-                    
-                    _val = self.chart.jp_candle.map_index_ohlcv[_x].open
-                                       
-                    obj = ArrowItem(drawtool=self,angle=270,pen="red",brush = "red")
-                    obj.setFlags(obj.flags() | self.GraphicsItemFlag.ItemIgnoresTransformations)
-                    obj.setParentItem(self)
-                    obj.setPos(_x, _val)
-                    obj.locked_handle()
-                    
-                    # stop_loss =  self.calculate_stop_loss("long",pivot_point[1])
-                    stop_loss =  stoploss_long
-                    # entry = Entry([_x-1, stop_loss], [0, 0],invertible=True,movable=True, resizable=False, removable=True, pen="#2962ff",parent=None, drawtool=self.chart.drawtool)
-                    # entry.setPoint(_x-1,_val)
-                    # entry.setParentItem(self)
-                    # entry.moveEntry(_x,_val)
-                    # self.chart.sig_add_item.emit(entry)
-                    self.list_pos[_x] = {"stop_loss":stop_loss,"entry_x":_x,"entry_y":_val,"type":"short","obj":obj, "entry":None, "is_stoploss":False, "take_profit_1_5R":None,"take_profit_2R":None}
-            
-        
-        
-    def add_historic_Data(self,data):
-        return
-        xData:np.ndarray = data[0]
-        _long:np.ndarray  = data[1]
-        _short:np.ndarray  = data[2]
-        df = pd.DataFrame({
-            "x":xData,
-            "long":_long,
-            "short":_short,
-        })
-        
-        # df = data.loc[(data['long'] == True) | (data['short'] == True)]
-        for i in range(1,len(df)):
-            _x = df.iloc[i]['x']
-            
-            
-
-            if i-self.has["inputs"]["n_period"]-self.has["inputs"]["m_period"]-1 <=0:
-                    continue
-            
-            # row = self.smoothcandle.df.loc[self.smoothcandle.df['index'] == _x-1]
-            # sm_candle_short_signal = False
-            # sm_candle_long_signal = False
-            # if not row.empty:
-            #     _high = row.iloc[-1]["high"]
-            #     _low = row.iloc[-1]["low"]
-            #     _open = row.iloc[-1]["open"]
-            #     _close = row.iloc[-1]["close"]
-            #     sm_candle_long_signal = _open < _close
-            #     sm_candle_short_signal = _open > _close
-            
-            # jp_open = self.chart.jp_candle.map_index_ohlcv[_x-1].open
-            # jp_close = self.chart.jp_candle.map_index_ohlcv[_x-1].close
-            
-            # macd_df = self.macd.df.loc[(self.macd.df['index'] == _x-1)]
-            # macd = None
-            # signalma = None
-            # histogram = None
-            # macd_long_signal = False
-            # macd_short_signal = False
-            # if len(macd_df) > 0:
-            #     macd = macd_df.iloc[-1]['macd']
-            #     signalma = macd_df.iloc[-1]['signalma']
-            #     histogram = macd_df.iloc[-1]['histogram']
-                
-            #     macd_long_signal = ((histogram < 0) and (self.has["inputs"]["min_price_low"] < signalma < self.has["inputs"]["price_low"])  and (macd < 0)) 
-            #     macd_short_signal = ((histogram > 0) and (self.has["inputs"]["price_high"] < signalma < self.has["inputs"]["max_price_high"])  and (macd > 0))
-            
-            if df.iloc[i-1]['long'] == True:
-                # if self.check_n_long_short_pos(True,"long",1):
+                # if not is_bulllish(pre_jp_open,pre_jp_close):
                 #     continue
                 
-                pv_df =  self.chart.jp_candle.df.loc[(self.chart.jp_candle.df['index'] < _x) & (self.chart.jp_candle.df['index'] >= _x-self.has["inputs"]["n_period"]-self.has["inputs"]["m_period"]-1)]   
-                pivot_point = self.check_pivot_points(pv_df,"low",self.has["inputs"]["n_period"],self.has["inputs"]["m_period"])
+                # if not is_bulllish(pre_heikin_open,pre_heikin_close):
+                #     continue
                 
-                if self.list_pos.get(pivot_point[2]):
-                    continue
-                
-                if pivot_point[0]:
-  
-                    _val = self.chart.jp_candle.map_index_ohlcv[_x].open
+                index, text = None,None
+                row = df.iloc[i-1]
+                if row['morning_star'] == True:
+                    # print(row['index'],row['morning_star'])
+                    index = row['index']
+                    text = 'morning_star'
+                # elif row['bullish_harami'] == True:
+                #     # print(row['index'],row['bullish_harami'])
+                #     index = row['index']
+                #     text = 'bullish_harami'
+                elif row['bullish_engulfing'] == True:
+                    index = row['index']
+                    text = 'bullish_engulfing'
+                elif row['bullish_kicker'] == True:
+                    # print(row['index'],row['bullish_kicker'])
+                    index = row['index']
+                    text = 'bullish_kicker'
                     
-                    if macd_long_signal and sm_candle_long_signal:
-                        obj = BaseArrowItem(drawtool=self,angle=90, tipAngle=60, headLen=10, tailLen=10, tailWidth=5, pen=None, brush='green')
+                if (index and text) or is_small_change:
+                    ohlc =  self.chart.jp_candle.map_index_ohlcv.get(index)
+                    if ohlc:
+                    #     obj = TextItem("",color="red")
+                    #     obj.setParentItem(self)
+                    #     obj.setAnchor((0.5,1))
+                    #     txt = text.split("_")
+                    #     txt1,txt2 = txt[0],txt[1]
+                    #     html = f"""<div style="text-align: center">
+                    # <span style="color: red; font-size: {10}pt;">{txt1}</span><br><span style="color: red; font-size: {10}pt;">{txt2}</span>"""
+                    #     obj.setHtml(html)
+                    #     obj.setPos(Point(index, ohlc.high))
+                        _val = self.chart.jp_candle.map_index_ohlcv[_x].high
+                                            
+                        obj = ArrowItem(drawtool=self,angle=270,pen="red",brush = "red")
+                        obj.setFlags(obj.flags() | self.GraphicsItemFlag.ItemIgnoresTransformations)
                         obj.setParentItem(self)
                         obj.setPos(_x, _val)
                         obj.locked_handle()
-                        self.chart.sig_add_item.emit(obj)
-                        entry = Entry([pivot_point[2], pivot_point[1]], [0, 0],invertible=True,movable=True, resizable=False, removable=True, pen="#2962ff",parent=self.chart.vb, drawtool=self.chart.drawtool)
-                        
-                        entry.setPoint(_x,_val)
-                        entry.locked_handle()
-                        entry.setParentItem(self)
-                        self.chart.sig_add_item.emit(entry)
-                        
-                        self.list_pos[pivot_point[2]] = {"stop_loss":pivot_point[1],"entry_x":_x,"entry_y":_val,"type":"long","obj":obj, "entry":entry}
-            elif df.iloc[i-1]['short'] == True:
-                # if self.check_n_long_short_pos(True,"short",1):
-                #     continue
-                pv_df =  self.chart.jp_candle.df.loc[(self.chart.jp_candle.df['index'] < _x) & (self.chart.jp_candle.df['index'] >= _x-self.has["inputs"]["n_period"]-self.has["inputs"]["m_period"]-1)]   
-                pivot_point = self.check_pivot_points(pv_df,"high",self.has["inputs"]["n_period"],self.has["inputs"]["m_period"])
-                if self.list_pos.get(pivot_point[2]):
-                    continue
-                if pivot_point[0]:
-                    _val = self.chart.jp_candle.map_index_ohlcv[_x].open
-                    "Check dieu kien so voi smcandle 50"
-                    if macd_short_signal and sm_candle_short_signal:
-                        obj =  BaseArrowItem(drawtool=self,angle=270, tipAngle=60, headLen=10, tailLen=10, tailWidth=5, pen=None, brush='red')
-                        obj.setParentItem(self)
-                        obj.locked_handle()
-                        obj.setPos(_x, _val)
-                        self.chart.sig_add_item.emit(obj)
-                        entry = Entry([pivot_point[2], pivot_point[1]], [0, 0],invertible=True,movable=True, resizable=False, removable=True, pen="#2962ff",parent=self.chart.vb, drawtool=self.chart.drawtool)
-                        
-                        entry.setPoint(_x,_val)
-                        entry.locked_handle()
-                        entry.setParentItem(self)
-                        self.chart.sig_add_item.emit(entry)
-                        
-                        self.list_pos[pivot_point[2]] = {"stop_loss":pivot_point[1],"entry_x":_x,"entry_y":_val,"type":"long","obj":obj, "entry":entry}
+                        # stop_loss =  self.calculate_stop_loss("long",pivot_point[1])
+                        stop_loss =  stoploss_long
+                        # entry = Entry([_x-1, stop_loss], [0, 0],invertible=True,movable=True, resizable=False, removable=True, pen="#2962ff",parent=None, drawtool=self.chart.drawtool)
+                        # entry.setPoint(_x-1,_val)
+                        # entry.setParentItem(self)
+                        # entry.moveEntry(_x,_val)
+                        # self.chart.sig_add_item.emit(entry)
+                        self.list_pos[self.cr_position["index"]] = {"stop_loss":stop_loss,"entry_x":_x,"entry_y":_val,"type":"short","obj":obj, "entry":None, "is_stoploss":False, "take_profit_1_5R":None,"take_profit_2R":None}
+          
         
-    
-    def update_Data(self,data):
-        return
-        # while not self.is_all_updated():
-        #     time.sleep(0.01)
-        #     print("not updated yet")
-        #     continue
-        
-        xdata,_long,_short = data[0],data[1],data[2]
-             
-        df = pd.DataFrame({
-            "x":xdata,
-            "long":_long,
-            "short":_short,
-        })
+    def add_historic_Data(self,df):
         for i in range(1,len(df)):
-            _x = df.iloc[i]['x']
+            
+            _x = df.iloc[i]['index']
 
-            if i-self.has["inputs"]["n_period"]-self.has["inputs"]["m_period"]-1 <=0:
-                    continue
-            
-            row = self.super_smoothcandle.df.loc[self.super_smoothcandle.df['index'] == _x-1]
-            sm_candle_short_signal = False
-            sm_candle_long_signal = False
-            if not row.empty:
-                _high = row.iloc[-1]["high"]
-                _low = row.iloc[-1]["low"]
-                _open = row.iloc[-1]["open"]
-                _close = row.iloc[-1]["close"]
-                sm_candle_long_signal = _open < _close
-                sm_candle_short_signal = _open > _close
+            jp_high = self.chart.jp_candle.map_index_ohlcv[_x].high
+            jp_low = self.chart.jp_candle.map_index_ohlcv[_x].low
+            jp_open = self.chart.jp_candle.map_index_ohlcv[_x].open
+            jp_close = self.chart.jp_candle.map_index_ohlcv[_x].close
             
             
-            jp_high = self.chart.jp_candle.map_index_ohlcv[_x-1].high
-            jp_low = self.chart.jp_candle.map_index_ohlcv[_x-1].low
-            jp_open = self.chart.jp_candle.map_index_ohlcv[_x-1].open
-            jp_close = self.chart.jp_candle.map_index_ohlcv[_x-1].close
+            pre_jp_high = self.chart.jp_candle.map_index_ohlcv[_x-1].high
+            pre_jp_low = self.chart.jp_candle.map_index_ohlcv[_x-1].low
+            pre_jp_open = self.chart.jp_candle.map_index_ohlcv[_x-1].open
+            pre_jp_close = self.chart.jp_candle.map_index_ohlcv[_x-1].close
             
-            
-            row_smooth_heikin = self.smooth_heikin.df.loc[self.smooth_heikin.df['index'] == _x-1]
-            # cr_row_smooth_heikin = self.smooth_heikin.df.loc[self.smooth_heikin.df['index'] == _x]
+            pre_smooth_heikin = self.stoploss_smooth_heikin.df.loc[self.stoploss_smooth_heikin.df['index'] == _x-1]
+            # cr_smooth_heikin = self.smooth_heikin.df.loc[self.smooth_heikin.df['index'] == _x]
             smooth_heikin_short_signal = False
             smooth_heikin_long_signal = False
-            if not row_smooth_heikin.empty:
-                _high = row_smooth_heikin.iloc[-1]["high"]
-                _low = row_smooth_heikin.iloc[-1]["low"]
-                _open = row_smooth_heikin.iloc[-1]["open"]
-                _close = row_smooth_heikin.iloc[-1]["close"]
-                smooth_heikin_long_signal = _high < jp_low and jp_open < jp_close
-                smooth_heikin_short_signal = _low > jp_high and jp_open > jp_close
+            
+            pre_sm_low = stoploss_long = None
+            pre_sm_high = stoploss_short = None
+            pre_sm_open = None
+            pre_sm_close = None
+            if not pre_smooth_heikin.empty:
+                pre_sm_high = stoploss_short = pre_smooth_heikin.iloc[-1]["high"]
+                pre_sm_low = stoploss_long = pre_smooth_heikin.iloc[-1]["low"]
+                pre_sm_open = _open = pre_smooth_heikin.iloc[-1]["open"]
+                pre_sm_close = _close = pre_smooth_heikin.iloc[-1]["close"]
+                smooth_heikin_long_signal = _open < _close  #and pre_jp_close > _close # and cr_jp_open > _close #and pre_jp_open < pre_jp_close
+                smooth_heikin_short_signal = _open > _close #and pre_jp_close < _close # and cr_jp_open < _close #and pre_jp_open > pre_jp_close
                 
-
-            stoploss_smooth_heikin = self.stoploss_smooth_heikin.df.loc[self.stoploss_smooth_heikin.df['index'] == _x-1]
-            stoploss_long = None
-            stoploss_short = None
-            if not stoploss_smooth_heikin.empty:
-                stoploss_long = stoploss_smooth_heikin.iloc[-1]["low"]
-                stoploss_short = stoploss_smooth_heikin.iloc[-1]["high"]
             
-            cr_jp_high = self.chart.jp_candle.map_index_ohlcv[_x].high
-            cr_jp_low = self.chart.jp_candle.map_index_ohlcv[_x].low
-            self.move_entry(_x,cr_jp_high,cr_jp_low)
-            
-            super_trend_df = self.super_trend.df.loc[(self.super_trend.df['index'] <= _x-1) & (self.super_trend.df['index'] >= _x-4)]
-            super_trend_long_signal = False
-            super_trend_short_signal = False
-            if len(super_trend_df) >= 3:
-                sqz_histogram = super_trend_df.iloc[-1]['SUPERTd']
-                super_trend_long_signal = sqz_histogram > 0 
-                super_trend_short_signal = sqz_histogram < 0
-            
-
-            if df.iloc[i-1]['long'] == True:
-                _type,is_sl,is_tp = self.check_last_pos()
+            # self.move_entry(_x,cr_jp_high,cr_jp_low)
+            if smooth_heikin_long_signal:# and sqz_long_signal:     
+            # if super_trend_long_signal:     
+                # _type,is_sl,is_tp = self.check_last_pos()
+                # if _type == "long":
+                #     continue
                 
-                if _type == "long":
-                    if is_sl == True:
-                        pass
-                    else:
+                if self.cr_position["type"] != "long":
+                    self.cr_position = {"type":"long","index":_x-1,"side_count":1}
+                else:
+                    self.cr_position["side_count"] = self.cr_position["side_count"] + 1
+                
+                if self.cr_position["side_count"] < 2:
+                    continue
+                
+                if self.list_pos.get(self.cr_position["index"]):
+                    continue
+                
+                is_small_change = False
+                _max = max([pre_sm_close , pre_jp_close])
+                _min = min([pre_sm_close , pre_jp_close])
+                # if pre_sm_close < pre_jp_close:
+                stoploss_percent = percent_caculator(_min, _max)
+                if stoploss_percent < self.has["inputs"]["stoploss_price"]:
+                    # continue
+                    is_small_change = True
+                
+                if pre_jp_close < pre_sm_low:
                         continue
+                # if not self.check_pos_is_near_pivot(_x,"red"):
+                #     continue
+                
+                # if not is_bearish(pre_jp_open,pre_jp_close):
+                #     continue
+                
+                # if not is_bearish(pre_heikin_open,pre_heikin_close):
+                #     continue
 
-                if super_trend_long_signal and sm_candle_long_signal and smooth_heikin_long_signal:     
+                index, text = None,None
+                row = df.iloc[i-1]
+                
+                if row['evening_star'] == True:
+                    # print(row['index'],row['evening_star'])
+                    index = row['index']
+                    text = 'evening_star'
+                elif row['shooting_star'] == True:
+                    # print(row['index'],row['shooting_star'])
+                    index = row['index']
+                    text = 'shooting_star'
+                # elif row['bearish_harami'] == True:
+                #     # print(row['index'],row['bearish_harami'])
+                #     index = row['index']
+                #     text = 'bearish_harami'
+                elif row['bearish_engulfing'] == True:
+                    # print(row['index'],row['bearish_engulfing'])
+                    index = row['index']
+                    text = 'bearish_engulfing'
+                elif row['bearish_kicker'] == True:
+                    # print(row['index'],row['bearish_kicker'])
+                    index = row['index']
+                    text = 'bearish_kicker'
+                
+                if (index and text) or is_small_change:
+                    ohlc =  self.chart.jp_candle.map_index_ohlcv.get(index)
+                    if ohlc:
+                        # obj = TextBoxROI(size=5,symbol="o",pen="green",brush = "green", drawtool=self.chart.drawtool)
+                    #     obj = TextItem("",color="green")
+                    #     obj.setParentItem(self)
+                    #     txt = text.split("_")
+                    #     txt1,txt2 = txt[0],txt[1]
+                    #     html = f"""<div style="text-align: center">
+                    # <span style="color: green; font-size: {10}pt;">{txt1}</span><br><span style="color: green; font-size: {10}pt;">{txt2}</span>"""
+                    #     obj.setHtml(html)
+                    #     obj.setAnchor((0.5,0))
+                    #     r = obj.textItem.boundingRect()
+                    #     tl = obj.textItem.mapToParent(r.topLeft())
+                    #     br = obj.textItem.mapToParent(r.bottomRight())
+                    #     offset = (br - tl) * obj.anchor
+                    #     _y = ohlc.low-offset.y()/2
+                    #     obj.setPos(Point(index,_y))
+                        _val = self.chart.jp_candle.map_index_ohlcv[_x].low
+                                            
+                        obj = ArrowItem(drawtool=self,angle=90,pen="green",brush = "green")
+                        obj.setFlags(obj.flags() | self.GraphicsItemFlag.ItemIgnoresTransformations)
+                        obj.setParentItem(self)
+                        obj.setPos(_x, _val)
+                        obj.locked_handle()
+                        # stop_loss =  self.calculate_stop_loss("long",pivot_point[1])
+                        stop_loss =  stoploss_short
+                        # entry = Entry([_x-1, stop_loss], [0, 0],invertible=True,movable=True, resizable=False, removable=True, pen="#2962ff",parent=None, drawtool=self.chart.drawtool)
+                        # entry.setPoint(_x-1,_val)
+                        # entry.setParentItem(self)
+                        # entry.moveEntry(_x,_val)
+                        # self.chart.sig_add_item.emit(entry)
+                        
+                        self.list_pos[self.cr_position["index"]] = {"stop_loss":stop_loss,"entry_x":_x,"entry_y":_val,"type":"long","obj":obj, "entry":None, "is_stoploss":False, "take_profit_1_5R":None,"take_profit_2R":None}
+            
+            elif  smooth_heikin_short_signal:# and sqz_short_signal:    
+            # elif  super_trend_short_signal:    
+                # _type,is_sl,is_tp = self.check_last_pos()
+                # if _type == "short":
+                #     continue
+
+                
+                if self.cr_position["type"] != "short":
+                    self.cr_position = {"type":"short","index":_x-1,"side_count":1}
+                else:
+                    self.cr_position["side_count"] = self.cr_position["side_count"] + 1
+                
+                if self.cr_position["side_count"] < 2:
+                    continue
+                
+                
+                if self.list_pos.get(self.cr_position["index"]):
+                    continue
+                
+                is_small_change = False
+                _max = max([pre_sm_close , pre_jp_close])
+                _min = min([pre_sm_close , pre_jp_close])
+                # if pre_sm_close < pre_jp_close:
+                stoploss_percent = percent_caculator(_max, _min)
+                if stoploss_percent < self.has["inputs"]["stoploss_price"]:
+                    # continue
+                    is_small_change = True
+                
+                if pre_jp_close > pre_sm_high:
+                        continue
+                
+                # if not self.check_pos_is_near_pivot(_x,"green"):
+                #     continue
+                
+                # if not is_bulllish(pre_jp_open,pre_jp_close):
+                #     continue
+                
+                # if not is_bulllish(pre_heikin_open,pre_heikin_close):
+                #     continue
+                
+                index, text = None,None
+                row = df.iloc[i-1]
+                if row['morning_star'] == True:
+                    # print(row['index'],row['morning_star'])
+                    index = row['index']
+                    text = 'morning_star'
+                # elif row['bullish_harami'] == True:
+                #     # print(row['index'],row['bullish_harami'])
+                #     index = row['index']
+                #     text = 'bullish_harami'
+                elif row['bullish_engulfing'] == True:
+                    index = row['index']
+                    text = 'bullish_engulfing'
+                elif row['bullish_kicker'] == True:
+                    # print(row['index'],row['bullish_kicker'])
+                    index = row['index']
+                    text = 'bullish_kicker'
                     
-                    _val = self.chart.jp_candle.map_index_ohlcv[_x].open
-                                       
+                if (index and text) or is_small_change:
+                    ohlc =  self.chart.jp_candle.map_index_ohlcv.get(index)
+                    if ohlc:
+                    #     obj = TextItem("",color="red")
+                    #     obj.setParentItem(self)
+                    #     obj.setAnchor((0.5,1))
+                    #     txt = text.split("_")
+                    #     txt1,txt2 = txt[0],txt[1]
+                    #     html = f"""<div style="text-align: center">
+                    # <span style="color: red; font-size: {10}pt;">{txt1}</span><br><span style="color: red; font-size: {10}pt;">{txt2}</span>"""
+                    #     obj.setHtml(html)
+                    #     obj.setPos(Point(index, ohlc.high))
+                        _val = self.chart.jp_candle.map_index_ohlcv[_x].high
+                                            
+                        obj = ArrowItem(drawtool=self,angle=270,pen="red",brush = "red")
+                        obj.setFlags(obj.flags() | self.GraphicsItemFlag.ItemIgnoresTransformations)
+                        obj.setParentItem(self)
+                        obj.setPos(_x, _val)
+                        obj.locked_handle()
+                        # stop_loss =  self.calculate_stop_loss("long",pivot_point[1])
+                        stop_loss =  stoploss_long
+                        # entry = Entry([_x-1, stop_loss], [0, 0],invertible=True,movable=True, resizable=False, removable=True, pen="#2962ff",parent=None, drawtool=self.chart.drawtool)
+                        # entry.setPoint(_x-1,_val)
+                        # entry.setParentItem(self)
+                        # entry.moveEntry(_x,_val)
+                        # self.chart.sig_add_item.emit(entry)
+                        self.list_pos[self.cr_position["index"]] = {"stop_loss":stop_loss,"entry_x":_x,"entry_y":_val,"type":"short","obj":obj, "entry":None, "is_stoploss":False, "take_profit_1_5R":None,"take_profit_2R":None}
+          
+    
+    def update_Data(self,df: pd.DataFrame):
+        while not self.is_all_updated():
+            print("not updated")
+            time.sleep(0.01)
+            continue
+        
+        # for i in range(1,len(df)):
+        _x = df.iloc[-1]['index']
+        
+        # jp_high = self.chart.jp_candle.map_index_ohlcv[_x].high
+        # jp_low = self.chart.jp_candle.map_index_ohlcv[_x].low
+        # jp_open = self.chart.jp_candle.map_index_ohlcv[_x].open
+        # jp_close = self.chart.jp_candle.map_index_ohlcv[_x].close
+        
+        # pre_jp_high = self.chart.jp_candle.map_index_ohlcv[_x-1].high
+        # pre_jp_low = self.chart.jp_candle.map_index_ohlcv[_x-1].low
+        # pre_jp_open = self.chart.jp_candle.map_index_ohlcv[_x-1].open
+        pre_jp_close = self.chart.jp_candle.map_index_ohlcv[_x-1].close
+        
+        pre_smooth_heikin = self.stoploss_smooth_heikin.df.loc[self.stoploss_smooth_heikin.df['index'] == _x-1]
+        # cr_smooth_heikin = self.smooth_heikin.df.loc[self.smooth_heikin.df['index'] == _x]
+        smooth_heikin_short_signal = False
+        smooth_heikin_long_signal = False
+        
+        pre_sm_low = stoploss_long = None
+        pre_sm_high = stoploss_short = None
+        pre_sm_open = None
+        pre_sm_close = None
+        
+        row = df.iloc[-2]
+            
+        if not pre_smooth_heikin.empty:
+            pre_sm_high = stoploss_short = pre_smooth_heikin.iloc[-1]["high"]
+            pre_sm_low = stoploss_long = pre_smooth_heikin.iloc[-1]["low"]
+            pre_sm_open = _open = pre_smooth_heikin.iloc[-1]["open"]
+            pre_sm_close = _close = pre_smooth_heikin.iloc[-1]["close"]
+            smooth_heikin_long_signal = _open < _close  #and pre_jp_close > _close # and cr_jp_open > _close #and pre_jp_open < pre_jp_close
+            smooth_heikin_short_signal = _open > _close #and pre_jp_close < _close # and cr_jp_open < _close #and pre_jp_open > pre_jp_close
+            
+        
+        # self.move_entry(_x,cr_jp_high,cr_jp_low)
+        if smooth_heikin_long_signal:# and sqz_long_signal:     
+        # if super_trend_long_signal:     
+            # _type,is_sl,is_tp = self.check_last_pos()
+            # if _type == "long":
+            #     continue
+            
+                
+            if self.cr_position["type"] != "long":
+                self.cr_position = {"type":"long","index":_x-1,"side_count":1}
+            else:
+                self.cr_position["side_count"] = self.cr_position["side_count"] + 1
+            
+            if self.cr_position["side_count"] < 2:
+                return
+            
+            if self.list_pos.get(self.cr_position["index"]):
+                return
+            
+            is_small_change = False
+            _max = max([pre_sm_close , pre_jp_close])
+            _min = min([pre_sm_close , pre_jp_close])
+            # if pre_sm_close < pre_jp_close:
+            stoploss_percent = percent_caculator(_min, _max)
+            if stoploss_percent < self.has["inputs"]["stoploss_price"]:
+                # continue
+                is_small_change = True
+                    
+            if pre_jp_close < pre_sm_low:
+                return
+            # if not self.check_pos_is_near_pivot(_x,"red"):
+            #     continue
+            
+            # if not is_bearish(pre_jp_open,pre_jp_close):
+            #     continue
+            
+            # if not is_bearish(pre_heikin_open,pre_heikin_close):
+            #     continue
+
+            index, text = None,None
+            row = df.iloc[-2]
+            
+            # print("okieee row", _x, row)
+            
+            if row['evening_star'] == True:
+                # print(row['index'],row['evening_star'])
+                index = row['index']
+                text = 'evening_star'
+            elif row['shooting_star'] == True:
+                # print(row['index'],row['shooting_star'])
+                index = row['index']
+                text = 'shooting_star'
+            # elif row['bearish_harami'] == True:
+            #     # print(row['index'],row['bearish_harami'])
+            #     index = row['index']
+            #     text = 'bearish_harami'
+            elif row['bearish_engulfing'] == True:
+                # print(row['index'],row['bearish_engulfing'])
+                index = row['index']
+                text = 'bearish_engulfing'
+            elif row['bearish_kicker'] == True:
+                # print(row['index'],row['bearish_kicker'])
+                index = row['index']
+                text = 'bearish_kicker'
+            
+            if (index and text) or is_small_change:
+                ohlc =  self.chart.jp_candle.map_index_ohlcv.get(index)
+                if ohlc:
+                    # obj = TextBoxROI(size=5,symbol="o",pen="green",brush = "green", drawtool=self.chart.drawtool)
+                #     obj = TextItem("",color="green")
+                #     obj.setParentItem(self)
+                #     txt = text.split("_")
+                #     txt1,txt2 = txt[0],txt[1]
+                #     html = f"""<div style="text-align: center">
+                # <span style="color: green; font-size: {10}pt;">{txt1}</span><br><span style="color: green; font-size: {10}pt;">{txt2}</span>"""
+                #     obj.setHtml(html)
+                #     obj.setAnchor((0.5,0))
+                #     r = obj.textItem.boundingRect()
+                #     tl = obj.textItem.mapToParent(r.topLeft())
+                #     br = obj.textItem.mapToParent(r.bottomRight())
+                #     offset = (br - tl) * obj.anchor
+                #     _y = ohlc.low-offset.y()/2
+                #     obj.setPos(Point(index,_y))
+                    _val = self.chart.jp_candle.map_index_ohlcv[_x].low
+                                        
                     obj = ArrowItem(drawtool=self,angle=90,pen="green",brush = "green")
                     obj.setFlags(obj.flags() | self.GraphicsItemFlag.ItemIgnoresTransformations)
                     obj.setParentItem(self)
@@ -1017,44 +1105,100 @@ class ATKBOT(GraphicsObject):
                     obj.locked_handle()
                     # stop_loss =  self.calculate_stop_loss("long",pivot_point[1])
                     stop_loss =  stoploss_short
-                    entry = Entry([_x-1, stop_loss], [0, 0],invertible=True,movable=True, resizable=False, removable=True, pen="#2962ff",parent=None, drawtool=self.chart.drawtool)
-                    entry.setPoint(_x-1,_val)
-                    entry.setParentItem(self)
-                    entry.moveEntry(_x,_val)
-                    self.chart.sig_add_item.emit(entry)
-                    self.list_pos[_x] = {"stop_loss":stop_loss,"entry_x":_x,"entry_y":_val,"type":"long","obj":obj, "entry":entry, "is_stoploss":False, "take_profit_1_5R":None,"take_profit_2R":None}
-            elif df.iloc[i-1]['short'] == True:
-                _type,is_sl,is_tp = self.check_last_pos()
-                
-                if _type == "short":
-                    if is_sl:
-                        pass
-                    else:
-                        continue
-                
-                # elif _type == "long":
-                #     _open = self.chart.jp_candle.map_index_ohlcv[_x].open
-                #     self.check_active_other_side_pos("long",_open)
-                
-                if  super_trend_short_signal and sm_candle_short_signal and smooth_heikin_short_signal:     
+                    # entry = Entry([_x-1, stop_loss], [0, 0],invertible=True,movable=True, resizable=False, removable=True, pen="#2962ff",parent=None, drawtool=self.chart.drawtool)
+                    # entry.setPoint(_x-1,_val)
+                    # entry.setParentItem(self)
+                    # entry.moveEntry(_x,_val)
+                    # self.chart.sig_add_item.emit(entry)
+                    self.list_pos[self.cr_position["index"]] = {"stop_loss":stop_loss,"entry_x":_x,"entry_y":_val,"type":"long","obj":obj, "entry":None, "is_stoploss":False, "take_profit_1_5R":None,"take_profit_2R":None}
+        
+        elif  smooth_heikin_short_signal:# and sqz_short_signal:    
+        # elif  super_trend_short_signal:    
+            # _type,is_sl,is_tp = self.check_last_pos()
+            # if _type == "short":
+            #     continue
+
+            if self.cr_position["type"] != "short":
+                self.cr_position = {"type":"short","index":_x-1,"side_count":1}
+            else:
+                self.cr_position["side_count"] = self.cr_position["side_count"] + 1
+            
+            if self.cr_position["side_count"] < 2:
+                return
+            
+            if self.list_pos.get(self.cr_position["index"]):
+                return
+
+            is_small_change = False
+            _max = max([pre_sm_close , pre_jp_close])
+            _min = min([pre_sm_close , pre_jp_close])
+            # if pre_sm_close < pre_jp_close:
+            stoploss_percent = percent_caculator(_max, _min)
+            if stoploss_percent < self.has["inputs"]["stoploss_price"]:
+                # continue
+                is_small_change = True
                     
-                    _val = self.chart.jp_candle.map_index_ohlcv[_x].open
-                                       
+                    
+            if pre_jp_close > pre_sm_high:
+                return
+            # if not self.check_pos_is_near_pivot(_x,"green"):
+            #     continue
+            
+            # if not is_bulllish(pre_jp_open,pre_jp_close):
+            #     continue
+            
+            # if not is_bulllish(pre_heikin_open,pre_heikin_close):
+            #     continue
+            
+            index, text = None,None
+            row = df.iloc[-2]
+            
+            # print("okieee row", _x, row)
+            
+            if row['morning_star'] == True:
+                # print(row['index'],row['morning_star'])
+                index = row['index']
+                text = 'morning_star'
+            # elif row['bullish_harami'] == True:
+            #     # print(row['index'],row['bullish_harami'])
+            #     index = row['index']
+            #     text = 'bullish_harami'
+            elif row['bullish_engulfing'] == True:
+                index = row['index']
+                text = 'bullish_engulfing'
+            elif row['bullish_kicker'] == True:
+                # print(row['index'],row['bullish_kicker'])
+                index = row['index']
+                text = 'bullish_kicker'
+                
+            if (index and text) or is_small_change:
+                ohlc =  self.chart.jp_candle.map_index_ohlcv.get(index)
+                if ohlc:
+                #     obj = TextItem("",color="red")
+                #     obj.setParentItem(self)
+                #     obj.setAnchor((0.5,1))
+                #     txt = text.split("_")
+                #     txt1,txt2 = txt[0],txt[1]
+                #     html = f"""<div style="text-align: center">
+                # <span style="color: red; font-size: {10}pt;">{txt1}</span><br><span style="color: red; font-size: {10}pt;">{txt2}</span>"""
+                #     obj.setHtml(html)
+                #     obj.setPos(Point(index, ohlc.high))
+                    _val = self.chart.jp_candle.map_index_ohlcv[_x].high
+                                        
                     obj = ArrowItem(drawtool=self,angle=270,pen="red",brush = "red")
                     obj.setFlags(obj.flags() | self.GraphicsItemFlag.ItemIgnoresTransformations)
                     obj.setParentItem(self)
                     obj.setPos(_x, _val)
                     obj.locked_handle()
-                    
                     # stop_loss =  self.calculate_stop_loss("long",pivot_point[1])
                     stop_loss =  stoploss_long
-                    entry = Entry([_x-1, stop_loss], [0, 0],invertible=True,movable=True, resizable=False, removable=True, pen="#2962ff",parent=None, drawtool=self.chart.drawtool)
-                    entry.setPoint(_x-1,_val)
-                    entry.setParentItem(self)
-                    entry.moveEntry(_x,_val)
+                    # entry = Entry([_x-1, stop_loss], [0, 0],invertible=True,movable=True, resizable=False, removable=True, pen="#2962ff",parent=None, drawtool=self.chart.drawtool)
+                    # entry.setPoint(_x-1,_val)
+                    # entry.setParentItem(self)
+                    # entry.moveEntry(_x,_val)
                     # self.chart.sig_add_item.emit(entry)
-                    self.list_pos[_x] = {"stop_loss":stop_loss,"entry_x":_x,"entry_y":_val,"type":"short","obj":obj, "entry":entry, "is_stoploss":False, "take_profit_1_5R":None,"take_profit_2R":None}
-            
+                    self.list_pos[self.cr_position["index"]] = {"stop_loss":stop_loss,"entry_x":_x,"entry_y":_val,"type":"short","obj":obj, "entry":None, "is_stoploss":False, "take_profit_1_5R":None,"take_profit_2R":None}
+    
     def setdata_worker(self):
         self.worker = None
         self.worker = FastWorker(self.update_data)
@@ -1074,16 +1218,16 @@ class ATKBOT(GraphicsObject):
         self.worker.start()    
     
     def load_historic_data(self,_len,setdata):
-        xdata,_long,_short= self.INDICATOR.get_data(stop=_len)
-        setdata.emit((xdata,_long,_short))
+        df= self.INDICATOR.get_data(stop=_len)
+        setdata.emit(df)
         
     def add_data(self,setdata):
-        xdata,_long,_short= self.INDICATOR.get_data(start=-int(self.has["inputs"]["n_period"]+self.has["inputs"]["m_period"]+10))
-        setdata.emit((xdata,_long,_short))
+        df = self.INDICATOR.get_data(start=-10)
+        setdata.emit(df)
     
     def update_data(self,setdata):
-        xdata,_long,_short= self.INDICATOR.get_data(start=-int(self.has["inputs"]["n_period"]+self.has["inputs"]["m_period"]+10))
-        setdata.emit((xdata,_long,_short))
+        df= self.INDICATOR.get_data(start=-10)
+        setdata.emit(df)
 
     def boundingRect(self) -> QRectF:
         if self.list_pos:

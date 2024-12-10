@@ -28,7 +28,9 @@ from atklip.graphics.chart_component.base_items.replay_cut import ReplayObject
 
 from atklip.controls.exchangemanager import ExchangeManager
 
-from atklip.graphics.chart_component.indicators import BasicMA,BasicBB,BasicDonchianChannels,BasicZIGZAG,ATKBOT,Volume,CandlePattern
+from atklip.graphics.chart_component.indicators import (BasicMA,BasicBB,BasicDonchianChannels,
+                                                        BasicZIGZAG,ATKBOT,Volume,CandlePattern,
+                                                        TrendStopLoss)
 
 class Chart(ViewPlotWidget):
     def __init__(self, parent=None,apikey:str="", secretkey:str="",exchange_name:str="binanceusdm",
@@ -278,7 +280,7 @@ class Chart(ViewPlotWidget):
         
         is_updated =  self.check_all_indicator_updated()
         while not is_updated:
-            print("dsadsad",is_updated)
+            print("all updated",is_updated)
             is_updated =  self.check_all_indicator_updated()
             time.sleep(0.01)
             if self.replay_mode or not self.exchange_name:
@@ -348,7 +350,7 @@ class Chart(ViewPlotWidget):
                         
                         is_updated =  self.check_all_indicator_updated()
                         while not is_updated:
-                            print("dsadsad",is_updated)
+                            print("all updated",is_updated)
                             is_updated =  self.check_all_indicator_updated()
                             time.sleep(0.01)
                             if self.replay_mode or not self.exchange_name:
@@ -510,6 +512,7 @@ class Chart(ViewPlotWidget):
                         return False
                 
                 elif isinstance(indicator,ATKBOT):
+                    # print("indicator.is_all_updated()",indicator.is_all_updated())
                     if not indicator.is_all_updated():
                         return False
                 
@@ -532,7 +535,6 @@ class Chart(ViewPlotWidget):
         _ohlcv = []
         n = 0
         while True:
-              
             client_socket = self.ExchangeManager.get_client_exchange(exchange_name,self.id,symbol,interval)
             ws_socket = self.ExchangeManager.get_ws_exchange(exchange_name,self.id,symbol,interval)
             
@@ -597,13 +599,14 @@ class Chart(ViewPlotWidget):
                     
                     is_updated =  self.check_all_indicator_updated()
                     while not is_updated:
-                        print("dsadsad",is_updated)
+                        print("all updated",is_updated)
                         is_updated =  self.check_all_indicator_updated()
                         time.sleep(0.3)
                         if self.replay_mode or not self.exchange_name:
                             self.trading_mode = False
                             break
                         if is_updated:
+                            print("all updated",is_updated)
                             break
                     
                     if _is_add_candle:
@@ -693,6 +696,12 @@ class Chart(ViewPlotWidget):
 
             elif _indicator_type==IndicatorType.ATKPRO:
                 indicator = ATKBOT(self)
+            
+            elif _indicator_type==IndicatorType.TRENDWITHSL:
+                indicator = TrendStopLoss(self)
+                
+                
+                
                 
         elif _group_indicator == "Parttens Indicator":
             if _indicator_type==IndicatorType.CANDLE_PATTERN:

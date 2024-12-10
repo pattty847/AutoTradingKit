@@ -16,9 +16,10 @@ class MainWindow(WindowBase):
         super().__init__()
 
     def closeEvent(self, event: QCloseEvent) -> None:
-        quit_msg = QCoreApplication.translate("MainWindow", u"To close window click button OK", None)   
+        quit_msg = QCoreApplication.translate("MainWindow", u"To close window click button OK", None)
         mgsBox = MessageBox("Quit Application?", quit_msg, self.window())
-        if mgsBox.exec():
+        response = mgsBox.exec()
+        if response:
             self.close_window()
             self.deleteLater()
             event.accept()
@@ -32,7 +33,7 @@ def main():
         os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "0"
         os.environ["QT_SCALE_FACTOR"] = str(cfg.get(cfg.dpiScale))
     
-    setTheme(Theme.DARK,True,True)
+    setTheme(Theme.DARK, True, True)
     app = QApplication(sys.argv)
     app.setAttribute(Qt.AA_DontCreateNativeWidgetSiblings)
     app.setStyle("Fusion")
@@ -43,9 +44,7 @@ def main():
     app.setOrganizationDomain('ATK.COM')
     w = MainWindow()
     w.setWindowTitle('ATK - Auto Trading Kit')
-    icon = QIcon()
-    app_icon = get_real_path("atklip/appdata")
-    icon.addFile(f'{app_icon}/appico.ico',QSize(), QIcon.Normal, QIcon.Off)
+    icon = QIcon(get_real_path("atklip/appdata") + '/appico.ico')
     w.setWindowIcon(icon)
     sys.exit(app.exec())
 

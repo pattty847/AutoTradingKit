@@ -59,6 +59,7 @@ class IndicatorType(Enum):
     Aroon = "Aroon"
     ATR = "Average True Range (ATR)"
     BB = "Bollinger Bands (BB)"
+    TRENDWITHSL = "Trend With Stop Loss"
     BOP = "Balance of Power (BOP)"
     CCI = "Commodity Channel Index (CCI)"
     ChaikinOsc = "Chaikin Oscillator"

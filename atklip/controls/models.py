@@ -1,7 +1,7 @@
 from psygnal import evented
 from dataclasses import dataclass
 
-#@evented
+
 @dataclass
 class Object:
     id: str
@@ -14,14 +14,14 @@ class BaseCandleModel():
     id_exchange:str
     symbol:str
     interval:str
-#@evented
+
 @dataclass
 class SmoothCandleModel(BaseCandleModel):
     mamode:str
     ma_leng:int
     source:str
     precision:float
-#@evented
+
 @dataclass
 class SuperSmoothCandleModel(BaseCandleModel):
     mamode:str
@@ -29,7 +29,7 @@ class SuperSmoothCandleModel(BaseCandleModel):
     n_smooth:int
     source:str
     precision:float
-#@evented
+
 
 @dataclass
 class IndicatorBase:
@@ -43,7 +43,7 @@ class ZigzagModel(IndicatorBase):
     legs:int
     devision:float
     precision:float
-#@evented
+
 @dataclass
 class MACDModel(IndicatorBase):
     source:str 
@@ -67,20 +67,30 @@ class SQeezeModel(IndicatorBase):
     detailed:bool
     
 
-#@evented
+
 @dataclass
 class MAModel(IndicatorBase):
     mamode:str 
     source:str 
     length:int
-#@evented
+
 @dataclass
 class BBandsModel(IndicatorBase):
     mamode:str 
     source:str 
     length:int 
     std_dev_mult:float 
-#@evented
+
+@dataclass
+class TrendWithStopLossModel(IndicatorBase):
+    fast_period :int 
+    slow_period :int 
+    signal_period :int 
+    atr_length :int 
+    atr_mamode :str 
+    atr_multiplier:float 
+
+
 @dataclass         
 class DonchainModel(IndicatorBase):
     lower_length:int 
@@ -95,17 +105,17 @@ class ATKBOTModel(IndicatorBase):
     atr_short_period:float
     ema_short_period:int
 
-#@evented
+
 @dataclass 
 class ROCModel(IndicatorBase):
     source:str    
     length:int
-#@evented
+
 @dataclass
 class ROCModel(IndicatorBase):
     source:str    
     length:int 
-#@evented
+
 @dataclass
 class RSIModel(IndicatorBase):
     source:str    
@@ -117,7 +127,7 @@ class CCIModel(IndicatorBase):
     length:int 
     c:float     
 
-#@evented
+
 @dataclass    
 class STCModel(IndicatorBase):
     source:str   
@@ -125,14 +135,14 @@ class STCModel(IndicatorBase):
     fast:int 
     slow:int 
     mamode:str 
-#@evented
+
 @dataclass
 class STOCHModel(IndicatorBase):
     smooth_k_period:int 
     k_period:int 
     d_period:int 
     mamode:str 
-#@evented
+
 @dataclass
 class STOCHRSIModel(IndicatorBase):
     rsi_period:int 
@@ -141,19 +151,19 @@ class STOCHRSIModel(IndicatorBase):
     d_period:int 
     source:str 
     mamode:str 
-#@evented
+
 @dataclass 
 class VORTEXModel(IndicatorBase):
     period :int
     drift :int
-#@evented
+
 @dataclass
 class TRIXModel(IndicatorBase):
     length_period :int 
     signal_period:int 
     source:str 
     mamode:str
-#@evented
+
 @dataclass          
 class TSIModel(IndicatorBase):
     fast_period :int 
@@ -161,7 +171,7 @@ class TSIModel(IndicatorBase):
     signal_period:int 
     source:str 
     mamode:str 
-#@evented
+
 @dataclass
 class UOModel(IndicatorBase):
     fast_period :int
