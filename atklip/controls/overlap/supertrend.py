@@ -311,10 +311,6 @@ class SuperTrend(QObject):
         self.xdata,self.SUPERTt,self.SUPERTd = self.df["index"].to_numpy(),self.df["SUPERTt"].to_numpy(),self.df["SUPERTd"].to_numpy()
         
         
-        print(self.xdata,len(self.xdata))
-        print(self.SUPERTt,len(self.SUPERTt))
-        print(self.SUPERTd,len(self.SUPERTd))
-        
         self.is_genering = False
         if self.first_gen == False:
             self.first_gen = True
@@ -344,10 +340,6 @@ class SuperTrend(QObject):
         self.SUPERTt = np.concatenate((_df["SUPERTt"].to_numpy(), self.SUPERTt))
 
         
-        print(self.xdata,len(self.xdata))
-        print(self.SUPERTt,len(self.SUPERTt))
-        print(self.SUPERTd,len(self.SUPERTd))
-        
         self.is_genering = False
         if self.first_gen == False:
             self.first_gen = True
@@ -371,21 +363,13 @@ class SuperTrend(QObject):
                                 "SUPERTd":[SUPERTd.iloc[-1]],
                                 })
             
-            print("vao day", new_frame)
             
             self.df = pd.concat([self.df,new_frame],ignore_index=True)
             
-            print("vao day------------", new_frame["SUPERTt"].iloc[-1],new_frame["SUPERTd"].iloc[-1], type(new_frame["SUPERTt"].iloc[-1]))
-            
-            self.xdata = np.append((self.xdata,new_candle.index)) 
+            self.xdata = np.append(self.xdata,new_candle.index)
             self.SUPERTd = np.append(self.SUPERTd,new_frame["SUPERTd"].iloc[-1])   
             self.SUPERTt = np.append(self.SUPERTt,new_frame["SUPERTt"].iloc[-1])
-            
-            
-            print(self.xdata,len(self.xdata))
-            print(self.SUPERTt,len(self.SUPERTt))
-            print(self.SUPERTd,len(self.SUPERTd))
-            
+
             self.sig_add_candle.emit()
         self.is_current_update = True
             
@@ -401,12 +385,7 @@ class SuperTrend(QObject):
             self.df.iloc[-1] = [new_candle.index,SUPERTt.iloc[-1],SUPERTd.iloc[-1]]
             
             self.xdata[-1],self.SUPERTt[-1],self.SUPERTd[-1] = new_candle.index,SUPERTt.iloc[-1],SUPERTd.iloc[-1]
-            
-            
-            print(self.xdata,len(self.xdata))
-            print(self.SUPERTt,len(self.SUPERTt))
-            print(self.SUPERTd,len(self.SUPERTd))
-            
+
             self.sig_update_candle.emit()
         self.is_current_update = True
             

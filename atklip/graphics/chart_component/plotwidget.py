@@ -20,7 +20,7 @@ from atklip.app_utils import *
 from atklip.graphics.chart_component.draw_tools import DrawTool
 
 from atklip.graphics.chart_component.base_items.replay_cut import ReplayObject
-from atklip.graphics.chart_component.indicators.advand_indicators.utbot import ATKBOT
+from atklip.graphics.chart_component.indicators import ATKBOT
 if TYPE_CHECKING:
     from .viewbox import PlotViewBox
     from .axisitem import CustomDateAxisItem, CustomPriceAxisItem

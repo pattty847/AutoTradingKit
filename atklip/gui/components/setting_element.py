@@ -96,7 +96,7 @@ class MaTypeEdit(ComboboxEdit):
     def __init__(self,parent:QWidget=None,indicator=None, _input=None):
         super(MaTypeEdit,self).__init__(parent,indicator, _input)
         
-        list_types = ["mamode","macd_type","rsi_ma_type","supertrend_atr_mamode"]
+        list_types = ["mamode","macd_type","rsi_ma_type","supertrend_atr_mamode","atr_mamode"]
         
         _inputs = self.indicator.get_inputs()
         
@@ -255,8 +255,8 @@ class PriceEdit(FloatEdit):
         
         _ls_inputs = ["price_high","price_low","fast_w_value","medium_w_value","min_price_low",
                       "slow_w_value","key_value_long","key_value_short","max_price_high",
-                      "capital","loss_capital","proportion_closed","risk_percentage","kc_scalar",
-                      "leverage","taker_fee","rsi_price_high","rsi_price_low","bb_std",
+                      "capital","loss_capital","proportion_closed","risk_percentage","kc_scalar","atr_multiplier",
+                      "leverage","taker_fee","rsi_price_high","rsi_price_low","bb_std","supertrend_multiplier",
                       "maker_fee","atr_multiplier"]
         
         if _input in _ls_inputs:

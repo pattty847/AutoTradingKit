@@ -95,6 +95,7 @@ class IndicatorType(Enum):
     Stoch = "Stochastic Oscillator"
     StochRSI = "Stochastic RSI"
     SuperTrend = "Super Trend"
+    ATRSuperTrend = "ATR Super Trend"
     ZIGZAG = "ZigZag"
     
 
@@ -120,6 +121,7 @@ class IndicatorType(Enum):
     CANDLESTICK = "CandleStick"
     SUB_CHART = "Sub_Chart"
     ATKPRO = "ATKBOT"
+    UTBOT = "UTBOT"
     ATKBOT_SUPERTREND = "ATKBOTFollowTrend"
     ATKBOT_CCI = "ATKBOTCCI"
     ATKBOT_SUPERTREND_SSCANDLE = "ATKBOTFollowSMCandle"

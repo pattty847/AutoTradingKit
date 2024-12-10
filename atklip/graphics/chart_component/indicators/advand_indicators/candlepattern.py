@@ -49,38 +49,14 @@ class CandlePattern(GraphicsObject):
             "inputs":{
                     "source":self.chart.jp_candle,
                     "source_name": self.chart.jp_candle.source_name,
-                    "type":"close",
-                    "mamode":PD_MAType.SMA,
-                    "length":20,
-                    "std_dev_mult":2,
                     "indicator_type":IndicatorType.CANDLE_PATTERN,
                     "show":False},
 
             "styles":{
-                    'pen_high_line': "green",
-                    'width_high_line': 1,
-                    'style_high_line': Qt.PenStyle.SolidLine,
-                    
-                    'pen_center_line': "orange",
-                    'width_center_line': 1,
-                    'style_center_line': Qt.PenStyle.SolidLine,
-                    
-                    'pen_low_line': "red",
-                    'width_low_line': 1,
-                    'style_low_line': Qt.PenStyle.SolidLine,
-                    
-                    "brush_color": mkBrush('#3f3964',width=0.7),
                     }
                     }
         self.id = self.chart.objmanager.add(self)
-        self.lowline = PlotDataItem(pen=self.has["styles"]['pen_low_line'])  # for z value
-        self.lowline.setParentItem(self)
-        self.centerline = PlotDataItem(pen=self.has["styles"]['pen_center_line'])
-        self.centerline.setParentItem(self)
-        self.highline = PlotDataItem(pen=self.has["styles"]['pen_high_line'])
-        self.highline.setParentItem(self)
-        
-        
+       
         self.list_patterns:dict = {}
      
         self.picture: QPicture = QPicture()
@@ -99,29 +75,21 @@ class CandlePattern(GraphicsObject):
     def id(self,_chart_id):
         self.chart_id = _chart_id
         
-    @property
-    def model(self) -> dict:
-        return BBandsModel(self.id,"BBands",self.chart.jp_candle.source_name,self.has["inputs"]["mamode"].name.lower(),
-                              self.has["inputs"]["type"],self.has["inputs"]["length"],
-                              self.has["inputs"]["std_dev_mult"])
-    
-    
     def disconnect_signals(self):
         try:
             self.INDICATOR.sig_reset_all.disconnect(self.reset_threadpool_asyncworker)
             self.INDICATOR.sig_update_candle.disconnect(self.setdata_worker)
             self.INDICATOR.sig_add_candle.disconnect(self.add_worker)
             self.INDICATOR.signal_delete.disconnect(self.replace_source)
+            self.INDICATOR.sig_add_historic.disconnect(self.add_historic_worker)
         except RuntimeError:
                     pass
     
     def connect_signals(self):
         self.INDICATOR.sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
-        
         self.INDICATOR.sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
         self.INDICATOR.sig_add_candle.connect(self.add_worker,Qt.ConnectionType.AutoConnection)
         self.INDICATOR.sig_add_historic.connect(self.add_historic_worker,Qt.ConnectionType.AutoConnection)
-        
         self.INDICATOR.signal_delete.connect(self.replace_source,Qt.ConnectionType.AutoConnection)
     
     def fisrt_gen_data(self):
@@ -157,27 +125,11 @@ class CandlePattern(GraphicsObject):
       
     
     def get_inputs(self):
-        inputs =  {"source":self.has["inputs"]["source"],
-                    "type":self.has["inputs"]["type"],
-                    "length":self.has["inputs"]["length"],
-                    "std_dev_mult":self.has["inputs"]["std_dev_mult"],
-                    "mamode":self.has["inputs"]["mamode"],}
+        inputs =  {"source":self.has["inputs"]["source"]}
         return inputs
     
     def get_styles(self):
-        styles =  {"pen_high_line":self.has["styles"]["pen_high_line"],
-                    "width_high_line":self.has["styles"]["width_high_line"],
-                    "style_high_line":self.has["styles"]["style_high_line"],
-                    
-                    "pen_center_line":self.has["styles"]["pen_center_line"],
-                    "width_center_line":self.has["styles"]["width_center_line"],
-                    "style_center_line":self.has["styles"]["style_center_line"],
-                    
-                    "pen_low_line":self.has["styles"]["pen_low_line"],
-                    "width_low_line":self.has["styles"]["width_low_line"],
-                    "style_low_line":self.has["styles"]["style_low_line"],
-                    
-                    "brush_color":self.has["styles"]["brush_color"],
+        styles =  {
                     }
         return styles
     
@@ -188,27 +140,11 @@ class CandlePattern(GraphicsObject):
                 self.has["inputs"]["source"] = self.chart.sources[_source]
                 self.has["inputs"]["source_name"] = self.chart.sources[_source].source_name
                 self.INDICATOR.change_input(self.has["inputs"]["source"])
-        elif _source != self.has["inputs"][_input]:
-                self.has["inputs"][_input] = _source
-                is_update = True
-        
-        if is_update:
-            self.has["name"] = f"BB {self.has["inputs"]["length"]} {self.has["inputs"]["std_dev_mult"]} {self.has["inputs"]["type"]} {self.has["inputs"]["mamode"].name}"
-            self.sig_change_indicator_name.emit(self.has["name"])
-            self.INDICATOR.change_input(dict_ta_params=self.model.__dict__)
+
     
     def update_styles(self, _input):
         _style = self.has["styles"][_input]
-        if _input == "pen_high_line" or _input == "width_high_line" or _input == "style_high_line":
-            self.highline.setPen(color=self.has["styles"]["pen_high_line"], width=self.has["styles"]["width_high_line"],style=self.has["styles"]["style_high_line"])
-        elif _input == "pen_center_line" or _input == "width_center_line" or _input == "style_center_line":
-            self.centerline.setPen(color=self.has["styles"]["pen_center_line"], width=self.has["styles"]["width_center_line"],style=self.has["styles"]["style_center_line"])
-            # self.setPen(color=self.has["styles"]["pen_center_line"], width=self.has["styles"]["width_center_line"],style=self.has["styles"]["style_center_line"])
-        elif _input == "pen_low_line" or _input == "width_low_line" or _input == "style_low_line":
-            self.lowline.setPen(color=self.has["styles"]["pen_low_line"], width=self.has["styles"]["width_low_line"],style=self.has["styles"]["style_low_line"])
-        elif _input == "brush_color":
-            self.bb_bank.setBrush(self.has["styles"]["brush_color"])
-    
+
     
     def get_xaxis_param(self):
         return None,"#363a45"
@@ -557,7 +493,6 @@ class CandlePattern(GraphicsObject):
     
     def paint(self, p:QPainter, *args):
         self.picture.play(p)
-        # p.drawRect(self.boundingRect())
     
     def get_yaxis_param(self):
         _value = None

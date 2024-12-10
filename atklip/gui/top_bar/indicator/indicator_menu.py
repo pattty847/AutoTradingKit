@@ -234,8 +234,12 @@ class AdvanceIndicator(BasicMenu):
         self._type_indicator = "Advance Indicator"
         self.setObjectName(self._type_indicator)
         self.list_indicators = [IndicatorType.ATKPRO,
+                                IndicatorType.UTBOT,
                                 IndicatorType.TRENDWITHSL,
                                 IndicatorType.SuperTrend,
+                                IndicatorType.ATRSuperTrend,
+                                
+                                
                                 IndicatorType.ZIGZAG,
                                 IndicatorType.BB,
                                 IndicatorType.StdDev,

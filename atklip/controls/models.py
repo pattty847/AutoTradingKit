@@ -105,7 +105,14 @@ class ATKBOTModel(IndicatorBase):
     atr_short_period:float
     ema_short_period:int
 
-
+@dataclass         
+class UTBOTModel(IndicatorBase):
+    key_value_long:float
+    key_value_short:float
+    atr_long_period:float
+    ema_long_period:int
+    atr_short_period:float
+    ema_short_period:int
 @dataclass 
 class ROCModel(IndicatorBase):
     source:str    
@@ -191,3 +198,12 @@ class SuperTrendModel(IndicatorBase):
     multiplier :float
     atr_mamode :str
 
+@dataclass
+class SuperWithSlModel(IndicatorBase):
+    supertrend_length :int
+    supertrend_atr_length:int
+    supertrend_multiplier :float
+    supertrend_atr_mamode :str
+    atr_length :int
+    atr_mamode :str
+    atr_multiplier :float

@@ -10,9 +10,9 @@ from atklip.graphics.chart_component.base_items.plotdataitem import PlotDataItem
 from atklip.graphics.pyqtgraph import GraphicsObject
 
 from atklip.controls import PD_MAType,IndicatorType,BBANDS
-from atklip.controls.models import SuperTrendModel
+from atklip.controls.models import SuperWithSlModel
 from atklip.controls.overlap.supertrend import SuperTrend
-
+from atklip.controls.tradingview import SuperTrendWithStopLoss
 
 from atklip.graphics.chart_component.base_items import SuperTrendLine
 
@@ -23,7 +23,7 @@ if TYPE_CHECKING:
     from atklip.graphics.chart_component.viewchart import Chart
 
 
-class BasicSuperTrend(GraphicsObject):
+class ATRSuperTrend(GraphicsObject):
     on_click = Signal(object)
     signal_visible = Signal(bool)
     signal_delete = Signal()
@@ -37,17 +37,23 @@ class BasicSuperTrend(GraphicsObject):
         # self.setFlag(self.GraphicsItemFlag.ItemHasNoContents)
         self.setFlag(self.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
         self.chart:Chart = chart
+        
+
         self.has = {
-            "name": f"BB 20 2",
+            "name": f"SuperTrendvsSL 20 2",
             "y_axis_show":False,
             "inputs":{
                     "source":self.chart.jp_candle,
                     "source_name": self.chart.jp_candle.source_name,
                     
-                    "supertrend_length" :14,
-                    "supertrend_atr_length":14,
+                    "supertrend_length" :7,
+                    "supertrend_atr_length":7,
                     "supertrend_multiplier" :3.0,
                     "supertrend_atr_mamode" :PD_MAType.RMA, 
+                    
+                    "atr_length" : 14,
+                    "atr_mamode" :PD_MAType.RMA, 
+                    "atr_multiplier" : 1,
                      
                     "indicator_type":IndicatorType.SuperTrend,
                     "show":False},
@@ -71,10 +77,12 @@ class BasicSuperTrend(GraphicsObject):
         self.highline = SuperTrendLine(self.chart,"green")
         self.highline.setParentItem(self)
         
+
+        
      
         self.picture: QPicture = QPicture()
                 
-        self.INDICATOR  = SuperTrend(self.has["inputs"]["source"], self.model.__dict__)
+        self.INDICATOR  = SuperTrendWithStopLoss(self.has["inputs"]["source"], self.model.__dict__)
         
         self.chart.sig_update_source.connect(self.change_source,Qt.ConnectionType.AutoConnection)   
         self.signal_delete.connect(self.delete)
@@ -90,11 +98,14 @@ class BasicSuperTrend(GraphicsObject):
         
     @property
     def model(self) -> dict:
-        return SuperTrendModel(self.id,"SuperTrend",self.chart.jp_candle.source_name,
+        return SuperWithSlModel(self.id,"SuperTrend",self.chart.jp_candle.source_name,
                     self.has["inputs"]["supertrend_length"],
                     self.has["inputs"]["supertrend_atr_length"],
                     self.has["inputs"]["supertrend_multiplier"],
-                    self.has["inputs"]["supertrend_atr_mamode"].name.lower()
+                    self.has["inputs"]["supertrend_atr_mamode"].name.lower(),
+                    self.has["inputs"]["atr_length"],
+                    self.has["inputs"]["atr_mamode"].name.lower(),
+                    self.has["inputs"]["atr_multiplier"]
                     )
     
     def disconnect_signals(self):
@@ -129,10 +140,10 @@ class BasicSuperTrend(GraphicsObject):
         self.worker.start()
 
     def regen_indicator(self,setdata):
-        x_data,SUPERTt,SUPERTd= self.INDICATOR.get_data()
-        setdata.emit((x_data,SUPERTt,SUPERTd))
+        x_data,long_stoploss,short_stoploss,SUPERTd = self.INDICATOR.get_data()
+        setdata.emit((x_data,long_stoploss,short_stoploss,SUPERTd))
         
-        self.has["name"] = f"SupperTrend {self.has["inputs"]["supertrend_length"]} {self.has["inputs"]["supertrend_atr_length"]} {self.has["inputs"]["supertrend_multiplier"]} {self.has["inputs"]["supertrend_atr_mamode"].name}"
+        self.has["name"] = f"SuperTrendvsSL {self.has["inputs"]["supertrend_length"]} {self.has["inputs"]["supertrend_atr_length"]} {self.has["inputs"]["supertrend_multiplier"]} {self.has["inputs"]["supertrend_atr_mamode"].name}"
         self.sig_change_indicator_name.emit(self.has["name"])
         
     def replace_source(self):
@@ -153,6 +164,9 @@ class BasicSuperTrend(GraphicsObject):
                     "supertrend_atr_length":self.has["inputs"]["supertrend_atr_length"],
                     "supertrend_multiplier":self.has["inputs"]["supertrend_multiplier"],
                     "supertrend_atr_mamode":self.has["inputs"]["supertrend_atr_mamode"],
+                    "supertrend_atr_mamode":self.has["inputs"]["atr_length"],
+                    "supertrend_atr_mamode":self.has["inputs"]["atr_multiplier"],
+                    "supertrend_atr_mamode":self.has["inputs"]["atr_mamode"],
                     }
         return inputs
     
@@ -179,7 +193,7 @@ class BasicSuperTrend(GraphicsObject):
                 is_update = True
 
         if is_update:
-            self.has["name"] = f"SupperTrend {self.has["inputs"]["supertrend_length"]} {self.has["inputs"]["supertrend_atr_length"]} {self.has["inputs"]["supertrend_multiplier"]} {self.has["inputs"]["supertrend_atr_mamode"].name}"
+            self.has["name"] = f"SuperTrendvsSL {self.has["inputs"]["supertrend_length"]} {self.has["inputs"]["supertrend_atr_length"]} {self.has["inputs"]["supertrend_multiplier"]} {self.has["inputs"]["supertrend_atr_mamode"].name}"
             self.sig_change_indicator_name.emit(self.has["name"])
             self.INDICATOR.change_input(dict_ta_params=self.model.__dict__)
     
@@ -199,22 +213,24 @@ class BasicSuperTrend(GraphicsObject):
             self.hide()
     
     def set_Data(self,data):
-        x_data,SUPERTt,SUPERTd = data[0],data[1],data[2]
+        x_data,long_stoploss,short_stoploss,SUPERTd = data[0],data[1],data[2],data[3]
         
-        self.lowline.setData((x_data,SUPERTt,SUPERTd))
-        self.highline.setData((x_data,SUPERTt,SUPERTd))
+        self.lowline.setData((x_data,short_stoploss,SUPERTd))
+        self.highline.setData((x_data,long_stoploss,SUPERTd))
     
     def add_historic_Data(self,data):
-        x_data,SUPERTt,SUPERTd = data[0],data[1],data[2]
+        x_data,long_stoploss,short_stoploss,SUPERTd = data[0],data[1],data[2],data[3]
         
-        self.lowline.setData((x_data,SUPERTt,SUPERTd))
-        self.highline.setData((x_data,SUPERTt,SUPERTd))
+        self.lowline.setData((x_data,short_stoploss,SUPERTd))
+        self.highline.setData((x_data,long_stoploss,SUPERTd))
 
         
     def update_Data(self,data):
-        x_data,SUPERTt,SUPERTd = data[0],data[1],data[2]
-        self.lowline.updateData((x_data,SUPERTt,SUPERTd))
-        self.highline.updateData((x_data,SUPERTt,SUPERTd))
+        x_data,long_stoploss,short_stoploss,SUPERTd = data[0],data[1],data[2],data[3]
+        self.lowline.updateData((x_data,short_stoploss,SUPERTd))
+        self.highline.updateData((x_data,long_stoploss,SUPERTd))
+        
+
         
     def setdata_worker(self):
         self.worker = None
@@ -234,18 +250,18 @@ class BasicSuperTrend(GraphicsObject):
         self.worker.start()
     
     def load_historic_data(self,_len,setdata):
-        x_data,SUPERTt,SUPERTd = self.INDICATOR.get_data(stop=_len)
-        setdata.emit((x_data,SUPERTt,SUPERTd))
+        x_data,long_stoploss,short_stoploss,SUPERTd = self.INDICATOR.get_data(stop=_len)
+        setdata.emit((x_data,long_stoploss,short_stoploss,SUPERTd))
         
 
     def add_data(self,setdata):
-        x_data,SUPERTt,SUPERTd= self.INDICATOR.get_data(start=-3)
-        setdata.emit((x_data,SUPERTt,SUPERTd))
+        x_data,long_stoploss,short_stoploss,SUPERTd = self.INDICATOR.get_data(start=-3)
+        setdata.emit((x_data,long_stoploss,short_stoploss,SUPERTd))
         
     
     def update_data(self,setdata):
-        x_data,SUPERTt,SUPERTd= self.INDICATOR.get_data(start=-3)
-        setdata.emit((x_data,SUPERTt,SUPERTd))
+        x_data,long_stoploss,short_stoploss,SUPERTd = self.INDICATOR.get_data(start=-3)
+        setdata.emit((x_data,long_stoploss,short_stoploss,SUPERTd))
 
     def boundingRect(self) -> QRectF:
         return self.highline.boundingRect()
@@ -255,11 +271,7 @@ class BasicSuperTrend(GraphicsObject):
     
     def get_yaxis_param(self):
         _value = None
-        try:
-            _time,_value = self.get_last_point()
-        except:
-            pass
-        return _value,self.has["styles"]['pen_center_line']
+        return None,None
     
     
     def get_last_point(self):

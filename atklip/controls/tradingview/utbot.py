@@ -61,7 +61,7 @@ def utbot(dataframe:pd.DataFrame, key_value=1, atr_period=3, ema_period=200, ma_
     return dataframe_result
     
 
-class ATKBOT_ALERT(QObject):
+class UTBOT_ALERT(QObject):
     sig_update_candle = Signal()
     sig_add_candle = Signal()
     sig_reset_all = Signal()
