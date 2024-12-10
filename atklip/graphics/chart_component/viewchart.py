@@ -664,11 +664,6 @@ class Chart(ViewPlotWidget):
         # print("view chart", _group_indicator,_indicator_type)
         if _group_indicator == "Basic Indicator":
             indicator = BasicMA(self,indicator_type=_indicator_type,length=30,_type="close",pen="#ffaa00")
-            
-            # panel = IndicatorPanel(self.mainwindow,self, indicator)
-            # self.container_indicator_wg.add_indicator_panel(panel)
-            # self.add_item(indicator)
-            # indicator.fisrt_gen_data()
 
         elif _group_indicator == "Candle Indicator":
             candle:CandleStick = self.get_candle(_indicator_type)
@@ -708,9 +703,6 @@ class Chart(ViewPlotWidget):
             
             elif _indicator_type==IndicatorType.ATRSuperTrend:
                 indicator = ATRSuperTrend(self)
-            
-            
-            
             
                   
         elif _group_indicator == "Parttens Indicator":

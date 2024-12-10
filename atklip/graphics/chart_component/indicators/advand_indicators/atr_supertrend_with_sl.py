@@ -46,8 +46,8 @@ class ATRSuperTrend(GraphicsObject):
                     "source":self.chart.jp_candle,
                     "source_name": self.chart.jp_candle.source_name,
                     
-                    "supertrend_length" :7,
-                    "supertrend_atr_length":7,
+                    "supertrend_length" :14,
+                    "supertrend_atr_length":14,
                     "supertrend_multiplier" :3.0,
                     "supertrend_atr_mamode" :PD_MAType.RMA, 
                     

@@ -5,23 +5,6 @@ from atklip.controls.momentum import macd
 from atklip.controls.tradingview.atr_stoploss import atr_stoploss
 from atklip.controls.overlap.supertrend import supertrend
 
-"""_summary_
-smaSrcHigh = ta.ema(high,cloud_val)
-smaSrcLow = ta.ema(low, cloud_val)
-[macdLine, signalLine, histLine] = ta.macd(close, 12, 26, 9)
-plot_high = plot(showMovingAverageCloud? smaSrcHigh : na, color = na, transp = 1, editable = false)
-plot_low  = plot(showMovingAverageCloud? smaSrcLow  : na, color = na, transp = 1, editable = false)
-
-plotshape(longCond ? up : na, title="UpTrend Begins", location=location.belowbar, style=shape.circle, size=size.tiny, color=color.new(color.teal,transp = 50) )
-plotshape(longCond and showBuySellSignals ? up : na, title="Buy", text="Buy", location=location.belowbar, style=shape.labelup, size=size.tiny, color=color.new(color.teal,transp = 50), textcolor=color.white )
-plotshape(shortCond ? dn : na, title="DownTrend Begins", location=location.abovebar, style=shape.circle, size=size.tiny, color=color.new(color.red,transp = 50) )
-plotshape(shortCond and showBuySellSignals ? dn : na, title="Sell", text="Sell", location=location.abovebar, style=shape.labeldown, size=size.tiny, color=color.new(color.red,transp = 50), textcolor=color.white)
- 
-fill(plot_high, plot_low, color = (macdLine > 0) and (macdLine[0] > macdLine[1]) ? color.new(color.aqua,transp = 85) : na, title = "Positive Cloud Uptrend")
-fill(plot_high, plot_low, color = macdLine > 0 and macdLine[0] < macdLine[1]     ? color.new(color.aqua,transp = 85) : na, title = "Positive Cloud  Downtrend")
-fill(plot_high, plot_low, color = macdLine < 0 and macdLine[0] < macdLine[1]     ? color.new(color.red,transp = 85) : na, title = "Negative Cloud  Uptrend")
-fill(plot_high, plot_low, color = macdLine < 0 and macdLine[0] > macdLine[1]     ? color.new(color.red,transp = 85) : na, title = "Negative Cloud Downtrend")
-"""
 def paire_data(INDICATOR:pd.DataFrame):
     try:
         column_names = INDICATOR.columns.tolist()
@@ -265,23 +248,6 @@ class SuperTrendWithStopLoss(QObject):
             return pd.Series([]),pd.Series([]),pd.Series([])
         
     def calculate(self,df: pd.DataFrame):
-        """_summary_
-        self.supertrend_length = dict_ta_params.get("supertrend_length",7) 
-        self.supertrend_atr_length = dict_ta_params.get("supertrend_atr_length",7)
-        self.supertrend_multiplier = dict_ta_params.get("supertrend_multiplier",3) 
-        self.supertrend_atr_mamode = dict_ta_params.get("supertrend_atr_mamode","rma")
-        
-        self.atr_length = dict_ta_params.get("atr_length",14) 
-        self.atr_mamode = dict_ta_params.get("atr_mamode","rma") 
-        self.atr_multiplier = dict_ta_params.get("atr_multiplier",1)
-        Args:
-            df (pd.DataFrame): _description_
-
-        Returns:
-            _type_: _description_
-        """
-        
-        
         INDICATOR = supertrend_with_stoploss(df,
                                             supertrend_length=self.supertrend_length,
                                             supertrend_atr_length=self.supertrend_atr_length,
@@ -316,8 +282,7 @@ class SuperTrendWithStopLoss(QObject):
         self.xdata,self.long_stoploss,self.short_stoploss,self.SUPERTd = self.df["index"].to_numpy(),\
                                                                         self.df["long_stoploss"].to_numpy(),\
                                                                         self.df["short_stoploss"].to_numpy(),\
-                                                                        self.df["SUPERTd"].to_numpy()
-        print(self.df)                                                                          
+                                                                        self.df["SUPERTd"].to_numpy()                                                                      
         self.is_genering = False
         if self.first_gen == False:
             self.first_gen = True

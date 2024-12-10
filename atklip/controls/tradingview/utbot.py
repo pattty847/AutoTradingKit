@@ -76,10 +76,10 @@ class UTBOT_ALERT(QObject):
         self.key_value_short:int=dict_ta_params.get("key_value_short",0.1)
         
         self.atr_long_period:float=dict_ta_params.get("atr_long_period",1)
-        self.ema_long_period:int=dict_ta_params.get("ema_long_period",100) 
+        self.ema_long_period:int=dict_ta_params.get("ema_long_period",40) 
         
         self.atr_short_period:float=dict_ta_params.get("atr_short_period",1)
-        self.ema_short_period:int=dict_ta_params.get("ema_short_period",10) 
+        self.ema_short_period:int=dict_ta_params.get("ema_short_period",40) 
 
         #self.signal_delete.connect(self.deleteLater)
         self.first_gen = False
