@@ -10,6 +10,7 @@ from .single_value_ui import Ui_single_value as SingleValue
 from .double_value_ui import Ui_double_value as DoubleValue
 from .edit_value_ui import Ui_text_value as TextValue
 from .color_value_ui import Ui_color_value as ColorValue
+from .checkbox_value_ui import Ui_Form as CheckBoxValue
 
 from atklip.gui.qfluentwidgets.common.icon import FluentIcon as FIF
 from atklip.gui.components._pushbutton import Color_Picker_Button
@@ -487,3 +488,27 @@ class WidthEditDrawTool(ComboBox):
             self.setCurrentIndex(2)
         elif _value == 4:
             self.setCurrentIndex(3)
+
+
+"styles setting"
+class CheckBoxEdit(QWidget,CheckBoxValue):
+    from PySide6.QtCore import Qt
+    def __init__(self,parent:QWidget=None,indicator=None, _input=None):
+        super(CheckBoxEdit,self).__init__(parent)
+        self.setupUi(self)
+        self._parent = parent
+        self.indicator = indicator
+        self._input = _input
+        self.setFixedHeight(35)
+        self.load_state()
+        self.value.stateChanged.connect(self.change_value)
+        
+    def set_name(self,name):
+        self.tittle.setText(name)
+    def change_value(self,value):
+        print(value)
+        # self.indicator.update_styles(self._input)
+    def load_state(self):
+        is_checked = self.indicator.has["styles"].get(self._input)
+        if is_checked:
+            self.value.setCheckState(Qt.CheckState.Checked)
