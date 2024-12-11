@@ -14,7 +14,6 @@ from PySide6.QtCore import Signal, Qt
 from PySide6.QtWidgets import QWidget
 
 
-
 class SettingButton(VWIDGET):
     def __init__(self,parent:QWidget=None):
         super(SettingButton, self).__init__(parent)
@@ -33,25 +32,22 @@ class SettingButton(VWIDGET):
         self.btn_save = TextButton("Save",self,None)
         self.btn_save.setFixedSize(80,35)
         self.btn_save.clicked.connect(self._onGotoClicked)
-        self.setSpacing(5)
-        self.setContentsMargins(0,0,0,0)
-
-        self.addSpacer()
-
-        self.addSeparator(_type = "HORIZONTAL",w=300,h=2)
+        # self.setSpacing(5)
+        # self.setContentsMargins(0,0,0,0)
+        # self.addSpacer()
+        self.addSeparator(_type = "HORIZONTAL",w=330,h=2)
         self._hwidget.addWidget(self.btn_save)
         self._hwidget.addWidget(self.btn_cancel)
         self._hwidget.addWidget(self.btn_ok)
         self._hwidget.setSpacing(5)
-        self._hwidget.setContentsMargins(2,2,2,2)
+        self._hwidget.setContentsMargins(2,2,2,5)
         self.addWidget(self._hwidget)
-        self.setFixedSize(300,45)
+        self.setFixedHeight(45)
         
     def _onGotoClicked(self):
         self.close()
     def _onCancelClicked(self):
         self.hide()
-
 
 
 class BasicMenu(ScrollInterface):
@@ -143,14 +139,15 @@ class BasicMenu(ScrollInterface):
                     style = StyleEdit(self,self.tool, _input)
                     style.set_name(_input)
                     self.sig_add_tool.emit(style)
-            
+    
     def add_Widget(self,widget):
         self.addWidget(widget, alignment=Qt.AlignmentFlag.AlignTop)
-        _height = self.height() + widget.height()+10
-        # _width = self.width()
-        # if _width < widget.width():
-        #     self.setFixedWidth(_width)
-        self.setFixedHeight(_height)
+        if self.height() < 250:
+            _height = self.height() + widget.height()
+            # self.view.setFixedHeight(_height)
+            self.setFixedHeight(_height)
+        # else:
+        #     self.setFixedHeight(250)
     def remove_Widget(self,widget):
         self.removeWidget(widget)
 
@@ -159,7 +156,7 @@ class BasicMenu(ScrollInterface):
 class SettingWidget(PivotInterface):
     def __init__(self,parent:QWidget=None,tool=None,chart=None):
         super(SettingWidget, self).__init__(parent)
-        self.w = 320
+        self.w = 330
         self.setFixedWidth(self.w)
         self.tool = tool
         self.chart:Chart|ViewSubPanel = chart
@@ -171,40 +168,36 @@ class SettingWidget(PivotInterface):
         
         if _inputs != {}:
             self.input_widget = BasicMenu("input",self,self.tool,self.chart)
-            width = self.input_widget.width()
-            if self.w < width:
-                self.w = width
-                self.setFixedWidth(width)
-                
             self.addSubInterface(self.input_widget, 'Inputs', self.tr('Inputs'))
 
         if _styles!= {}:
             self.style_widget = BasicMenu("style",self,self.tool,self.chart)
-            width = self.style_widget.width()
-            if self.w < width:
-                self.w = width
-                self.setFixedWidth(width)
-            
             self.addSubInterface(self.style_widget, 'Styles', self.tr('Styles'))
             if _inputs == {}:
                 _height_style_widget = self.style_widget.height() 
-                self.setFixedHeight(_height_style_widget)
+                self.stackedWidget.setFixedHeight(_height_style_widget)
                 self.stackedWidget.setCurrentWidget(self.style_widget)
                 self.pivot.setCurrentItem(self.style_widget.objectName())
+                self.setFixedHeight(self.stackedWidget.height()+self.pivot.height())
                 qrouter.setDefaultRouteKey(self.stackedWidget, self.style_widget.objectName())
             else:
                 _height_input_widget = self.input_widget.height() 
-                self.setFixedHeight(_height_input_widget)
+                self.stackedWidget.setFixedHeight(_height_input_widget)
                 
                 self.stackedWidget.setCurrentWidget(self.input_widget)
                 self.pivot.setCurrentItem(self.input_widget.objectName())
+                self.setFixedHeight(self.stackedWidget.height()+self.pivot.height())
                 qrouter.setDefaultRouteKey(self.stackedWidget, self.input_widget.objectName())
                 
-                # _height_style_widget = self.style_widget.height() 
-                # if _height_input_widget > _height_style_widget:
-                #     self.setFixedHeight(_height_input_widget)
-                # else:
-                #     self.setFixedHeight(_height_style_widget)
+        else:
+            if _inputs != {}:
+                _height_input_widget = self.input_widget.height() 
+                self.setFixedHeight(_height_input_widget)
+                self.stackedWidget.setCurrentWidget(self.input_widget)
+                self.pivot.setCurrentItem(self.input_widget.objectName())
+                self.setFixedHeight(self.stackedWidget.height()+self.pivot.height())
+                qrouter.setDefaultRouteKey(self.stackedWidget, self.input_widget.objectName())
+        
 
 class DrawSettingMenu(MovingWidget):
     def __init__(self,tool,parent:QWidget=None,chart=None):
@@ -222,18 +215,22 @@ class DrawSettingMenu(MovingWidget):
         self.addWidget(menu)
         self.w = menu.width()
         
-        _height = 30
+        # _height = 30
         
         self.btn_setting = SettingButton(self)
         self.addWidget(self.btn_setting)
         
-        _height += self.title.height()
-        _height +=  menu.height()
-        _height += self.btn_setting.height()
+        # _height += self.title.height()
+        # _height +=  menu.height()
+        # _height += self.btn_setting.height()
         
-        self.resize(self.w,_height)
+        # self.resize(self.w,_height)
+        
+        _height_widget = menu.stackedWidget.height() + menu.pivot.height()
+        menu.sig_change_widget.emit(_height_widget)
         
         FluentStyleSheet.INDICATORMENU.apply(self)
+    
     
     def delete(self,ev):
         try:
@@ -247,11 +244,12 @@ class DrawSettingMenu(MovingWidget):
     def deleteLater(self) -> None:
         return super().deleteLater()
     def update_size(self,height):
-        _height = 30
+        _height = 0
         _height += self.title.height()
         _height +=  height
         _height += self.btn_setting.height()
         self.resize(self.w,_height)
+        
     def change_title(self,name):
         title= f"Setting {name}"
         self.title.title.setText(title)

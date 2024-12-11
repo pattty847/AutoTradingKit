@@ -3,32 +3,38 @@
 ################################################################################
 ## Form generated from reading UI file 'iconwidget_with_text_button.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.4.2
+## Created by: Qt User Interface Compiler version 6.8.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide6.QtCore import (QCoreApplication, QMetaObject, QSize)
-from PySide6.QtGui import (QFont)
-from PySide6.QtWidgets import (QHBoxLayout)
+from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
+    QMetaObject, QObject, QPoint, QRect,
+    QSize, QTime, QUrl, Qt)
+from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
+    QFont, QFontDatabase, QGradient, QIcon,
+    QImage, QKeySequence, QLinearGradient, QPainter,
+    QPalette, QPixmap, QRadialGradient, QTransform)
+from PySide6.QtWidgets import (QApplication, QHBoxLayout, QSizePolicy, QWidget)
 
-from atklip.gui.qfluentwidgets.components.widgets import (IconWidget, TitleLabel)
-import resource
+from atklip.gui.qfluentwidgets import (CardWidget, IconWidget, TitleLabel)
+from atklip.gui.qfluentwidgets import resource as resource_rc
+
 class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(213, 40)
+        Form.resize(301, 40)
         Form.setMinimumSize(QSize(200, 40))
         Form.setMaximumSize(QSize(16777215, 45))
         self.horizontalLayout = QHBoxLayout(Form)
-        self.horizontalLayout.setSpacing(10)
+        self.horizontalLayout.setSpacing(5)
         self.horizontalLayout.setObjectName(u"horizontalLayout")
-        self.horizontalLayout.setContentsMargins(-1, 1, 9, 1)
+        self.horizontalLayout.setContentsMargins(5, 1, 5, 1)
         self.exchange_icon = IconWidget(Form)
         self.exchange_icon.setObjectName(u"exchange_icon")
-        self.exchange_icon.setMinimumSize(QSize(30, 30))
-        self.exchange_icon.setMaximumSize(QSize(30, 30))
+        self.exchange_icon.setMinimumSize(QSize(25, 25))
+        self.exchange_icon.setMaximumSize(QSize(25, 25))
 
         self.horizontalLayout.addWidget(self.exchange_icon)
 

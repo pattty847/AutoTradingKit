@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>213</width>
+    <width>301</width>
     <height>40</height>
    </rect>
   </property>
@@ -27,13 +27,16 @@
   </property>
   <layout class="QHBoxLayout" name="horizontalLayout">
    <property name="spacing">
-    <number>10</number>
+    <number>5</number>
+   </property>
+   <property name="leftMargin">
+    <number>5</number>
    </property>
    <property name="topMargin">
     <number>1</number>
    </property>
    <property name="rightMargin">
-    <number>9</number>
+    <number>5</number>
    </property>
    <property name="bottomMargin">
     <number>1</number>

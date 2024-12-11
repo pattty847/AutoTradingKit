@@ -38,7 +38,7 @@ class SettingButton(VWIDGET):
 
         # self.addSpacer()
 
-        self.addSeparator(_type = "HORIZONTAL",w=300,h=2)
+        self.addSeparator(_type = "HORIZONTAL",w=330,h=2)
         self._hwidget.addWidget(self.btn_save)
         self._hwidget.addWidget(self.btn_cancel)
         self._hwidget.addWidget(self.btn_ok)
@@ -156,7 +156,7 @@ class BasicMenu(ScrollInterface):
 class SettingWidget(PivotInterface):
     def __init__(self,parent:QWidget=None,indicator=None,chart=None):
         super(SettingWidget, self).__init__(parent)
-        self.setFixedWidth(300)
+        self.setFixedWidth(330)
         
         self.indicator = indicator
         self.chart:Chart|ViewSubPanel = chart

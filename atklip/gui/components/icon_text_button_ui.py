@@ -3,18 +3,24 @@
 ################################################################################
 ## Form generated from reading UI file 'icon_text_button.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.4.2
+## Created by: Qt User Interface Compiler version 6.8.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide6.QtCore import (QCoreApplication, QMetaObject, QSize)
-from PySide6.QtGui import (QFont, QIcon)
-from PySide6.QtWidgets import (QHBoxLayout, QSizePolicy)
+from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
+    QMetaObject, QObject, QPoint, QRect,
+    QSize, QTime, QUrl, Qt)
+from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
+    QFont, QFontDatabase, QGradient, QIcon,
+    QImage, QKeySequence, QLinearGradient, QPainter,
+    QPalette, QPixmap, QRadialGradient, QTransform)
+from PySide6.QtWidgets import (QApplication, QHBoxLayout, QSizePolicy, QWidget)
+
 
 from atklip.gui.components.exchange_icon import ExchangeICon
-from atklip.gui.qfluentwidgets.components.widgets import (TitleLabel)
-import resource
+from atklip.gui.qfluentwidgets import (CardWidget, TitleLabel)
+from atklip.gui.qfluentwidgets import resource as resource_rc
 class Ui__pushbutton(object):
     def setupUi(self, _pushbutton):
         if not _pushbutton.objectName():
@@ -28,7 +34,7 @@ class Ui__pushbutton(object):
         self.horizontalLayout.setContentsMargins(-1, 1, -1, 1)
         self.exchange_icon = ExchangeICon(_pushbutton)
         self.exchange_icon.setObjectName(u"exchange_icon")
-        sizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
+        sizePolicy = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.exchange_icon.sizePolicy().hasHeightForWidth())
@@ -36,7 +42,7 @@ class Ui__pushbutton(object):
         self.exchange_icon.setMinimumSize(QSize(30, 30))
         self.exchange_icon.setMaximumSize(QSize(30, 30))
         icon = QIcon()
-        icon.addFile(u":/qfluentwidgets/images/exchange/binance_logo.png", QSize(), QIcon.Normal, QIcon.Off)
+        icon.addFile(u":/qfluentwidgets/images/exchange/binance_logo.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.exchange_icon.setIcon(icon)
         self.exchange_icon.setIconSize(QSize(30, 30))
         self.exchange_icon.setAutoDefault(True)
@@ -46,6 +52,8 @@ class Ui__pushbutton(object):
 
         self.TitleLabel = TitleLabel(_pushbutton)
         self.TitleLabel.setObjectName(u"TitleLabel")
+        self.TitleLabel.setMinimumSize(QSize(0, 33))
+        self.TitleLabel.setMaximumSize(QSize(16777215, 33))
         font = QFont()
         font.setFamilies([u"Segoe UI"])
         font.setPointSize(13)
