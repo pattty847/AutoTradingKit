@@ -359,9 +359,9 @@ class STC(QObject):
                 stoch_name = name
             if name.__contains__("STCmacd") and macd_name == "":
                 macd_name = name
-        stc_ = INDICATOR[stc_name].dropna().round(4)
-        macd = INDICATOR[macd_name].dropna().round(4)
-        stoch = INDICATOR[stoch_name].dropna().round(4)
+        stc_ = INDICATOR[stc_name].dropna().round(6)
+        macd = INDICATOR[macd_name].dropna().round(6)
+        stoch = INDICATOR[stoch_name].dropna().round(6)
         return stc_,macd,stoch
     
     def calculate(self,df: pd.DataFrame):
@@ -372,7 +372,7 @@ class STC(QObject):
                         mamode= self.mamode,
                         factor=self.factor,
                         offset=self.offset
-                        ).dropna().round(4)
+                        ).dropna().round(6)
         return self.paire_data(INDICATOR)
     
     def fisrt_gen_data(self):

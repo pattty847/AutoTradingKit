@@ -275,7 +275,7 @@ class RSI(QObject):
                                     length=self.length,
                                     mamode=self.mamode,
                                     drift=self.drift,
-                                    offset=self.offset).dropna().round(4)
+                                    offset=self.offset).dropna().round(6)
         return self.paire_data(INDICATOR)
     def fisrt_gen_data(self):
         self.is_current_update = False

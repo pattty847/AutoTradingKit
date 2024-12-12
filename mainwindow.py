@@ -27,7 +27,6 @@ class MainWindow(WindowBase):
             event.ignore()
 
 def main():
-    
     # enable dpi scale
     if cfg.get(cfg.dpiScale) != "Auto":
         os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "0"

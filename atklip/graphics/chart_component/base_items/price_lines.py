@@ -73,5 +73,5 @@ class PriceLine(InfiniteLine):
                     self.pen.setColor(mkColor(colorline))
                     self.setPos(point)
         
-        self.prepareGeometryChange()
-        self.informViewBoundsChanged()
+        # self.prepareGeometryChange()
+        # self.informViewBoundsChanged()

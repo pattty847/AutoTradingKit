@@ -91,9 +91,9 @@ def divide_with_remainder(a, b):
 def percent_caculator(start, stop):
     percent = ((start - stop) / start) * 100
     if percent > 0:
-        return round(percent,2)
+        return round(percent,4)
     else:
-        return round(abs(percent),2)
+        return round(abs(percent),4)
 
 
 @njit(cache=True)
@@ -208,7 +208,7 @@ def calculate_pl_with_fees(entry_price: float, exit_price: float,
     leverage_gain = percent_change * leverage
     capital_gain = leverage_gain * capital * proportion_closed
     pl = capital_gain - open_fee * proportion_closed - close_fee
-    return round(pl, 2)
+    return round(pl, 4)
 
 
 def cal_pnl_with_fee(entry_price: float, exit_price: float, 
@@ -253,7 +253,7 @@ def cal_pnl_with_fee(entry_price: float, exit_price: float,
     leverage_gain = percent_change * leverage
     capital_gain = leverage_gain * capital * proportion_closed
     pl = capital_gain - open_fee * proportion_closed - close_fee
-    return round(pl, 2)
+    return round(pl, 4)
 
 def calculate_recommended_capital_base_on_risk(entry_price: float, stop_loss_price: float, 
                                   total_capital: float=1000, risk_percentage: float=2, 
@@ -288,7 +288,7 @@ def calculate_recommended_capital_base_on_risk(entry_price: float, stop_loss_pri
     
     effective_loss_per_unit = leveraged_loss_per_unit + (total_taker_fee / (entry_price * leverage))
     recommended_capital = capital_to_risk / effective_loss_per_unit
-    return round(recommended_capital, 2)
+    return round(recommended_capital, 4)
 
 
 def calculate_recommended_capital_base_on_loss_capital(entry_price: float, stop_loss_price: float, 
@@ -324,4 +324,4 @@ def calculate_recommended_capital_base_on_loss_capital(entry_price: float, stop_
     
     # Tính số vốn khuyến nghị dựa trên số vốn có thể mất
     recommended_capital = loss_capital / effective_loss_per_unit
-    return round(recommended_capital, 2)
+    return round(recommended_capital, 4)

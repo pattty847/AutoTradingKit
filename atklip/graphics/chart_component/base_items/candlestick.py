@@ -346,27 +346,30 @@ class CandleStick(GraphicsObject):
         candle_picture:QPicture =QPicture()
         p:QPainter =QPainter(candle_picture)
         if _open > close:
-            self.outline_pen = mkPen(color=self.has["styles"]["pen_lowcolor"],width=0.7) #,width=0.7
+            self.outline_pen = mkPen(color=self.has["styles"]["pen_lowcolor"],width=0.7)
             p.setPen(self.outline_pen)
             p.setBrush(self.has["styles"]["brush_lowcolor"])
+            # brush = self.has["styles"]["brush_lowcolor"]
             
         else:
-            self.outline_pen = mkPen(color=self.has["styles"]["pen_highcolor"],width=0.7) #,width=0.7
+            self.outline_pen = mkPen(color=self.has["styles"]["pen_highcolor"],width=0.7) 
             p.setPen(self.outline_pen)
             p.setBrush(self.has["styles"]["brush_highcolor"])
+            # brush = self.has["styles"]["brush_highcolor"]
         
-        _height = close - _open
-        if _height == 0:
+        if close == _open:
             if _max != _min:
                 line = QLineF(QPointF(t, _min), QPointF(t, _max))
                 p.drawLine(line)
             _line = QLineF(QPointF(t - w, _open), QPointF(t + w, close))
             p.drawLine(_line)
         else:
-            line = QLineF(QPointF(t, _min), QPointF(t, _max))
-            p.drawLine(line)
+            if _max != _min:
+                line = QLineF(QPointF(t, _min), QPointF(t, _max))
+                p.drawLine(line)
             rect = QRectF(t - w, _open, w * 2, close - _open)  
             p.drawRect(rect)
+            # p.fillRect(rect,brush)
         p.end()
         self._bar_picutures[t] = candle_picture
 

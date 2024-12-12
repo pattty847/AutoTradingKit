@@ -306,9 +306,9 @@ class MACD(QObject):
                 elif name.__contains__("SIGNAL"):
                     signalma_name = name
 
-            macd = INDICATOR[macd_name].dropna().round(4)
-            histogram = INDICATOR[histogram_name].dropna().round(4)
-            signalma = INDICATOR[signalma_name].dropna().round(4)
+            macd = INDICATOR[macd_name].dropna().round(6)
+            histogram = INDICATOR[histogram_name].dropna().round(6)
+            signalma = INDICATOR[signalma_name].dropna().round(6)
             return macd,histogram,signalma
         except:
             return Series([]),Series([]),Series([])

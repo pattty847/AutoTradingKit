@@ -58,7 +58,9 @@ class SubChart(PlotWidget):
         kwargs = {Crosshair.ENABLED: True,
           Crosshair.LINE_PEN: mkPen(color="#eaeaea", width=0.5,style=Qt.DashLine),
           Crosshair.TEXT_KWARGS: {"color": "#eaeaea"}} 
-
+        
+        self.Chart: Chart = chart
+        self._precision = 2
         self.PlotItem = ViewPlotItem(context=self, type_chart="trading")    
         # self.sigSceneMouseMoved.
         self.manual_range = False
@@ -77,12 +79,11 @@ class SubChart(PlotWidget):
         self.indicator_name,self.mainwindow = indicator_name,mainwindow
         # self.setCacheMode(QGraphicsView.CacheModeFlag.CacheBackground)
 
-        self.Chart: Chart = chart
+        
         
         self.exchange_name, self.symbol, self.interval =self.Chart.exchange_name, self.Chart.symbol,self.Chart.interval
         self.apikey,self.secretkey = self.Chart.apikey, self.Chart.secretkey
         
-        self._precision = self.Chart.get_precision()
         
         self.jp_candle = JAPAN_CANDLE()
         
@@ -111,7 +112,7 @@ class SubChart(PlotWidget):
 
         self.yAxis: CustomPriceAxisItem = self.getAxis('right')
         self.xAxis:CustomDateAxisItem = self.getAxis('bottom')
-        self.yAxis.setWidth(60)
+        self.yAxis.setWidth(70)
         self.xAxis.hide()
         
         self.vb:PlotViewBox = self.PlotItem.view_box
@@ -145,6 +146,10 @@ class SubChart(PlotWidget):
         
         self.first_run.connect(self.set_data_dataconnect,Qt.ConnectionType.AutoConnection)
         self.fast_reset_worker(apikey=self.apikey,secretkey=self.secretkey,exchange_name=self.exchange_name,symbol=self.symbol,interval=self.interval)
+    
+    
+    def get_precision(self):
+        self.Chart.get_precision()
     
     def set_data_dataconnect(self):
         self.setup_indicator((self.indicator_name,self.mainwindow))

@@ -229,8 +229,8 @@ class VORTEX(QObject):
             elif name.__contains__("VTXM_"):
                 signalma_name = name
 
-        vortex_ = INDICATOR[vortex_name].dropna().round(4)
-        signalma = INDICATOR[signalma_name].dropna().round(4)
+        vortex_ = INDICATOR[vortex_name].dropna().round(6)
+        signalma = INDICATOR[signalma_name].dropna().round(6)
         
         return vortex_,signalma
     
@@ -241,7 +241,7 @@ class VORTEX(QObject):
                             length=self.period,
                             drift=self.drift,
                             offset=self.offset
-                            ).dropna().round(4)
+                            ).dropna().round(6)
         return self.paire_data(INDICATOR)
     
     def fisrt_gen_data(self):

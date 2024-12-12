@@ -280,8 +280,8 @@ class STOCH(QObject):
             elif name.__contains__("STOCHd"):
                 signalma_name = name
 
-        stoch_ = INDICATOR[stoch_name].dropna().round(4)
-        signalma = INDICATOR[signalma_name].dropna().round(4)
+        stoch_ = INDICATOR[stoch_name].dropna().round(6)
+        signalma = INDICATOR[signalma_name].dropna().round(6)
         return stoch_,signalma
     
     def calculate(self,df: pd.DataFrame):
@@ -292,7 +292,7 @@ class STOCH(QObject):
                         k = self.k_period,
                         d = self.d_period,
                         mamode=self.mamode,
-                        offset=self.offset).dropna().round(4)
+                        offset=self.offset).dropna().round(6)
         return self.paire_data(INDICATOR)
     
     def fisrt_gen_data(self):

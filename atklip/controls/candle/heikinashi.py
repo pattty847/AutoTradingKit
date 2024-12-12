@@ -31,17 +31,17 @@ class HEIKINASHI(QObject):
     signal_delete = Signal()
     sig_update_source = Signal()
     
-    def __init__(self,precision,_candle) -> None:
+    def __init__(self,Chart,_candle) -> None:
         super().__init__(parent=None)
         self._candles:JAPAN_CANDLE = _candle
-        
+        self.chart = Chart
         self.exchange_id:str
         self.symbol:str
         self.interval:str
         
         self.first_gen = False
         self._source_name = "HEIKINASHI"
-        self.precision = precision
+        self.precision = self.chart.get_precision()
         self.df = pd.DataFrame([])
         self.worker = ApiThreadPool
         self.is_current_update = False
@@ -75,6 +75,7 @@ class HEIKINASHI(QObject):
     def update_source(self,candle:JAPAN_CANDLE):
         self.disconnect_signals()
         self._candles = candle
+        self.precision = self.chart.get_precision()
         self.connect_signals()
     
 
@@ -319,7 +320,8 @@ class HEIKINASHI(QObject):
         self.candles = []
     
     
-    def fisrt_gen_data(self):
+    def fisrt_gen_data(self,_precision):
+        self.precision = _precision
         self.is_current_update = False
         self.first_gen = False
         self.candles = []

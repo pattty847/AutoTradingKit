@@ -238,7 +238,7 @@ class ROC(QObject):
             y_data = INDICATOR[roc_name]
         return y_data
     def calculate(self,df: pd.DataFrame):
-        INDICATOR = roc(close=df[self.source],length=self.length,offset=self.offset).dropna().round(4)
+        INDICATOR = roc(close=df[self.source],length=self.length,offset=self.offset).dropna().round(6)
         return self.paire_data(INDICATOR)
     def fisrt_gen_data(self):
         self.is_current_update = False

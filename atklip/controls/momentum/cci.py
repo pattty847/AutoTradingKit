@@ -233,7 +233,7 @@ class CCI(QObject):
                         low=df["low"],
                         close=df["close"],
                         length=self.length,
-                        c=self.c).dropna().round(4)
+                        c=self.c).dropna().round(6)
                         
         return self.paire_data(INDICATOR)
     def fisrt_gen_data(self):

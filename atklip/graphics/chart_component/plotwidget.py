@@ -64,10 +64,11 @@ class ViewPlotWidget(PlotWidget):
           Crosshair.LINE_PEN: mkPen(color="#eaeaea", width=0.5,style=Qt.DashLine),
           Crosshair.TEXT_KWARGS: {"color": "#eaeaea"}} 
 
+        self._precision = 2
+        
         self.PlotItem = ViewPlotItem(context=self, type_chart=type_chart)     # parent?
         # self.sigSceneMouseMoved.
         
-
         super().__init__(parent=parent,background=background, plotItem= self.PlotItem,**kwargs)
         self.crosshair_enabled = kwargs.get(Crosshair.ENABLED, False)
                 
@@ -85,12 +86,12 @@ class ViewPlotWidget(PlotWidget):
         self.drawtools:List = []
         
         self.is_trading = False
-        self._precision = 2
+        
         self.quanty_precision = 3
         
         self.jp_candle = JAPAN_CANDLE(self)
         
-        self.heikinashi = HEIKINASHI(self._precision,self.jp_candle)
+        self.heikinashi = HEIKINASHI(self,self.jp_candle)
         
         self.container_indicator_wg = IndicatorContainer(self)
         self.sig_show_candle_infor.connect(self.container_indicator_wg.get_candle_infor, Qt.ConnectionType.AutoConnection)
@@ -127,7 +128,7 @@ class ViewPlotWidget(PlotWidget):
         self.yAxis: CustomPriceAxisItem = self.getAxis('right')
         self.xAxis:CustomDateAxisItem = self.getAxis('bottom')
         
-        self.yAxis.setWidth(60)
+        self.yAxis.setWidth(70)
         self.xAxis.hide()
         
         self.vb:PlotViewBox = self.PlotItem.view_box
@@ -156,6 +157,8 @@ class ViewPlotWidget(PlotWidget):
         self.quanty_precision= quanty_precision
     
     def get_precision(self):
+        if self._precision == 2:
+            return self._precision
         return self._precision
 
     def show_hide_cross(self, value):
@@ -173,7 +176,7 @@ class ViewPlotWidget(PlotWidget):
                 self.vLine.hide()
             self.crosshair_x_value_change.emit(("#363a45",None))
             self.crosshair_y_value_change.emit(("#363a45",None))
-        # self.vb.viewTransformChanged()
+        self.vb.update()
         # self.vb.informViewBoundsChanged()
             
     # Override addItem method
