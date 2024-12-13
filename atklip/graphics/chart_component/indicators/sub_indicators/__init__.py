@@ -12,3 +12,4 @@ from .uo import BasicUO
 from .stoch import BasicSTOCH
 from .cci import BasicCCI
 from .sqeeze import BaSicSqeeze
+from .volume_with_ma import VolumeWithMA

@@ -29,7 +29,7 @@ class CandleStick(GraphicsObject):
         """Choose colors of candle"""
         GraphicsObject.__init__(self)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
-        self.setZValue(999)
+        self.setZValue(500)
         
         self.chart:Chart|SubChart = chart
         self.precision = self.chart._precision

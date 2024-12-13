@@ -189,7 +189,7 @@ class SubIndicator(BasicMenu):
 
         self.list_indicators = [IndicatorType.VOLUME,IndicatorType.MACD,
                                 IndicatorType.RSI,IndicatorType.ROC,IndicatorType.SQEEZE,
-                                IndicatorType.TTM,IndicatorType.TSI,
+                                IndicatorType.TTM,IndicatorType.TSI, IndicatorType.VOLUMEWITHMA,
                                 IndicatorType.VTX,IndicatorType.UO,
                                 IndicatorType.StochRSI,IndicatorType.TRIX,
                                 IndicatorType.STC,IndicatorType.Stoch,

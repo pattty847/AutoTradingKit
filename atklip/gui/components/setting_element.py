@@ -79,7 +79,7 @@ class TypeEdit(ComboboxEdit):
     def __init__(self,parent:QWidget=None,indicator=None, _input=None):
         super(TypeEdit,self).__init__(parent,indicator, _input)
         
-        list_types = ["open","high","low","close","hl2","hlc3","ohlc4"]
+        list_types = ["open","high","low","close","hl2","hlc3","ohlc4","volume"]
         _inputs = self.indicator.get_inputs()
         _type = _inputs.get("type")
         if _type != None:

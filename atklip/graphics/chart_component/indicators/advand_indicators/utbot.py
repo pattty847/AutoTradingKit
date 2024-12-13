@@ -38,8 +38,8 @@ class UTBOT(GraphicsObject):
     def __init__(self,chart) -> None:
         # super().__init__()
         GraphicsObject.__init__(self)
-        self.setFlag(self.GraphicsItemFlag.ItemHasNoContents)
-        # self.setFlag(self.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
+        # self.setFlag(self.GraphicsItemFlag.ItemHasNoContents)
+        self.setFlag(self.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
         
         self.chart:Chart = chart
         self.has = {
@@ -50,14 +50,14 @@ class UTBOT(GraphicsObject):
                     "source":self.chart.jp_candle,
                     "source_name": self.chart.jp_candle.source_name,
                     
-                    "key_value_long":0.1,
-                    "key_value_short":0.1,
+                    "key_value_long":0.5,
+                    "key_value_short":0.5,
                     
                     "atr_long_period":1,
-                    "ema_long_period":2,
+                    "ema_long_period":50,
                     
                     "atr_short_period":1,
-                    "ema_short_period":2,
+                    "ema_short_period":50,
                     
                     "indicator_type":IndicatorType.UTBOT,
                     "show":False},
@@ -327,9 +327,9 @@ class UTBOT(GraphicsObject):
             "short":_short,
         })
         
-        for i in range(len(df)):
+        for i in range(1,len(df)):
             _x = df.iloc[i]['x']
-            if df.iloc[i]['long'] == True:
+            if df.iloc[i-1]['long'] == True:
                 _val = self.chart.jp_candle.map_index_ohlcv[_x].low
                 obj = BaseArrowItem(drawtool=self.chart.drawtool,angle=90, tipAngle=60, headLen=10, tailLen=10, tailWidth=5, pen=None, brush='green')
                 obj.setParentItem(self)
@@ -337,7 +337,7 @@ class UTBOT(GraphicsObject):
                 obj.locked_handle()
                 self.list_pos[_x] = {"type":"long","obj":obj}
                 
-            elif df.iloc[i]['short'] == True:
+            elif df.iloc[i-1]['short'] == True:
                 _val = self.chart.jp_candle.map_index_ohlcv[_x].open
                 obj =  BaseArrowItem(drawtool=self.chart.drawtool,angle=270, tipAngle=60, headLen=10, tailLen=10, tailWidth=5, pen=None, brush='red')
                 obj.setParentItem(self)
@@ -356,11 +356,11 @@ class UTBOT(GraphicsObject):
             "short":_short,
         })
         
-        for i in range(len(df)):
+        for i in range(1,len(df)):
             _x = df.iloc[i]['x']
             if self.list_pos.get(_x):
                 continue
-            if df.iloc[i]['long'] == True:
+            if df.iloc[i-1]['long'] == True:
                 _val = self.chart.jp_candle.map_index_ohlcv[_x].low
                 obj = BaseArrowItem(drawtool=self.chart.drawtool,angle=90, tipAngle=60, headLen=10, tailLen=10, tailWidth=5, pen=None, brush='green')
                 obj.setParentItem(self)
@@ -368,7 +368,7 @@ class UTBOT(GraphicsObject):
                 obj.locked_handle()
                 self.list_pos[_x] = {"type":"long","obj":obj}
                 
-            elif df.iloc[i]['short'] == True:
+            elif df.iloc[i-1]['short'] == True:
                 _val = self.chart.jp_candle.map_index_ohlcv[_x].open
                 obj =  BaseArrowItem(drawtool=self.chart.drawtool,angle=270, tipAngle=60, headLen=10, tailLen=10, tailWidth=5, pen=None, brush='red')
                 obj.setParentItem(self)
@@ -386,7 +386,7 @@ class UTBOT(GraphicsObject):
             "short":_short,
         })
         
-        _x = df.iloc[-2]['x']
+        _x = df.iloc[-1]['x']
         
         if self.list_pos.get(_x):
                 return

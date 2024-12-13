@@ -50,10 +50,6 @@ class Volume(GraphicsObject):
         self.precision = precision
         self.output_y_data: List[float] = []
         
-        # self.ma_line = PlotDataItem(pen="orange")
-        # self.ma_line.setFlag(QGraphicsItem.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
-        # self.ma_line.setParentItem(self)
-        
         self.type_picture = "volume"
 
         self.picture = QPicture()
@@ -243,6 +239,10 @@ class Volume(GraphicsObject):
         self._bar_picutures[t] = candle_picture
         
 
+    def calculate_ma(self,xdata,ydata):
+        "calculate ma"
+    
+    
     def setData(self, data) -> None:
         """y_data must be in format [[open, close, min, max], ...]"""
         self._to_update = False
@@ -275,103 +275,3 @@ class Volume(GraphicsObject):
             raise Exception("Len of x_data must be the same as y_data")
         setdata.emit((x_data, y_data))
     
-      
-class SingleVolume(GraphicsObject):
-    """Live candlestick plot, plotting data [[open, close, min, max], ...]"""
-    sigPlotChanged = Signal(object)
-    def __init__(self,chart, has) -> None:
-        """Choose colors of candle"""
-        GraphicsObject.__init__(self)
-        
-        self.chart:Chart  = chart
-        sig_reset_all,sig_update_candle,self._canldes= self.chart.jp_candle.sig_reset_all,self.chart.jp_candle.sig_update_candle,self.chart.jp_candle
-        self.has = has
-        precision = 1
-        
-        self.output_y_data: List[float] = []
-
-        self.type_picture = "candlestick"
-        self.picture = QPicture()
-        self.colorline = 'white'
-
-        self.old_w = []
-        self.setAcceptHoverEvents(True)
-        self.precision = precision
-        
-        self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
-        self.setAcceptedMouseButtons(Qt.MouseButton.NoButton)
-        
-        sig_update_candle.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
-
-    def fisrt_gen_data(self):
-        self.worker = None
-        self.worker = FastWorker(self.update_last_data)
-        self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.QueuedConnection)
-        self.worker.start()
-        #self.threadpool.start(self.worker)
-    
-    def threadpool_asyncworker(self, last_candle:List[OHLCV]=[]):
-        self.worker = None
-        self.worker = FastWorker(self.update_last_data)
-        self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.QueuedConnection)
-        self.worker.start()
-        #self.threadpool.start(self.worker)
-
-    def paint(self, p: QPainter, *args) -> None:
-        p.drawPicture(0, 0, self.picture)
-
-    def boundingRect(self) -> QRect:
-        return QRectF(self.picture.boundingRect())
-    
-    def draw_volume(self,p:QPainter,_open,close,volume,w,t):
-        if _open > close:
-            self.outline_pen = mkPen(color=self.has["styles"]["pen_lowcolor"],width=0.7) #,width=0.7
-            p.setPen(self.outline_pen)
-            p.setBrush(self.has["styles"]["brush_lowcolor"])
-        else:
-            self.outline_pen = mkPen(color=self.has["styles"]["pen_highcolor"],width=0.7) #,width=0.7
-            p.setPen(self.outline_pen)
-            p.setBrush(self.has["styles"]["brush_highcolor"])
-
-        if volume == 0:
-            _line = QLineF(QPointF(t - w, 0), QPointF(t + w, 0))
-            p.drawLine(_line)
-        else:
-            #path = QPainterPath()
-            rect = QRectF(t - w, 0, w * 2, volume)  
-            #path.addRect(rect)  
-            p.drawRect(rect)
-
-    def setData(self, data) -> None:
-        """y_data must be in format [[open, close, min, max], ...]"""
-        
-        x_data, y_data = data[0], data[1]
-        if not isinstance(x_data, np.ndarray):
-            x_data = np.array(x_data)
-            y_data = np.array(y_data)
-        if len(x_data) != len(y_data):
-            raise Exception("Len of x_data must be the same as y_data")
-        self.picture = QPicture()
-        p = QPainter(self.picture)
-        
-        w = 1 / 5
-        index = -1
-        t = x_data[index]
-        _open, close,volume = y_data[-1][0],y_data[-1][1],y_data[-1][2]
-        self.draw_volume(p,_open,close,volume,w,t)
-        p.end()
-        
-        self.prepareGeometryChange()
-        self.informViewBoundsChanged()
-
-    def update_last_data(self,setdata) -> None:
-        if self._canldes.first_gen:
-            if self._canldes.candles != []:
-                last_candle = self._canldes.last_data()
-                x_data, _y_data = np.array([last_candle.index]), np.array([[last_candle.open,last_candle.close,last_candle.volume]])
-                #self.setData((x_data, _y_data))
-                try:
-                    setdata.emit((x_data, _y_data))
-                    #QCoreApplication.processEvents()
-                except Exception as e:
-                    pass
