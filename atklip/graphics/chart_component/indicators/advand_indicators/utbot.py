@@ -50,14 +50,14 @@ class UTBOT(GraphicsObject):
                     "source":self.chart.jp_candle,
                     "source_name": self.chart.jp_candle.source_name,
                     
-                    "key_value_long":0.5,
-                    "key_value_short":0.5,
+                    "key_value_long":0.1,
+                    "key_value_short":0.1,
                     
                     "atr_long_period":1,
-                    "ema_long_period":50,
+                    "ema_long_period":2,
                     
                     "atr_short_period":1,
-                    "ema_short_period":50,
+                    "ema_short_period":2,
                     
                     "indicator_type":IndicatorType.UTBOT,
                     "show":False},
