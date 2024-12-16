@@ -50,14 +50,14 @@ class UTBOT(GraphicsObject):
                     "source":self.chart.jp_candle,
                     "source_name": self.chart.jp_candle.source_name,
                     
-                    "key_value_long":0.1,
-                    "key_value_short":0.1,
+                    "key_value_long":1,
+                    "key_value_short":1,
                     
-                    "atr_long_period":1,
-                    "ema_long_period":2,
+                    "atr_long_period":200,
+                    "ema_long_period":1,
                     
-                    "atr_short_period":1,
-                    "ema_short_period":2,
+                    "atr_short_period":200,
+                    "ema_short_period":1,
                     
                     "indicator_type":IndicatorType.UTBOT,
                     "show":False},
@@ -158,6 +158,10 @@ class UTBOT(GraphicsObject):
         return False
                         
     def delete(self):
+        print("deleted--------------------------")
+        
+        self.disconnect_signals()
+        self.INDICATOR.disconnect()
         self.INDICATOR.deleteLater()
         # self.macd.deleteLater()
         # self.super_smoothcandle.deleteLater()

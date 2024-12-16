@@ -14,50 +14,110 @@ from atklip.app_api.workers import ApiThreadPool
 from PySide6.QtCore import Signal,QObject
 
 
-def xATRTrailingStop_func(close, prev_close, prev_atr, nloss):
-    if close > prev_atr and prev_close > prev_atr:
-        return max(prev_atr, close - nloss)
-    elif close < prev_atr and prev_close < prev_atr:
-        return min(prev_atr, close + nloss)
-    elif close > prev_atr:
-        return close - nloss
+def old_utbot(dataframe:pd.DataFrame, key_value=1, atr_period=3, ema_period=200, ma_atr_mode="rma", ma_mode="ema")->pd.DataFrame:
+
+    xATR = atr(dataframe['high'], dataframe['low'], dataframe['close'], length=atr_period,mamode=ma_atr_mode).dropna().to_numpy()
+    _lenatr = len(xATR)
+    
+    nLoss = key_value * xATR
+    src = dataframe['close'].iloc[-_lenatr:].to_numpy()
+
+    xATRTrailingStop = np.zeros(_lenatr)
+    xATRTrailingStop[0] = src[0] - nLoss[0]
+
+    mask_1 = (src > np.roll(xATRTrailingStop, 1)) & (np.roll(src, 1) > np.roll(xATRTrailingStop, 1))
+    mask_2 = (src < np.roll(xATRTrailingStop, 1)) & (np.roll(src, 1) < np.roll(xATRTrailingStop, 1))
+    mask_3 = src > np.roll(xATRTrailingStop, 1)
+
+    xATRTrailingStop = np.where(mask_1, np.maximum(np.roll(xATRTrailingStop, 1), src - nLoss), xATRTrailingStop)
+    xATRTrailingStop = np.where(mask_2, np.minimum(np.roll(xATRTrailingStop, 1), src + nLoss), xATRTrailingStop)
+    xATRTrailingStop = np.where(mask_3, src- nLoss, xATRTrailingStop)
+
+    mask_buy = (np.roll(src, 1) < xATRTrailingStop) & (src > np.roll(xATRTrailingStop, 1))
+    mask_sell = (np.roll(src, 1) > xATRTrailingStop)  & (src < np.roll(xATRTrailingStop, 1))
+
+    pos = np.zeros(_lenatr)
+    pos = np.where(mask_buy, 1, pos)
+    pos = np.where(mask_sell, -1, pos)
+    pos[~((pos == 1) | (pos == -1))] = 0
+
+    if ma_mode == "smma":
+        ema_mode = "sma"
+    elif ma_mode == "zlma":
+        ema_mode = "ema"
     else:
-        return close + nloss
-
-
-def utbot(dataframe:pd.DataFrame, key_value=1, atr_period=10, ema_period=1, ma_atr_mode="rma", ma_mode="ema"):
-    # ATR Calculation
-    data = dataframe.copy()
+        ema_mode = ""
     
-    data = data.reset_index(drop=True)
+    _ema = ma(name=ma_mode,source=dataframe['close'], length=ema_period, mamode=ema_mode).dropna().to_numpy()
+
+    _leng = min([len(xATRTrailingStop),len(_ema),len(pos)])
     
-    data["xATR"] = atr(data['high'], data['low'], data['close'], length=atr_period,mamode=ma_atr_mode)
-    data["nLoss"] = key_value * data["xATR"]
-    src = data["close"]
+    buy_condition_utbot = (xATRTrailingStop[-_leng:] > _ema[-_leng:]) & (pos[-_leng:] > 0) & (src[-_leng:] > _ema[-_leng:])
+    sell_condition_utbot = (xATRTrailingStop[-_leng:] < _ema[-_leng:]) & (pos[-_leng:] < 0) & (src[-_leng:] < _ema[-_leng:])
 
-    data["ATRTrailingStop"] = [0.0] + [np.nan for i in range(len(data) - 1)]
- 
-    for i in range(1, len(data)):
-        data.loc[i, "ATRTrailingStop"] = xATRTrailingStop_func(
-            data.loc[i, "close"],
-            data.loc[i - 1, "close"],
-            data.loc[i - 1, "ATRTrailingStop"],
-            data.loc[i, "nLoss"],
-        )
-    # EMA for crossover logic
-    _ema = ema(src, length=ema_period)
-    data["EMA"] = _ema
-    data["Above"] = crossover(_ema,data["ATRTrailingStop"])  
-    data["Below"] = crossover(data["ATRTrailingStop"],_ema)  
+    dataframe_result = pd.DataFrame([])
+    dataframe_result['long'] = buy_condition_utbot
+    dataframe_result['short'] = sell_condition_utbot
     
-    data["long"] = (data["close"] > data["ATRTrailingStop"]) & (data["Above"]==1)
-    data["short"] = (data["close"] < data["ATRTrailingStop"]) & (data["Below"]==1)
-    kq = data.iloc[max([ema_period,atr_period])-1:]
-    return kq[["long", "short"]]
+    return dataframe_result
 
 
 
-class UTBOT_ALERT(QObject):
+def utbot(dataframe:pd.DataFrame, key_value=1, atr_period=3, ema_period=200, ma_atr_mode="rma", ma_mode="ema")->pd.DataFrame:
+
+    dataframe = dataframe.copy()
+    dataframe = dataframe.reset_index(drop=True)
+    # Calculate ATR and xATRTrailingStop
+    xATR = atr(dataframe['high'], dataframe['low'], dataframe['close'], length=atr_period,mamode=ma_atr_mode).to_numpy()
+    nLoss = key_value * xATR
+    src = dataframe['close']
+
+    # Initialize arrays
+    xATRTrailingStop = np.zeros(len(dataframe))
+    xATRTrailingStop[0] = src[0] - nLoss[0]
+
+    # Calculate xATRTrailingStop using vectorized operations
+    mask_1 = (src > np.roll(xATRTrailingStop, 1)) & (np.roll(src, 1) > np.roll(xATRTrailingStop, 1))
+    mask_2 = (src < np.roll(xATRTrailingStop, 1)) & (np.roll(src, 1) < np.roll(xATRTrailingStop, 1))
+    mask_3 = src > np.roll(xATRTrailingStop, 1)
+
+    xATRTrailingStop = np.where(mask_1, np.maximum(np.roll(xATRTrailingStop, 1), src - nLoss), xATRTrailingStop)
+    xATRTrailingStop = np.where(mask_2, np.minimum(np.roll(xATRTrailingStop, 1), src + nLoss), xATRTrailingStop)
+    xATRTrailingStop = np.where(mask_3, src - nLoss, xATRTrailingStop)
+
+    # Calculate pos using vectorized operations
+    mask_buy = (np.roll(src, 1) < xATRTrailingStop) & (src > np.roll(xATRTrailingStop, 1))
+    mask_sell = (np.roll(src, 1) > xATRTrailingStop)  & (src < np.roll(xATRTrailingStop, 1))
+
+    pos = np.zeros(len(dataframe))
+    pos = np.where(mask_buy, 1, pos)
+    pos = np.where(mask_sell, -1, pos)
+    pos[~((pos == 1) | (pos == -1))] = 0
+
+    if ma_mode == "smma":
+        ema_mode = "sma"
+    elif ma_mode == "zlma":
+        ema_mode = "ema"
+    else:
+        ema_mode = ""
+    
+    ema = ma(name=ma_mode,source=dataframe['close'], length=ema_period, mamode=ema_mode).to_numpy()
+
+    buy_condition_utbot = (xATRTrailingStop > ema) & (pos > 0) & (src > ema)
+    sell_condition_utbot = (xATRTrailingStop < ema) & (pos < 0) & (src < ema)    
+
+    dataframe_result = pd.DataFrame([])
+    dataframe_result['long'] = buy_condition_utbot
+    dataframe_result['short'] = sell_condition_utbot
+    
+    kq = dataframe_result.iloc[max([ema_period,atr_period])-1:]
+    
+    return kq
+    
+    
+
+
+class CUSTOM_UTBOT_ALERT(QObject):
     sig_update_candle = Signal()
     sig_add_candle = Signal()
     sig_reset_all = Signal()
@@ -68,14 +128,14 @@ class UTBOT_ALERT(QObject):
         
         self._candles: JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE =_candles
 
-        self.key_value_long:int=dict_ta_params.get("key_value_long",1)
-        self.key_value_short:int=dict_ta_params.get("key_value_short",1)
+        self.key_value_long:int=dict_ta_params.get("key_value_long",0.1)
+        self.key_value_short:int=dict_ta_params.get("key_value_short",0.1)
         
-        self.atr_long_period:float=dict_ta_params.get("atr_long_period",10)
-        self.ema_long_period:int=dict_ta_params.get("ema_long_period",1) 
+        self.atr_long_period:float=dict_ta_params.get("atr_long_period",1)
+        self.ema_long_period:int=dict_ta_params.get("ema_long_period",40) 
         
-        self.atr_short_period:float=dict_ta_params.get("atr_short_period",10)
-        self.ema_short_period:int=dict_ta_params.get("ema_short_period",1) 
+        self.atr_short_period:float=dict_ta_params.get("atr_short_period",1)
+        self.ema_short_period:int=dict_ta_params.get("ema_short_period",40) 
 
         #self.signal_delete.connect(self.deleteLater)
         self.first_gen = False
@@ -166,7 +226,7 @@ class UTBOT_ALERT(QObject):
     
     def get_data(self,start:int=0,stop:int=0):
         if len(self.xdata) == 0:
-            return self.xdata,self.long,self.short
+            return [],[]
         if start == 0 and stop == 0:
             x_data = self.xdata
             _long =self.long
@@ -258,7 +318,10 @@ class UTBOT_ALERT(QObject):
                             "short":_short.to_numpy()
                             })
         
+        
         self.xdata,self.long,self.short = self.df["index"].to_numpy(),self.df["long"].to_numpy(),self.df["short"].to_numpy()
+        
+        # print(self.df)
         
         self.is_genering = False
         if self.first_gen == False:
@@ -267,7 +330,8 @@ class UTBOT_ALERT(QObject):
         
         self.is_current_update = True
         self.sig_reset_all.emit()
-        
+          
+    
     def add_historic(self,n:int):
         self.is_genering = True
         self.is_histocric_load = False
@@ -275,9 +339,11 @@ class UTBOT_ALERT(QObject):
         
         df:pd.DataFrame = self._candles.get_df().iloc[:-1*_pre_len]
         
+        
         _long = self.calculate_long(df)
         _short = self.calculate_short(df)
-        # _long,_short = self.calculate_long_short(df) 
+        # _long,_short = self.calculate_long_short(df)
+                
         _len = min([len(_long),len(_short)])
                 
         _index = df["index"].tail(_len)
@@ -299,7 +365,8 @@ class UTBOT_ALERT(QObject):
         self.xdata = np.concatenate((_df["index"].to_numpy(), self.xdata)) 
         self.long = np.concatenate((_df["long"].to_numpy(), self.long))   
         self.short = np.concatenate((_df["short"].to_numpy(), self.short))
-
+        
+        
         self.is_genering = False
         if self.first_gen == False:
             self.first_gen = True
@@ -311,8 +378,8 @@ class UTBOT_ALERT(QObject):
         new_candle:OHLCV = new_candles[-1]
         if (self.first_gen == True) and (self.is_genering == False):
             self.is_current_update = False
-            df_long:pd.DataFrame = self._candles.get_df(int(self.atr_long_period+self.ema_long_period+10))
-            df_short:pd.DataFrame = self._candles.get_df(int(self.atr_short_period+self.ema_short_period+10))
+            df_long:pd.DataFrame = self._candles.df.iloc[-int(self.atr_long_period+self.ema_long_period+10):]
+            df_short:pd.DataFrame = self._candles.df.iloc[-int(self.atr_short_period+self.ema_short_period+10):]
              
             _long = self.calculate_long(df_long)
             _short = self.calculate_short(df_short)
@@ -323,11 +390,14 @@ class UTBOT_ALERT(QObject):
                                     "long":[_long.iloc[-1]],
                                     "short":[_short.iloc[-1]]
                                     })
+            
             self.df = pd.concat([self.df,new_frame],ignore_index=True)
             
-            self.xdata = np.append(self.xdata,new_candle.index)
-            self.long = np.append(self.long,_long.iloc[-1])
-            self.short = np.append(self.short,_short.iloc[-1])
+            self.xdata = np.concatenate((self.xdata,np.array([new_candle.index])))
+            self.long = np.concatenate((self.long,np.array([_long.iloc[-1]])))
+            self.short = np.concatenate((self.short,np.array([_short.iloc[-1]])))
+            
+            print("added--------",self.df.iloc[-1])
             
             self.sig_add_candle.emit()
             
@@ -339,15 +409,17 @@ class UTBOT_ALERT(QObject):
         
         if (self.first_gen == True) and (self.is_genering == False):
             self.is_current_update = False
-            df_long:pd.DataFrame = self._candles.get_df(int(self.atr_long_period+self.ema_long_period+10))
-            df_short:pd.DataFrame = self._candles.get_df(int(self.atr_short_period+self.ema_short_period+10))
-
+            df_long:pd.DataFrame = self._candles.df.iloc[-int(self.atr_long_period+self.ema_long_period+10):]
+            df_short:pd.DataFrame = self._candles.df.iloc[-int(self.atr_short_period+self.ema_short_period+10):]
+             
             _long = self.calculate_long(df_long)
             _short = self.calculate_short(df_short)
                         
             self.df.iloc[-1] = [new_candle.index,_long.iloc[-1],_short.iloc[-1]]
             
             self.xdata[-1],self.long[-1],self.short[-1] = new_candle.index,_long.iloc[-1],_short.iloc[-1]
+            
+            print(self.df.iloc[-1])
             
             self.sig_update_candle.emit()
         self.is_current_update = True
