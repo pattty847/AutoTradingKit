@@ -93,15 +93,15 @@ def candle_pattern(df:pd.DataFrame,doji_size: float= 0.05):
                                 (df['high'].shift(2) < df['high'].shift(3))
     
 
-    output_df["buy_simple"] = (df['Open'] > df['Close'])&\
-                            (df['High'] > df['High'].shift(1))&\
-                            (df['Low'] < df['Low'].shift(1))&\
-                            (df['Close'] < df['Low'].shift(1))
+    output_df["buy_simple"] = (df['open'] > df['close'])&\
+                            (df['high'] > df['high'].shift(1))&\
+                            (df['low'] < df['low'].shift(1))&\
+                            (df['close'] < df['low'].shift(1))
 
-    output_df["sell_simple"] = (df['Open'] < df['Close'])&\
-                                (df['Low'] < df['Low'].shift(1))&\
-                                (df['High'] > df['High'].shift(1))&\
-                                (df['Close'] > df['High'].shift(1))
+    output_df["sell_simple"] = (df['open'] < df['close'])&\
+                                (df['low'] < df['low'].shift(1))&\
+                                (df['high'] > df['high'].shift(1))&\
+                                (df['close'] > df['high'].shift(1))
 
 
     output_df['evening_star'] = (df['close'].shift(2) > df['open'].shift(2)) & \
