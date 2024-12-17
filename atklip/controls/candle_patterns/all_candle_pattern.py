@@ -62,7 +62,6 @@ def candle_pattern(df:pd.DataFrame,doji_size: float= 0.05):
     plotshape(data15, title= "Dark Cloud Cover", color=red, style=shape.arrowdown, text="Dark\nCloudCover")
 
 
-
     Args:
         df (pd.DataFrame): _description_
         doji_size (float, optional): _description_. Defaults to 0.05.
@@ -74,7 +73,36 @@ def candle_pattern(df:pd.DataFrame,doji_size: float= 0.05):
     
     output_df["index"] = df["index"]
     # df['doji'] = (abs(df['open'] - df['close']) <= (df['high'] - df['low']) * doji_size)
+    #MichaelHarris
+    # Buy condition
+    output_df["buy_harris"] = (df['high'] > df['high'].shift(1))&\
+                                (df['high'].shift(1) > df['low'])&\
+                                (df['low'] > df['high'].shift(2))&\
+                                (df['high'].shift(2) > df['low'].shift(1))&\
+                                (df['low'].shift(1) > df['high'].shift(3))&\
+                                (df['high'].shift(3) > df['low'].shift(2))&\
+                                (df['low'].shift(2) > df['low'].shift(3))
+                            
+    # Symmetrical conditions for short (sell condition)
+    output_df["sell_harris"] = (df['low'] < df['low'].shift(1))&\
+                                (df['low'].shift(1) < df['high'])&\
+                                (df['high'] < df['low'].shift(2))&\
+                                (df['low'].shift(2) < df['high'].shift(1))&\
+                                (df['high'].shift(1) < df['low'].shift(3))&\
+                                (df['low'].shift(3) < df['high'].shift(2))&\
+                                (df['high'].shift(2) < df['high'].shift(3))
     
+
+    output_df["buy_simple"] = (df['Open'] > df['Close'])&\
+                            (df['High'] > df['High'].shift(1))&\
+                            (df['Low'] < df['Low'].shift(1))&\
+                            (df['Close'] < df['Low'].shift(1))
+
+    output_df["sell_simple"] = (df['Open'] < df['Close'])&\
+                                (df['Low'] < df['Low'].shift(1))&\
+                                (df['High'] > df['High'].shift(1))&\
+                                (df['Close'] > df['High'].shift(1))
+
 
     output_df['evening_star'] = (df['close'].shift(2) > df['open'].shift(2)) & \
                         (np.minimum(df['open'].shift(1), df['close'].shift(1)) > df['close'].shift(2)) & \
