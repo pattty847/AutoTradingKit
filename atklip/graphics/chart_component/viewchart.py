@@ -27,6 +27,7 @@ from atklip.graphics.chart_component.indicator_panel import IndicatorPanel
 from atklip.graphics.chart_component.base_items.replay_cut import ReplayObject
 
 from atklip.controls.exchangemanager import ExchangeManager
+from atklip.appmanager.setting import AppConfig
 
 from atklip.graphics.chart_component.indicators import (BasicMA,BasicBB,BasicDonchianChannels,ATRSuperTrend,
                                                         BasicZIGZAG,ATKBOT,Volume,CandlePattern,UTBOT,BasicSuperTrend,
@@ -51,12 +52,20 @@ class Chart(ViewPlotWidget):
         
         self.ExchangeManager = ExchangeManager()
         
-        if "binance" in self.exchange_name:
-            self.apikey = "zhBF9X2mhD7rY6fpFU243biBtE4ySGpXTBPdYYOExyx27G5CrU6cCEditBhO7ek4"
-            self.secretkey = "6rIYDN1xBaxxGyuLslYGMxlHFtjgzhVh6nV4zO8IKaspdF1H3tC5MKXMgxA1rHDA"
-        else:
-            self.apikey = ""
-            self.secretkey = ""
+        
+        self.keys = AppConfig.get_config_value(f"app.keys")
+
+        if self.keys == None:
+            api = ""
+            secretkey = ""
+            if "binance" in self.exchange_name:
+                api = "zhBF9X2mhD7rY6fpFU243biBtE4ySGpXTBPdYYOExyx27G5CrU6cCEditBhO7ek4"
+                secretkey = "6rIYDN1xBaxxGyuLslYGMxlHFtjgzhVh6nV4zO8IKaspdF1H3tC5MKXMgxA1rHDA"
+            AppConfig.sig_set_single_data.emit((f"app.keys",{self.exchange_name:{"apikey":api,"secretkey":secretkey}}))
+            self.keys = AppConfig.get_config_value(f"app.keys")
+            
+        self.apikey = self.keys[self.exchange_name]["apikey"]
+        self.secretkey = self.keys[self.exchange_name]["secretkey"]
         
         self.worker = None
         self.worker_reload:asyncio.Task = None
@@ -223,7 +232,7 @@ class Chart(ViewPlotWidget):
         
         self.heikinashi.source_name = f"heikin {self.symbol} {self.interval}"
         self.update_sources(self.heikinashi)
-        self.heikinashi.fisrt_gen_data()
+        self.heikinashi.fisrt_gen_data(self._precision)
         
         if isinstance(self.replay_obj,ReplayObject):
                 self.drawtool.drawing_object = None
@@ -494,7 +503,7 @@ class Chart(ViewPlotWidget):
         
         self.heikinashi.source_name = f"heikin {self.symbol} {self.interval}"
         self.update_sources(self.heikinashi)
-        self.heikinashi.fisrt_gen_data()
+        self.heikinashi.fisrt_gen_data(self._precision)
         
         if self.indicators != []:
             "when replay mode was turn off"

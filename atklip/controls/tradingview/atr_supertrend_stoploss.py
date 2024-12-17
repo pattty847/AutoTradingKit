@@ -22,10 +22,10 @@ def paire_data(INDICATOR:pd.DataFrame):
             elif name.__contains__("SUPERTs"):
                 SUPERTs_name = name
                 
-        SUPERTt = INDICATOR[SUPERT_name].dropna().round(4)
-        SUPERTd = INDICATOR[SUPERTd_name].dropna().round(4)
-        SUPERTl = INDICATOR[SUPERTl_name].round(4)
-        SUPERTs = INDICATOR[SUPERTs_name].round(4)
+        SUPERTt = INDICATOR[SUPERT_name].dropna().round(6)
+        SUPERTd = INDICATOR[SUPERTd_name].dropna().round(6)
+        SUPERTl = INDICATOR[SUPERTl_name].round(6)
+        SUPERTs = INDICATOR[SUPERTs_name].round(6)
         return SUPERTt,SUPERTd
     except:
         return pd.Series([]),pd.Series([])
@@ -240,8 +240,8 @@ class SuperTrendWithStopLoss(QObject):
     
     def paire_data(self,INDICATOR:pd.DataFrame):
         try:
-            long_stoploss = INDICATOR["long_stoploss"].dropna().round(4)
-            short_stoploss = INDICATOR["short_stoploss"].dropna().round(4)
+            long_stoploss = INDICATOR["long_stoploss"].dropna().round(6)
+            short_stoploss = INDICATOR["short_stoploss"].dropna().round(6)
             SUPERTd = INDICATOR["SUPERTd"].dropna()
             return long_stoploss,short_stoploss,SUPERTd
         except:

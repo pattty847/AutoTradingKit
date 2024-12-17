@@ -256,14 +256,14 @@ class UO(QObject):
     
     def paire_data(self,INDICATOR:pd.DataFrame|pd.Series):
         if isinstance(INDICATOR,pd.Series):
-            data = INDICATOR.dropna().round(4)
+            data = INDICATOR.dropna().round(6)
         else:
             column_names = INDICATOR.columns.tolist()
             uo_name = ''
             for name in column_names:
                 if name.__contains__("UO_"):
                     uo_name = name
-            data = INDICATOR[uo_name].dropna().round(4)
+            data = INDICATOR[uo_name].dropna().round(6)
         return data
     
     def calculate(self,df: pd.DataFrame):
@@ -277,7 +277,7 @@ class UO(QObject):
                     medium_w=self.medium_w_value,
                     slow_w=self.slow_w_value,
                     drift = self.drift,
-                    offset = self.offset).dropna().round(4)
+                    offset = self.offset).dropna().round(6)
                     
         return self.paire_data(INDICATOR)
     

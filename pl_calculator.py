@@ -15,7 +15,7 @@ def calculate_pl_with_fees(entry_price, exit_price, capital, leverage, proportio
     leverage_gain = percent_change * leverage
     capital_gain = leverage_gain * capital * proportion_closed
     pl = capital_gain - open_fee * proportion_closed - close_fee
-    return round(pl, 2)
+    return round(pl, 4)
 
 def calculate_recommended_capital(entry_price, stop_loss_price, total_capital, risk_percentage, leverage, taker_fee, is_long=True):
     capital_to_risk = total_capital * (risk_percentage / 100)
@@ -25,7 +25,7 @@ def calculate_recommended_capital(entry_price, stop_loss_price, total_capital, r
     total_taker_fee = entry_price * leverage * taker_fee * 2
     effective_loss_per_unit = leveraged_loss_per_unit + (total_taker_fee / (entry_price * leverage))
     recommended_capital = capital_to_risk / effective_loss_per_unit
-    return round(recommended_capital, 2)
+    return round(recommended_capital, 4)
 
 # CSS for background color and author note
 st.markdown(

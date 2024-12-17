@@ -228,7 +228,7 @@ class MA(QObject):
         self.df = pd.DataFrame([])
         df:pd.DataFrame = self._candles.get_df()
         
-        data = ma(self.mamode,source=df[self.source],length=self.length,mamode=self.zl_mode).dropna().round(4)
+        data = ma(self.mamode,source=df[self.source],length=self.length,mamode=self.zl_mode).dropna().round(6)
         
         _len = len(data)
         _index = df["index"].tail(_len)
@@ -253,7 +253,7 @@ class MA(QObject):
         _pre_len = len(self.df)
         df:pd.DataFrame = self._candles.get_df().iloc[:-1*_pre_len]
         
-        data = ma(self.mamode,source=df[self.source],length=self.length,mamode=self.zl_mode).dropna().round(4)
+        data = ma(self.mamode,source=df[self.source],length=self.length,mamode=self.zl_mode).dropna().round(6)
         
         
         _len = len(data)
@@ -282,7 +282,7 @@ class MA(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.length*10)
                         
-            data = ma(self.mamode,source=df[self.source],length=self.length,mamode=self.zl_mode).round(4)
+            data = ma(self.mamode,source=df[self.source],length=self.length,mamode=self.zl_mode).round(6)
             
             _data = data.iloc[-1]
             
@@ -303,7 +303,7 @@ class MA(QObject):
         self.is_current_update = False
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.length*10)
-            data = ma(self.mamode,source=df[self.source],length=self.length,mamode=self.zl_mode).round(4)
+            data = ma(self.mamode,source=df[self.source],length=self.length,mamode=self.zl_mode).round(6)
             self.df.iloc[-1] = [new_candle.index,data.iloc[-1]]
             self.xdata[-1] = new_candle.index
             self.ydata[-1] = data.iloc[-1]

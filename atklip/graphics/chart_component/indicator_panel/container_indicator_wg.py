@@ -69,13 +69,15 @@ class IndicatorContainer(VWIDGET):
             color = '#089981'
         else:
             color = '#f23645'
+            
+        _precision = f".{self._parent._precision}f"
         style = f"color:{color};"
         color_theme = "#d1d4dc" if isDarkTheme else "black"
         style_0 = f"color:{color_theme};"
         # [open, close, min, max]
-        html = f"<span style=\"{style_0}\">O </span><span style=\"{style}\">{tuple_price[0]}</span> <span style=\"{style_0}\">H </span><span style=\"{style}\">{tuple_price[1]}</span> <span style=\"{style_0}\">L </span><span style=\"{style}\">{tuple_price[2]}</span> <span style=\"{style_0}\">C </span><span style=\"{style}\">{tuple_price[3]}</span>"
+        html = f"<span style=\"{style_0}\">O </span><span style=\"{style}\">{tuple_price[0]:{_precision}}</span> <span style=\"{style_0}\">H </span><span style=\"{style}\">{tuple_price[1]:{_precision}}</span> <span style=\"{style_0}\">L </span><span style=\"{style}\">{tuple_price[2]:{_precision}}</span> <span style=\"{style_0}\">C </span><span style=\"{style}\">{tuple_price[3]:{_precision}}</span>"
         self.CandlePanel.candle_info.setHtml(html)
-        self._parent.prepareGeometryChange()
+        # self._parent.prepareGeometryChange()
 
 class SubIndicatorContainer(VWIDGET):
     sig_add_panel = Signal(object)

@@ -276,9 +276,9 @@ class BBANDS(QObject):
             elif name.__contains__("BBU_"):
                 upper_name = name
 
-        lb = INDICATOR[lower_name].dropna().round(4)
-        cb = INDICATOR[mid_name].dropna().round(4)
-        ub = INDICATOR[upper_name].dropna().round(4)
+        lb = INDICATOR[lower_name].dropna().round(6)
+        cb = INDICATOR[mid_name].dropna().round(6)
+        ub = INDICATOR[upper_name].dropna().round(6)
         return lb,cb,ub
     def calculate(self,df: pd.DataFrame):
         INDICATOR = bbands(df[self.source],

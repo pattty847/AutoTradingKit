@@ -215,16 +215,8 @@ class DrawSettingMenu(MovingWidget):
         self.addWidget(menu)
         self.w = menu.width()
         
-        # _height = 30
-        
         self.btn_setting = SettingButton(self)
         self.addWidget(self.btn_setting)
-        
-        # _height += self.title.height()
-        # _height +=  menu.height()
-        # _height += self.btn_setting.height()
-        
-        # self.resize(self.w,_height)
         
         _height_widget = menu.stackedWidget.height() + menu.pivot.height()
         menu.sig_change_widget.emit(_height_widget)

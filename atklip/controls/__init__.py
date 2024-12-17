@@ -3,6 +3,7 @@ from atklip.controls import pandas_ta as ta
 from .ma_type import PD_MAType,IndicatorType
 from .ohlcv import OHLCV
 from .ma import MA,ma
+from .volume_with_ma import VolumeWithMa
 from atklip.controls.volatility import *
 from atklip.controls.momentum import *
 from atklip.controls.volume import *

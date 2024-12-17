@@ -263,8 +263,8 @@ class STOCHRSI(QObject):
             elif name.__contains__("STOCHRSId"):
                 signalma_name = name
 
-        stochrsi_ = INDICATOR[stochrsi_name].dropna().round(4)
-        signalma = INDICATOR[signalma_name].dropna().round(4)
+        stochrsi_ = INDICATOR[stochrsi_name].dropna().round(6)
+        signalma = INDICATOR[signalma_name].dropna().round(6)
         return stochrsi_,signalma
     
     def calculate(self,df: pd.DataFrame):
@@ -274,7 +274,7 @@ class STOCHRSI(QObject):
                             k = self.k_period,
                             d = self.d_period,
                             mamode=self.mamode.lower(),
-                            offset=self.offset).dropna().round(4)
+                            offset=self.offset).dropna().round(6)
         return self.paire_data(INDICATOR)
     
     def fisrt_gen_data(self):

@@ -268,7 +268,7 @@ class GraphSplitter(ViewSplitter):
         self.xaxisview.setContentsMargins(0,0,0,0)
         self.xaxislayout = GraphicsLayout()
         self.xaxisview.setCentralItem(self.xaxislayout)
-        self.xaxislayout.setContentsMargins(0,0,61,0)
+        self.xaxislayout.setContentsMargins(0,0,70,0)
         self.xaxislayout.addItem(self.dateAxis, row=0, col=0)
         self.addItem(self.xaxisview)
         self.dateAxis.linkToView(self.chart.vb)

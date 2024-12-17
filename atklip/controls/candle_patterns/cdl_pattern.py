@@ -258,26 +258,7 @@ class AllCandlePattern(QObject):
         self.worker.submit(self.fisrt_gen_data)
     
     def paire_data(self,INDICATOR:pd.DataFrame|pd.Series):
-        column_names = INDICATOR.columns.tolist()
-        
-        vortex_name = ''
-        signalma_name = ''
-        
-        patterns = ['doji', 'evening_star', 'morning_star', 'shooting_star', 'hammer', 'inverted_hammer', 'bearish_harami', 
-            'bullish_harami', 'bearish_engulfing', 'bullish_engulfing', 'piercing_line', 'bullish_belt', 
-            'bullish_kicker', 'bearish_kicker', 'hanging_man', 'dark_cloud_cover']
-        
-        
-        for name in column_names:
-            if name.__contains__("VTXP_"):
-                vortex_name = name
-            elif name.__contains__("VTXM_"):
-                signalma_name = name
-
-        vortex_ = INDICATOR[vortex_name].dropna().round(4)
-        signalma = INDICATOR[signalma_name].dropna().round(4)
-        
-        return vortex_,signalma
+        return
     
     def calculate(self,df: pd.DataFrame):
         INDICATOR = cdl_pattern(open_=df["open"],
@@ -285,7 +266,7 @@ class AllCandlePattern(QObject):
                                 low=df["low"],
                                 close=df["close"],
                                 name=list_cdl_patterns)
-        return INDICATOR#self.paire_data(INDICATOR)
+        return INDICATOR
     
     def fisrt_gen_data(self):
         self.is_current_update = False

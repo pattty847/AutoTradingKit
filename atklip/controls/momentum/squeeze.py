@@ -411,25 +411,25 @@ class SQEEZE(QObject):
                 SQZ = name
 
         if SQZ != "":
-            SQZ_data = INDICATOR[SQZ].dropna().round(4)
+            SQZ_data = INDICATOR[SQZ].dropna().round(6)
         # elif SQZ_ON != "":
-        #     SQZ_ON_data = INDICATOR[SQZ_ON].dropna().round(4)
+        #     SQZ_ON_data = INDICATOR[SQZ_ON].dropna().round(6)
         # elif SQZ_OFF != "":
-        #     SQZ_OFF_data = INDICATOR[SQZ_OFF].dropna().round(4)
+        #     SQZ_OFF_data = INDICATOR[SQZ_OFF].dropna().round(6)
         # elif NO_SQZ != "":
-        #     NO_SQZ_data = INDICATOR[NO_SQZ].dropna().round(4)
+        #     NO_SQZ_data = INDICATOR[NO_SQZ].dropna().round(6)
         # elif SQZ_INC != "":
-        #     SQZ_INC_data = INDICATOR[SQZ_INC].dropna().round(4)
+        #     SQZ_INC_data = INDICATOR[SQZ_INC].dropna().round(6)
         # elif SQZ_DEC != "":
-        #     SQZ_DEC_data = INDICATOR[SQZ_DEC].dropna().round(4)
+        #     SQZ_DEC_data = INDICATOR[SQZ_DEC].dropna().round(6)
         # elif SQZ_PINC != "":
-        #     SQZ_PINC_data = INDICATOR[SQZ_PINC].dropna().round(4)
+        #     SQZ_PINC_data = INDICATOR[SQZ_PINC].dropna().round(6)
         # elif SQZ_PDEC != "":
-        #     SQZ_PDEC_data = INDICATOR[SQZ_PDEC].dropna().round(4)
+        #     SQZ_PDEC_data = INDICATOR[SQZ_PDEC].dropna().round(6)
         # elif SQZ_NDEC != "":
-        #     SQZ_NDEC_data = INDICATOR[SQZ_NDEC].dropna().round(4)
+        #     SQZ_NDEC_data = INDICATOR[SQZ_NDEC].dropna().round(6)
         # elif SQZ_NINC != "":
-        #     SQZ_NINC_data = INDICATOR[SQZ_NINC].dropna().round(4)
+        #     SQZ_NINC_data = INDICATOR[SQZ_NINC].dropna().round(6)
 
         return SQZ_data #,SQZ_ON_data,SQZ_OFF_data,NO_SQZ_data #,SQZ_INC_data,SQZ_DEC_data,SQZ_PINC_data,SQZ_PDEC_data,SQZ_NDEC_data,SQZ_NINC_data
     
@@ -444,7 +444,7 @@ class SQEEZE(QObject):
                             mom_length = self.mom_length,
                             mom_smooth = self.mom_smooth,
                             mamode=self.mamode.lower(),
-                            kwargs=self.kwargs).dropna().round(4)
+                            kwargs=self.kwargs).dropna().round(6)
         
         # print(INDICATOR)
         # print(self.bb_length,self.bb_std,self.kc_length,self.kc_scalar,self.mom_length,self.mom_smooth)

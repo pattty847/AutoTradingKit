@@ -36,9 +36,9 @@ def paire_data(INDICATOR:pd.DataFrame):
             elif name.__contains__("SIGNAL"):
                 signalma_name = name
 
-        macd = INDICATOR[macd_name].dropna().round(4)
-        histogram = INDICATOR[histogram_name].dropna().round(4)
-        signalma = INDICATOR[signalma_name].dropna().round(4)
+        macd = INDICATOR[macd_name].dropna().round(6)
+        histogram = INDICATOR[histogram_name].dropna().round(6)
+        signalma = INDICATOR[signalma_name].dropna().round(6)
         return macd,histogram,signalma
     except:
         return pd.Series([]),pd.Series([]),pd.Series([])
@@ -249,8 +249,8 @@ class TrendWithStopLoss(QObject):
     
     def paire_data(self,INDICATOR:pd.DataFrame):
         try:
-            long_stoploss = INDICATOR["long_stoploss"].dropna().round(4)
-            short_stoploss = INDICATOR["short_stoploss"].dropna().round(4)
+            long_stoploss = INDICATOR["long_stoploss"].dropna().round(6)
+            short_stoploss = INDICATOR["short_stoploss"].dropna().round(6)
             Uptrend = INDICATOR["Uptrend"].dropna()
             Downtrend = INDICATOR["Downtrend"].dropna()
             return long_stoploss,short_stoploss,Uptrend,Downtrend

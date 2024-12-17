@@ -217,15 +217,11 @@ class IndicatorSettingMenu(MovingWidget):
         self.btn_setting = SettingButton(self)
         self.addWidget(self.btn_setting)
         
-        # _height += self.title.height()
-        # _height +=  menu.stackedWidget.height()
-        # _height +=  menu.pivot.height()
-        # _height += self.btn_setting.height()
         _height_widget = menu.stackedWidget.height() + menu.pivot.height()
         menu.sig_change_widget.emit(_height_widget)
   
         FluentStyleSheet.INDICATORMENU.apply(self)
-        # self.resize(self.w,_height)
+
     
     def delete(self,ev):
         try:

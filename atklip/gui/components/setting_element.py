@@ -79,7 +79,7 @@ class TypeEdit(ComboboxEdit):
     def __init__(self,parent:QWidget=None,indicator=None, _input=None):
         super(TypeEdit,self).__init__(parent,indicator, _input)
         
-        list_types = ["open","high","low","close","hl2","hlc3","ohlc4"]
+        list_types = ["open","high","low","close","hl2","hlc3","ohlc4","volume"]
         _inputs = self.indicator.get_inputs()
         _type = _inputs.get("type")
         if _type != None:
@@ -208,9 +208,9 @@ class FloatEdit(QWidget,DoubleValue):
     def __init__(self,parent:QWidget=None,indicator=None, _input=None):
         super(FloatEdit,self).__init__(parent)
         self.setupUi(self)
-        self.value.setDecimals(2)
-        self.value.setMinimum(0.00)
-        self.value.setSingleStep(0.01)
+        self.value.setDecimals(3)
+        self.value.setMinimum(0.000)
+        self.value.setSingleStep(0.001)
         self._parent = parent
         self.indicator = indicator
         self._input = _input
@@ -254,7 +254,7 @@ class PriceEdit(FloatEdit):
         self.setFixedHeight(35)
         _inputs = self.indicator.get_inputs()
         
-        _ls_inputs = ["price_high","price_low","fast_w_value","medium_w_value","min_price_low",
+        _ls_inputs = ["price_high","price_low","fast_w_value","medium_w_value","min_price_low","c_mul",
                       "slow_w_value","key_value_long","key_value_short","max_price_high",
                       "capital","loss_capital","proportion_closed","risk_percentage","kc_scalar","atr_multiplier",
                       "leverage","taker_fee","rsi_price_high","rsi_price_low","bb_std","supertrend_multiplier",

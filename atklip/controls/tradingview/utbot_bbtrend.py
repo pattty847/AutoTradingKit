@@ -2,67 +2,35 @@ import numpy as np
 import pandas as pd
 import pandas_ta as ta
 
-# Inputs
-a = 1  # Key Value, this changes sensitivity
-c = 10  # ATR Period
-h = False  # Use Heikin Ashi Candles
-BandType = "Bollinger Bands"  # Channel Type
-ChannelLength = 20
-StdDev = 1
-pvtLen = 2
-Pd = 22  # ATR Period for trailing stop
-Mult = 1  # ATR Multiplier
-wicks = False
-
-# Sample OHLC Data (replace with real data)
-data = pd.DataFrame({
-    "open": np.random.random(100),
-    "high": np.random.random(100),
-    "low": np.random.random(100),
-    "close": np.random.random(100)
-})
-
-# Ensure consistent Heikin Ashi Data if required
-if h:
-    ha_data = ta.heikinashi(data)
-    src = ha_data["HA_close"]
-else:
+def utsignal(data,a,c):
+    # ATR Calculation
+    xATR = ta.atr(data["high"], data["low"], data["close"], length=c)
+    nLoss = a * xATR
     src = data["close"]
-
-# ATR Calculation
-xATR = ta.atr(data["high"], data["low"], data["close"], length=c)
-nLoss = a * xATR
-
-# ATR Trailing Stop
-xATRTrailingStop = np.zeros(len(data))
-for i in range(1, len(data)):
-    if src[i] > xATRTrailingStop[i - 1] and src[i - 1] > xATRTrailingStop[i - 1]:
-        xATRTrailingStop[i] = max(xATRTrailingStop[i - 1], src[i] - nLoss[i])
-    elif src[i] < xATRTrailingStop[i - 1] and src[i - 1] < xATRTrailingStop[i - 1]:
-        xATRTrailingStop[i] = min(xATRTrailingStop[i - 1], src[i] + nLoss[i])
-    else:
-        xATRTrailingStop[i] = src[i] - nLoss[i] if src[i] > xATRTrailingStop[i - 1] else src[i] + nLoss[i]
-
-# EMA for crossover logic
-ema = ta.ema(src, length=1)
-
-above = (ema > xATRTrailingStop).astype(int).diff() > 0
-below = (xATRTrailingStop > ema).astype(int).diff() > 0
-
-# Pivot Points Calculation
-# def calculate_pivots(data, length):
-#     pivot_highs = data["high"].rolling(window=2 * length + 1, center=True).apply(lambda x: x[length] if x[length] == x.max() else np.nan)
-#     pivot_lows = data["low"].rolling(window=2 * length + 1, center=True).apply(lambda x: x[length] if x[length] == x.min() else np.nan)
-#     return pivot_highs, pivot_lows
-
-# pivot_highs, pivot_lows = calculate_pivots(data, pvtLen)
+    # ATR Trailing Stop
+    xATRTrailingStop = np.zeros(len(data))
+    for i in range(1, len(data)):
+        if src[i] > xATRTrailingStop[i - 1] and src[i - 1] > xATRTrailingStop[i - 1]:
+            xATRTrailingStop[i] = max(xATRTrailingStop[i - 1], src[i] - nLoss[i])
+        elif src[i] < xATRTrailingStop[i - 1] and src[i - 1] < xATRTrailingStop[i - 1]:
+            xATRTrailingStop[i] = min(xATRTrailingStop[i - 1], src[i] + nLoss[i])
+        else:
+            xATRTrailingStop[i] = src[i] - nLoss[i] if src[i] > xATRTrailingStop[i - 1] else src[i] + nLoss[i]
+    # EMA for crossover logic
+    ema = ta.ema(src, length=1)
+    above = (ema > xATRTrailingStop).astype(int).diff() > 0
+    below = (xATRTrailingStop > ema).astype(int).diff() > 0
+    return xATR,xATRTrailingStop, above, below
 
 # Bands Calculation
 def calculate_bands(data, band_type, length, std_dev):
     if band_type == "Bollinger Bands":
         bb = ta.bbands(data["close"], length=length, std=std_dev)
-        print(bb)
-        return bb["BBL_20_1"], bb["BBM_20_1"], bb["BBU_20_1"]
+        _props = f"_{length}_{std_dev}"
+        lower_name = f"BBL{_props}"
+        mid_name = f"BBM{_props}"
+        upper_name = f"BBU{_props}"
+        return bb[lower_name], bb[mid_name], bb[upper_name]
     elif band_type == "Keltner Channel":
         kc = ta.kc(data, length=length)
         return kc["KCL_20"], kc["KCM_20"], kc["KCU_20"]
@@ -73,33 +41,67 @@ def calculate_bands(data, band_type, length, std_dev):
     else:
         return None, None, None
 
-lower_band, middle_band, upper_band = calculate_bands(data, BandType, ChannelLength, StdDev)
-
 # Trailing Stop Calculation
 def calculate_trailing_stop(data, lower, upper, atr, mult, wicks):
     dir = np.ones(len(data))
     long_stop = lower - atr * mult
     short_stop = upper + atr * mult
 
+    if wicks:
+        longtarget = data["low"]
+        shorttarget = data["high"]
+    else:
+        shorttarget = data["close"]
+        longtarget = data["close"]
+        
     for i in range(1, len(data)):
-        if dir[i - 1] == 1 and data["low"][i] < long_stop[i - 1]:
+        if dir[i - 1] == 1 and longtarget[i] < long_stop[i - 1]:
             dir[i] = -1
-        elif dir[i - 1] == -1 and data["high"][i] > short_stop[i - 1]:
+        elif dir[i - 1] == -1 and shorttarget[i] > short_stop[i - 1]:
             dir[i] = 1
         else:
             dir[i] = dir[i - 1]
 
     return dir, long_stop, short_stop
 
-barState, buyStop, sellStop = calculate_trailing_stop(data, lower_band, upper_band, xATR, Mult, wicks)
+def utbot_with_bb(data,a = 1,c=10, Mult = 1, wicks=False,BandType = "Bollinger Bands", ChannelLength = 20, StdDev = 1):
+    """_summary_
+    Args:
+        data (_type_): _description_
+        a (int, optional): Key Value, this changes sensitivity. Defaults to 1.
+        c (int, optional): ATR Period. Defaults to 10.
+        Mult (int, optional): ATR Multiplier. Defaults to 1.
+        wicks (bool, optional): _description_. Defaults to False.
+        BandType (str, optional): Channel Type. Defaults to "Bollinger Bands".
+        ChannelLength (int, optional): _description_. Defaults to 20.
+        StdDev (int, optional): _description_. Defaults to 1.
 
-# Trade Conditions
-buy_condition = (src > xATRTrailingStop) & above & (barState == 1)
-sell_condition = (src < xATRTrailingStop) & below & (barState == -1)
+    Returns:
+        _type_: _description_
+    """
+    data = data.copy()
+    src = data["close"]
+    xATR,xATRTrailingStop, above, below = utsignal(data,a,c)
+    lower_band, middle_band, upper_band = calculate_bands(data, BandType, ChannelLength, StdDev)
+    barState, buyStop, sellStop = calculate_trailing_stop(data, lower_band, upper_band, xATR, Mult, wicks)
+    # Trade Conditions
+    buy_condition = (src > xATRTrailingStop) & above & (barState == 1)
+    sell_condition = (src < xATRTrailingStop) & below & (barState == -1)
+    # Output Results
+    data["BuySignal"] = buy_condition
+    data["SellSignal"] = sell_condition
+    
+    return data[["BuySignal", "SellSignal"]]
 
-# Output Results
-data["Buy Signal"] = buy_condition
-data["Sell Signal"] = sell_condition
-data["Trailing Stop"] = np.where(barState == 1, buyStop, sellStop)
 
-print(data[["Buy Signal", "Sell Signal", "Trailing Stop"]])
+# Sample OHLC Data (replace with real data)
+data = pd.DataFrame({
+    "open": np.random.random(100),
+    "high": np.random.random(100),
+    "low": np.random.random(100),
+    "close": np.random.random(100)
+})
+
+data = utbot_with_bb(data)
+
+print(data)

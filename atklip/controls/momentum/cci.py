@@ -91,12 +91,12 @@ class CCI(QObject):
     sig_reset_all = Signal()
     signal_delete = Signal()  
     sig_add_historic = Signal(int)   
-    def __init__(self,_candles,dict_ta_params) -> None:   
+    def __init__(self,_candles,dict_ta_params:dict={}) -> None:   
         super().__init__(parent=None)
         self._candles: JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE =_candles
         
-        self.length:int = dict_ta_params["length"]
-        self.c:str = dict_ta_params["c"]
+        self.length:int = dict_ta_params.get("length",7)
+        self.c:float = dict_ta_params.get("c",0.015) 
         
         #self.signal_delete.connect(self.deleteLater)
 
@@ -128,8 +128,8 @@ class CCI(QObject):
             self.connect_signals()
         
         if dict_ta_params != {}:    
-            self.length:int = dict_ta_params["length"]
-            self.c:str = dict_ta_params["c"]
+            self.length:int = dict_ta_params.get("length",7)
+            self.c:float = dict_ta_params.get("c",0.015) 
 
             ta_name:str=dict_ta_params.get("ta_name")
             obj_id:str=dict_ta_params.get("obj_id") 
@@ -233,7 +233,7 @@ class CCI(QObject):
                         low=df["low"],
                         close=df["close"],
                         length=self.length,
-                        c=self.c).dropna().round(4)
+                        c=self.c).dropna()#.round(6)
                         
         return self.paire_data(INDICATOR)
     def fisrt_gen_data(self):

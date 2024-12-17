@@ -273,10 +273,10 @@ class SuperTrend(QObject):
                     SUPERTs_name = name
                     
 
-            SUPERTt = INDICATOR[SUPERT_name].dropna().round(4)
-            SUPERTd = INDICATOR[SUPERTd_name].dropna().round(4)
-            SUPERTl = INDICATOR[SUPERTl_name].round(4)
-            SUPERTs = INDICATOR[SUPERTs_name].round(4)
+            SUPERTt = INDICATOR[SUPERT_name].dropna().round(6)
+            SUPERTd = INDICATOR[SUPERTd_name].dropna().round(6)
+            SUPERTl = INDICATOR[SUPERTl_name].round(6)
+            SUPERTs = INDICATOR[SUPERTs_name].round(6)
             return SUPERTt,SUPERTd
         except:
             return Series([]),Series([])

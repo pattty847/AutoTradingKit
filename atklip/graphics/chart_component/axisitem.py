@@ -429,7 +429,8 @@ class CustomPriceAxisItem(AxisItem):
         self.setContentsMargins(1,1,1,1)
         self.vb = vb
         self.context = context
-
+        self._precision = f".{self.context._precision}f"
+                
         self.cross_color,self.cross_price = "#eaeaea", None
 
         self.dict_objects = {}
@@ -802,11 +803,16 @@ class CustomPriceAxisItem(AxisItem):
                 for i in range(int(notional)-1):
                     new_number+="0"
         return new_number
+    
     def draw_value(self,painter, rect,color, text):
         # Set up the pen for drawing the rectangle
         if "e" in text:
             text = self.convert2float(text)
-          
+        
+        
+        text = f"{float(text):{self._precision}}"
+        
+
         pen = QPen(Qt.white, 0.1, Qt.SolidLine)
         painter.setPen(pen)
 
@@ -829,6 +835,7 @@ class CustomPriceAxisItem(AxisItem):
     
     def drawPicture(self, p, axisSpec, tickSpecs, textSpecs):
         # super().drawPicture(p, axisSpec, tickSpecs, textSpecs)
+        self._precision = f".{self.context.get_precision()}f"
         p.setRenderHint(p.RenderHint.Antialiasing, False)
         p.setRenderHint(p.RenderHint.TextAntialiasing, True)
         pen, p1, p2 = axisSpec
@@ -848,6 +855,8 @@ class CustomPriceAxisItem(AxisItem):
         for rect, flags, text in textSpecs:
             if "e" in text:
                 text = self.convert2float(text)
+            # print(self._precision)
+            text = f"{float(text):{self._precision}}"
             p.drawText(rect, int(flags), text)
         
         self.paint_crosshair(p)
@@ -858,6 +867,7 @@ class CustomPriceAxisItem(AxisItem):
                     if hasattr(item, 'get_yaxis_param'):
                         price,color = item.get_yaxis_param()
                         if price != None:
+                            
                             self.draw_object_value(p,price,color=color)
     def paint_crosshair(self,p):
         """draw cross hair"""

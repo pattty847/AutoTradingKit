@@ -40,16 +40,16 @@ class BasicCCI(PlotDataItem):
         self._precision = self.chart._precision
         
         self.has = {
-            "name" :f"CCI 3",
+            "name" :f"CCI 0.015",
             "y_axis_show":True,
             "inputs":{
                     "source":self.chart.jp_candle,
                     "source_name": self.chart.jp_candle.source_name,
                     "indicator_type":IndicatorType.CCI,
-                    "length":14,
-                    "c":0.015,
-                    "price_high":80,
-                    "price_low":20,
+                    "length":20,
+                    "c_mul":0.015,
+                    "price_high":100,
+                    "price_low":-100,
                     "show":True},
 
             "styles":{
@@ -96,7 +96,7 @@ class BasicCCI(PlotDataItem):
     def model(self) -> dict:
         return CCIModel(self.id,"CCI",self.chart.jp_candle.source_name,
                         self.has["inputs"]["length"],
-                        self.has["inputs"]["c"]
+                        self.has["inputs"]["c_mul"]
                         )
     
     def disconnect_signals(self):
@@ -135,7 +135,7 @@ class BasicCCI(PlotDataItem):
         xdata,y_data= self.INDICATOR.get_data()
         setdata.emit((xdata,y_data))
         self.sig_change_yaxis_range.emit()
-        self.has["name"] = f"CCI {self.has["inputs"]["length"]} {self.has["inputs"]["c"]}"
+        self.has["name"] = f"CCI {self.has["inputs"]["length"]} {self.has["inputs"]["c_mul"]}"
         self.sig_change_indicator_name.emit(self.has["name"])
         
         
@@ -152,7 +152,7 @@ class BasicCCI(PlotDataItem):
     def get_inputs(self):
         inputs =  {"source":self.has["inputs"]["source"],
                     "length":self.has["inputs"]["length"],
-                    "c":self.has["inputs"]["c"]}
+                    "c_mul":self.has["inputs"]["c_mul"]}
         return inputs
     
     def get_styles(self):
@@ -185,7 +185,7 @@ class BasicCCI(PlotDataItem):
                 update = True
                 
         if update:
-            self.has["name"] = f"CCI {self.has["inputs"]["length"]} {self.has["inputs"]["c"]}"
+            self.has["name"] = f"CCI {self.has["inputs"]["length"]} {self.has["inputs"]["c_mul"]}"
             self.sig_change_indicator_name.emit(self.has["name"])
             self.INDICATOR.change_input(dict_ta_params=self.model.__dict__)
     

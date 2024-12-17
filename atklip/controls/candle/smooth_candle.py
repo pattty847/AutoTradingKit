@@ -368,13 +368,13 @@ class SMOOTH_CANDLE(QObject):
         _new_time = lastcandle.time
         _last_time = self.df["time"].iloc[-1]
         df:pd.DataFrame = self._candles.get_df(self.ma_leng*5)
-        highs = ta.ma(self.mamode, df["high"],length=self.ma_leng).dropna().round(4)
-        lows = ta.ma(self.mamode, df["low"],length=self.ma_leng).dropna().round(4)
-        closes = ta.ma(self.mamode, df["close"],length=self.ma_leng).dropna().round(4)
-        opens = ta.ma(self.mamode, df["open"],length=self.ma_leng).dropna().round(4)
-        hl2s = ta.ma(self.mamode, df["hl2"],length=self.ma_leng).dropna().round(4)
-        hlc3s = ta.ma(self.mamode, df["hlc3"],length=self.ma_leng).dropna().round(4)
-        ohlc4s = ta.ma(self.mamode, df["ohlc4"],length=self.ma_leng).dropna().round(4)
+        highs = ta.ma(self.mamode, df["high"],length=self.ma_leng).dropna().round(self._precision)
+        lows = ta.ma(self.mamode, df["low"],length=self.ma_leng).dropna().round(self._precision)
+        closes = ta.ma(self.mamode, df["close"],length=self.ma_leng).dropna().round(self._precision)
+        opens = ta.ma(self.mamode, df["open"],length=self.ma_leng).dropna().round(self._precision)
+        hl2s = ta.ma(self.mamode, df["hl2"],length=self.ma_leng).dropna().round(self._precision)
+        hlc3s = ta.ma(self.mamode, df["hlc3"],length=self.ma_leng).dropna().round(self._precision)
+        ohlc4s = ta.ma(self.mamode, df["ohlc4"],length=self.ma_leng).dropna().round(self._precision)
 
         if _new_time == _last_time:
             
@@ -445,19 +445,19 @@ class SMOOTH_CANDLE(QObject):
         _pre_len = len(self.df)
 
         df:pd.DataFrame = self._candles.get_df().iloc[:-1*_pre_len]
-        highs = ta.ma(self.mamode, df["high"],length=self.ma_leng).dropna().round(4)
+        highs = ta.ma(self.mamode, df["high"],length=self.ma_leng).dropna().round(self._precision)
 
-        lows = ta.ma(self.mamode, df["low"],length=self.ma_leng).dropna().round(4)
+        lows = ta.ma(self.mamode, df["low"],length=self.ma_leng).dropna().round(self._precision)
 
-        closes = ta.ma(self.mamode, df["close"],length=self.ma_leng).dropna().round(4)
+        closes = ta.ma(self.mamode, df["close"],length=self.ma_leng).dropna().round(self._precision)
 
-        opens = ta.ma(self.mamode, df["open"],length=self.ma_leng).dropna().round(4)
+        opens = ta.ma(self.mamode, df["open"],length=self.ma_leng).dropna().round(self._precision)
 
-        hl2s = ta.ma(self.mamode, df["hl2"],length=self.ma_leng).dropna().round(4)
+        hl2s = ta.ma(self.mamode, df["hl2"],length=self.ma_leng).dropna().round(self._precision)
 
-        hlc3s = ta.ma(self.mamode, df["hlc3"],length=self.ma_leng).dropna().round(4)
+        hlc3s = ta.ma(self.mamode, df["hlc3"],length=self.ma_leng).dropna().round(self._precision)
 
-        ohlc4s = ta.ma(self.mamode, df["ohlc4"],length=self.ma_leng).dropna().round(4)
+        ohlc4s = ta.ma(self.mamode, df["ohlc4"],length=self.ma_leng).dropna().round(self._precision)
 
         _len = len(ohlc4s)
         
@@ -493,19 +493,19 @@ class SMOOTH_CANDLE(QObject):
         self.map_time_ohlcv: Dict[int, OHLCV] = {}
         
         df:pd.DataFrame = self._candles.get_df()
-        highs = ta.ma(self.mamode, df["high"],length=self.ma_leng).dropna().round(4)
+        highs = ta.ma(self.mamode, df["high"],length=self.ma_leng).dropna().round(self._precision)
 
-        lows = ta.ma(self.mamode, df["low"],length=self.ma_leng).dropna().round(4)
+        lows = ta.ma(self.mamode, df["low"],length=self.ma_leng).dropna().round(self._precision)
 
-        closes = ta.ma(self.mamode, df["close"],length=self.ma_leng).dropna().round(4)
+        closes = ta.ma(self.mamode, df["close"],length=self.ma_leng).dropna().round(self._precision)
 
-        opens = ta.ma(self.mamode, df["open"],length=self.ma_leng).dropna().round(4)
+        opens = ta.ma(self.mamode, df["open"],length=self.ma_leng).dropna().round(self._precision)
 
-        hl2s = ta.ma(self.mamode, df["hl2"],length=self.ma_leng).dropna().round(4)
+        hl2s = ta.ma(self.mamode, df["hl2"],length=self.ma_leng).dropna().round(self._precision)
 
-        hlc3s = ta.ma(self.mamode, df["hlc3"],length=self.ma_leng).dropna().round(4)
+        hlc3s = ta.ma(self.mamode, df["hlc3"],length=self.ma_leng).dropna().round(self._precision)
 
-        ohlc4s = ta.ma(self.mamode, df["ohlc4"],length=self.ma_leng).dropna().round(4)
+        ohlc4s = ta.ma(self.mamode, df["ohlc4"],length=self.ma_leng).dropna().round(self._precision)
 
         _len = len(ohlc4s)
         

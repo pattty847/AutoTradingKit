@@ -50,7 +50,8 @@ class ViewSubPanel(PlotWidget):
         kwargs = {Crosshair.ENABLED: True,
           Crosshair.LINE_PEN: mkPen(color="#eaeaea", width=0.5,style=Qt.DashLine),
           Crosshair.TEXT_KWARGS: {"color": "#eaeaea"}} 
-
+        self.Chart: Chart = chart
+        self._precision = 3
         self.PlotItem = ViewPlotItem(context=self, type_chart="trading")    
         # self.sigSceneMouseMoved.
         self.manual_range = False
@@ -68,11 +69,11 @@ class ViewSubPanel(PlotWidget):
         self._parent = parent
         # 
 
-        self.Chart: Chart = chart
+        
         
         self.sources = self.Chart.sources
 
-        self._precision = self.Chart.get_precision()
+        
         
         self.jp_candle = self.Chart.jp_candle
         self.container_indicator_wg = SubIndicatorContainer(self)
@@ -101,7 +102,7 @@ class ViewSubPanel(PlotWidget):
 
         self.yAxis: CustomPriceAxisItem = self.getAxis('right')
         self.xAxis:CustomDateAxisItem = self.getAxis('bottom')
-        self.yAxis.setWidth(60)
+        self.yAxis.setWidth(70)
         self.xAxis.hide()
         
         self.vb:PlotViewBox = self.PlotItem.view_box
@@ -129,7 +130,10 @@ class ViewSubPanel(PlotWidget):
         self.Chart.crosshair_x_value_change.connect(slot=self.xAxis.change_value,type=Qt.ConnectionType.AutoConnection)
 
         global_signal.sig_show_hide_cross.connect(self.show_hide_cross,Qt.ConnectionType.AutoConnection)
-        
+    
+    def get_precision(self):
+        return 3#self.Chart.get_precision()
+     
     def setup_indicator(self,indicator_data):
         self.indicator_data = indicator_data
         _group_indicator = indicator_data[0][0]
@@ -163,6 +167,12 @@ class ViewSubPanel(PlotWidget):
         elif _indicator_type == IndicatorType.SQEEZE:
             
             self.indicator = BaSicSqeeze(self.get_last_pos_worker,self.Chart,self)
+        
+        elif _indicator_type == IndicatorType.VOLUMEWITHMA:
+            
+            self.indicator = VolumeWithMA(self.get_last_pos_worker,self.Chart,self)
+        
+        
         
     
         if self.indicator:
@@ -247,6 +257,7 @@ class ViewSubPanel(PlotWidget):
             self.vLine.hide()
             self.crosshair_x_value_change.emit(("#363a45",None))
             self.crosshair_y_value_change.emit(("#363a45",None))
+        self.vb.update()
     # Override addItem method
     def addItem(self, *args: Any, **kwargs: Any) -> None:
         self.vb.addItem(*args)
@@ -257,9 +268,9 @@ class ViewSubPanel(PlotWidget):
 
     def _update_crosshair_position(self, pos) -> None:
         """Update position of crosshair based on mouse position"""
-        self._precision = self.Chart.get_precision()
+        # self._precision = self.Chart.get_precision()
         nearest_value_yaxis = pos.y()
-        h_value = round(nearest_value_yaxis,self._precision)
+        h_value = round(nearest_value_yaxis,4)
         if self.mouse_on_vb:
             if not self.hLine.isVisible():
                 self.hLine.show()

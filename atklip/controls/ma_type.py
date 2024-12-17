@@ -117,6 +117,7 @@ class IndicatorType(Enum):
     N_SMOOTH_HEIKIN = "n_smooth_heikin"
     N_SMOOTH_JP = "n_smooth_jp"
     VOLUME = "Volume"
+    VOLUMEWITHMA = "Volume With MA"
     HISTOGRAM = "Histogram"
     CANDLESTICK = "CandleStick"
     SUB_CHART = "Sub_Chart"

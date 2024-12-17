@@ -7,15 +7,15 @@ class CandlePanel(QWidget):
         self.setStyleSheet("""background-color: transparent; color:#eaeaea; font: bold 14px 'Segoe UI', 'Microsoft YaHei', 'PingFang SC';
                             """)
         
-        self.setFixedSize(300, 25)
+        self.setFixedSize(320, 25)
         #self.move(300, 0)
         # self.
         layout = QHBoxLayout(self)
         self.setLayout(layout)
         layout.setSpacing(5)
-        layout.setContentsMargins(1, 1, 1, 1)
+        layout.setContentsMargins(0, 0, 0, 0)
         self.candle_info = QTextEdit(self)
-        self.candle_info.setContentsMargins(1,1,1,1)
+        self.candle_info.setContentsMargins(0,0,0,0)
         self.candle_info.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
         layout.addWidget(self.candle_info)

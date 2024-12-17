@@ -299,8 +299,8 @@ class AllCandlePattern(QObject):
             elif name.__contains__("VTXM_"):
                 signalma_name = name
 
-        vortex_ = INDICATOR[vortex_name].dropna().round(4)
-        signalma = INDICATOR[signalma_name].dropna().round(4)
+        vortex_ = INDICATOR[vortex_name].dropna().round(6)
+        signalma = INDICATOR[signalma_name].dropna().round(6)
         
         return vortex_,signalma
     
