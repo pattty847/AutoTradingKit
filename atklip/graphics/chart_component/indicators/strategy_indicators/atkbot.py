@@ -67,10 +67,10 @@ class ATKBOT(GraphicsObject):
                     # UT BOT
                     "key_value_long":0.1,
                     "key_value_short":0.1,
-                    "atr_long_period":1,
-                    "ema_long_period":2,
-                    "atr_short_period":1,
-                    "ema_short_period":2,
+                    "atr_long_period":2,
+                    "ema_long_period":1,
+                    "atr_short_period":2,
+                    "ema_short_period":1,
                     
                     #Super Trend ATR
                     "supertrend_length" :14,
@@ -138,7 +138,8 @@ class ATKBOT(GraphicsObject):
 
         self.supertrend = SuperTrendWithStopLoss(self.has["inputs"]["source"], self.supertmodel.__dict__)
         # self.trendwithsl = TrendWithStopLoss(self.has["inputs"]["source"], self.trendwithsltmodel.__dict__)
-        self.utbot  = CUSTOM_UTBOT_ALERT(self.has["inputs"]["source"], self.utbotmodel.__dict__)
+        self.utbot  = UTBOT_ALERT(self.has["inputs"]["source"], self.utbotmodel.__dict__)
+        # self.utbot  = CUSTOM_UTBOT_ALERT(self.has["inputs"]["source"], self.utbotmodel.__dict__)
         
         self.rsi  = RSI(self.has["inputs"]["source"], self.rsi_model.__dict__)
         self.rsifast  = RSI(self.has["inputs"]["source"], self.rsi_fast_model.__dict__)
@@ -398,10 +399,10 @@ class ATKBOT(GraphicsObject):
                 rsidata = rsidf.iloc[-1]["data"]
             
             
-            rsifastdf = self.rsifast.df.loc[self.rsifast.df['index'] == _x-1]
-            rsifastdata = None
-            if not rsifastdf.empty:
-                rsifastdata = rsifastdf.iloc[-1]["data"]
+            # rsifastdf = self.rsifast.df.loc[self.rsifast.df['index'] == _x-1]
+            # rsifastdata = None
+            # if not rsifastdf.empty:
+            #     rsifastdata = rsifastdf.iloc[-1]["data"]
             
             "MA3 MA30"
             # mafastdf = self.mafast.df.loc[self.mafast.df['index'] == _x-1]
@@ -416,7 +417,7 @@ class ATKBOT(GraphicsObject):
             # if not maslowdata or not mafastdata:
             #     continue
             
-            if self.utbot.df.iloc[i-1]['long'] == True and SUPERTd>0 and rsidata>70:#  and 90 < rsifastdata < 100: # and maslowdata < mafastdata
+            if self.utbot.df.iloc[i-1]['long'] == True and SUPERTd>0 and rsidata>50:#  and 90 < rsifastdata < 100: # and maslowdata < mafastdata
                 
                 # if percent_caculator(sl_long,jp_open) > 0.1:
                 #     continue
@@ -428,7 +429,7 @@ class ATKBOT(GraphicsObject):
                 obj.locked_handle()
                 self.list_pos[_x] = {"type":"long","obj":obj}
                 
-            elif self.utbot.df.iloc[i-1]['short'] == True and  SUPERTd<0 and rsidata<30:# and SUPERTd<0 and 0 < rsifastdata < 20: # and maslowdata > mafastdata
+            elif self.utbot.df.iloc[i-1]['short'] == True and  SUPERTd<0 and rsidata<50:# and SUPERTd<0 and 0 < rsifastdata < 20: # and maslowdata > mafastdata
                 
                 # if percent_caculator(sl_short,jp_open) > 0.1:
                 #     continue
@@ -719,7 +720,7 @@ class ATKBOT(GraphicsObject):
         #     return
         
         
-        if self.utbot.df.iloc[-2]['long'] == True and SUPERTd>0 and rsidata>70:#  and 90 < rsifastdata < 100: # and maslowdata < mafastdata
+        if self.utbot.df.iloc[-2]['long'] == True and SUPERTd>0 and rsidata>50:#  and 90 < rsifastdata < 100: # and maslowdata < mafastdata
                 
             # if percent_caculator(sl_long,jp_open) > 0.1:
             #     continue
@@ -731,7 +732,7 @@ class ATKBOT(GraphicsObject):
             obj.locked_handle()
             self.list_pos[_x] = {"type":"long","obj":obj}
             
-        elif self.utbot.df.iloc[-2]['short'] == True and  SUPERTd<0 and rsidata<30:# and SUPERTd<0 and 0 < rsifastdata < 20: # and maslowdata > mafastdata
+        elif self.utbot.df.iloc[-2]['short'] == True and  SUPERTd<0 and rsidata<50:# and SUPERTd<0 and 0 < rsifastdata < 20: # and maslowdata > mafastdata
             
             # if percent_caculator(sl_short,jp_open) > 0.1:
             #     continue
@@ -803,7 +804,7 @@ class ATKBOT(GraphicsObject):
             # if not maslowdata or not mafastdata:
             #     continue
             
-            if self.utbot.df.iloc[i-1]['long'] == True and SUPERTd>0 and rsidata>70:#  and 90 < rsifastdata < 100: # and maslowdata < mafastdata
+            if self.utbot.df.iloc[i-1]['long'] == True and SUPERTd>0 and rsidata>50:#  and 90 < rsifastdata < 100: # and maslowdata < mafastdata
                 
                 # if percent_caculator(sl_long,jp_open) > 0.1:
                 #     continue
@@ -815,7 +816,7 @@ class ATKBOT(GraphicsObject):
                 obj.locked_handle()
                 self.list_pos[_x] = {"type":"long","obj":obj}
                 
-            elif self.utbot.df.iloc[i-1]['short'] == True and  SUPERTd<0 and rsidata<30:# and SUPERTd<0 and 0 < rsifastdata < 20: # and maslowdata > mafastdata
+            elif self.utbot.df.iloc[i-1]['short'] == True and  SUPERTd<0 and rsidata<50:# and SUPERTd<0 and 0 < rsifastdata < 20: # and maslowdata > mafastdata
                 
                 # if percent_caculator(sl_short,jp_open) > 0.1:
                 #     continue

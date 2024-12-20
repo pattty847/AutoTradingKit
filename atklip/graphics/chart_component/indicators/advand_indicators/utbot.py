@@ -53,10 +53,10 @@ class UTBOT(GraphicsObject):
                     "key_value_long":1,
                     "key_value_short":1,
                     
-                    "atr_long_period":200,
+                    "atr_long_period":10,
                     "ema_long_period":1,
                     
-                    "atr_short_period":200,
+                    "atr_short_period":10,
                     "ema_short_period":1,
                     
                     "indicator_type":IndicatorType.UTBOT,

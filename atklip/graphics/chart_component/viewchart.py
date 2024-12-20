@@ -685,6 +685,9 @@ class Chart(ViewPlotWidget):
             if isinstance(candle.source,JAPAN_CANDLE): 
                 self.auto_xrange()
             candle.source.sig_add_candle.emit(candle.source.candles[-2:])
+            ohlcv = candle.source.candles[-1]
+            data = [ohlcv.open,ohlcv.high,ohlcv.low,ohlcv.close]
+            self.sig_show_candle_infor.emit(data)
             self.indicators.append(candle) 
 
         elif _group_indicator == "Advance Indicator":

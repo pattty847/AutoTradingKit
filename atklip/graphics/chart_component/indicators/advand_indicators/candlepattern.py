@@ -199,9 +199,9 @@ class CandlePattern(GraphicsObject):
             if row['sell_harris'] == True:
                 index = row['index']
                 text = 'sell_harris'
-            elif row['buy_simple'] == True:
+            elif row['sell_simple'] == True:
                 index = row['index']
-                text = 'buy_simple'
+                text = 'sell_simple'
                 
             if index and text:
                 ohlc =  self.chart.jp_candle.map_index_ohlcv.get(index)
@@ -228,19 +228,19 @@ class CandlePattern(GraphicsObject):
             #     # print(row['index'],row['bullish_harami'])
             #     index = row['index']
             #     text = 'bullish_harami'
-            # elif row['bullish_engulfing'] == True:
-            #     index = row['index']
-            #     text = 'bullish_engulfing'
+            if row['bullish_engulfing'] == True:
+                index = row['index']
+                text = 'bullish_engulfing'
             # elif row['bullish_kicker'] == True:
             #     # print(row['index'],row['bullish_kicker'])
             #     index = row['index']
             #     text = 'bullish_kicker'
-            if row['buy_harris'] == True:
+            elif row['buy_harris'] == True:
                 index = row['index']
                 text = 'buy_harris'
-            elif row['sell_simple'] == True:
+            elif row['buy_simple'] == True:
                 index = row['index']
-                text = 'sell_simple'
+                text = 'buy_simple'
             
             if index and text:
                 ohlc =  self.chart.jp_candle.map_index_ohlcv.get(index)
@@ -271,6 +271,7 @@ class CandlePattern(GraphicsObject):
                     
 
     def add_historic_Data(self,df):
+        return
         sells = df.loc[(df['evening_star'] == True)|(df['shooting_star'] == True)|(df['bearish_harami'] == True)|(df['bearish_engulfing'] == True)|(df['bearish_kicker'] == True)] 
         buys = df.loc[(df['morning_star'] == True)|(df['bullish_harami'] == True)|(df['bullish_engulfing'] == True)|(df['bullish_kicker'] == True)] 
         for i in range(len(sells)):
@@ -370,6 +371,7 @@ class CandlePattern(GraphicsObject):
 
         
     def update_Data(self,df):
+        return
         # sells = df.loc[(df['evening_star'] == True)|(df['shooting_star'] == True)|(df['bearish_harami'] == True)|(df['bearish_engulfing'] == True)|(df['bearish_kicker'] == True)] 
         # buys = df.loc[(df['morning_star'] == True)|(df['bullish_harami'] == True)|(df['bullish_engulfing'] == True)|(df['bullish_kicker'] == True)] 
         # for i in range(len(sells)):

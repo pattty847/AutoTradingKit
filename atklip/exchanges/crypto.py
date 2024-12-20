@@ -110,7 +110,7 @@ class CryptoExchange():
             self.exchange = None
             return None
         return self.exchange
-
+    
 
 class  CryptoExchange_WS():
     def __init__(self):

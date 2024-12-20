@@ -42,7 +42,12 @@ def calculate_bands(data, band_type, length, std_dev):
         return None, None, None
 
 # Trailing Stop Calculation
-def calculate_trailing_stop(data, lower, upper, atr, mult, wicks):
+def calculate_trailing_stop(data, lower, upper, atr_len, mult, wicks):
+    if lower is None or upper is None:
+        raise ValueError("Invalid band type or parameters resulting in None values for bands.")
+    
+    atr = ta.atr(data["high"], data["low"], data["close"], length=atr_len)
+    
     dir = np.ones(len(data))
     long_stop = lower - atr * mult
     short_stop = upper + atr * mult
@@ -64,7 +69,7 @@ def calculate_trailing_stop(data, lower, upper, atr, mult, wicks):
 
     return dir, long_stop, short_stop
 
-def utbot_with_bb(data,a = 1,c=10, Mult = 1, wicks=False,BandType = "Bollinger Bands", ChannelLength = 20, StdDev = 1):
+def utbot_with_bb(data,a = 1,c=10, Mult = 1, wicks=False,BandType = "Bollinger Bands",atr_len=22, ChannelLength = 20, StdDev = 1):
     """_summary_
     Args:
         data (_type_): _description_
@@ -83,7 +88,11 @@ def utbot_with_bb(data,a = 1,c=10, Mult = 1, wicks=False,BandType = "Bollinger B
     src = data["close"]
     xATR,xATRTrailingStop, above, below = utsignal(data,a,c)
     lower_band, middle_band, upper_band = calculate_bands(data, BandType, ChannelLength, StdDev)
-    barState, buyStop, sellStop = calculate_trailing_stop(data, lower_band, upper_band, xATR, Mult, wicks)
+    
+    
+    
+    
+    barState, buyStop, sellStop = calculate_trailing_stop(data, lower_band, upper_band, atr_len, Mult, wicks)
     # Trade Conditions
     buy_condition = (src > xATRTrailingStop) & above & (barState == 1)
     sell_condition = (src < xATRTrailingStop) & below & (barState == -1)

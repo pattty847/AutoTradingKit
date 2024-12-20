@@ -85,7 +85,7 @@ class SubChart(PlotWidget):
         self.apikey,self.secretkey = self.Chart.apikey, self.Chart.secretkey
         
         
-        self.jp_candle = JAPAN_CANDLE()
+        self.jp_candle = JAPAN_CANDLE(self.Chart)
         
         self.container_indicator_wg = SubIndicatorContainer(self)
 
@@ -215,7 +215,6 @@ class SubChart(PlotWidget):
         
         self.interval = interval
         self.fast_reset_worker(exchange_name=self.exchange_name,symbol=self.symbol,interval=interval)
-    
     
     def fast_reset_worker(self,apikey:str="",secretkey:str="",exchange_name:str="binanceusdm",symbol:str="",interval:str=""):
         crypto_ex = CryptoExchange(self)

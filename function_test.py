@@ -19,9 +19,10 @@ def utsignal(data,a,c):
         else:
             xATRTrailingStop[i] = src[i] - nLoss[i] if src[i] > xATRTrailingStop[i - 1] else src[i] + nLoss[i]
     # EMA for crossover logic
+    xATRTrailingStop= pd.Series(xATRTrailingStop)
     ema = ta.ema(src, length=1)
-    above = (ema > xATRTrailingStop).astype(int).diff() > 0
-    below = (xATRTrailingStop > ema).astype(int).diff() > 0
+    above = crossover(ema , xATRTrailingStop) 
+    below = crossover(xATRTrailingStop , ema) 
     return xATR,xATRTrailingStop, above, below
 
 # Bands Calculation
@@ -44,8 +45,13 @@ def calculate_bands(data, band_type, length, std_dev):
         return None, None, None
 
 # Trailing Stop Calculation
-def calculate_trailing_stop(data, lower, upper, atr, mult, wicks):
-    dir = np.ones(len(data))
+def calculate_trailing_stop(data, lower, upper, atr_len, mult, wicks):
+    if lower is None or upper is None:
+        raise ValueError("Invalid band type or parameters resulting in None values for bands.")
+    
+    atr = ta.atr(data["high"], data["low"], data["close"], length=atr_len)
+    
+    dir = np.ndarray(len(data))
     dir[0] = 1
     long_stop = lower - atr * mult
     short_stop = upper + atr * mult
@@ -67,7 +73,7 @@ def calculate_trailing_stop(data, lower, upper, atr, mult, wicks):
 
     return dir, long_stop, short_stop
 
-def utbot_with_bb(data,a = 1,c=10, Mult = 1, wicks=False,BandType = "Bollinger Bands", ChannelLength = 20, StdDev = 1):
+def utbot_with_bb(data,a = 1,c=10, Mult = 1, wicks=False,BandType = "Bollinger Bands",atr_len=22, ChannelLength = 20, StdDev = 1):
     """_summary_
     Args:
         data (_type_): _description_
@@ -86,9 +92,9 @@ def utbot_with_bb(data,a = 1,c=10, Mult = 1, wicks=False,BandType = "Bollinger B
     src = data["close"]
     xATR,xATRTrailingStop, above, below = utsignal(data,a,c)
     lower_band, middle_band, upper_band = calculate_bands(data, BandType, ChannelLength, StdDev)
-    barState, buyStop, sellStop = calculate_trailing_stop(data, lower_band, upper_band, xATR, Mult, wicks)
+    
+    barState, buyStop, sellStop = calculate_trailing_stop(data, lower_band, upper_band, atr_len, Mult, wicks)
     # Trade Conditions
-    print(barState)
     buy_condition = (src > xATRTrailingStop) & above & (barState == 1)
     sell_condition = (src < xATRTrailingStop) & below & (barState == -1)
     # Output Results
@@ -106,78 +112,6 @@ data = pd.DataFrame({
     "close": np.random.random(100)
 })
 
-# data = utbot_with_bb(data)
-import numpy as np
-import pandas as pd
-import pandas_ta as ta
+data = utbot_with_bb(data)
 
-def get_trailing_stop(df:pd.DataFrame, channel_length=20, std_dev=1.0, pd_len=22, mult=1.0, use_wicks=False):
-    """
-    Calculate trailing stop values based on bands and ATR for a given DataFrame.
-    
-    Parameters:
-    - df: pandas DataFrame containing columns ['high', 'low', 'close']
-    - band_type: str, type of bands ('Bollinger Bands', 'Keltner Channel', etc.)
-    - channel_length: int, length of the channel calculation
-    - std_dev: float, standard deviation multiplier (used in Bollinger Bands)
-    - pivot_len: int, pivot length for Donchian calculations
-    - pd_len: int, ATR period
-    - mult: float, multiplier for ATR-based stop levels
-    - use_wicks: bool, whether to use wicks (high/low) or close price for calculations
-    
-    Returns:
-    - A DataFrame with added columns for `dir`, `long_stop`, and `short_stop`
-    """
-    # ATR calculation
-    
-    df = df.copy()
-    df = df.reset_index(drop=True)
-    df['atr'] = ta.atr(high=df['high'], low=df['low'], close=df['close'], length=pd_len)
-    
-  
-    bb = ta.bbands(data["close"], length=channel_length, std=std_dev)
-    _props = f"_{channel_length}_{std_dev}"
-    lower_name = f"BBL{_props}"
-    mid_name = f"BBM{_props}"
-    upper_name = f"BBU{_props}"
-    df['upper_band'] = bb[upper_name]
-    df['lower_band'] = bb[lower_name]
-    
-    
-    # Use high/low or close for calculations
-    df['long_target'] = df['low'] if use_wicks else df['close']
-    df['short_target'] = df['high'] if use_wicks else df['close']
-    
-    # Calculate long and short stops
-    df['long_stop'] = df['lower_band'] - df['atr'] * mult
-    df['long_stop_prev'] = df['long_stop'].shift(1)
-    df['long_stop'] = np.where(df['long_stop_prev'].isna(), df['long_stop'], 
-                               np.maximum(df['long_stop'], df['long_stop_prev']))
-    
-    df['short_stop'] = df['upper_band'] + df['atr'] * mult
-    df['short_stop_prev'] = df['short_stop'].shift(1)
-    df['short_stop'] = np.where(df['short_stop_prev'].isna(), df['short_stop'], 
-                                np.minimum(df['short_stop'], df['short_stop_prev']))
-    
-    
-    df = df.iloc[max([pd_len,channel_length])+1:]
-    df = df.reset_index(drop=True)
-    
-    # Determine direction
-    df['dir'] =  np.zeros(len(df)) 
-    df['dir'].iloc[0] = 1
-    df['dir'] = np.where(
-        (df['dir'].shift(1) == -1) & (df['short_target'] >= df['short_stop_prev']), 1,
-        np.where(
-            (df['dir'].shift(1) == 1) & (df['long_target'] <= df['long_stop_prev']), -1,
-            df['dir'].shift(1).fillna(1)
-        )
-    )
-    
-    # Return the DataFrame with trailing stop calculations
-    return df[['dir', 'long_stop', 'short_stop']]
-
-
-dataa = get_trailing_stop(data)
-
-print(dataa)
+print(data.loc[(data["BuySignal"] == True) | (data["SellSignal"] == True)])
