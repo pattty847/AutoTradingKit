@@ -224,6 +224,7 @@ class ParttensIndicator(BasicMenu):
         self._type_indicator = "Parttens Indicator"
         self.setObjectName(self._type_indicator)
         self.list_indicators = [IndicatorType.CANDLE_PATTERN,
+                                IndicatorType.CUSTOM_CANDLE_PATTERN,
                                 IndicatorType.CHART_PATTERN]
         self.load_indicators()
         #self.addSpacer("VERTICAL")
@@ -235,6 +236,7 @@ class AdvanceIndicator(BasicMenu):
         self.setObjectName(self._type_indicator)
         self.list_indicators = [IndicatorType.ATKPRO,
                                 IndicatorType.UTBOT,
+                                IndicatorType.UTBOT_WITH_BBAND,
                                 IndicatorType.TRENDWITHSL,
                                 IndicatorType.SuperTrend,
                                 IndicatorType.ATRSuperTrend,

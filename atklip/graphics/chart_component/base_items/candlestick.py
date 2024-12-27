@@ -109,7 +109,12 @@ class CandleStick(GraphicsObject):
         self.source.sig_update_candle.connect(self.update_asyncworker,Qt.ConnectionType.AutoConnection)
         self.source.sig_add_candle.connect(self.update_asyncworker,Qt.ConnectionType.AutoConnection)
         self.source.sig_add_historic.connect(self.threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
-  
+    
+    @property
+    def is_all_updated(self):
+        is_updated = self.source.is_current_update 
+        return is_updated
+    
     def delete_source(self):
         self.sig_deleted_source.emit(self.source)
         # self.source.signal_delete.emit()

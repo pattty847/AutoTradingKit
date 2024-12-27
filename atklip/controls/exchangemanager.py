@@ -76,14 +76,17 @@ class ExchangeManager:
             if ws:
                 try:
                     await ws.close()
+                    del self.map_chart_exchange[f"ws-{chart_id}-{symbol}-{interval}"]
                 except: pass
             cl = self.get_client_exchange(id_exchange,chart_id,symbol,interval)
             if ws:
                 try:
                     cl.close()  
+                    del self.map_chart_exchange[f"client-{chart_id}-{symbol}-{interval}"]
                 except: pass
             print("remove all socket--------")
         except:
             pass
     def clear(self):
         self.map_chart_exchange.clear()
+

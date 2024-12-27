@@ -11,54 +11,54 @@ from atklip.controls.ohlcv import   OHLCV
 from atklip.controls.candle import JAPAN_CANDLE,HEIKINASHI,SMOOTH_CANDLE,N_SMOOTH_CANDLE
 from atklip.app_api.workers import ApiThreadPool
 from PySide6.QtCore import Signal,QObject
+from .utbot import utbot
 
+# def utbot(dataframe:pd.DataFrame, key_value=1, atr_period=3, ema_period=200, ma_atr_mode="rma", ma_mode="ema")->pd.DataFrame:
 
-def utbot(dataframe:pd.DataFrame, key_value=1, atr_period=3, ema_period=200, ma_atr_mode="rma", ma_mode="ema")->pd.DataFrame:
-
-    xATR = atr(dataframe['high'], dataframe['low'], dataframe['close'], length=atr_period,mamode=ma_atr_mode).dropna().to_numpy()
-    _lenatr = len(xATR)
+#     xATR = atr(dataframe['high'], dataframe['low'], dataframe['close'], length=atr_period,mamode=ma_atr_mode).dropna().to_numpy()
+#     _lenatr = len(xATR)
     
-    nLoss = key_value * xATR
-    src = dataframe['close'].iloc[-_lenatr:].to_numpy()
+#     nLoss = key_value * xATR
+#     src = dataframe['close'].iloc[-_lenatr:].to_numpy()
 
-    xATRTrailingStop = np.zeros(_lenatr)
-    xATRTrailingStop[0] = src[0] - nLoss[0]
+#     xATRTrailingStop = np.zeros(_lenatr)
+#     xATRTrailingStop[0] = src[0] - nLoss[0]
 
-    mask_1 = (src > np.roll(xATRTrailingStop, 1)) & (np.roll(src, 1) > np.roll(xATRTrailingStop, 1))
-    mask_2 = (src < np.roll(xATRTrailingStop, 1)) & (np.roll(src, 1) < np.roll(xATRTrailingStop, 1))
-    mask_3 = src > np.roll(xATRTrailingStop, 1)
+#     mask_1 = (src > np.roll(xATRTrailingStop, 1)) & (np.roll(src, 1) > np.roll(xATRTrailingStop, 1))
+#     mask_2 = (src < np.roll(xATRTrailingStop, 1)) & (np.roll(src, 1) < np.roll(xATRTrailingStop, 1))
+#     mask_3 = src > np.roll(xATRTrailingStop, 1)
 
-    xATRTrailingStop = np.where(mask_1, np.maximum(np.roll(xATRTrailingStop, 1), src - nLoss), xATRTrailingStop)
-    xATRTrailingStop = np.where(mask_2, np.minimum(np.roll(xATRTrailingStop, 1), src + nLoss), xATRTrailingStop)
-    xATRTrailingStop = np.where(mask_3, src- nLoss, xATRTrailingStop)
+#     xATRTrailingStop = np.where(mask_1, np.maximum(np.roll(xATRTrailingStop, 1), src - nLoss), xATRTrailingStop)
+#     xATRTrailingStop = np.where(mask_2, np.minimum(np.roll(xATRTrailingStop, 1), src + nLoss), xATRTrailingStop)
+#     xATRTrailingStop = np.where(mask_3, src- nLoss, xATRTrailingStop)
 
-    mask_buy = (np.roll(src, 1) < xATRTrailingStop) & (src > np.roll(xATRTrailingStop, 1))
-    mask_sell = (np.roll(src, 1) > xATRTrailingStop)  & (src < np.roll(xATRTrailingStop, 1))
+#     mask_buy = (np.roll(src, 1) < xATRTrailingStop) & (src > np.roll(xATRTrailingStop, 1))
+#     mask_sell = (np.roll(src, 1) > xATRTrailingStop)  & (src < np.roll(xATRTrailingStop, 1))
 
-    pos = np.zeros(_lenatr)
-    pos = np.where(mask_buy, 1, pos)
-    pos = np.where(mask_sell, -1, pos)
-    pos[~((pos == 1) | (pos == -1))] = 0
+#     pos = np.zeros(_lenatr)
+#     pos = np.where(mask_buy, 1, pos)
+#     pos = np.where(mask_sell, -1, pos)
+#     pos[~((pos == 1) | (pos == -1))] = 0
 
-    if ma_mode == "smma":
-        ema_mode = "sma"
-    elif ma_mode == "zlma":
-        ema_mode = "ema"
-    else:
-        ema_mode = ""
+#     if ma_mode == "smma":
+#         ema_mode = "sma"
+#     elif ma_mode == "zlma":
+#         ema_mode = "ema"
+#     else:
+#         ema_mode = ""
     
-    _ema = ma(name=ma_mode,source=dataframe['close'], length=ema_period, mamode=ema_mode).dropna().to_numpy()
+#     _ema = ma(name=ma_mode,source=dataframe['close'], length=ema_period, mamode=ema_mode).dropna().to_numpy()
 
-    _leng = min([len(xATRTrailingStop),len(_ema),len(pos)])
+#     _leng = min([len(xATRTrailingStop),len(_ema),len(pos)])
     
-    buy_condition_utbot = (xATRTrailingStop[-_leng:] > _ema[-_leng:]) & (pos[-_leng:] > 0) & (src[-_leng:] > _ema[-_leng:])
-    sell_condition_utbot = (xATRTrailingStop[-_leng:] < _ema[-_leng:]) & (pos[-_leng:] < 0) & (src[-_leng:] < _ema[-_leng:])    
+#     buy_condition_utbot = (xATRTrailingStop[-_leng:] > _ema[-_leng:]) & (pos[-_leng:] > 0) & (src[-_leng:] > _ema[-_leng:])
+#     sell_condition_utbot = (xATRTrailingStop[-_leng:] < _ema[-_leng:]) & (pos[-_leng:] < 0) & (src[-_leng:] < _ema[-_leng:])    
 
-    dataframe_result = pd.DataFrame([])
-    dataframe_result['long'] = buy_condition_utbot
-    dataframe_result['short'] = sell_condition_utbot
+#     dataframe_result = pd.DataFrame([])
+#     dataframe_result['long'] = buy_condition_utbot
+#     dataframe_result['short'] = sell_condition_utbot
     
-    return dataframe_result
+#     return dataframe_result
     
 
 class ATKBOT_ALERT(QObject):

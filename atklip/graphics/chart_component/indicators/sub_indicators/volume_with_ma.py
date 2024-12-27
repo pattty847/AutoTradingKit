@@ -93,6 +93,11 @@ class VolumeWithMA(GraphicsObject):
         self.signal_delete.connect(self.delete)
     
     @property
+    def is_all_updated(self):
+        is_updated = self.INDICATOR.is_current_update 
+        return is_updated
+    
+    @property
     def id(self):
         return self.chart_id
     

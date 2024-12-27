@@ -574,7 +574,7 @@ class ZIGZAG(QObject):
         self.first_gen = False
         self.is_genering = True
         self.list_zizgzag:list = []
-        
+        self.is_current_update = False
         self.name = f"ZIGZAG {self.legs} {self.deviation}"
 
         self.df = pd.DataFrame([])
@@ -706,6 +706,7 @@ class ZIGZAG(QObject):
     
     def fisrt_gen_data(self):
         self.is_genering = True
+        self.is_current_update = False
         self.df = pd.DataFrame([])
         
         self.x_data,self.y_data = self.calculate([],self._candles.candles)
@@ -714,26 +715,33 @@ class ZIGZAG(QObject):
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
+        self.is_current_update = True
         self.sig_reset_all.emit()
     
     def add_historic(self,_len:int):
         self.is_genering = True
+        self.is_current_update = False
         self.x_data,self.y_data = self.calculate(self.list_zizgzag,self._candles.candles,"load")
         self.is_genering = False
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
+        self.is_current_update = True
         self.sig_add_historic.emit(_len)
     
     def add(self,new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]
+        self.is_current_update = False
         if (self.first_gen == True) and (self.is_genering == False):
             self.x_data,self.y_data = self.calculate(self.list_zizgzag,self._candles.candles,"add")
             self.sig_add_candle.emit()
+        self.is_current_update = True
         
     def update(self, new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]
+        self.is_current_update = False
         if (self.first_gen == True) and (self.is_genering == False):
             self.x_data,self.y_data = self.calculate(self.list_zizgzag,self._candles.candles,"update")
             self.sig_update_candle.emit()
+        self.is_current_update = True
 

@@ -113,6 +113,18 @@ class UTBOTModel(IndicatorBase):
     ema_long_period:int
     atr_short_period:float
     ema_short_period:int
+    
+@dataclass 
+class UTBOTWITHBBModel(IndicatorBase):
+    atr_length:int
+    channel_length:int
+    key_value:float
+    atr_utbot_length:int
+    mult:float
+    wicks:bool
+    band_type:str
+
+    
 @dataclass 
 class ROCModel(IndicatorBase):
     source:str    

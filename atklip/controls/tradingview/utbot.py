@@ -31,9 +31,12 @@ def utbot(dataframe:pd.DataFrame, key_value=1, atr_period=10, ema_period=1, ma_a
     
     data = data.reset_index(drop=True)
     
-    data["xATR"] = atr(data['high'], data['low'], data['close'], length=atr_period,mamode=ma_atr_mode)
-    data["nLoss"] = key_value * data["xATR"]
     src = data["close"]
+    high = data["high"]
+    low = data["low"]
+    
+    data["xATR"] = atr(high, low, src, length=atr_period,mamode=ma_atr_mode)
+    data["nLoss"] = key_value * data["xATR"]
 
     data["ATRTrailingStop"] = [0.0] + [np.nan for i in range(len(data) - 1)]
  
@@ -46,15 +49,13 @@ def utbot(dataframe:pd.DataFrame, key_value=1, atr_period=10, ema_period=1, ma_a
         )
     # EMA for crossover logic
     _ema = ema(src, length=ema_period)
-    data["EMA"] = _ema
     data["Above"] = crossover(_ema,data["ATRTrailingStop"])  
     data["Below"] = crossover(data["ATRTrailingStop"],_ema)  
     
-    data["long"] = (data["close"] > data["ATRTrailingStop"]) & (data["Above"]==1)
-    data["short"] = (data["close"] < data["ATRTrailingStop"]) & (data["Below"]==1)
+    data["long"] = (src > data["ATRTrailingStop"]) & (data["Above"]==1)
+    data["short"] = (src < data["ATRTrailingStop"]) & (data["Below"]==1)
     kq = data.iloc[max([ema_period,atr_period])-1:]
     return kq[["long", "short"]]
-
 
 
 class UTBOT_ALERT(QObject):

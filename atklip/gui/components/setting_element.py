@@ -93,6 +93,25 @@ class TypeEdit(ComboboxEdit):
         """ "open","high","low","close","hl2","hlc3","ohlc4 """
         self.indicator.update_inputs(self._input,_type)
 
+
+class BandTypeEdit(ComboboxEdit):
+    def __init__(self,parent:QWidget=None,indicator=None, _input=None):
+        super(BandTypeEdit,self).__init__(parent,indicator, _input)
+        
+        list_types = ["Bollinger Bands","Keltner Channel","Donchian Channel"]
+        _inputs = self.indicator.get_inputs()
+        _type = _inputs.get("band_type")
+        if _type != None:
+            if _type in list_types:
+                list_types.remove(_type)
+                list_types.insert(0,_type)
+        self.set_values(list_types)
+        self.value.currentTextChanged.connect(self.change_type)
+        self.setFixedHeight(35)
+    def change_type(self,_type):
+        self.indicator.update_inputs(self._input,_type)
+
+
 class MaTypeEdit(ComboboxEdit):
     def __init__(self,parent:QWidget=None,indicator=None, _input=None):
         super(MaTypeEdit,self).__init__(parent,indicator, _input)
@@ -184,11 +203,16 @@ class PeriodEdit(IntEdit):
         self.setFixedHeight(35)
         _inputs = self.indicator.get_inputs()
         
-        _list_inputs = ["legs","length","period","ma_period","period_lower","period_upper","k_period",\
-            "d_period","rsi_period","fast_period","medium_period","slow_period","ma_smooth_period","n_period","m_period",
-            "signal_period","length_period","n_smooth_period","smooth_k_period","atr_long_period","ema_long_period",
-            "atr_short_period","ema_short_period","bb_length","kc_length","mom_length","mom_smooth",
-            "supertrend_length","supertrend_atr_length"]
+        _list_inputs = ["legs","length","period","ma_period","period_lower",
+                        "period_upper","k_period","atr_utbot_length","atr_length",
+                        "channel_length",
+                        "d_period","rsi_period","fast_period","medium_period","slow_period",
+                        "ma_smooth_period","n_period","m_period",
+                        "signal_period","length_period","n_smooth_period",
+                        "smooth_k_period","atr_long_period","ema_long_period",
+                        "atr_short_period","ema_short_period","bb_length",
+                        "kc_length","mom_length","mom_smooth",
+                        "supertrend_length","supertrend_atr_length"]
         
         if _input in _list_inputs:
             _value = _inputs.get(_input)
@@ -254,8 +278,8 @@ class PriceEdit(FloatEdit):
         self.setFixedHeight(35)
         _inputs = self.indicator.get_inputs()
         
-        _ls_inputs = ["price_high","price_low","fast_w_value","medium_w_value","min_price_low","c_mul",
-                      "slow_w_value","key_value_long","key_value_short","max_price_high",
+        _ls_inputs = ["price_high","price_low","fast_w_value","medium_w_value","min_price_low","c_mul","mult",
+                      "slow_w_value","key_value_long","key_value_short","max_price_high","key_value",
                       "capital","loss_capital","proportion_closed","risk_percentage","kc_scalar","atr_multiplier",
                       "leverage","taker_fee","rsi_price_high","rsi_price_low","bb_std","supertrend_multiplier",
                       "maker_fee","atr_multiplier"]
@@ -509,6 +533,7 @@ class CheckBoxEdit(QWidget,CheckBoxValue):
         print(value)
         # self.indicator.update_styles(self._input)
     def load_state(self):
-        is_checked = self.indicator.has["styles"].get(self._input)
+        _inputs = self.indicator.get_inputs()
+        is_checked = _inputs.get(self._input,False)
         if is_checked:
             self.value.setCheckState(Qt.CheckState.Checked)

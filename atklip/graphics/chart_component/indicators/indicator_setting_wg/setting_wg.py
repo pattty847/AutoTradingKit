@@ -4,7 +4,7 @@ from atklip.gui.qfluentwidgets.components.container import HWIDGET,VWIDGET
 from atklip.gui.components import ScrollInterface,TextButton,MovingWidget,PivotInterface
 from atklip.gui.qfluentwidgets.common import *
 from atklip.gui.components.setting_element import PeriodEdit,MultiDevEdit,PriceEdit,ColorEdit,WidthEdit,StyleEdit,\
-SourceEdit,TypeEdit,MaTypeEdit,MaIntervalEdit
+SourceEdit,TypeEdit,MaTypeEdit,MaIntervalEdit,BandTypeEdit,CheckBoxEdit
 
 if TYPE_CHECKING:
     from atklip.graphics.chart_component.viewchart import Chart
@@ -89,6 +89,21 @@ class BasicMenu(ScrollInterface):
                         type_indicator.set_name(_input)
                         self.sig_add_indicator.emit(type_indicator)
                     continue
+                
+                elif _input == "band_type":
+                    if isinstance(_input,str):
+                        type_indicator = BandTypeEdit(self,self.indicator, _input)
+                        type_indicator.set_name(_input)
+                        self.sig_add_indicator.emit(type_indicator)
+                    continue
+                
+                elif _input == "wicks":
+                    if isinstance(_input,str):
+                        type_indicator = CheckBoxEdit(self,self.indicator, _input)
+                        type_indicator.set_name(_input)
+                        self.sig_add_indicator.emit(type_indicator)
+                    continue
+                
                 elif "period" in _input or "length" in _input or "legs" in _input or "smooth" in _input:
                     period = PeriodEdit(self,self.indicator, _input)
                     period.set_name(_input)
@@ -104,15 +119,16 @@ class BasicMenu(ScrollInterface):
                     interval.set_name(_input)
                     self.sig_add_indicator.emit(interval)
                     continue
-                elif "show" in _input:
-                    pass
-                elif "indicator_type" in _input:
-                    pass
+                
                 elif "price" in _input or "scalar" in _input or "value" in _input or "std" in _input or "mul" in _input:
                     price = PriceEdit(self,self.indicator, _input)
                     price.set_name(_input)
                     self.sig_add_indicator.emit(price)
                     continue
+                elif "show" in _input:
+                    pass
+                elif "indicator_type" in _input:
+                    pass
                 else:
                     period = MultiDevEdit(self._parent,self.indicator,_input)
                     period.set_name(_input)

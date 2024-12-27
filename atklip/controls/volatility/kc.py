@@ -82,7 +82,7 @@ def kc(
         upper.fillna(kwargs["fillna"], inplace=True)
 
     # Name and Category
-    _props = f"{mamode.lower()[0] if len(mamode) else ''}_{length}_{scalar}"
+    _props = f"_{length}_{scalar}"
     lower.name = f"KCL{_props}"
     basis.name = f"KCB{_props}"
     upper.name = f"KCU{_props}"

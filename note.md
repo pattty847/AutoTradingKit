@@ -1,3 +1,14 @@
+mt5:
+
+Name     : Pham Cong Che
+Type     : Forex Hedged USD
+Server   : MetaQuotes-Demo
+Login    : 10005200943
+Password : *mRuT8Eg
+Investor : EtF*V2Zc
+
+
+
 Thêm 1 số indicators PANDAS-TA
 
 https://github.com/twopirllc/pandas-ta/pull/661/files#diff-45fcc49d657dcb2c763943b43322a3c91d2b054484f0d1e2d18388ae3124e714
@@ -6,13 +17,9 @@ build Ta_lib
 https://github.com/cgohlke/talib-build/
 d:/AutoTradingKit/venv/Scripts/python.exe -3.12 -m pip install TA_Lib-0.4.32-cp312-cp312-win_amd64.whl
 
-
 pip install --upgrade "PySide6-Fluent-Widgets[full]" -i https://pypi.org/simple/
 
-
 Khi sử dụng lệnh `cythonize`, bạn có thể cung cấp nhiều tham số để tinh chỉnh quá trình biên dịch. Dưới đây là một số tham số phổ biến mà bạn có thể sử dụng:
-
-
 
 1. **-3, --3** : Kiểm tra cú pháp và sử dụng Python 3 trong quá trình biên dịch.
 2. **-a, --annotate** : Tạo các tệp HTML chứa thông tin về cách mã Python được biên dịch thành mã C.

@@ -79,11 +79,8 @@ class SubChart(PlotWidget):
         self.indicator_name,self.mainwindow = indicator_name,mainwindow
         # self.setCacheMode(QGraphicsView.CacheModeFlag.CacheBackground)
 
-        
-        
         self.exchange_name, self.symbol, self.interval =self.Chart.exchange_name, self.Chart.symbol,self.Chart.interval
         self.apikey,self.secretkey = self.Chart.apikey, self.Chart.secretkey
-        
         
         self.jp_candle = JAPAN_CANDLE(self.Chart)
         

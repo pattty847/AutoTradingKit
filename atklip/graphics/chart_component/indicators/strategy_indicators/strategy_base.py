@@ -158,6 +158,7 @@ class ATKBOT(GraphicsObject):
         self.signal_delete.connect(self.delete)
     
     
+    @property
     def is_all_updated(self):
         is_updated = self.INDICATOR.is_current_update and self.super_trend.is_current_update and self.super_smoothcandle.is_current_update and self.stoploss_smooth_heikin.is_current_update and self.smooth_heikin.is_current_update
         return is_updated
@@ -779,11 +780,6 @@ class ATKBOT(GraphicsObject):
         
     
     def update_Data(self,data):
-        
-        # while not self.is_all_updated():
-        #     time.sleep(0.01)
-        #     print("not updated yet")
-        #     continue
         
         xdata,_long,_short = data[0],data[1],data[2]
              

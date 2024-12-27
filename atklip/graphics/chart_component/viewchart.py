@@ -29,8 +29,8 @@ from atklip.graphics.chart_component.base_items.replay_cut import ReplayObject
 from atklip.controls.exchangemanager import ExchangeManager
 from atklip.appmanager.setting import AppConfig
 
-from atklip.graphics.chart_component.indicators import (BasicMA,BasicBB,BasicDonchianChannels,ATRSuperTrend,
-                                                        BasicZIGZAG,ATKBOT,Volume,CandlePattern,UTBOT,BasicSuperTrend,
+from atklip.graphics.chart_component.indicators import (BasicMA,BasicBB,BasicDonchianChannels,ATRSuperTrend,CustomCandlePattern,
+                                                        BasicZIGZAG,ATKBOT,Volume,CandlePattern,UTBOT,BasicSuperTrend,UTBOT_WITH_BBAND,
                                                         TrendStopLoss)
 
 class Chart(ViewPlotWidget):
@@ -422,7 +422,6 @@ class Chart(ViewPlotWidget):
         self.sig_remove_all_draw_obj.emit()
             
                 
-    
     def remove_source(self,source:HEIKINASHI|SMOOTH_CANDLE|JAPAN_CANDLE|N_SMOOTH_CANDLE):
         if source.source_name in list(self.sources.keys()):
             del self.sources[source.source_name]
@@ -515,21 +514,8 @@ class Chart(ViewPlotWidget):
     def check_all_indicator_updated(self):
         if self.indicators:
             for indicator in self.indicators:
-                if isinstance(indicator,CandleStick):
-                    if indicator.source.is_current_update == False:
-                        # print(indicator)
+                if not indicator.is_all_updated:
                         return False
-                
-                elif isinstance(indicator,ATKBOT):
-                    # print("indicator.is_all_updated()",indicator.is_all_updated())
-                    if not indicator.is_all_updated():
-                        return False
-                
-                elif isinstance(indicator,Volume) or isinstance(indicator,BasicZIGZAG):
-                    continue
-                elif indicator.INDICATOR.is_current_update == False:
-                    # print(indicator)
-                    return False
         return True
     
     async def loop_watch_ohlcv(self,symbol,interval,exchange_name):
@@ -610,12 +596,11 @@ class Chart(ViewPlotWidget):
                     while not is_updated:
                         print("all updated",is_updated)
                         is_updated =  self.check_all_indicator_updated()
-                        time.sleep(0.3)
+                        time.sleep(0.01)
                         if self.replay_mode or not self.exchange_name:
                             self.trading_mode = False
                             break
                         if is_updated:
-                            print("all updated",is_updated)
                             break
                     
                     if _is_add_candle:
@@ -683,11 +668,11 @@ class Chart(ViewPlotWidget):
             self.add_item(candle)
             candle.first_setup_candle()
             if isinstance(candle.source,JAPAN_CANDLE): 
+                candle.source.sig_add_candle.emit(candle.source.candles[-2:])
+                ohlcv = candle.source.candles[-1]
+                data = [ohlcv.open,ohlcv.high,ohlcv.low,ohlcv.close]
+                self.sig_show_candle_infor.emit(data)
                 self.auto_xrange()
-            candle.source.sig_add_candle.emit(candle.source.candles[-2:])
-            ohlcv = candle.source.candles[-1]
-            data = [ohlcv.open,ohlcv.high,ohlcv.low,ohlcv.close]
-            self.sig_show_candle_infor.emit(data)
             self.indicators.append(candle) 
 
         elif _group_indicator == "Advance Indicator":
@@ -707,6 +692,9 @@ class Chart(ViewPlotWidget):
             elif _indicator_type==IndicatorType.UTBOT:
                 indicator = UTBOT(self)
             
+            elif _indicator_type==IndicatorType.UTBOT_WITH_BBAND:
+                indicator = UTBOT_WITH_BBAND(self)
+            
             elif _indicator_type==IndicatorType.TRENDWITHSL:
                 indicator = TrendStopLoss(self)
             
@@ -716,12 +704,12 @@ class Chart(ViewPlotWidget):
             elif _indicator_type==IndicatorType.ATRSuperTrend:
                 indicator = ATRSuperTrend(self)
             
-                  
         elif _group_indicator == "Parttens Indicator":
             if _indicator_type==IndicatorType.CANDLE_PATTERN:
                 indicator = CandlePattern(self)
+            elif _indicator_type==IndicatorType.CUSTOM_CANDLE_PATTERN:
+                indicator = CustomCandlePattern(self)
                 
-            
         if indicator:
             self.indicators.append(indicator) 
             self.add_item(indicator)

@@ -83,6 +83,10 @@ class BasicDonchianChannels(GraphicsObject):
         self.chart.sig_update_source.connect(self.change_source,Qt.ConnectionType.AutoConnection)   
         self.signal_delete.connect(self.delete)
     
+    @property
+    def is_all_updated(self):
+        is_updated = self.INDICATOR.is_current_update 
+        return is_updated
     
     @property
     def id(self):

@@ -10,8 +10,7 @@ import pandas as pd
 
 from atklip.graphics.chart_component.base_items.plotdataitem import PlotDataItem
 
-from atklip.controls import PD_MAType,IndicatorType,UTBOT_ALERT
-from atklip.controls.models import UTBOTModel, MACDModel, RSIModel
+from atklip.controls import PD_MAType,IndicatorType,UTBOT_ALERT,UTBOT_ALERT_WITH_BB
 from atklip.graphics.chart_component.draw_tools.base_arrow import BaseArrowItem
 from atklip.graphics.chart_component.draw_tools.entry import Entry
 
@@ -22,11 +21,14 @@ from atklip.controls.ma import ma
 from atklip.controls.trend.zigzag import ZIGZAG
 from atklip.controls.momentum.macd import MACD
 from atklip.controls.momentum.rsi import RSI
+from atklip.controls.tradingview import SuperTrendWithStopLoss
+from atklip.controls.models import UTBOTWITHBBModel, MACDModel, MAModel, RSIModel,SQeezeModel,SuperTrendModel, SuperWithSlModel, TrendWithStopLossModel
+
 from atklip.graphics.pyqtgraph.graphicsItems.GraphicsObject import GraphicsObject
 if TYPE_CHECKING:
     from atklip.graphics.chart_component.viewchart import Chart
 
-class UTBOT(GraphicsObject):
+class UTBOT_WITH_BBAND(GraphicsObject):
     on_click = Signal(object)
     signal_visible = Signal(bool)
     signal_delete = Signal()
@@ -50,16 +52,31 @@ class UTBOT(GraphicsObject):
                     "source":self.chart.jp_candle,
                     "source_name": self.chart.jp_candle.source_name,
                     
-                    "key_value_long":1,
-                    "key_value_short":1,
+                    #Super Trend ATR
+                    "supertrend_length" :14,
+                    "supertrend_atr_length":14,
+                    "supertrend_multiplier" :3.0,
+                    "supertrend_atr_mamode" :PD_MAType.RMA, 
+                    "atr_length" : 14,
+                    "atr_mamode" :PD_MAType.RMA, 
+                    "atr_multiplier" : 1,
                     
-                    "atr_long_period":10,
-                    "ema_long_period":1,
+                    #RSI
+                    "rsi_type":"close",
+                    "rsi_indicator_type":IndicatorType.RSI,
+                    "rsi_period":14,
+                    "rsi_mamode":PD_MAType.RMA,
                     
-                    "atr_short_period":10,
-                    "ema_short_period":1,
+                    #UTBOT
+                    "key_value":1,
+                    "atr_utbot_length":10,
+                    "mult":1,
+                    "wicks":False,
+                    "band_type":"Bollinger Bands",
+                    "atr_length":10,
+                    "channel_length":10,
                     
-                    "indicator_type":IndicatorType.UTBOT,
+                    "indicator_type":IndicatorType.UTBOT_WITH_BBAND,
                     "show":False},
 
             "styles":{
@@ -71,14 +88,18 @@ class UTBOT(GraphicsObject):
         self.list_pos:dict = {}
         self.picture: QPicture = QPicture()
 
-        self.INDICATOR  = UTBOT_ALERT(self.has["inputs"]["source"], self.model.__dict__)
+        self.INDICATOR  = UTBOT_ALERT_WITH_BB(self.has["inputs"]["source"], self.model.__dict__)
+        
+        self.supertrend = SuperTrendWithStopLoss(self.has["inputs"]["source"], self.supertmodel.__dict__)
+        
+        self.rsi  = RSI(self.has["inputs"]["source"], self.rsi_model.__dict__)
                 
         self.chart.sig_update_source.connect(self.change_source,Qt.ConnectionType.AutoConnection)   
         self.signal_delete.connect(self.delete)
     
     @property
     def is_all_updated(self):
-        is_updated = self.INDICATOR.is_current_update 
+        is_updated = self.INDICATOR.is_current_update and self.supertrend.is_current_update and self.rsi.is_current_update
         return is_updated
     
     @property
@@ -90,10 +111,35 @@ class UTBOT(GraphicsObject):
         self.chart_id = _chart_id
 
     @property
+    def rsi_model(self) -> dict:
+        return RSIModel(self.id,"RSI",self.has["inputs"]["source"].source_name,
+                        self.has["inputs"]["rsi_type"],
+                        self.has["inputs"]["rsi_period"],
+                        self.has["inputs"]["rsi_mamode"].name.lower())
+    
+    @property
+    def supertmodel(self) -> dict:
+        return SuperWithSlModel(self.id,"SuperTrend",self.chart.jp_candle.source_name,
+                    self.has["inputs"]["supertrend_length"],
+                    self.has["inputs"]["supertrend_atr_length"],
+                    self.has["inputs"]["supertrend_multiplier"],
+                    self.has["inputs"]["supertrend_atr_mamode"].name.lower(),
+                    self.has["inputs"]["atr_length"],
+                    self.has["inputs"]["atr_mamode"].name.lower(),
+                    self.has["inputs"]["atr_multiplier"]
+                    )
+    
+    @property
     def model(self) -> dict:
-        return UTBOTModel(self.id,"UTBOT",self.has["inputs"]["source"].source_name,self.has["inputs"]["key_value_long"],self.has["inputs"]["key_value_short"],
-                              self.has["inputs"]["atr_long_period"],self.has["inputs"]["ema_long_period"],
-                              self.has["inputs"]["atr_short_period"],self.has["inputs"]["ema_short_period"])
+        return UTBOTWITHBBModel(self.id,"UTBOT_WITH_BB",self.has["inputs"]["source"].source_name,
+                                self.has["inputs"]["atr_length"],
+                                self.has["inputs"]["channel_length"],
+                                self.has["inputs"]["key_value"],
+                                self.has["inputs"]["atr_utbot_length"],
+                                self.has["inputs"]["mult"],
+                                self.has["inputs"]["wicks"],
+                                self.has["inputs"]["band_type"]
+                                )
     
     def disconnect_signals(self):
         try:
@@ -115,7 +161,9 @@ class UTBOT(GraphicsObject):
             
     def fisrt_gen_data(self):
         self.connect_signals()
-        self.INDICATOR.started_worker()
+        self.INDICATOR.fisrt_gen_data()
+        self.supertrend.fisrt_gen_data()
+        self.rsi.fisrt_gen_data()
     
     def check_pivot_points(self,df:pd.DataFrame,_type:str="high",n = 10, m=20):
         _len = len(df)
@@ -161,9 +209,7 @@ class UTBOT(GraphicsObject):
                         return True
         return False
                         
-    def delete(self):
-        print("deleted--------------------------")
-        
+    def delete(self):        
         self.disconnect_signals()
         self.INDICATOR.disconnect()
         self.INDICATOR.deleteLater()
@@ -181,7 +227,7 @@ class UTBOT(GraphicsObject):
         xdata,_long,_short= self.INDICATOR.get_data()
         setdata.emit((xdata,_long,_short))
         self.sig_change_yaxis_range.emit()
-        self.has["name"] = f"UTBOT Ver_1.0"
+        self.has["name"] = f"UTBOT_WITH_BB Ver_1.0"
         self.sig_change_indicator_name.emit(self.has["name"])
         
     def replace_source(self):
@@ -196,12 +242,13 @@ class UTBOT(GraphicsObject):
       
     def get_inputs(self):
         inputs =  {"source":self.has["inputs"]["source"],
-                    "key_value_long":self.has["inputs"]["key_value_long"],
-                    "key_value_short":self.has["inputs"]["key_value_short"],
-                    "atr_long_period":self.has["inputs"]["atr_long_period"],
-                    "ema_long_period":self.has["inputs"]["ema_long_period"],
-                    "atr_short_period":self.has["inputs"]["atr_short_period"],
-                    "ema_short_period":self.has["inputs"]["ema_short_period"],
+                    "key_value":self.has["inputs"]["key_value"],
+                    "atr_utbot_length":self.has["inputs"]["atr_utbot_length"],
+                    "mult":self.has["inputs"]["mult"],
+                    "wicks":self.has["inputs"]["wicks"],
+                    "band_type":self.has["inputs"]["band_type"],
+                    "atr_length":self.has["inputs"]["atr_length"],
+                    "channel_length":self.has["inputs"]["channel_length"],
                     }
         return inputs
     
@@ -222,7 +269,7 @@ class UTBOT(GraphicsObject):
                 is_update = True
         
         if is_update:
-            self.has["name"] = f"UTBOT"
+            self.has["name"] = f"UTBOT_WITH_BB"
             self.sig_change_indicator_name.emit(self.has["name"])
             self.INDICATOR.change_input(dict_ta_params=self.model.__dict__)
     
@@ -316,7 +363,7 @@ class UTBOT(GraphicsObject):
                 
                 if is_entry_closed or is_take_profit_2R:
                     entry.locked_handle()
-                   
+                    
     
     def set_Data(self,data):
         if self.list_pos:
@@ -335,9 +382,22 @@ class UTBOT(GraphicsObject):
             "short":_short,
         })
         
+        
         for i in range(1,len(df)):
             _x = df.iloc[i]['x']
-            if df.iloc[i-1]['long'] == True:
+            
+            supertrenddf = self.supertrend.df.loc[self.supertrend.df['index'] == _x-1]
+            SUPERTd = 0
+            if not supertrenddf.empty:
+                SUPERTd = supertrenddf.iloc[-1]["SUPERTd"]
+            
+            rsidf = self.rsi.df.loc[self.rsi.df['index'] == _x-1]
+            rsidata = None
+            if not rsidf.empty:
+                rsidata = rsidf.iloc[-1]["data"]
+            
+            
+            if df.iloc[i-1]['long'] == True and SUPERTd>0 and 40<rsidata:
                 _val = self.chart.jp_candle.map_index_ohlcv[_x].low
                 obj = BaseArrowItem(drawtool=self.chart.drawtool,angle=90, tipAngle=60, headLen=10, tailLen=10, tailWidth=5, pen=None, brush='green')
                 obj.setParentItem(self)
@@ -345,14 +405,13 @@ class UTBOT(GraphicsObject):
                 obj.locked_handle()
                 self.list_pos[_x] = {"type":"long","obj":obj}
                 
-            elif df.iloc[i-1]['short'] == True:
-                _val = self.chart.jp_candle.map_index_ohlcv[_x].open
+            elif df.iloc[i-1]['short'] == True and SUPERTd<0 and rsidata<60:
+                _val = self.chart.jp_candle.map_index_ohlcv[_x].high
                 obj =  BaseArrowItem(drawtool=self.chart.drawtool,angle=270, tipAngle=60, headLen=10, tailLen=10, tailWidth=5, pen=None, brush='red')
                 obj.setParentItem(self)
                 obj.locked_handle()
                 obj.setPos(_x, _val)
                 self.list_pos[_x] = {"type":"short","obj":obj}
-
     
     def add_historic_Data(self,data):
         xData:np.ndarray = data[0]
@@ -368,7 +427,19 @@ class UTBOT(GraphicsObject):
             _x = df.iloc[i]['x']
             if self.list_pos.get(_x):
                 continue
-            if df.iloc[i-1]['long'] == True:
+            
+            supertrenddf = self.supertrend.df.loc[self.supertrend.df['index'] == _x-1]
+            SUPERTd = 0
+            if not supertrenddf.empty:
+                SUPERTd = supertrenddf.iloc[-1]["SUPERTd"]
+            
+            rsidf = self.rsi.df.loc[self.rsi.df['index'] == _x-1]
+            rsidata = None
+            if not rsidf.empty:
+                rsidata = rsidf.iloc[-1]["data"]
+            
+            
+            if df.iloc[i-1]['long'] == True and SUPERTd>0 and 40<rsidata:
                 _val = self.chart.jp_candle.map_index_ohlcv[_x].low
                 obj = BaseArrowItem(drawtool=self.chart.drawtool,angle=90, tipAngle=60, headLen=10, tailLen=10, tailWidth=5, pen=None, brush='green')
                 obj.setParentItem(self)
@@ -376,8 +447,8 @@ class UTBOT(GraphicsObject):
                 obj.locked_handle()
                 self.list_pos[_x] = {"type":"long","obj":obj}
                 
-            elif df.iloc[i-1]['short'] == True:
-                _val = self.chart.jp_candle.map_index_ohlcv[_x].open
+            elif df.iloc[i-1]['short'] == True and SUPERTd<0 and rsidata<60:
+                _val = self.chart.jp_candle.map_index_ohlcv[_x].high
                 obj =  BaseArrowItem(drawtool=self.chart.drawtool,angle=270, tipAngle=60, headLen=10, tailLen=10, tailWidth=5, pen=None, brush='red')
                 obj.setParentItem(self)
                 obj.locked_handle()
@@ -399,7 +470,17 @@ class UTBOT(GraphicsObject):
         if self.list_pos.get(_x):
                 return
 
-        if df.iloc[-2]['long'] == True:
+        supertrenddf = self.supertrend.df.loc[self.supertrend.df['index'] == _x-1]
+        SUPERTd = 0
+        if not supertrenddf.empty:
+            SUPERTd = supertrenddf.iloc[-1]["SUPERTd"]
+        
+        rsidf = self.rsi.df.loc[self.rsi.df['index'] == _x-1]
+        rsidata = None
+        if not rsidf.empty:
+            rsidata = rsidf.iloc[-1]["data"]
+        
+        if df.iloc[-2]['long'] == True and SUPERTd>0 and 40<rsidata:
             _val = self.chart.jp_candle.map_index_ohlcv[_x].low
             obj = BaseArrowItem(drawtool=self.chart.drawtool,angle=90, tipAngle=60, headLen=10, tailLen=10, tailWidth=5, pen=None, brush='green')
             obj.setParentItem(self)
@@ -407,8 +488,8 @@ class UTBOT(GraphicsObject):
             obj.locked_handle()
             self.list_pos[_x] = {"type":"long","obj":obj}
             
-        elif df.iloc[-2]['short'] == True:
-            _val = self.chart.jp_candle.map_index_ohlcv[_x].open
+        elif df.iloc[-2]['short'] == True and SUPERTd<0 and rsidata<60:
+            _val = self.chart.jp_candle.map_index_ohlcv[_x].high
             obj =  BaseArrowItem(drawtool=self.chart.drawtool,angle=270, tipAngle=60, headLen=10, tailLen=10, tailWidth=5, pen=None, brush='red')
             obj.setParentItem(self)
             obj.locked_handle()

@@ -112,7 +112,7 @@ plot(smoothType, title = "Trend Type Oscillator", color = trendCol,
 
 def trend_type_indicator(df,
                         use_atr = True,
-                        atr_len = 14,
+                        atr_length = 14,
                         atr_ma_type = "SMA",
                         atr_ma_len = 20,
                         use_adx = True,
@@ -126,7 +126,7 @@ def trend_type_indicator(df,
     :return: DataFrame with calculated trend type and smoothed trend type.
     """
     # Calculate ATR and its moving average
-    df['atr'] = ta.atr(high=df['high'], low=df['low'], close=df['close'], length=atr_len,talib=True)
+    df['atr'] = ta.atr(high=df['high'], low=df['low'], close=df['close'], length=atr_length,talib=True)
     if atr_ma_type == "EMA":
         df['atr_ma'] = ta.ema(df['atr'], atr_ma_len,talib=True)
     elif atr_ma_type == "SMA":

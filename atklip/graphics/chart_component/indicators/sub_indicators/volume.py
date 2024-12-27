@@ -72,6 +72,11 @@ class Volume(GraphicsObject):
         
     
     @property
+    def is_all_updated(self):
+        # is_updated = self.INDICATOR.is_current_update 
+        return True
+    
+    @property
     def id(self):
         return self.chart_id
     

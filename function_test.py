@@ -45,11 +45,11 @@ def calculate_bands(data, band_type, length, std_dev):
         return None, None, None
 
 # Trailing Stop Calculation
-def calculate_trailing_stop(data, lower, upper, atr_len, mult, wicks):
+def calculate_trailing_stop(data, lower, upper, atr_length, mult, wicks):
     if lower is None or upper is None:
         raise ValueError("Invalid band type or parameters resulting in None values for bands.")
     
-    atr = ta.atr(data["high"], data["low"], data["close"], length=atr_len)
+    atr = ta.atr(data["high"], data["low"], data["close"], length=atr_length)
     
     dir = np.ndarray(len(data))
     dir[0] = 1
@@ -73,16 +73,16 @@ def calculate_trailing_stop(data, lower, upper, atr_len, mult, wicks):
 
     return dir, long_stop, short_stop
 
-def utbot_with_bb(data,a = 1,c=10, Mult = 1, wicks=False,BandType = "Bollinger Bands",atr_len=22, ChannelLength = 20, StdDev = 1):
+def utbot_with_bb(data,a = 1,c=10, mult = 1, wicks=False,band_type = "Bollinger Bands",atr_length=22, channel_length = 20, StdDev = 1):
     """_summary_
     Args:
         data (_type_): _description_
         a (int, optional): Key Value, this changes sensitivity. Defaults to 1.
         c (int, optional): ATR Period. Defaults to 10.
-        Mult (int, optional): ATR Multiplier. Defaults to 1.
+        mult (int, optional): ATR Multiplier. Defaults to 1.
         wicks (bool, optional): _description_. Defaults to False.
-        BandType (str, optional): Channel Type. Defaults to "Bollinger Bands".
-        ChannelLength (int, optional): _description_. Defaults to 20.
+        band_type (str, optional): Channel Type. Defaults to "Bollinger Bands".
+        channel_length (int, optional): _description_. Defaults to 20.
         StdDev (int, optional): _description_. Defaults to 1.
 
     Returns:
@@ -91,9 +91,9 @@ def utbot_with_bb(data,a = 1,c=10, Mult = 1, wicks=False,BandType = "Bollinger B
     data = data.copy()
     src = data["close"]
     xATR,xATRTrailingStop, above, below = utsignal(data,a,c)
-    lower_band, middle_band, upper_band = calculate_bands(data, BandType, ChannelLength, StdDev)
+    lower_band, middle_band, upper_band = calculate_bands(data, band_type, channel_length, StdDev)
     
-    barState, buyStop, sellStop = calculate_trailing_stop(data, lower_band, upper_band, atr_len, Mult, wicks)
+    barState, buyStop, sellStop = calculate_trailing_stop(data, lower_band, upper_band, atr_length, mult, wicks)
     # Trade Conditions
     buy_condition = (src > xATRTrailingStop) & above & (barState == 1)
     sell_condition = (src < xATRTrailingStop) & below & (barState == -1)

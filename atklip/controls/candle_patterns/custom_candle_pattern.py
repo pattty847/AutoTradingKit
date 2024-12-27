@@ -218,110 +218,35 @@ def candle_pattern(df:pd.DataFrame,C_Len: int= 14,C_ShadowPercent:float = 5.0):
 
 
 def identify_patterns(df:pd.DataFrame):
-    """
-    Hàm nhận diện các mẫu nến từ dữ liệu OHLC.
-    Args:
-        df (pd.DataFrame): DataFrame chứa dữ liệu OHLC với các cột ['open', 'high', 'low', 'close'].
-    _summary_
-        Check for Bearish Engulfing pattern
-       if((C1 > O1) & (O > C) & (O >= C1) & (O1 >= C) & ((O - C) > (C1 - O1))) 
-       
-        // Check for a Three Outside Down pattern
-       if((C2 > O2) & (O1 > C1) & (O1 >= C2) & (O2 >= C1) & ((O1 - C1) > (C2 - O2)) & (O > C) & (C < C1)) 
-        
-        // Check for a Dark Cloud Cover pattern
-       if((C1 > O1) & (((C1 + O1) / 2) > C) & (O > C) & (O > C1) & (C > O1) & ((O - C) / (0.001 + (H - L)) > 0.6)) 
-        
-        // Check for Evening Doji Star pattern
-       if((C2 > O2) & ((C2 - O2) / (0.001 + H2 - L2) > 0.6) & (C2 < O1) & (C1 > O1) & ((H1-L1) > (3*(C1 - O1))) & (O > C) & (O < O1)) 
-        
-        // Check for Bearish Harami pattern
-       if((C1 > O1) & (O > C) & (O <= C1) & (O1 <= C) & ((O - C) < (C1 - O1))) 
-       
-       // Check for Three Inside Down pattern
-       if((C2 > O2) & (O1 > C1) & (O1 <= C2) & (O2 <= C1) & ((O1 - C1) < (C2 - O2)) & (O > C) & (C < C1) & (O < O1)) 
-        
-        // Check for Three Black Crows pattern
-       if((O > C*1.01) & (O1 > C1*1.01) & (O2 > C2*1.01) & (C < C1) & (C1 < C2) & (O > C1) & (O < O1) & (O1 > C2) & (O1 < O2) & (((C - L) / (H - L)) < 0.2) & (((C1 - L1) / (H1 - L1)) < 0.2) & (((C2 - L2) / (H2 - L2)) < 0.2))
-        
-        //Check for Evening Star Pattern
-       if((C2 > O2) & ((C2 - O2) / (0.001 + H2 - L2) > 0.6) & (C2 < O1) & (C1 > O1) & ((H1 - L1) > (3*(C1 - O1))) & (O > C) & (O < O1)) 
-    
-    
-    // Bullish Patterns
-       // Check for Bullish Engulfing pattern
-       if((O1 > C1) & (C > O) & (C >= O1) & (C1 >= O) & ((C - O) > (O1 - C1))) 
-    // Check for Three Outside Up pattern
-       if((O2 > C2) & (C1 > O1) & (C1 >= O2) & (C2 >= O1) & ((C1 - O1) > (O2 - C2)) & (C > O) & (C > C1)) 
-    // Check for Bullish Harami pattern
-       if((O1 > C1) & (C > O) & (C <= O1) & (C1 <= O) & ((C - O) < (O1 - C1))) 
-    
-    // Check for Three Inside Up pattern
-       if((O2 > C2) & (C1 > O1) & (C1 <= O2) & (C2 <= O1) & ((C1 - O1) < (O2 - C2)) & (C > O) & (C > C1) & (O > O1)) 
-    // Check for Piercing Line pattern
-       if((C1 < O1) & (((O1 + C1) / 2) < C) & (O < C) & (O < C1) & (C < O1) & ((C - O) / (0.001 + (H - L)) > 0.6)) 
-    // Check for Three White Soldiers pattern
-       if((C > O*1.01) & (C1 > O1*1.01) & (C2 > O2*1.01) & (C > C1) & (C1 > C2) & 
-          (O < C1) & (O > O1) & (O1 < C2) & (O1 > O2) & (((H - C) / (H - L)) < 0.2) & 
-          (((H1 - C1) / (H1 - L1)) < 0.2) & (((H2 - C2) / (H2 - L2)) < 0.2)) 
-    // Check for Morning Doji Star
-       if((O2 > C2) & ((O2 - C2) / (0.001 + H2 - L2) > 0.6) & (C2 > O1) & (O1 > C1) & 
-          ((H1 - L1) > (3*(C1 - O1))) & (C > O) & (O > O1)) 
-
-    Returns:
-        pd.DataFrame: DataFrame với các cột bổ sung cho mỗi mẫu nến được nhận diện.
-    """
     # Tạo cột Range trung bình cho mỗi 10 cây nến
     # df['range'] = (df['high'] - df['low']).rolling(window=10).mean()
     df = df.copy()
     # Khởi tạo các cột mẫu nến
-    patterns = ["index",
-        'bearish_engulfing', 'three_outside_down', 'dark_cloud_cover',"bearish_ziad_francis",
-        'evening_doji_star', 'bearish_harami', 'three_inside_down',"evenning_star",
-        'three_black_crows', #"sell_simple",
-        'bullish_engulfing',#"buy_simple",
-        'three_outside_up', 'bullish_harami', 'three_inside_up',"bull_ziad_francis",
-        'piercing_line', 'three_white_soldiers', 'morning_doji_star'
-    ]
+    patterns = ["index","bearish_ziad_francis",'bull_ziad_francis',
+                "bearish_miharris","bull_miharris","bull_miharris2","bearish_miharris2"]
 
     # Lấy giá Open, High, Low, Close cho các cột trước đó
     O, H, L, C = df['open'], df['high'], df['low'], df['close']
     O1, H1, L1, C1 = O.shift(1), H.shift(1), L.shift(1), C.shift(1)
     O2, H2, L2, C2 = O.shift(2), H.shift(2), L.shift(2), C.shift(2)
+    O3, H3, L3, C3 = O.shift(3), H.shift(3), L.shift(3), C.shift(3)
+    O4, H4, L4, C4 = O.shift(4), H.shift(4), L.shift(4), C.shift(4)
 
-    # Bearish Patterns
-    df['bearish_engulfing'] = (C1 > O1) & (O > C) & (O >= C1) & (O1 >= C) & ((O - C) > (C1 - O1))
-    df['three_outside_down'] = (C2 > O2) & (O1 > C1) & (O1 >= C2) & (O2 >= C1) & ((O1 - C1) > (C2 - O2)) & (O > C) & (C < C1)
-    df['dark_cloud_cover'] = (C1 > O1) & (((C1 + O1) / 2) > C) & (O > C) & (O > C1) & (C > O1) & ((O - C) / (0.001 + (H - L)) > 0.6)
-    df['evening_doji_star'] = (C2 > O2) & ((C2 - O2) / (0.001 + H2 - L2) > 0.6) & (C2 < O1) & (C1 > O1) & ((H1-L1) > (3*(C1 - O1))) & (O > C) & (O < O1)
-    df['bearish_harami'] = (C1 > O1) & (O > C) & (O <= C1) & (O1 <= C) & ((O - C) < (C1 - O1))
-    df['three_inside_down'] = (C2 > O2) & (O1 > C1) & (O1 <= C2) & (O2 <= C1) & ((O1 - C1) < (C2 - O2)) & (O > C) & (C < C1) & (O < O1)
-    df['three_black_crows'] = (O > C*1.01) & (O1 > C1*1.01) & (O2 > C2*1.01) & (C < C1) & (C1 < C2) & (O > C1) & (O < O1) & (O1 > C2) & (O1 < O2) & (((C - L) / (H - L)) < 0.2) & (((C1 - L1) / (H1 - L1)) < 0.2) & (((C2 - L2) / (H2 - L2)) < 0.2)
-    df["evenning_star"] = (C2 > O2) & ((C2 - O2) / (0.001 + H2 - L2) > 0.6) & (C2 < O1) & (C1 > O1) & ((H1 - L1) > (3*(C1 - O1))) & (O > C) & (O < O1)
-    
     # df["sell_simple"] = (O<C)&(L < L1)&(H > H1)&(C > H1)
+    # df["buy_simple"] = (O>C)&(H > H1)&(L < L1)&(C < L1)
     "https://www.youtube.com/watch?v=tOH6Bd_jvfA&ab_channel=CodeTrading"
     df["bearish_ziad_francis"] = (L<C) & (C<L2) & (L2<L1) & (L1<H) & (H<H2) & (H2<H1)
-
-    
-    # Bullish Patterns
-    df['bullish_engulfing'] = (O1 > C1) & (C > O) & (C >= O1) & (C1 >= O) & ((C - O) > (O1 - C1))
-    df['three_outside_up'] = (O2 > C2) & (C1 > O1) & (C1 >= O2) & (C2 >= O1) & ((C1 - O1) > (O2 - C2)) & (C > O) & (C > C1)
-    df['bullish_harami'] = (O1 > C1) & (C > O) & (C <= O1) & (C1 <= O) & ((C - O) < (O1 - C1))
-    df['three_inside_up'] = (O2 > C2) & (C1 > O1) & (C1 <= O2) & (C2 <= O1) & ((C1 - O1) < (O2 - C2)) & (C > O) & (C > C1) & (O > O1)
-    df['piercing_line'] = (C1 < O1) & (((O1 + C1) / 2) < C) & (O < C) & (O < C1) & (C < O1) & ((C - O) / (0.001 + (H - L)) > 0.6)
-    df['three_white_soldiers'] = (C > O*1.01) & (C1 > O1*1.01) & (C2 > O2*1.01) & (C > C1) & (C1 > C2) & (O < C1) & (O > O1) & (O1 < C2) & (O1 > O2) & (((H - C) / (H - L)) < 0.2) & (((H1 - C1) / (H1 - L1)) < 0.2) & (((H2 - C2) / (H2 - L2)) < 0.2)
-    df['morning_doji_star'] = (O2 > C2) & ((O2 - C2) / (0.001 + H2 - L2) > 0.6) & (C2 > O1) & (O1 > C1) & ((H1 - L1) > (3*(C1 - O1))) & (C > O) & (O > O1)
-
-    # df["buy_simple"] = (O>C)&(H > H1)&(L < L1)&(C < L1)
     df["bull_ziad_francis"] = (H>C) & (C>H2) & (H2>H1) & (H1>L) & (L>L2) & (L2>L1)
     
+    "https://www.youtube.com/watch?v=cKzBu0aqdYA&ab_channel=CodeTrading"
+    df["bearish_miharris"] = (L4>H) & (H>L3) & (L3>L2) & (L2>L1) & (C>H1)
+    df["bull_miharris"] = (H4<L) & (L<H3) & (H3<H2) & (H2<H1) & (C<L1)
+    
+    "https://www.youtube.com/watch?v=H23GLHD__yY&t=163s&ab_channel=CodeTrading"
+    df["bull_miharris2"] = (H>H1) & (H1>L) & (L>H2) & (H2>L1) & (L1>H3) & (H3>L2) & (L2>L3)
+    df["bearish_miharris2"] = (L<L1) & (L1<H) & (H<L2) & (L2<H1) & (H1<L3) & (L3<H2) & (H2<H3)
 
     return df[patterns]
-
-
-
-
 
 import numpy as np
 import pandas as pd
@@ -331,7 +256,7 @@ from atklip.controls.candle import JAPAN_CANDLE,HEIKINASHI,SMOOTH_CANDLE,N_SMOOT
 from atklip.app_api.workers import ApiThreadPool
 from PySide6.QtCore import Signal,QObject
 
-class AllCandlePattern(QObject):
+class ProCandlePattern(QObject):
     sig_update_candle = Signal()
     sig_add_candle = Signal()
     sig_reset_all = Signal()

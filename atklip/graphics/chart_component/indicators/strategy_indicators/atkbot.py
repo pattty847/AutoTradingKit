@@ -151,7 +151,7 @@ class ATKBOT(GraphicsObject):
         self.chart.sig_update_source.connect(self.change_source,Qt.ConnectionType.AutoConnection)   
         self.signal_delete.connect(self.delete)
     
-    
+    @property
     def is_all_updated(self):
         is_updated = (self.supertrend.is_current_update and self.utbot.is_current_update
                        and self.rsi.is_current_update and self.rsifast.is_current_update)
@@ -680,7 +680,7 @@ class ATKBOT(GraphicsObject):
         
     
     def update_Data(self,df: pd.DataFrame):
-        while not self.is_all_updated():
+        while not self.is_all_updated:
             print("not updated")
             time.sleep(0.01)
             continue
@@ -764,7 +764,7 @@ class ATKBOT(GraphicsObject):
         self.worker.start()    
     
     def load_historic_data(self,_len,setdata):
-        while not self.is_all_updated():
+        while not self.is_all_updated:
             time.sleep(0.01)
             continue
         list_objs = []
