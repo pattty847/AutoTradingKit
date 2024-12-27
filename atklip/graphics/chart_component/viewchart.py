@@ -29,8 +29,11 @@ from atklip.graphics.chart_component.base_items.replay_cut import ReplayObject
 from atklip.controls.exchangemanager import ExchangeManager
 from atklip.appmanager.setting import AppConfig
 
-from atklip.graphics.chart_component.indicators import (BasicMA,BasicBB,BasicDonchianChannels,ATRSuperTrend,CustomCandlePattern,
-                                                        BasicZIGZAG,ATKBOT,Volume,CandlePattern,UTBOT,BasicSuperTrend,UTBOT_WITH_BBAND,
+from atklip.graphics.chart_component.indicators import (BasicMA,BasicBB,BasicDonchianChannels,
+                                                        ATRSuperTrend,CustomCandlePattern,
+                                                        KeltnerChannels,
+                                                        BasicZIGZAG,ATKBOT,CandlePattern,
+                                                        UTBOT,BasicSuperTrend,UTBOT_WITH_BBAND,
                                                         TrendStopLoss)
 
 class Chart(ViewPlotWidget):
@@ -682,6 +685,9 @@ class Chart(ViewPlotWidget):
    
             elif _indicator_type==IndicatorType.DonchianChannels:
                 indicator = BasicDonchianChannels(self)
+            
+            elif _indicator_type==IndicatorType.KeltnerChannels:
+                indicator = KeltnerChannels(self)
 
             elif _indicator_type==IndicatorType.ZIGZAG:
                 indicator = BasicZIGZAG(self)

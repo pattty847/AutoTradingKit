@@ -263,12 +263,12 @@ class TrendStopLoss(GraphicsObject):
         x_data,long_stoploss,short_stoploss,Uptrend,Downtrend= self.INDICATOR.get_data(start=-3)
         setdata.emit((x_data,long_stoploss,short_stoploss,Uptrend,Downtrend))
 
-       
     def boundingRect(self) -> QRectF:
-        return self.highline.boundingRect()
+        return self.lowline.boundingRect()
     
     def paint(self, p:QPainter, *args):
         self.picture.play(p)
+    
     
     def get_yaxis_param(self):
         _value = None

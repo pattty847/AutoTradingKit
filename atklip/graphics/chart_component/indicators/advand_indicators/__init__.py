@@ -1,5 +1,7 @@
 from .bb import BasicBB
 from .donchian import BasicDonchianChannels
+from .keltner_channels import KeltnerChannels
+
 from .zigzag import BasicZIGZAG
 from .utbot import UTBOT
 

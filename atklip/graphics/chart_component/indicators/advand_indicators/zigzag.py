@@ -246,12 +246,36 @@ class BasicZIGZAG(PlotDataItem):
     def get_xaxis_param(self):
         return None,"#363a45"
 
-    # def paint(self, p:QPainter, *args):
-    #     self.picture.play(p)
     
-    # def boundingRect(self) -> QRectF:
-    #     return self.stc_line.boundingRect()
+    def boundingRect(self) -> QRectF:
+        x_left,x_right = int(self.chart.xAxis.range[0]),int(self.chart.xAxis.range[1])
+        start_index = self.chart.jp_candle.candles[0].index
+        stop_index = self.chart.jp_candle.candles[-1].index
+        if x_left > start_index:
+            _start = x_left+2
+        else:
+            _start = start_index+2
+        if x_right < stop_index:
+            _width = x_right-_start
+            _stop = x_right
+        else:
+            _width = stop_index-_start
+            _stop = stop_index
+        if self.yData is not None:
+            if self.yData.size != 0:
+                try:
+                    h_low,h_high = np.nanmin(self.yData[_start:_stop]), np.nanmax(self.yData[_start:_stop])
+                except ValueError:
+                    h_low,h_high = int(self.chart.yAxis.range[0]),int(self.chart.yAxis.range[1])  
+            else:
+                h_low,h_high = self.chart.yAxis.range[0],self.chart.yAxis.range[1]
+        else:
+            h_low,h_high = self.chart.yAxis.range[0],self.chart.yAxis.range[1]
+        rect = QRectF(_start,h_low,_width,h_high-h_low)
+        return rect
     
+    def paint(self, p:QPainter, *args):
+        self.picture.play(p)
     
     def get_last_point(self):
         _time = self.xData[-1]

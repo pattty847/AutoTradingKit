@@ -455,12 +455,10 @@ class UTBOT(GraphicsObject):
                         obj["obj"].show()
                     else:
                         obj["obj"].hide()
-
         return self.picture.boundingRect()
     
     def paint(self, p:QPainter, *args):
         self.picture.play(p)
-        # p.drawRect(self.boundingRect())
     
     def get_yaxis_param(self):
         _value = None

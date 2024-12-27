@@ -7,7 +7,7 @@ from .bbands import bbands, BBANDS
 from .chandelier_exit import chandelier_exit
 from .donchian import donchian, DONCHIAN
 from .hwc import hwc
-from .kc import kc
+from .kc import kc, KC
 from .massi import massi
 from .natr import natr
 from .pdist import pdist

@@ -97,6 +97,10 @@ class DonchainModel(IndicatorBase):
     upper_length:int 
 
 @dataclass         
+class KeltnerChannelsModel(IndicatorBase):
+    length:int 
+
+@dataclass         
 class ATKBOTModel(IndicatorBase):
     key_value_long:float
     key_value_short:float

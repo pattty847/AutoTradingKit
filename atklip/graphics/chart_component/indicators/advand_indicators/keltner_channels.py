@@ -9,8 +9,8 @@ from atklip.graphics.chart_component.base_items.plotdataitem import PlotDataItem
 from atklip.graphics.pyqtgraph import GraphicsObject
 
 from .fillbetweenitem import FillBetweenItem
-from atklip.controls import PD_MAType,IndicatorType,DONCHIAN
-from atklip.controls.models import DonchainModel
+from atklip.controls import PD_MAType,IndicatorType,KC
+from atklip.controls.models import KeltnerChannelsModel
 
 
 from atklip.appmanager import FastWorker
@@ -19,7 +19,7 @@ from atklip.app_utils import *
 if TYPE_CHECKING:
     from atklip.graphics.chart_component.viewchart import Chart
 
-class BasicDonchianChannels(GraphicsObject):
+class KeltnerChannels(GraphicsObject):
     on_click = Signal(object)
     signal_visible = Signal(bool)
     signal_delete = Signal()
@@ -36,14 +36,13 @@ class BasicDonchianChannels(GraphicsObject):
         
         self.chart:Chart = chart
         self.has = {
-            "name": f"DC 20 2",
+            "name": f"KC 20",
             "y_axis_show":False,
             
             "inputs":{
                     "source":self.chart.jp_candle,
                     "source_name": self.chart.jp_candle.source_name,
-                    "period_lower":20,
-                    "period_upper":20,
+                    "length":20,
                     "indicator_type":IndicatorType.DonchianChannels,
                     "show":False},
 
@@ -78,7 +77,7 @@ class BasicDonchianChannels(GraphicsObject):
         
         self.picture: QPicture = QPicture()
         
-        self.INDICATOR  = DONCHIAN(self.has["inputs"]["source"], self.model.__dict__)
+        self.INDICATOR  = KC(self.has["inputs"]["source"], self.model.__dict__)
         
         self.chart.sig_update_source.connect(self.change_source,Qt.ConnectionType.AutoConnection)   
         self.signal_delete.connect(self.delete)
@@ -98,8 +97,8 @@ class BasicDonchianChannels(GraphicsObject):
         
     @property
     def model(self) -> dict:
-        return DonchainModel(self.id,"DonChain",self.chart.jp_candle.source_name,self.has["inputs"]["period_lower"],
-                              self.has["inputs"]["period_upper"])
+        return KeltnerChannelsModel(self.id,"KeltnerChannels",self.chart.jp_candle.source_name,
+                              self.has["inputs"]["length"])
     
     def disconnect_signals(self):
         try:
@@ -138,7 +137,7 @@ class BasicDonchianChannels(GraphicsObject):
         xdata,lb,cb,ub= self.INDICATOR.get_data()
         setdata.emit((xdata,lb,cb,ub))
         self.sig_change_yaxis_range.emit()
-        self.has["name"] = f"DC {self.has["inputs"]["period_lower"]} {self.has["inputs"]["period_upper"]}"
+        self.has["name"] = f"KC {self.has["inputs"]["length"]}"
         self.sig_change_indicator_name.emit(self.has["name"])
         
     def replace_source(self):
@@ -153,8 +152,7 @@ class BasicDonchianChannels(GraphicsObject):
       
     def get_inputs(self):
         inputs =  {"source":self.has["inputs"]["source"],
-                    "period_lower":self.has["inputs"]["period_lower"],
-                    "period_upper":self.has["inputs"]["period_upper"],
+                    "length":self.has["inputs"]["length"],
                     }
         return inputs
     
@@ -187,7 +185,7 @@ class BasicDonchianChannels(GraphicsObject):
                 is_update = True
         
         if is_update:
-            self.has["name"] = f"DC {self.has["inputs"]["period_lower"]} {self.has["inputs"]["period_upper"]}"
+            self.has["name"] = f"KC {self.has["inputs"]["length"]}"
             self.sig_change_indicator_name.emit(self.has["name"])
             self.INDICATOR.change_input(dict_ta_params=self.model.__dict__)
     
@@ -296,11 +294,9 @@ class BasicDonchianChannels(GraphicsObject):
             h_low,h_high = self.chart.yAxis.range[0],self.chart.yAxis.range[1]
         rect = QRectF(_start,h_low,_width,h_high-h_low)
         return rect
-        # return self.centerline.boundingRect()
     
     def paint(self, p:QPainter, *args):
         self.picture.play(p)
-        # p.drawRect(self.boundingRect())
     
     def get_yaxis_param(self):
         _value = None

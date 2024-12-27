@@ -241,14 +241,17 @@ class AdvanceIndicator(BasicMenu):
                                 IndicatorType.SuperTrend,
                                 IndicatorType.ATRSuperTrend,
                                 
-                                
                                 IndicatorType.ZIGZAG,
                                 IndicatorType.BB,
-                                IndicatorType.StdDev,
-                                IndicatorType.ParabolicSAR,IndicatorType.PivotsHL,
-                                IndicatorType.McGinleyDynamic,IndicatorType.KeltnerChannels,
-                                IndicatorType.KAMA,
+                                IndicatorType.KeltnerChannels,
                                 IndicatorType.DonchianChannels,
+                                
+                                IndicatorType.StdDev,
+                                IndicatorType.ParabolicSAR,
+                                IndicatorType.PivotsHL,
+                                IndicatorType.McGinleyDynamic,
+                                IndicatorType.KAMA,
+                                
                                 IndicatorType.ChandeKrollStop,
                                 IndicatorType.VWAP,IndicatorType.VWMA,
                                 IndicatorType.T3,

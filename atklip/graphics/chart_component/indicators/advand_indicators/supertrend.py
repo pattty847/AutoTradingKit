@@ -252,7 +252,7 @@ class BasicSuperTrend(GraphicsObject):
         setdata.emit((x_data,SUPERTt,SUPERTd))
 
     def boundingRect(self) -> QRectF:
-        return self.highline.boundingRect()
+        return self.lowline.boundingRect()
     
     def paint(self, p:QPainter, *args):
         self.picture.play(p)
