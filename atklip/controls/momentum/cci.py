@@ -4,15 +4,9 @@ from atklip.controls.pandas_ta._typing import DictLike, Int, IntFloat
 from atklip.controls.pandas_ta.maps import Imports
 from atklip.controls.pandas_ta.overlap import hlc3, sma
 from atklip.controls.pandas_ta.statistics import mad
-from atklip.controls.pandas_ta.utils import v_offset, v_pos_default, v_series, v_talib
+from atklip.controls.pandas_ta.utils import v_offset, v_pos_default, v_series, v_talib,verify_series,get_offset
 
-
-
-def cci(
-    high: Series, low: Series, close: Series, length: Int = None,
-    c: IntFloat = None, talib: bool = True,
-    offset: Int = None, **kwargs: DictLike
-) -> Series:
+def cci(high, low, close, length=None, c=None, talib=None, offset=None, **kwargs):
     """Commodity Channel Index (CCI)
 
     Commodity Channel Index is a momentum oscillator used to primarily
@@ -37,39 +31,40 @@ def cci(
     Returns:
         pd.Series: New feature generated.
     """
-    # Validate
-    length = v_pos_default(length, 14)
-    high = v_series(high, length)
-    low = v_series(low, length)
-    close = v_series(close, length)
+    # Validate Arguments
+    length = int(length) if length and length > 0 else 14
+    c = float(c) if c and c > 0 else 0.015
+    high = verify_series(high, length)
+    low = verify_series(low, length)
+    close = verify_series(close, length)
+    offset = get_offset(offset)
+    mode_tal = bool(talib) if isinstance(talib, bool) else True
 
-    if high is None or low is None or close is None:
-        return
+    if high is None or low is None or close is None: return
 
-    c = v_pos_default(c, 0.015)
-    mode_tal = v_talib(talib)
-    offset = v_offset(offset)
-
-    # Calculate
+    # Calculate Result
     if Imports["talib"] and mode_tal:
-        from atklip.controls.talib import CCI
+        from talib import CCI
         cci = CCI(high, low, close, length)
     else:
-        typical_price = hlc3(high=high, low=low, close=close, talib=mode_tal)
-        mean_typical_price = sma(typical_price, length=length, talib=mode_tal)
+        typical_price = hlc3(high=high, low=low, close=close)
+        mean_typical_price = sma(typical_price, length=length)
         mad_typical_price = mad(typical_price, length=length)
 
-        cci = typical_price - mean_typical_price / (c * mad_typical_price)
+        cci = typical_price - mean_typical_price
+        cci /= c * mad_typical_price
 
     # Offset
     if offset != 0:
         cci = cci.shift(offset)
 
-    # Fill
+    # Handle fills
     if "fillna" in kwargs:
         cci.fillna(kwargs["fillna"], inplace=True)
+    if "fill_method" in kwargs:
+        cci.fillna(method=kwargs["fill_method"], inplace=True)
 
-    # Name and Category
+    # Name and Categorize it
     cci.name = f"CCI_{length}_{c}"
     cci.category = "momentum"
 
@@ -95,7 +90,7 @@ class CCI(QObject):
         super().__init__(parent=None)
         self._candles: JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE =_candles
         
-        self.length:int = dict_ta_params.get("length",7)
+        self.length:int = dict_ta_params.get("length",14)
         self.c:float = dict_ta_params.get("c",0.015) 
         
         #self.signal_delete.connect(self.deleteLater)
@@ -128,7 +123,7 @@ class CCI(QObject):
             self.connect_signals()
         
         if dict_ta_params != {}:    
-            self.length:int = dict_ta_params.get("length",7)
+            self.length:int = dict_ta_params.get("length",14)
             self.c:float = dict_ta_params.get("c",0.015) 
 
             ta_name:str=dict_ta_params.get("ta_name")
@@ -234,7 +229,7 @@ class CCI(QObject):
                         close=df["close"],
                         length=self.length,
                         c=self.c).dropna()#.round(6)
-                        
+                      
         return self.paire_data(INDICATOR)
     def fisrt_gen_data(self):
         self.is_current_update = False
@@ -247,13 +242,14 @@ class CCI(QObject):
         
         _len = len(data)
         _index = df["index"].tail(_len)
-
         self.df = pd.DataFrame({
                             'index':_index,
                             "data":data,
                             })
                 
         self.xdata,self.data = self.df["index"].to_numpy(),self.df["data"].to_numpy()
+        
+        print(self.df)
         
         self.is_genering = False
         if self.first_gen == False:
@@ -262,7 +258,6 @@ class CCI(QObject):
         self.is_current_update = True
         self.sig_reset_all.emit()
         
-    
     def add_historic(self,n:int):
         self.is_histocric_load = False
         self.is_genering = True
@@ -273,7 +268,6 @@ class CCI(QObject):
         
         _len = len(data)
         _index = df["index"].tail(_len)
-
         _df = pd.DataFrame({
                             'index':_index,
                             "data":data,
@@ -311,7 +305,6 @@ class CCI(QObject):
             self.sig_add_candle.emit()
         self.is_current_update = True
             
-        
     def update(self, new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]
         self.is_current_update = False
@@ -324,4 +317,3 @@ class CCI(QObject):
             self.sig_update_candle.emit()
         self.is_current_update = True
             
-

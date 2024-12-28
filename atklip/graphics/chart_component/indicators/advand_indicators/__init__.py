@@ -1,6 +1,7 @@
 from .bb import BasicBB
 from .donchian import BasicDonchianChannels
 from .keltner_channels import KeltnerChannels
+from .vwma import BASE_VWMA
 
 from .zigzag import BasicZIGZAG
 from .utbot import UTBOT

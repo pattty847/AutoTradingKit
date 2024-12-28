@@ -29,12 +29,7 @@ from atklip.graphics.chart_component.base_items.replay_cut import ReplayObject
 from atklip.controls.exchangemanager import ExchangeManager
 from atklip.appmanager.setting import AppConfig
 
-from atklip.graphics.chart_component.indicators import (BasicMA,BasicBB,BasicDonchianChannels,
-                                                        ATRSuperTrend,CustomCandlePattern,
-                                                        KeltnerChannels,
-                                                        BasicZIGZAG,ATKBOT,CandlePattern,
-                                                        UTBOT,BasicSuperTrend,UTBOT_WITH_BBAND,
-                                                        TrendStopLoss)
+from atklip.graphics.chart_component.indicators import *
 
 class Chart(ViewPlotWidget):
     def __init__(self, parent=None,apikey:str="", secretkey:str="",exchange_name:str="binanceusdm",
@@ -679,7 +674,7 @@ class Chart(ViewPlotWidget):
             self.indicators.append(candle) 
 
         elif _group_indicator == "Advance Indicator":
-            
+            #________BASIC INDICATORS__________
             if _indicator_type==IndicatorType.BB:
                 indicator = BasicBB(self)
    
@@ -691,7 +686,12 @@ class Chart(ViewPlotWidget):
 
             elif _indicator_type==IndicatorType.ZIGZAG:
                 indicator = BasicZIGZAG(self)
-
+            
+            elif _indicator_type==IndicatorType.VWMA:
+                indicator = BASE_VWMA(self)
+                
+                
+            #________Custom INDICATORS_________
             elif _indicator_type==IndicatorType.ATKPRO:
                 indicator = ATKBOT(self)
             
@@ -709,7 +709,7 @@ class Chart(ViewPlotWidget):
             
             elif _indicator_type==IndicatorType.ATRSuperTrend:
                 indicator = ATRSuperTrend(self)
-            
+        #________Candle Pattern________
         elif _group_indicator == "Parttens Indicator":
             if _indicator_type==IndicatorType.CANDLE_PATTERN:
                 indicator = CandlePattern(self)

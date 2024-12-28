@@ -65,11 +65,11 @@ class ATKBOT(GraphicsObject):
                     "source_name": self.chart.jp_candle.source_name,
                     
                     # UT BOT
-                    "key_value_long":0.1,
-                    "key_value_short":0.1,
-                    "atr_long_period":2,
+                    "key_value_long":1,
+                    "key_value_short":1,
+                    "atr_long_period":10,
                     "ema_long_period":1,
-                    "atr_short_period":2,
+                    "atr_short_period":10,
                     "ema_short_period":1,
                     
                     #Super Trend ATR

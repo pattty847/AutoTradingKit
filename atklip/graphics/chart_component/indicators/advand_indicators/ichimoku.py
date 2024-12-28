@@ -5,12 +5,13 @@ from PySide6.QtCore import Signal, QObject,Qt,QRectF
 from PySide6.QtWidgets import QGraphicsItem
 from PySide6.QtGui import QPainter,QPicture
 
-from .fillbetweenitem import FillBetweenItem
 from atklip.graphics.chart_component.base_items.plotdataitem import PlotDataItem
 from atklip.graphics.pyqtgraph import GraphicsObject
 
-from atklip.controls import PD_MAType,IndicatorType,BBANDS
-from atklip.controls.models import BBandsModel
+from .fillbetweenitem import FillBetweenItem
+from atklip.controls import PD_MAType,IndicatorType,KC
+from atklip.controls.models import KeltnerChannelsModel
+
 
 from atklip.appmanager import FastWorker
 from atklip.app_utils import *
@@ -18,8 +19,7 @@ from atklip.app_utils import *
 if TYPE_CHECKING:
     from atklip.graphics.chart_component.viewchart import Chart
 
-
-class BasicBB(GraphicsObject):
+class KeltnerChannels(GraphicsObject):
     on_click = Signal(object)
     signal_visible = Signal(bool)
     signal_delete = Signal()
@@ -29,22 +29,21 @@ class BasicBB(GraphicsObject):
     signal_change_type = Signal(str)
     sig_change_indicator_name = Signal(str)
     def __init__(self,chart) -> None:
-        GraphicsObject.__init__(self)
         # super().__init__()
+        GraphicsObject.__init__(self)
         # self.setFlag(self.GraphicsItemFlag.ItemHasNoContents)
         self.setFlag(self.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
+        
         self.chart:Chart = chart
         self.has = {
-            "name": f"BB 20 2",
+            "name": f"KC 20",
             "y_axis_show":False,
+            
             "inputs":{
                     "source":self.chart.jp_candle,
                     "source_name": self.chart.jp_candle.source_name,
-                    "type":"close",
-                    "mamode":PD_MAType.SMA,
                     "length":20,
-                    "std_dev_mult":2,
-                    "indicator_type":IndicatorType.BB,
+                    "indicator_type":IndicatorType.DonchianChannels,
                     "show":False},
 
             "styles":{
@@ -60,10 +59,12 @@ class BasicBB(GraphicsObject):
                     'width_low_line': 1,
                     'style_low_line': Qt.PenStyle.SolidLine,
                     
-                    "brush_color": mkBrush('#3f3964',width=0.7),
+                    "brush_color": mkBrush('#133135',width=0.7),
                     }
                     }
+        
         self.id = self.chart.objmanager.add(self)
+        
         self.lowline = PlotDataItem(pen=self.has["styles"]['pen_low_line'])  # for z value
         self.lowline.setParentItem(self)
         self.centerline = PlotDataItem(pen=self.has["styles"]['pen_center_line'])
@@ -73,10 +74,10 @@ class BasicBB(GraphicsObject):
         
         # self.bb_bank = FillBetweenItem(self.lowline,self.highline,self.has["styles"]['brush_color'])
         # self.bb_bank.setParentItem(self)
-     
+        
         self.picture: QPicture = QPicture()
-                
-        self.INDICATOR  = BBANDS(self.has["inputs"]["source"], self.model.__dict__)
+        
+        self.INDICATOR  = KC(self.has["inputs"]["source"], self.model.__dict__)
         
         self.chart.sig_update_source.connect(self.change_source,Qt.ConnectionType.AutoConnection)   
         self.signal_delete.connect(self.delete)
@@ -96,18 +97,16 @@ class BasicBB(GraphicsObject):
         
     @property
     def model(self) -> dict:
-        return BBandsModel(self.id,"BBands",self.chart.jp_candle.source_name,self.has["inputs"]["mamode"].name.lower(),
-                              self.has["inputs"]["type"],self.has["inputs"]["length"],
-                              self.has["inputs"]["std_dev_mult"])
-    
+        return KeltnerChannelsModel(self.id,"KeltnerChannels",self.chart.jp_candle.source_name,
+                              self.has["inputs"]["length"])
     
     def disconnect_signals(self):
         try:
             self.INDICATOR.sig_reset_all.disconnect(self.reset_threadpool_asyncworker)
             self.INDICATOR.sig_update_candle.disconnect(self.setdata_worker)
-            self.INDICATOR.sig_add_candle.disconnect(self.setdata_worker)
-            self.INDICATOR.sig_add_historic.disconnect(self.add_historic_worker)
+            self.INDICATOR.sig_add_candle.disconnect(self.add_worker)
             self.INDICATOR.signal_delete.disconnect(self.replace_source)
+            self.INDICATOR.sig_add_historic.disconnect(self.add_historic_worker)
         except RuntimeError:
                     pass
     
@@ -138,7 +137,7 @@ class BasicBB(GraphicsObject):
         xdata,lb,cb,ub= self.INDICATOR.get_data()
         setdata.emit((xdata,lb,cb,ub))
         self.sig_change_yaxis_range.emit()
-        self.has["name"] = f"BB {self.has["inputs"]["length"]} {self.has["inputs"]["std_dev_mult"]} {self.has["inputs"]["type"]} {self.has["inputs"]["mamode"].name}"
+        self.has["name"] = f"KC {self.has["inputs"]["length"]}"
         self.sig_change_indicator_name.emit(self.has["name"])
         
     def replace_source(self):
@@ -151,13 +150,10 @@ class BasicBB(GraphicsObject):
         if self.has["inputs"]["source_name"] == source.source_name:
             self.update_inputs("source",source.source_name)
       
-    
     def get_inputs(self):
         inputs =  {"source":self.has["inputs"]["source"],
-                    "type":self.has["inputs"]["type"],
                     "length":self.has["inputs"]["length"],
-                    "std_dev_mult":self.has["inputs"]["std_dev_mult"],
-                    "mamode":self.has["inputs"]["mamode"],}
+                    }
         return inputs
     
     def get_styles(self):
@@ -189,7 +185,7 @@ class BasicBB(GraphicsObject):
                 is_update = True
         
         if is_update:
-            self.has["name"] = f"BB {self.has["inputs"]["length"]} {self.has["inputs"]["std_dev_mult"]} {self.has["inputs"]["type"]} {self.has["inputs"]["mamode"].name}"
+            self.has["name"] = f"KC {self.has["inputs"]["length"]}"
             self.sig_change_indicator_name.emit(self.has["name"])
             self.INDICATOR.change_input(dict_ta_params=self.model.__dict__)
     
@@ -199,6 +195,7 @@ class BasicBB(GraphicsObject):
             self.highline.setPen(color=self.has["styles"]["pen_high_line"], width=self.has["styles"]["width_high_line"],style=self.has["styles"]["style_high_line"])
         elif _input == "pen_center_line" or _input == "width_center_line" or _input == "style_center_line":
             self.centerline.setPen(color=self.has["styles"]["pen_center_line"], width=self.has["styles"]["width_center_line"],style=self.has["styles"]["style_center_line"])
+            # self.setPen(color=self.has["styles"]["pen_center_line"], width=self.has["styles"]["width_center_line"],style=self.has["styles"]["style_center_line"])
         elif _input == "pen_low_line" or _input == "width_low_line" or _input == "style_low_line":
             self.lowline.setPen(color=self.has["styles"]["pen_low_line"], width=self.has["styles"]["width_low_line"],style=self.has["styles"]["style_low_line"])
         elif _input == "brush_color":
@@ -215,7 +212,6 @@ class BasicBB(GraphicsObject):
         else:
             self.hide()
 
-    
     def set_Data(self,data):
         xData = data[0]
         lb = data[1]
@@ -224,7 +220,6 @@ class BasicBB(GraphicsObject):
         self.lowline.setData(xData,lb)
         self.centerline.setData(xData,cb)
         self.highline.setData(xData,ub)
-        
     
     def add_historic_Data(self,data):
         xData = data[0]
@@ -243,23 +238,24 @@ class BasicBB(GraphicsObject):
         self.lowline.updateData(xData,lb)
         self.centerline.updateData(xData,cb)
         self.highline.updateData(xData,ub)
-    
+        
     def setdata_worker(self):
         self.worker = None
         self.worker = FastWorker(self.update_data)
         self.worker.signals.setdata.connect(self.update_Data,Qt.ConnectionType.QueuedConnection)
-        self.worker.start()    
-        
+        self.worker.start()  
+    
     def add_historic_worker(self,_len):
         self.worker = None
         self.worker = FastWorker(self.load_historic_data,_len)
         self.worker.signals.setdata.connect(self.add_historic_Data,Qt.ConnectionType.QueuedConnection)
         self.worker.start() 
+    
     def add_worker(self):
         self.worker = None
         self.worker = FastWorker(self.add_data)
         self.worker.signals.setdata.connect(self.update_Data,Qt.ConnectionType.QueuedConnection)
-        self.worker.start()
+        self.worker.start()    
     
     def load_historic_data(self,_len,setdata):
         xdata,lb,cb,ub= self.INDICATOR.get_data(stop=_len)
@@ -270,9 +266,8 @@ class BasicBB(GraphicsObject):
     
     def update_data(self,setdata):
         xdata,lb,cb,ub= self.INDICATOR.get_data(start=-1)
-        setdata.emit((xdata,lb,cb,ub))  
+        setdata.emit((xdata,lb,cb,ub))    
 
-       
     def boundingRect(self) -> QRectF:
         x_left,x_right = int(self.chart.xAxis.range[0]),int(self.chart.xAxis.range[1])
         start_index = self.chart.jp_candle.candles[0].index
@@ -292,7 +287,7 @@ class BasicBB(GraphicsObject):
                 try:
                     h_low,h_high = np.nanmin(self.lowline.yData[_start:_stop]), np.nanmax(self.highline.yData[_start:_stop])
                 except ValueError:
-                    h_low,h_high = int(self.chart.yAxis.range[0]),int(self.chart.yAxis.range[1])  
+                    h_low,h_high = self.chart.yAxis.range[0],self.chart.yAxis.range[1]
             else:
                 h_low,h_high = self.chart.yAxis.range[0],self.chart.yAxis.range[1]
         else:
@@ -314,8 +309,8 @@ class BasicBB(GraphicsObject):
     
     def get_last_point(self):
         # _time = self.centerline.xData[-1]
-        # _value = self.centerline.yData[-1]
         _time = self.xData[-1]
+        # _value = self.centerline.yData[-1]
         _value = self.yData[-1]
         return _time,_value
     

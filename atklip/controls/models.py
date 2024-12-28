@@ -75,6 +75,11 @@ class MAModel(IndicatorBase):
     length:int
 
 @dataclass
+class VWMAModel(IndicatorBase):
+    source:str 
+    length:int
+
+@dataclass
 class BBandsModel(IndicatorBase):
     mamode:str 
     source:str 
@@ -146,6 +151,11 @@ class RSIModel(IndicatorBase):
     mamode:str 
 
 @dataclass
+class MOMModel(IndicatorBase):
+    source:str    
+    length:int 
+
+@dataclass
 class CCIModel(IndicatorBase):
     length:int 
     c:float     
@@ -194,6 +204,11 @@ class TSIModel(IndicatorBase):
     signal_period:int 
     source:str 
     mamode:str 
+
+@dataclass          
+class RGVIModel(IndicatorBase):
+    length :int 
+    swma_length :int 
 
 @dataclass
 class UOModel(IndicatorBase):

@@ -34,6 +34,8 @@ __all__ = [
     "v_talib",
     "v_tradingview",
     "v_upperbound",
+    "verify_series",
+    "get_offset"
 ]
 
 
@@ -183,3 +185,12 @@ def v_upperbound(
 ) -> IntFloat:
     return partial(v_lowerbound, complement=True)\
         (var=var, bound=bound, default=default, strict=strict)
+
+def verify_series(series: Series, min_length: int = None) -> Series:
+    """If a Pandas Series and it meets the min_length of the indicator return it."""
+    has_length = min_length is not None and isinstance(min_length, int)
+    if series is not None and isinstance(series, Series):
+        return None if has_length and series.size < min_length else series
+def get_offset(x: int) -> int:
+    """Returns an int, otherwise defaults to zero."""
+    return int(x) if isinstance(x, int) else 0

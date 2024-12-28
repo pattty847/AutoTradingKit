@@ -17,7 +17,7 @@ from .pvt import pvt
 from .vhm import vhm
 from .vp import vp
 from .vwap import vwap
-from .vwma import vwma
+from .vwma import vwma, VWMA
 from .wb_tsv import wb_tsv
 
 # __all__ = [

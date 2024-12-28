@@ -20,7 +20,7 @@ from .inertia import inertia
 from .kdj import kdj
 from .kst import kst
 from .macd import macd, MACD
-from .mom import mom
+from .mom import mom, MOM
 from .pgo import pgo
 from .ppo import ppo
 from .psl import psl
@@ -28,7 +28,7 @@ from .qqe import qqe
 from .roc import roc, ROC
 from .rsi import rsi, RSI
 from .rsx import rsx
-from .rvgi import rvgi
+from .rvgi import rvgi, RVGI
 from .slope import slope
 from .smc import smc
 from .smi import smi

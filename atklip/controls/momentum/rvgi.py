@@ -87,3 +87,276 @@ def rvgi(
     df.category = rvgi.category
 
     return df
+
+
+import numpy as np
+import pandas as pd
+from typing import List
+from atklip.controls.ohlcv import   OHLCV
+from atklip.controls.candle import JAPAN_CANDLE,HEIKINASHI,SMOOTH_CANDLE,N_SMOOTH_CANDLE
+from atklip.app_api.workers import ApiThreadPool
+
+from PySide6.QtCore import Signal,QObject
+
+class RVGI(QObject):
+    sig_update_candle = Signal()
+    sig_add_candle = Signal()
+    sig_reset_all = Signal()
+    signal_delete = Signal()    
+    sig_add_historic = Signal(int) 
+    def __init__(self,_candles,dict_ta_params) -> None:
+        super().__init__(parent=None)
+        
+        self._candles: JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE =_candles
+        
+        self.length  :int=dict_ta_params.get("length",10)
+        self.swma_length :int=dict_ta_params.get("swma_length",14)
+
+
+        #self.signal_delete.connect(self.deleteLater)
+        self.first_gen = False
+        self.is_genering = True
+        self.is_current_update = False
+        self.is_histocric_load = False
+        self.name = f"RVGI {self.length}-{self.swma_length}"
+
+        self.df = pd.DataFrame([])
+        self.worker = ApiThreadPool
+        
+        self.xdata,self.rvgi_ , self.signalma = np.array([]),np.array([]),np.array([])
+
+        self.connect_signals()
+    
+    
+    @property
+    def source_name(self)-> str:
+        return self._source_name
+    @source_name.setter
+    def source_name(self,source_name):
+        self._source_name = source_name
+    
+    def change_input(self,candles=None,dict_ta_params: dict={}):
+        if candles != None:
+            self.disconnect_signals()
+            self._candles : JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE= candles
+            self.connect_signals()
+        
+        if dict_ta_params != {}:
+            self.length  :int=dict_ta_params.get("length",10)
+            self.swma_length :int=dict_ta_params.get("swma_length",14)
+            
+            
+            ta_name:str=dict_ta_params.get("ta_name")
+            obj_id:str=dict_ta_params.get("obj_id") 
+            
+            ta_param = f"{obj_id}-{ta_name}-{self.length}-{self.swma_length}"
+
+            self.indicator_name = ta_param
+        
+        self.first_gen = False
+        self.is_genering = True
+        self.is_current_update = False
+        
+        self.fisrt_gen_data()
+    
+    def disconnect_signals(self):
+        try:
+            self._candles.sig_reset_all.disconnect(self.started_worker)
+            self._candles.sig_update_candle.disconnect(self.update_worker)
+            self._candles.sig_add_candle.disconnect(self.add_worker)
+            self._candles.signal_delete.disconnect(self.signal_delete)
+            self._candles.sig_add_historic.disconnect(self.add_historic_worker)
+        except RuntimeError:
+                    pass
+    
+    def connect_signals(self):
+        self._candles.sig_reset_all.connect(self.started_worker)
+        self._candles.sig_update_candle.connect(self.update_worker)
+        self._candles.sig_add_candle.connect(self.add_worker)
+        self._candles.signal_delete.connect(self.signal_delete)
+        self._candles.sig_add_historic.connect(self.add_historic_worker)
+    
+    
+    def change_source(self,_candles:JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE):
+        self.disconnect_signals()
+        self._candles =_candles
+        self.connect_signals()
+        self.started_worker()
+    
+    @property
+    def indicator_name(self):
+        return self.name
+    @indicator_name.setter
+    def indicator_name(self,_name):
+        self.name = _name
+    
+    def get_df(self,n:int=None):
+        if not n:
+            return self.df
+        return self.df.tail(n)
+    
+    def get_data(self,start:int=0,stop:int=0):
+        if len(self.xdata) == 0:
+            return [],[],[]
+        if start == 0 and stop == 0:
+            x_data = self.xdata
+            rvgi_,signalma =self.rvgi_,self.signalma
+        elif start == 0 and stop != 0:
+            x_data = self.xdata[:stop]
+            rvgi_,signalma=self.rvgi_[:stop],self.signalma[:stop]
+        elif start != 0 and stop == 0:
+            x_data = self.xdata[start:]
+            rvgi_,signalma=self.rvgi_[start:],self.signalma[start:]
+        else:
+            x_data = self.xdata[start:stop]
+            rvgi_,signalma=self.rvgi_[start:stop],self.signalma[start:stop]
+        return x_data,rvgi_,signalma
+    
+    
+    def get_last_row_df(self):
+        return self.df.iloc[-1] 
+
+    def update_worker(self,candle):
+        self.worker.submit(self.update,candle)
+
+    def add_worker(self,candle):
+        self.worker.submit(self.add,candle)
+    
+    def add_historic_worker(self,n):
+        self.worker.submit(self.add_historic,n)
+
+    def started_worker(self):
+        self.worker.submit(self.fisrt_gen_data)
+    
+    def paire_data(self,INDICATOR:pd.DataFrame|pd.Series):
+        column_names = INDICATOR.columns.tolist()
+        tsi_name = ''
+        signalma_name = ''
+        for name in column_names:
+            if name.__contains__("RVGI_"):
+                tsi_name = name
+            elif name.__contains__("RVGIs_"):
+                signalma_name = name
+
+        rvgi_ = INDICATOR[tsi_name].dropna().round(6)
+        signalma = INDICATOR[signalma_name].dropna().round(6)
+        return rvgi_,signalma
+    
+    def calculate(self,df: pd.DataFrame):
+        INDICATOR = rvgi(
+                        open_=df["open"],
+                        high=df["high"],
+                        low=df["low"],
+                        close=df["close"],
+                        length=self.length,
+                        swma_length = self.swma_length,
+                        ).dropna().round(6)
+        return self.paire_data(INDICATOR)
+    
+    def fisrt_gen_data(self):
+        self.is_current_update = False
+        self.is_genering = True
+        self.df = pd.DataFrame([])
+        
+        df:pd.DataFrame = self._candles.get_df()
+        
+        rvgi_, signalma = self.calculate(df)
+        
+        _len = min([len(rvgi_),len(signalma)])
+        _index = df["index"].tail(_len)
+
+        self.df = pd.DataFrame({
+                            'index':_index,
+                            "rvgi":rvgi_.tail(_len),
+                            "signalma":signalma.tail(_len)
+                            })
+                
+        self.xdata,self.rvgi_ , self.signalma = self.df["index"].to_numpy(),\
+                                                self.df["rvgi"].to_numpy(),\
+                                                self.df["signalma"].to_numpy()
+        
+        self.is_genering = False
+        if self.first_gen == False:
+            self.first_gen = True
+            self.is_genering = False
+        
+        self.is_current_update = True
+        self.sig_reset_all.emit()
+    
+    
+    def add_historic(self,n:int):
+        self.is_genering = True
+        self.is_histocric_load = False
+        _pre_len = len(self.df)
+        df:pd.DataFrame = self._candles.get_df().iloc[:-1*_pre_len]
+        df = df.copy()
+        df = df.reset_index(drop=True)
+        
+        rvgi_, signalma = self.calculate(df)
+        
+        _len = min([len(rvgi_),len(signalma)])
+        _index = df["index"].tail(_len)
+
+        _df = pd.DataFrame({
+                            'index':_index,
+                            "rvgi":rvgi_.tail(_len),
+                            "signalma":signalma.tail(_len)
+                            })
+        
+        self.df = pd.concat([_df,self.df],ignore_index=True)
+        
+        
+        self.xdata = np.concatenate((_df["index"].to_numpy(), self.xdata)) 
+        self.rvgi_ = np.concatenate((_df["rvgi"].to_numpy(), self.rvgi_))   
+        self.signalma = np.concatenate((_df["signalma"].to_numpy(), self.signalma))
+        
+        self.is_genering = False
+        if self.first_gen == False:
+            self.first_gen = True
+            self.is_genering = False
+        self.is_histocric_load = True
+        self.sig_add_historic.emit(_len)
+    
+    def add(self,new_candles:List[OHLCV]):
+        new_candle:OHLCV = new_candles[-1]
+        self.is_current_update = False
+        if (self.first_gen == True) and (self.is_genering == False):
+            df:pd.DataFrame = self._candles.get_df((self.length+self.swma_length)*5)
+            
+            df = df.copy()
+            df = df.reset_index(drop=True)
+            rvgi_, signalma = self.calculate(df)
+            
+            new_frame = pd.DataFrame({
+                                    'index':[new_candle.index],
+                                    "rvgi":[rvgi_.iloc[-1]],
+                                    "signalma":[signalma.iloc[-1]]
+                                    })
+            
+            self.df = pd.concat([self.df,new_frame],ignore_index=True)
+            
+                                            
+            self.xdata = np.concatenate((self.xdata,np.array([new_candle.index])))
+            self.rvgi_ = np.concatenate((self.rvgi_,np.array([rvgi_.iloc[-1]])))
+            self.signalma = np.concatenate((self.signalma,np.array([signalma.iloc[-1]])))
+            
+            self.is_current_update = True
+            self.sig_add_candle.emit()
+        
+    def update(self, new_candles:List[OHLCV]):
+        new_candle:OHLCV = new_candles[-1]
+        self.is_current_update = False
+        if (self.first_gen == True) and (self.is_genering == False):
+            
+            df:pd.DataFrame = self._candles.get_df((self.length+self.swma_length)*5)
+            df = df.copy()
+            df = df.reset_index(drop=True)
+                    
+            rvgi_, signalma = self.calculate(df)
+                    
+            self.df.iloc[-1] = [new_candle.index,rvgi_.iloc[-1],signalma.iloc[-1]]
+                    
+            self.xdata[-1],self.rvgi_[-1] , self.signalma[-1]  = new_candle.index,rvgi_.iloc[-1],signalma.iloc[-1]
+            
+            self.is_current_update = True
+            self.sig_update_candle.emit()

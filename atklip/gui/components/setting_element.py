@@ -203,7 +203,7 @@ class PeriodEdit(IntEdit):
         self.setFixedHeight(35)
         _inputs = self.indicator.get_inputs()
         
-        _list_inputs = ["legs","length","period","ma_period","period_lower",
+        _list_inputs = ["legs","length","period","ma_period","period_lower","swma_length",
                         "period_upper","k_period","atr_utbot_length","atr_length",
                         "channel_length",
                         "d_period","rsi_period","fast_period","medium_period","slow_period",
