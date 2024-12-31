@@ -157,6 +157,14 @@ class N_SMOOTH_CANDLE(QObject):
         if not n:
             return self.df
         return self.df.tail(n)
+    def get_head_df(self,n:int=None):
+        if not n:
+            return self.df
+        return self.df.head(n)
+    def get_tail_df(self,n:int=None):
+        if not n:
+            return self.df
+        return self.df.tail(n)
     
     def get_last_row_df(self):
         return self.df.iloc[-1]

@@ -17,6 +17,7 @@ from atklip.app_utils import *
 if TYPE_CHECKING:
     from atklip.graphics.chart_component.viewchart import Chart
     from atklip.graphics.chart_component.sub_panel_indicator import ViewSubPanel
+    
 class BasicMOM(PlotDataItem):
     """MOM"""
     on_click = Signal(object)

@@ -114,8 +114,6 @@ def utbot(dataframe:pd.DataFrame, key_value=1, atr_period=3, ema_period=200, ma_
     
     return kq
     
-    
-
 
 class CUSTOM_UTBOT_ALERT(QObject):
     sig_update_candle = Signal()

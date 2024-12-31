@@ -97,6 +97,7 @@ class IndicatorType(Enum):
     Stoch = "Stochastic Oscillator"
     StochRSI = "Stochastic RSI"
     SuperTrend = "Super Trend"
+    EMATrendMetter = "EMA Trend Metter"
     ATRSuperTrend = "ATR Super Trend"
     ZIGZAG = "ZigZag"
     
@@ -128,6 +129,7 @@ class IndicatorType(Enum):
     ATKPRO = "ATKBOT"
     UTBOT = "UTBOT"
     UTBOT_WITH_BBAND = "UTBOT_WITH_BBAND"
+    BUY_SELL_WITH_ETM_ST = "EMA Trend Metter Supper Trend"
     ATKBOT_SUPERTREND = "ATKBOTFollowTrend"
     ATKBOT_CCI = "ATKBOTCCI"
     ATKBOT_SUPERTREND_SSCANDLE = "ATKBOTFollowSMCandle"

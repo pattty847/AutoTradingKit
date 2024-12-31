@@ -151,6 +151,13 @@ class RSIModel(IndicatorBase):
     mamode:str 
 
 @dataclass
+class EMATRENDMETTERModel(IndicatorBase):
+    base_ema_length:int
+    ema_length_1:int
+    ema_length_2:int
+    ema_length_3:int
+
+@dataclass
 class MOMModel(IndicatorBase):
     source:str    
     length:int 

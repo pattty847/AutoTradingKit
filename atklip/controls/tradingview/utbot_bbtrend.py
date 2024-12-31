@@ -24,6 +24,8 @@ def utsignal(data,a,c):
     # EMA for crossover logic
     above_ema = ema(high, length=1)
     below_ema = ema(low, length=1)
+    # above_ema = ema(src, length=1)
+    # below_ema = ema(src, length=1)
     above = crossover(below_ema, xATRTrailingStop)
     below = crossover(xATRTrailingStop, above_ema)
     return src, xATRTrailingStop, above, below

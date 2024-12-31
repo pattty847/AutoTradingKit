@@ -192,7 +192,7 @@ class SubIndicator(BasicMenu):
                                 IndicatorType.RSI,
                                 IndicatorType.MOM,
                                 IndicatorType.RVGI,
-                                
+                                IndicatorType.EMATrendMetter,
                                 IndicatorType.ROC,
                                 IndicatorType.SQEEZE,
                                 IndicatorType.TTM,
@@ -262,6 +262,7 @@ class AdvanceIndicator(BasicMenu):
                                 IndicatorType.TRENDWITHSL,
                                 IndicatorType.SuperTrend,
                                 IndicatorType.ATRSuperTrend,
+                                IndicatorType.BUY_SELL_WITH_ETM_ST,
                                 
                                 IndicatorType.ZIGZAG,
                                 IndicatorType.BB,

@@ -146,9 +146,10 @@ class ViewSubPanel(PlotWidget):
             self.indicator = BasicRSI(self.get_last_pos_worker,self.Chart,self)
         elif _indicator_type == IndicatorType.MOM:
             self.indicator = BasicMOM(self.get_last_pos_worker,self.Chart,self)
-        
         elif _indicator_type == IndicatorType.RVGI:
             self.indicator = BasicRVGI(self.get_last_pos_worker,self.Chart,self)
+        elif _indicator_type == IndicatorType.EMATrendMetter:
+            self.indicator = EMATrendMetter(self.get_last_pos_worker,self.Chart,self)
         
         elif _indicator_type == IndicatorType.CCI:
             self.indicator = BasicCCI(self.get_last_pos_worker,self.Chart,self)

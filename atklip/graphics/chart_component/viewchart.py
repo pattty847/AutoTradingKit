@@ -701,6 +701,9 @@ class Chart(ViewPlotWidget):
             elif _indicator_type==IndicatorType.UTBOT_WITH_BBAND:
                 indicator = UTBOT_WITH_BBAND(self)
             
+            elif _indicator_type==IndicatorType.BUY_SELL_WITH_ETM_ST:
+                indicator = EMA_SUPER_TREND_BOT(self)
+            
             elif _indicator_type==IndicatorType.TRENDWITHSL:
                 indicator = TrendStopLoss(self)
             

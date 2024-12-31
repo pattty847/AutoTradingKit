@@ -108,14 +108,14 @@ class SuperTrendWithStopLoss(QObject):
         self._candles: JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE =_candles
         
 
-        self.supertrend_length = dict_ta_params.get("supertrend_length",7) 
-        self.supertrend_atr_length = dict_ta_params.get("supertrend_atr_length",7)
+        self.supertrend_length = dict_ta_params.get("supertrend_length",14) 
+        self.supertrend_atr_length = dict_ta_params.get("supertrend_atr_length",14)
         self.supertrend_multiplier = dict_ta_params.get("supertrend_multiplier",3) 
         self.supertrend_atr_mamode = dict_ta_params.get("supertrend_atr_mamode","rma")
         
         self.atr_length = dict_ta_params.get("atr_length",14) 
         self.atr_mamode = dict_ta_params.get("atr_mamode","rma") 
-        self.atr_multiplier = dict_ta_params.get("atr_multiplier",1) 
+        self.atr_multiplier = dict_ta_params.get("atr_multiplier",1.5) 
         
         
         #self.signal_delete.connect(self.deleteLater)

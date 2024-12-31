@@ -83,9 +83,9 @@ class TypeEdit(ComboboxEdit):
         _inputs = self.indicator.get_inputs()
         _type = _inputs.get("type")
         if _type != None:
-            if _type in list_types:
-                list_types.remove(_type)
-                list_types.insert(0,_type)
+            # if _type in list_types:
+            list_types.remove(_type)
+            list_types.insert(0,_type)
         self.set_values(list_types)
         self.value.currentTextChanged.connect(self.change_type)
         self.setFixedHeight(35)
@@ -102,9 +102,9 @@ class BandTypeEdit(ComboboxEdit):
         _inputs = self.indicator.get_inputs()
         _type = _inputs.get("band_type")
         if _type != None:
-            if _type in list_types:
-                list_types.remove(_type)
-                list_types.insert(0,_type)
+            # if _type in list_types:
+            list_types.remove(_type)
+            list_types.insert(0,_type)
         self.set_values(list_types)
         self.value.currentTextChanged.connect(self.change_type)
         self.setFixedHeight(35)
@@ -150,9 +150,9 @@ class MaTypeEdit(ComboboxEdit):
         list_values = list(self._dict_values.values())
         
         if _ma_type in list_values:
-            if _type_name in list_types:
-                list_types.remove(_type_name)
-                list_types.insert(0,_type_name)
+            # if _type_name in list_types:
+            list_types.remove(_type_name)
+            list_types.insert(0,_type_name)
         self.set_values(list_types)
         self.value.currentTextChanged.connect(self.change_ma_type)
         self.setFixedHeight(35)
@@ -168,9 +168,9 @@ class MaIntervalEdit(ComboboxEdit):
                         "2h","4h","6h"]
         _inputs = self.indicator.get_inputs()
         interval = _inputs.get("interval")
-        if interval in list_values:
-            list_values.remove(interval)
-            list_values.insert(0,interval)
+        # if interval in list_values:
+        list_values.remove(interval)
+        list_values.insert(0,interval)
         self.set_values(list_values)
         self.value.currentTextChanged.connect(self.change_ma_type)
         self.setFixedHeight(35)
@@ -203,7 +203,8 @@ class PeriodEdit(IntEdit):
         self.setFixedHeight(35)
         _inputs = self.indicator.get_inputs()
         
-        _list_inputs = ["legs","length","period","ma_period","period_lower","swma_length",
+        _list_inputs = ["base_ema_length","ema_length_1","ema_length_2","ema_length_3",
+                        "legs","length","period","ma_period","period_lower","swma_length",
                         "period_upper","k_period","atr_utbot_length","atr_length",
                         "channel_length",
                         "d_period","rsi_period","fast_period","medium_period","slow_period",
@@ -214,10 +215,10 @@ class PeriodEdit(IntEdit):
                         "kc_length","mom_length","mom_smooth",
                         "supertrend_length","supertrend_atr_length"]
         
-        if _input in _list_inputs:
-            _value = _inputs.get(_input)
-            if _value != None:
-                self.set_value(_value)
+        # if _input in _list_inputs:
+        _value = _inputs.get(_input)
+        if _value != None:
+            self.set_value(_value)
         self.value.valueChanged.connect(self.change_period)
          
     def change_period(self,period):
@@ -259,10 +260,10 @@ class MultiDevEdit(FloatEdit):
         _inputs = self.indicator.get_inputs()
 
         list_vls = ["std_dev_mult","price_low","deviation","supertrend_multiplier"]
-        if _input in list_vls:
-            _value = _inputs.get(_input)
-            if _value != None:
-                self.set_value(_value)
+        # if _input in list_vls:
+        _value = _inputs.get(_input)
+        if _value != None:
+            self.set_value(_value)
         self.value.valueChanged.connect(self.change_price)
 
     def change_price(self,price):
@@ -284,10 +285,10 @@ class PriceEdit(FloatEdit):
                       "leverage","taker_fee","rsi_price_high","rsi_price_low","bb_std","supertrend_multiplier",
                       "maker_fee","atr_multiplier"]
         
-        if _input in _ls_inputs:
-            _value = _inputs.get(_input)
-            if _value != None:
-                self.set_value(_value)
+        # if _input in _ls_inputs:
+        _value = _inputs.get(_input)
+        if _value != None:
+            self.set_value(_value)
         self.value.valueChanged.connect(self.change_price)
         
 
