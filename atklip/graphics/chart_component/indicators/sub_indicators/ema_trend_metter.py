@@ -251,7 +251,7 @@ class EMATrendMetter(GraphicsObject):
             _time,_value = self.get_last_point()
         except:
             pass
-        return _value,self.has["styles"]['pen_center_line']
+        return _value,"#363a45"
     
     
     def get_last_point(self):

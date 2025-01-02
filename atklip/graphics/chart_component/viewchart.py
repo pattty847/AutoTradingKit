@@ -50,20 +50,8 @@ class Chart(ViewPlotWidget):
         
         self.ExchangeManager = ExchangeManager()
         
-        
-        self.keys = AppConfig.get_config_value(f"app.keys")
-
-        if self.keys == None:
-            api = ""
-            secretkey = ""
-            if "binance" in self.exchange_name:
-                api = "zhBF9X2mhD7rY6fpFU243biBtE4ySGpXTBPdYYOExyx27G5CrU6cCEditBhO7ek4"
-                secretkey = "6rIYDN1xBaxxGyuLslYGMxlHFtjgzhVh6nV4zO8IKaspdF1H3tC5MKXMgxA1rHDA"
-            AppConfig.sig_set_single_data.emit((f"app.keys",{self.exchange_name:{"apikey":api,"secretkey":secretkey}}))
-            self.keys = AppConfig.get_config_value(f"app.keys")
             
-        self.apikey = self.keys[self.exchange_name]["apikey"]
-        self.secretkey = self.keys[self.exchange_name]["secretkey"]
+        self.apikey, self.secretkey = self.get_api_secret_key(self.exchange_name)
         
         self.worker = None
         self.worker_reload:asyncio.Task = None
@@ -87,6 +75,28 @@ class Chart(ViewPlotWidget):
         self.first_run.connect(self.set_data_dataconnect,Qt.ConnectionType.AutoConnection)
         self.mouse_clicked_on_chart.connect(self.started_replay_mode)
         self.fast_reset_worker()
+    
+    def get_api_secret_key(self,exchange_name)-> tuple:
+        keys = AppConfig.get_config_value(f"app.keys")
+        if keys == None:
+            api = ""
+            secretkey = ""
+            if "binance" in exchange_name:
+                api = "zhBF9X2mhD7rY6fpFU243biBtE4ySGpXTBPdYYOExyx27G5CrU6cCEditBhO7ek4"
+                secretkey = "6rIYDN1xBaxxGyuLslYGMxlHFtjgzhVh6nV4zO8IKaspdF1H3tC5MKXMgxA1rHDA"
+            AppConfig.sig_set_single_data.emit((f"app.keys.{exchange_name}",{"apikey":api,"secretkey":secretkey}))
+            keys = AppConfig.get_config_value(f"app.keys")
+        api_secret_keys = keys.get(exchange_name,None)
+        if api_secret_keys is None:
+            api = ""
+            secretkey = ""
+            if "binance" in exchange_name:
+                api = "zhBF9X2mhD7rY6fpFU243biBtE4ySGpXTBPdYYOExyx27G5CrU6cCEditBhO7ek4"
+                secretkey = "6rIYDN1xBaxxGyuLslYGMxlHFtjgzhVh6nV4zO8IKaspdF1H3tC5MKXMgxA1rHDA"
+            AppConfig.sig_set_single_data.emit((f"app.keys.{exchange_name}",{"apikey":api,"secretkey":secretkey}))
+            keys = AppConfig.get_config_value(f"app.keys")
+        apikey, secretkey= keys[exchange_name]["apikey"],keys[exchange_name]["secretkey"]
+        return apikey, secretkey
         
     async def reload_market(self):
         self.worker_reload:asyncio.Task = asyncio.create_task(self.ExchangeManager.reload_markets(self.exchange_name,self.id,self.symbol,self.interval))
@@ -449,6 +459,8 @@ class Chart(ViewPlotWidget):
         _type, symbol, exchange_name = args[0],args[1],args[2]
         self.exchange_name = exchange_name
         self.symbol = symbol
+        
+        self.apikey, self.secretkey = self.get_api_secret_key(self.exchange_name)
         
         self.sig_show_process.emit(True)
         

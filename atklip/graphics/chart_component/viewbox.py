@@ -37,6 +37,8 @@ class PlotViewBox(ViewBox):
         
         self.type_chart = type_chart
         self._isMouseLeftDrag = False
+        self.start_pos = None
+        self.x_range = None
         self.drawing = False
         self.draw_line = None
         self.rois = []
@@ -78,7 +80,7 @@ class PlotViewBox(ViewBox):
                 'yRange': [None, None],   # Maximum and minimum Y range
                 }
         })
-        self.setLimits(minXRange=5, maxXRange=1000)
+        # self.setLimits(minXRange=5, maxXRange=1000)
     def makepen(self,color, style=None, width=1):
         if style is None or style == '-':
             return mkPen(color=color, width=width)
@@ -168,21 +170,20 @@ class PlotViewBox(ViewBox):
         return text
     
     def wheelEvent(self, ev, axis=None):
-        self.load_old_data.emit()
         y_range = (self.plotwidget.yAxis.range[1] + self.plotwidget.yAxis.range[0])/2
         x_range = self.plotwidget.xAxis.range[1]
         tr = self.targetRect()
-        # if tr.right() - tr.left() >=1440 and ev.delta() < 0:
-        #     "giới hạn 1440 candle trên viewchart"
-        #     if axis == None or axis == 0:
-        #         return True
+        
+        if tr.right() - tr.left() >=1000 and ev.delta() < 0 and (axis == 0 or axis == None):
+            "giới hạn 1000 candle trên viewchart"
+            return True
         
         if axis is None:
                 mask = [True, False]   # Zom theo trục x
         elif axis == 1:
-                mask = [False, True]
+                mask = [False, True] # Zom theo trục y
         elif axis == 0:
-                mask = [True, False]
+                mask = [True, False] # Zom theo trục x
         else:
             mask = [True, False]
 
@@ -196,13 +197,25 @@ class PlotViewBox(ViewBox):
         ev.accept()
     
     def mouseDragEvent(self, ev, axis=None):
-        self.load_old_data.emit()
-        
+
         pos = ev.pos()
         lastPos = ev.lastPos()
         dif = pos - lastPos
         dif = dif * -1
-
+        if ev.isStart():
+            self.start_pos = ev.pos()
+        if ev.isFinish() and (axis == 0 or axis == None):
+            if self.start_pos:
+                deltax = pos.x()-self.start_pos.x()
+                if deltax>0:
+                    self.load_old_data.emit()
+            return
+        
+        if dif.x()<0:
+            tr = self.targetRect()
+            if tr.right() - tr.left() >=1000 and axis == 0:
+                return
+        
         ## Ignore axes if mouse is disabled
         mouseEnabled = np.array(self.state['mouseEnabled'], dtype=np.float64)
         mask = mouseEnabled.copy()
@@ -251,6 +264,7 @@ class PlotViewBox(ViewBox):
 
     def mouseRightDrag(self, ev, mouseEnabled, mask):
         #print "vb.rightDrag"
+        return
         if ev.modifiers() == Qt.KeyboardModifier.ControlModifier:
             if self.state['aspectLocked'] is not False:
                 mask[0] = 0
@@ -284,36 +298,40 @@ class PlotViewBox(ViewBox):
     
     def mouseLeftDrag(self, ev, axis, mouseEnabled, mask):
         if axis in [0,1]:
-            #print(axis)
-            #print "vb.rightDrag"
             if self.state['aspectLocked'] is not False:
                 mask[0] = 0
-
             dif = ev.screenPos() - ev.lastScreenPos()
-            
-            dif = np.array([dif.x()/4, dif.y()/4])
-            dif[0] *= 1   # Điều chỉnh hệ số giản, -1 là chỉ số gốc, đã modified để giống binance khi kéo trục x
-            s = ((mask * 0.02) + 1) ** dif  # tính toán hệ số zoom của trục x,y. <1 thì co vào, >1 thì giản ra, =1 không thay đổi
-
-            tr = self.childGroup.transform()
-            #print(tr)
-            tr = fn.invertQTransform(tr)
-            #print(tr)
-
-            x = s[0] if mouseEnabled[0] == 1 else None
-            y = s[1] if mouseEnabled[1] == 1 else None
-            
-            y_range = (self.plotwidget.getAxis('right').range[1] + self.plotwidget.getAxis('right').range[0])/2
-        
-            x_range = self.plotwidget.getAxis('bottom').range[1]
-
-            #center = Point(tr.map(ev.buttonDownPos(QtCore.Qt.MouseButton.LeftButton)))
-            
-            center = Point(x_range, y_range)
-            
-            self._resetTarget()
-            self.scaleBy(x=x, y=y, center=center)
-            self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
+            if  axis==0:
+                if dif.x()<0:
+                    s = [0.9666223852575591, None]
+                else:
+                    s = [1.0345301487442249, None]
+                # tr = self.childGroup.transform()
+                # tr = fn.invertQTransform(tr)                
+                y_range = (self.plotwidget.yAxis.range[1] + self.plotwidget.yAxis.range[0])/2                
+                if ev.isStart():
+                    print("vao day----------------------")
+                    self.x_range = self.plotwidget.xAxis.range[1]
+                center = Point(self.x_range, y_range)
+                self._resetTarget()
+                self.scaleBy(s=s, center=center)
+                self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
+                
+            else:
+                dif = np.array([dif.x()/4, dif.y()/4])
+                dif[0] *= 1   # Điều chỉnh hệ số giản, -1 là chỉ số gốc, đã modified để giống binance khi kéo trục x
+                s = ((mask * 0.02) + 1) ** dif  # tính toán hệ số zoom của trục x,y. <1 thì co vào, >1 thì giản ra, =1 không thay đổi
+                # tr = self.childGroup.transform()
+                # tr = fn.invertQTransform(tr)
+                x = s[0] if mouseEnabled[0] == 1 else None
+                y = s[1] if mouseEnabled[1] == 1 else None
+                y_range = (self.plotwidget.getAxis('right').range[1] + self.plotwidget.getAxis('right').range[0])/2
+                x_range = self.plotwidget.getAxis('bottom').range[1]
+                #center = Point(tr.map(ev.buttonDownPos(QtCore.Qt.MouseButton.LeftButton)))
+                center = Point(x_range, y_range)
+                self._resetTarget()
+                self.scaleBy(x=x, y=y, center=center)
+                self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
         '''Shift+LButton draw lines.'''
         if ev.modifiers() != Qt.KeyboardModifier.ShiftModifier:
             super().mouseDragEvent(ev, axis)
@@ -321,12 +339,8 @@ class PlotViewBox(ViewBox):
                 self._isMouseLeftDrag = False
             else:
                 self._isMouseLeftDrag = True
-            # if ev.isFinish() or self.drawing:
-            #     self.refresh_all_y_zoom()
-
             if not self.drawing:
                 return
-     
         ev.accept() 
 
     def mouseClickEvent(self, ev):
@@ -351,4 +365,3 @@ class PlotViewBox(ViewBox):
             elif ax.getAxis('bottom').grid:
                 pos.setY(pos.y() + self.height())
         return super().mapToView(pos)
-

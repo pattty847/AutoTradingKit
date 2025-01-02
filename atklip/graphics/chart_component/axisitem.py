@@ -404,10 +404,10 @@ class CustomDateAxisItem(AxisItem):
         # if not lv.sceneBoundingRect().contains(event.buttonDownScenePos()):
         #     event.ignore()
         #     return
-        tr = self.vb.targetRect()
-        x0 = tr.left()
-        x1 = tr.right()
-        dif = event.screenPos() - event.lastScreenPos()
+        # tr = self.vb.targetRect()
+        # x0 = tr.left()
+        # x1 = tr.right()
+        # dif = event.screenPos() - event.lastScreenPos()
         # print(326, x1-x0, dif)
             
         if self.orientation in ['left', 'right']:
