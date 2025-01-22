@@ -1,3 +1,19 @@
+API chứng khoán VN:
+
+https://github.com/vietfin/vietfin/tree/main
+
+https://hub.algotrade.vn/ch%E1%BB%A7-%C4%91%E1%BB%81/t%E1%BB%95ng-quan-giao-d%E1%BB%8Bch-thu%E1%BA%ADt-to%C3%A1n/
+
+SSI 
+
+- data - https://github.com/SSI-Securities-Corporation/python-fcdata/
+
+- trade - https://github.com/SSI-Securities-Corporation/python-fctrading
+
+DNSE
+
+BSC
+
 mt5:
 
 Name     : Pham Cong Che
@@ -6,8 +22,6 @@ Server   : MetaQuotes-Demo
 Login    : 10005200943
 Password : *mRuT8Eg
 Investor : EtF*V2Zc
-
-
 
 Thêm 1 số indicators PANDAS-TA
 

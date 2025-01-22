@@ -77,9 +77,6 @@ class ATRSuperTrend(GraphicsObject):
         self.highline = SuperTrendLine(self.chart,"green")
         self.highline.setParentItem(self)
         
-
-        
-     
         self.picture: QPicture = QPicture()
                 
         self.INDICATOR  = SuperTrendWithStopLoss(self.has["inputs"]["source"], self.model.__dict__)

@@ -334,7 +334,6 @@ class SuperTrendWithStopLoss(QObject):
             
             long_stoploss,short_stoploss,SUPERTd = self.calculate(df)
         
-            
             new_frame = pd.DataFrame({
                                 'index':[new_candle.index],
                                 "long_stoploss":[long_stoploss.iloc[-1]],

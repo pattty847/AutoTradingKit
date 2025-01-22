@@ -5,7 +5,9 @@ darkdetect
 colorthief
 scipy
 pillow
-numpy==2.0.2
+# numpy==2.0.2
+qasync
+numpy
 pyqtgraph
 pandas
 numba

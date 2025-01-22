@@ -13,7 +13,6 @@ win = pg.GraphicsLayoutWidget(show=True)
 win.setWindowTitle('pyqtgraph example: crosshair')
 label = pg.LabelItem(justify='right')
 win.addItem(label)
-label.setPos
 p1 = win.addPlot(row=1, col=0)
 # customize the averaged curve that can be activated from the context menu:
 p1.avgPen = pg.mkPen('#FFFFFF')

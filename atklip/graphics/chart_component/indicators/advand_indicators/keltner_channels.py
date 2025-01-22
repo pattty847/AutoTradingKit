@@ -229,6 +229,7 @@ class KeltnerChannels(GraphicsObject):
         self.lowline.addHistoricData(xData,lb)
         self.centerline.addHistoricData(xData,cb)
         self.highline.addHistoricData(xData,ub)
+        self.update()
         
     def update_Data(self,data):
         xData = data[0]
@@ -270,8 +271,10 @@ class KeltnerChannels(GraphicsObject):
 
     def boundingRect(self) -> QRectF:
         x_left,x_right = int(self.chart.xAxis.range[0]),int(self.chart.xAxis.range[1])
-        start_index = self.chart.jp_candle.candles[0].index
-        stop_index = self.chart.jp_candle.candles[-1].index
+        if not self.chart.jp_candle.candles:
+            return self.picture.boundingRect()
+        start_index = self.chart.jp_candle.start_index
+        stop_index = self.chart.jp_candle.stop_index
         if x_left > start_index:
             _start = x_left+2
         else:
@@ -294,6 +297,7 @@ class KeltnerChannels(GraphicsObject):
             h_low,h_high = self.chart.yAxis.range[0],self.chart.yAxis.range[1]
         rect = QRectF(_start,h_low,_width,h_high-h_low)
         return rect
+    
     
     def paint(self, p:QPainter, *args):
         self.picture.play(p)

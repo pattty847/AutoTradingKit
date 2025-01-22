@@ -310,7 +310,6 @@ class PlotViewBox(ViewBox):
                 # tr = fn.invertQTransform(tr)                
                 y_range = (self.plotwidget.yAxis.range[1] + self.plotwidget.yAxis.range[0])/2                
                 if ev.isStart():
-                    print("vao day----------------------")
                     self.x_range = self.plotwidget.xAxis.range[1]
                 center = Point(self.x_range, y_range)
                 self._resetTarget()

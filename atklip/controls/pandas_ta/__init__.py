@@ -35,7 +35,7 @@ from atklip.controls.pandas_ta.volume import __all__ as volume_all
 from atklip.controls.pandas_ta.ma import ma
 
 # Custom External Directory Commands. See help(import_dir)
-from atklip.controls.pandas_ta.custom import create_dir, import_dir
+# from atklip.controls.pandas_ta.custom import create_dir, import_dir
 
 # Enable "ta" DataFrame Extension
 # from atklip.controls.pandas_ta.core import AnalysisIndicators
@@ -48,8 +48,8 @@ __all__ = [
     "Imports",
     # "version",
     "ma",
-    "create_dir",
-    "import_dir",
+    # "create_dir",
+    # "import_dir",
     # "AnalysisIndicators",
 ]
 

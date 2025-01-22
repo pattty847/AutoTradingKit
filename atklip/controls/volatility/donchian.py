@@ -288,12 +288,6 @@ class DONCHIAN(QObject):
         
         self.df = pd.concat([_df,self.df],ignore_index=True)
         
-        
-        self.xdata = _df["index"].to_numpy() + self.xdata
-        self.lb = _df["lb"].to_numpy() + self.lb
-        self.cb = _df["cb"].to_numpy() + self.cb
-        self.ub = _df["ub"].to_numpy() + self.ub
-        
         self.xdata = np.concatenate((_df["index"].to_numpy(), self.xdata)) 
         self.lb = np.concatenate((_df["lb"].to_numpy(), self.lb))   
         self.cb = np.concatenate((_df["cb"].to_numpy(), self.cb))
@@ -310,7 +304,7 @@ class DONCHIAN(QObject):
         self.is_current_update = False
         new_candle:OHLCV = new_candles[-1]
         if (self.first_gen == True) and (self.is_genering == False):
-            df:pd.DataFrame = self._candles.get_df(self.upper_length*5)
+            df:pd.DataFrame = self._candles.get_df(self.upper_length+self.lower_length+5)
                     
             lb,cb,ub = self.calculate(df)
  
@@ -337,7 +331,7 @@ class DONCHIAN(QObject):
         new_candle:OHLCV = new_candles[-1]
         self.is_current_update = False
         if (self.first_gen == True) and (self.is_genering == False):
-            df:pd.DataFrame = self._candles.get_df(self.upper_length*5)
+            df:pd.DataFrame = self._candles.get_df(self.upper_length+self.lower_length+5)
                     
             lb,cb,ub = self.calculate(df)
 

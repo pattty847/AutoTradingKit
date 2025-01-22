@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from pandas import Series
 from atklip.controls.pandas_ta._typing import DictLike, Int
-from atklip.controls.pandas_ta._typing import DictLike
 from atklip.controls.overlap.dema import dema
 from atklip.controls.overlap.ema import ema
 from atklip.controls.overlap.fwma import fwma

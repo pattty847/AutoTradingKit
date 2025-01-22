@@ -291,7 +291,7 @@ class EMA_SUPER_TREND_BOT(GraphicsObject):
         if is_update:
             self.has["name"] = f"UTBOT_WITH_BB"
             self.sig_change_indicator_name.emit(self.has["name"])
-            self.INDICATOR.change_input(dict_ta_params=self.model.__dict__)
+            self.INDICATOR.change_input(self.has["inputs"]["source"])
     
     def update_styles(self, _input):
         _style = self.has["styles"][_input]

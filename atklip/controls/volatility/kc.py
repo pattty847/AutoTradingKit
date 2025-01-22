@@ -307,10 +307,6 @@ class KC(QObject):
         self.df = pd.concat([_df,self.df],ignore_index=True)
         
         
-        self.xdata = _df["index"].to_numpy() + self.xdata
-        self.lb = _df["lb"].to_numpy() + self.lb
-        self.cb = _df["cb"].to_numpy() + self.cb
-        self.ub = _df["ub"].to_numpy() + self.ub
         
         self.xdata = np.concatenate((_df["index"].to_numpy(), self.xdata)) 
         self.lb = np.concatenate((_df["lb"].to_numpy(), self.lb))   

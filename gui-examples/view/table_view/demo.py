@@ -3,7 +3,7 @@ import sys
 
 from PySide6.QtCore import QModelIndex, Qt
 from PySide6.QtGui import QPalette
-from PySide6.QtWidgets import QApplication, QStyleOptionViewItem, QTableWidget, QTableWidgetItem, QWidget, QHBoxLayout,QHeaderView
+from PySide6.QtWidgets import QApplication, QStyleOptionViewItem, QTableWidget, QTableWidgetItem, QWidget, QHBoxLayout
 
 from qfluentwidgets import TableWidget, isDarkTheme, setTheme, Theme, TableView, TableItemDelegate, setCustomStyleSheet
 
@@ -34,7 +34,7 @@ class Demo(QWidget):
         self.tableView = TableWidget(self)
 
         # NOTE: use custom item delegate
-        self.tableView.setItemDelegate(CustomTableItemDelegate(self.tableView))
+        # self.tableView.setItemDelegate(CustomTableItemDelegate(self.tableView))
 
         # select row on right-click
         # self.tableView.setSelectRightClickedRow(True)
@@ -86,8 +86,8 @@ class Demo(QWidget):
         self.tableView.verticalHeader().hide()
         self.tableView.setHorizontalHeaderLabels(['Title', 'Artist', 'Album', 'Year', 'Duration'])
         self.tableView.resizeColumnsToContents()
-        self.tableView.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.tableView.setSortingEnabled(True)
+        # self.tableView.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        # self.tableView.setSortingEnabled(True)
 
         self.setStyleSheet("Demo{background: rgb(255, 255, 255)} ")
         self.hBoxLayout.setContentsMargins(50, 30, 50, 30)
@@ -96,7 +96,6 @@ class Demo(QWidget):
 
 
 if __name__ == "__main__":
-    setTheme(Theme.DARK,True,True)
     app = QApplication(sys.argv)
     w = Demo()
     w.show()

@@ -1,0 +1,17 @@
+Metadata-Version: 2.1
+Name: vnii
+Version: 0.0.6
+Author: Vnstock HQ
+Author-email: support@vnstock.site
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.7
+Requires-Dist: requests
+Requires-Dist: cryptography
+Provides-Extra: dev
+Requires-Dist: pytest; extra == "dev"
+Requires-Dist: pytest-cov; extra == "dev"

@@ -1,0 +1,17 @@
+Metadata-Version: 2.1
+Name: aiconn
+Version: 0.0.4
+Summary: aiconn
+Home-page: https://github.com/vnstock-hq/aicon
+Author: Thinh Vu
+Author-email: vnstock.hq@gmail.com
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+
+# aicon
+ > connect 'em all
+
+A Python package for integrating generative AI models into Python applications

@@ -98,25 +98,19 @@ w3 = w.addLayout(row=1, col=0)
 label3 = w3.addLabel(text, row=0, col=0)
 v3 = w3.addViewBox(row=1, col=0, lockAspect=True)
 
-r3a = pg.RectROI([0,0], [10,10])
-
-x,y = r3a.x(),-r3a.boundingRect().height()
-r3_ = pg.RectROI([x,y], [10,10])
-r3_.setParentItem(r3a)
-
-r3_.mouseDragEvent = r3a.mouseDragEvent
-
+r3a = pg.ROI([0,0], [10,10])
 v3.addItem(r3a)
+## handles scaling horizontally around center
+r3a.addScaleHandle([1, 0.5], [0.5, 0.5])
+r3a.addScaleHandle([0, 0.5], [0.5, 0.5])
 
-right_handle_r3a = r3a.addScaleHandle([1, 0], [0, 0], lockAspect=True)
-r3a.addScaleHandle([0, 1], [0, 0], lockAspect=True)
-parent_handle = r3a.addTranslateHandle([0, 0], [0, 1])
+## handles scaling vertically from opposite edge
+r3a.addScaleHandle([0.5, 0], [0.5, 1])
+r3a.addScaleHandle([0.5, 1], [0.5, 0])
 
-right_handle_r3_ = r3_.addScaleHandle([1, 0], [0, 0], lockAspect=True,item=right_handle_r3a)
-r3_.addScaleHandle([0, 0], [0, 1], lockAspect=True)
-# r3_.addScaleHandle([0, 1], [0, 0], lockAspect=True,item=parent_handle)
-
-
+## handles scaling both vertically and horizontally
+r3a.addScaleHandle([1, 1], [0, 0])
+r3a.addScaleHandle([0, 0], [1, 1])
 
 r3b = pg.ROI([20,0], [10,10])
 v3.addItem(r3b)

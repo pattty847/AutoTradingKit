@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QWidget, QGraphicsDropShadowEffect,QLabel
 
 from atklip.appmanager.worker import ProcessWorker
 
-class LoadingProgress(QLabel):
+class _LoadingProgress(QLabel):
     def __init__(self,parent=None,size=75):
         super().__init__(parent)
         self._parent:QWidget = parent
@@ -71,6 +71,44 @@ class StreamingMode(QLabel):
             self.moviebusy.start()
             self.is_runing = True
             self.show()
+    # ADD DROPSHADOW
+    def set_shadow(self):
+        self.shadow = QGraphicsDropShadowEffect(self)
+        self.shadow.setBlurRadius(15)
+        self.shadow.setXOffset(0)
+        self.shadow.setYOffset(0)
+        self.shadow.setColor(QColor(0, 0, 0, 80))
+        self.setGraphicsEffect(self.shadow)
+
+
+from atklip.gui.qfluentwidgets.components.widgets.progress_ring import IndeterminateProgressRing
+
+
+class LoadingProgress(IndeterminateProgressRing):
+    def __init__(self,parent=None,size=75):
+        super().__init__(parent)
+        self._parent:QWidget = parent
+        self.setStyleSheet("QLabel {background-color: transparent;}")
+        # CUSTOM PROPERTIES
+        self.setFixedSize(size,size)
+        self.setContentsMargins(1,1,1,1)
+        #self.moviebusy.stop()
+        self.bg_color = 0x44475a
+        self.set_shadow()
+
+    def run_process(self,is_show):
+        if is_show:
+            _x = self._parent.width()
+            _y = self._parent.height()
+            x = (_x-self.width())/2
+            y = (_y-self.height())/2
+            self.move(QPoint(x, y))
+            self.start()
+            if not self.isVisible():
+                self.show()
+        else:
+            self.stop()
+            self.hide()
     # ADD DROPSHADOW
     def set_shadow(self):
         self.shadow = QGraphicsDropShadowEffect(self)

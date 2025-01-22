@@ -81,7 +81,6 @@ def relaxed():
     app.processEvents()
     
 def mouse(pos):
-    print(pos)
     global mousepos
     pos = view.mapSceneToView(pos)
     mousepos = np.array([pos.x(), pos.y()])

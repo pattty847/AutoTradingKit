@@ -683,6 +683,7 @@ class Chart(ViewPlotWidget):
                 data = [ohlcv.open,ohlcv.high,ohlcv.low,ohlcv.close]
                 self.sig_show_candle_infor.emit(data)
                 self.auto_xrange()
+                self.sig_show_process.emit(False)
             self.indicators.append(candle) 
 
         elif _group_indicator == "Advance Indicator":

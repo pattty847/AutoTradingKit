@@ -61,16 +61,16 @@ def change_svg(value:str):
     return new_path
 
 def svg_to_pixmap(self, svg_filename: str, width: int, height: int, color: QColor) -> QPixmap:
-        renderer = QSvgRenderer(svg_filename)
-        pixmap = QPixmap(width, height)
-        pixmap.fill(Qt.GlobalColor.transparent)
-        painter = QPainter(pixmap)
-        renderer.render(painter)  # this is the destination, and only its alpha is used!
-        painter.setCompositionMode(
-            painter.CompositionMode.CompositionMode_SourceIn)
-        painter.fillRect(pixmap.rect(), color)
-        painter.end()
-        return pixmap
+    renderer = QSvgRenderer(svg_filename)
+    pixmap = QPixmap(width, height)
+    pixmap.fill(Qt.GlobalColor.transparent)
+    painter = QPainter(pixmap)
+    renderer.render(painter)  # this is the destination, and only its alpha is used!
+    painter.setCompositionMode(
+        painter.CompositionMode.CompositionMode_SourceIn)
+    painter.fillRect(pixmap.rect(), color)
+    painter.end()
+    return pixmap
 
 
 def getIconColor(theme=Theme.AUTO, reverse=False):

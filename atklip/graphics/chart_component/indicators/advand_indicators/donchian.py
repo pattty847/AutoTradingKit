@@ -272,8 +272,10 @@ class BasicDonchianChannels(GraphicsObject):
 
     def boundingRect(self) -> QRectF:
         x_left,x_right = int(self.chart.xAxis.range[0]),int(self.chart.xAxis.range[1])
-        start_index = self.chart.jp_candle.candles[0].index
-        stop_index = self.chart.jp_candle.candles[-1].index
+        if not self.chart.jp_candle.candles:
+            return self.picture.boundingRect()
+        start_index = self.chart.jp_candle.start_index
+        stop_index = self.chart.jp_candle.stop_index
         if x_left > start_index:
             _start = x_left+2
         else:

@@ -106,7 +106,7 @@ adj = np.array([
     ])
     
 ## Define the symbol to use for each node (this is optional)
-symbols = ['o','o','o','o','t','-']
+symbols = ['o','o','o','o','t','+']
 
 ## Define the line style for each connection (this is optional)
 lines = np.array([

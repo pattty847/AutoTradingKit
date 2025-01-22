@@ -255,7 +255,7 @@ class OptimationLine(GraphicsObject):
         if self._is_change_source:
             self._bar_picutures.clear()
             self._is_change_source = False
-        [self.draw_volume(x_data,index) for index, value in enumerate(y_data)]
+        [self.draw_volume(x_data,index) for index in range(1,len(y_data))]
         self._to_update = True
         self.chart.sig_update_y_axis.emit()
         # self.prepareGeometryChange()
@@ -512,7 +512,7 @@ class SuperTrendLine(GraphicsObject):
         if self._is_change_source:
             self._bar_picutures.clear()
             self._is_change_source = False
-        [self.draw_volume(x_data,index) for index, value in enumerate(y_data)]
+        [self.draw_volume(x_data,index) for index in range(1,len(y_data))]
         self._to_update = True
         self.chart.sig_update_y_axis.emit()
         # self.prepareGeometryChange()
@@ -774,7 +774,7 @@ class TrendLine(GraphicsObject):
         if self._is_change_source:
             self._bar_picutures.clear()
             self._is_change_source = False
-        [self.draw_volume(x_data,index) for index, value in enumerate(uptrend)]
+        [self.draw_volume(x_data,index) for index in range(1,len(uptrend))]
         self._to_update = True
         self.chart.sig_update_y_axis.emit()
         # self.prepareGeometryChange()
