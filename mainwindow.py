@@ -1,4 +1,5 @@
 import sys
+import os
 from PySide6.QtCore import QCoreApplication,QSize
 from PySide6.QtGui import QCloseEvent,QIcon
 from PySide6.QtWidgets import QApplication
@@ -27,23 +28,32 @@ class MainWindow(WindowBase):
             event.ignore()
 
 def main():
-    # enable dpi scale
-    if cfg.get(cfg.dpiScale) != "Auto":
+    # Constants for application information
+    APP_VERSION = "1.0.0"
+    APP_NAME = "Auto Trading Kit"
+    APP_DISPLAY_NAME = f"ATK (v{APP_VERSION})"
+    ORGANIZATION_NAME = "ATK-Team"
+    ORGANIZATION_DOMAIN = "ATK.COM"
+    ICON_PATH = os.path.join("atklip", "appdata", "appico.ico")
+
+    # Enable DPI scale if not set to "Auto"
+    dpi_scale = cfg.get(cfg.dpiScale)
+    if dpi_scale != "Auto":
         os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "0"
-        os.environ["QT_SCALE_FACTOR"] = str(cfg.get(cfg.dpiScale))
+        os.environ["QT_SCALE_FACTOR"] = str(dpi_scale)
     
     setTheme(Theme.DARK, True, True)
     app = QApplication(sys.argv)
     app.setAttribute(Qt.AA_DontCreateNativeWidgetSiblings)
     app.setStyle("Fusion")
-    app.setApplicationVersion("1.0.0")
-    app.setApplicationName('Auto Trading Kit')
-    app.setApplicationDisplayName('ATK (v1.0.0)')
-    app.setOrganizationName('ATK-Team')
-    app.setOrganizationDomain('ATK.COM')
+    app.setApplicationVersion(APP_VERSION)
+    app.setApplicationName(APP_NAME)
+    app.setApplicationDisplayName(APP_DISPLAY_NAME)
+    app.setOrganizationName(ORGANIZATION_NAME)
+    app.setOrganizationDomain(ORGANIZATION_DOMAIN)
     w = MainWindow()
-    w.setWindowTitle('ATK - Auto Trading Kit')
-    icon = QIcon(get_real_path("atklip/appdata") + '/appico.ico')
+    w.setWindowTitle(f"ATK - {APP_NAME}")
+    icon = QIcon(get_real_path(ICON_PATH))
     w.setWindowIcon(icon)
     sys.exit(app.exec())
 

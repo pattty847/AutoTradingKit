@@ -132,7 +132,7 @@ def writeSvg(iconPath: str, indexes=None, **attributes):
     f.open(QFile.ReadOnly)
 
     dom = QDomDocument()
-    dom.setContent(f.readAll())
+    dom.setContent(f.readAll().toStdString())
 
     f.close()
 

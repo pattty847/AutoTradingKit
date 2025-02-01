@@ -1,0 +1,210 @@
+hãy convert indicator được viết bằng pinescript version 4 dưới đây sang python3, hãy sử dụng các thư viện numpy, pandas, pandas-ta hoặc ta-lib để thay thế các hàm liên quan đến technical analysis indicator calculator.
+hãy loại bỏ các phần code liên quan đến hiển thị đồ thị, data visualisation.
+đây là nội dung code cần convert:
+//@version=3
+
+study(title="T3MA Ribbon R4.2 by JustUncleL", shorttitle="T3RIBBON", overlay = true)
+
+//
+// Revision: R4
+// Revision Author: JustUncleL
+//
+// Description:
+//   This study draws a T3 Moving average Coloured Ribbon based on a Fast and Slow T3 MAs.
+//
+// References: 
+// - https://www.forexstrategiesresources.com/binary-options-trading-strategies/84-winner-binary-system/
+// =======
+// - T3 Average by HPotter v1.0 21/05/2014
+// This indicator plots the moving average described in the January, 1998 issue
+// of S&C, p.57, "Smoothing Techniques for More Accurate Signals", by Tim Tillson.
+// This indicator plots T3 moving average presented in Figure 4 in the article.
+// T3 indicator is a moving average which is calculated according to formula:
+//     T3(n) = GD(GD(GD(n))),
+// where GD - generalized DEMA (Double EMA) and calculating according to this:
+//     GD(n,v) = EMA(n) * (1+v)-EMA(EMA(n)) * v,
+// where "v" is volume factor, which determines how hot the moving average’s response
+// to linear trends will be. The author advises to use v=0.7.
+// When v = 0, GD = EMA, and when v = 1, GD = DEMA. In between, GD is a less aggressive
+// version of DEMA. By using a value for v less than1, trader cure the multiple DEMA
+// overshoot problem but at the cost of accepting some additional phase delay.
+// In filter theory terminology, T3 is a six-pole nonlinear Kalman filter. Kalman
+// filters are ones that use the error — in this case, (time series - EMA(n)) — 
+// to correct themselves. In the realm of technical analysis, these are called adaptive
+// moving averages; they track the time series more aggres-sively when it is making large
+// moves. Tim Tillson is a software project manager at Hewlett-Packard, with degrees in
+// mathematics and computer science. He has privately traded options and equities for 15 years.   
+// =======
+// Options:
+//
+// 1) Option to display coloured Candles around the Ribbon, the coulouring uses
+//    the Standard candle colours:
+//    - Lime    = candle closed above Ribbon.
+//    - Red     = candle closed below Ribbon.
+//    - Gray    = Candle Closed inside Ribbon.
+//    the Grab candles scheme:
+//    - Lime    = Bull candle closed above Ribbon.
+//    - Green   = Bear candle closed above Ribbon.
+//    - Red     = Bull candle closed below Ribbon.
+//    - DarkRed = Bear candle closed below Ribbon.
+//    - Aqua    = Bull candle closed inside Ribbon.
+//    - Blue    = Bear candle closed inside Ribbon.
+//
+// 2) Option to base the candles on a higher time frame (HFT), this performed by increasing
+//    the MA length to create equivalent lengths from the HFT. So no re-painting.
+//    NOTE: The script will time out if the MA lengths get too long after resizing.
+//
+// Modifications:
+// R1 - Original
+// R2 - Added optional Bar colouring
+//    - Added option to Anchor chart to a higher Time Frame (1440 max)
+// 
+// 10-Aug-2017 - R3:
+//    - Made updates for Pinescript version 3 Compliance.
+//    - Allow anchor option to be used for Days and Weeks.
+//    - Allow option to use standard 3-tone bar colouring, or 6-tone Grab candle Colouring
+//    - Added named colour constants, to include fully opaque colours, a work around
+//      for bar colouring transparency bug.
+//
+// 7-Jan-2018    R4:
+//    - Added Alert Buy/Sell exit options.
+//    - Added alarms for TradingView's Alarm Subsystem.
+//    - Added implied GPL Copyright notice.
+//    - Some coding efficiency and some variable name changes to make it easier 
+//      to read.
+//
+// 13-Jan-2018
+//    - Corrected Anchor calculation for non- intraday charts.
+//
+//
+// -----------------------------------------------------------------------------
+// Copyright 2014 HPotter
+// Copyright 2017,2018 JustUncleL
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// The GNU General Public License can be found here
+// <http://www.gnu.org/licenses/>.
+//
+// -----------------------------------------------------------------------------
+//
+
+// Use Alternate Anchor TF for MAs 
+anchor       = input(0,minval=0,maxval=1440,title="Use Alternate Anchor TimeFrame (0=none, max=1440mins)")
+LengthFast_  = input(8, minval=1,title="Fast T3MA length")
+VolFactorFast= input(0.7,minval=0.0,maxval=1.0,title="Fast T3 Volume Factor")
+LengthSlow__ = input(13, minval=2,title="Slow T3MA length")
+VolFactorSlow= input(0.6,minval=0.0,maxval=1.0,title="Slow T3 Volume Factor")
+ma_src       = input(close,title="T3MA Source")
+sBars        = input(false,title="Show Coloured Trend Bars")
+uGrabClr     = input(false,title="Use Grab Bar 6-tone Colours, instead of Standard 3-tone")
+ShowSwing    = input(false,title="Show Swing Alerts")
+dFilter      = input(false,title="Filter Alerts to Ribbon Colour")
+isHA         = input(true, "Use HA Candles for Calculations")
+//
+data   = isHA ? heikenashi(tickerid) : tickerid
+//
+open_   = security(data, period, open)
+high_   = security(data, period, high)
+low_    = security(data, period, low)
+close_  = security(data, period, close)
+ma_src_ = security(data, period, ma_src)
+
+//col = close_ > open_ ? green : maroon
+//plotbar(open_, high_, low_, close_, "Calc Bar", col)
+
+
+// Constants colours that include fully non-transparent option.
+green100 = #008000FF
+lime100  = #00FF00FF
+red100   = #FF0000FF
+blue100  = #0000FFFF
+aqua100  = #00FFFFFF
+darkred100 = #8B0000FF
+gray100 = #808080FF
+
+// Make sure we have minimum channel spread.
+LengthSlow_    = (LengthSlow__-LengthFast_)<1?LengthFast_+1:LengthSlow__
+
+// If this is 5min or less Time Frame select EMAs
+mult =  isintraday ? anchor==0 or interval<=0 or interval>=anchor or anchor>1440 ? 1 : round(anchor/interval)>1? round(anchor/interval) : 1 : 1
+mult := not isintraday ? anchor==0 or interval<=0 or interval>=anchor or anchor>52 ? mult : round(anchor/interval)>1? round(anchor/interval) : 1 : mult 
+//
+LengthFast = mult==1 ? LengthFast_ : (LengthFast_*mult)-1
+LengthSlow = mult==1 ? LengthSlow_ : (LengthSlow_*mult)-1
+
+
+// T3 Moving Average Calculation Function.
+T3MA(src, Length, VolFactor) =>
+    xe1 = ema(src, Length)
+    xe2 = ema(xe1, Length)
+    xe3 = ema(xe2, Length)
+    xe4 = ema(xe3, Length)
+    xe5 = ema(xe4, Length)
+    xe6 = ema(xe5, Length)
+    b = VolFactor
+    c1 = -b*b*b
+    c2 = 3*b*b+3*b*b*b
+    c3 = -6*b*b-3*b-3*b*b*b
+    c4 = 1+3*b+b*b*b+3*b*b
+    c1 * xe6 + c2 * xe5 + c3 * xe4 + c4 * xe3
+
+
+// Get the two T3MAs
+t3maFast = T3MA(ma_src_, LengthFast, VolFactorFast)
+t3maSlow = T3MA(ma_src_, LengthSlow, VolFactorSlow)    
+
+//Plot the Ribbon
+ma1=plot( t3maFast,color=rising(t3maFast,2)?green:red,linewidth=1,join=true,transp=20,title="Fast t3ma")
+ma2=plot( t3maSlow,color=rising(t3maSlow,2)?green:red,linewidth=1,join=true,transp=20,title="Slow t3ma")
+fcolor = t3maFast>t3maSlow?green:red
+fill(ma1,ma2,color=fcolor,transp=80,title="Ribbon Fill")
+
+// Colour bars according to the close position relative to the MA selected
+// Or Grab candle colour code bars according to the close position relative to the MA selected
+grabcol = close_>=open_? close_>t3maFast and close_>t3maSlow? lime100 : close_<t3maFast and close_<t3maSlow? red100 : aqua100 :
+          close_>t3maFast and close_>t3maSlow? green100 : close_<t3maFast and close_<t3maSlow? darkred100 : blue100
+stdcol  = close_>t3maFast and close_>t3maSlow ? lime100 : close_<t3maFast and close_<t3maSlow? red100 : gray100 
+
+barcolor(sBars?uGrabClr? grabcol: stdcol:na, title = "Bar Colours")
+
+// Generate Alert Arrows
+//
+buy = 0
+sell=0
+buyT = 0
+sellT =0
+// Generate signal by Grab Candle Colour
+buy  := grabcol==lime100? (nz(buy[1])+1) : grabcol==green100? (nz(buy[1])>0? nz(buy[1])+1: 0) : 0
+sell := grabcol==darkred100? (nz(sell[1])+1) : grabcol==red100? (nz(sell[1])>0? nz(sell[1])+1: 0) : 0
+
+// Trend Filter
+buyT := buy==0? 0 :  (dFilter and t3maFast<t3maSlow) ? 0 : nz(buyT[1])+1
+sellT := sell==0? 0 :  (dFilter and t3maFast>t3maSlow) ? 0 : nz(sellT[1])+1
+
+// Exit conditions
+exitbuy  = nz(buyT[1])>0 and buyT==0
+exitsell = nz(sellT[1])>0 and sellT==0
+
+//
+plotarrow(ShowSwing and buyT==1  ?1:na, title="BUY Swing Arrow", colorup=lime, maxheight=60, minheight=50, transp=20)
+plotarrow(ShowSwing and sellT==1 ?-1:na, title="SELL Swing Arrow", colordown=red, maxheight=60, minheight=50, transp=20)
+//
+plotshape(ShowSwing and exitbuy, title='BUY Exit', style=shape.xcross, location=location.belowbar, color=gray, text="Exit\nBuy", offset=0,transp=0)
+plotshape(ShowSwing and exitsell, title='Sell Exit', style=shape.xcross, location=location.abovebar, color=gray, text="Exit\nSell", offset=0,transp=0)
+
+// Generate Alarms
+alertcondition(buyT==1,title="BUY Alert",message="BUY")
+alertcondition(sellT==1,title="SELL Alert",message="SELL")
+alertcondition(exitbuy,title="BUY Exit Alert",message="ExitBuy")
+alertcondition(exitsell,title="SELL Exit Alert",message="ExitSell")
+
+//eof

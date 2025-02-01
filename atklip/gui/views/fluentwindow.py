@@ -128,7 +128,6 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
             icon_path = CI.crypto_url(current_symbol)
         else :
             icon_path = CI.BTC.path()
-
         routeKey = f'{current_symbol}-{curent_interval}-{self.tabBar.count()}'
         print(routeKey)
         self.addTab(routeKey, f"{current_symbol} {curent_interval}", icon_path,current_ex,current_symbol,curent_interval)
