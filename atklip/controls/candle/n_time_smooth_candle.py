@@ -1,31 +1,12 @@
-from functools import lru_cache
-import numpy as np
-import time
 import pandas as pd
-from typing import Any, Dict, List,Tuple
-from dataclasses import dataclass
-
-from atklip.controls import pandas_ta as ta
+from typing import Dict, List
 from atklip.controls.ma_type import  PD_MAType
-from atklip.controls.ohlcv import   OHLCV
-
-from .candle import JAPAN_CANDLE
-from .heikinashi import HEIKINASHI
 from atklip.app_api.workers import ApiThreadPool
-
-
-from functools import lru_cache
-import numpy as np
-import time
-import pandas as pd
-from typing import Any, Dict, List,Tuple
-from dataclasses import dataclass
-from PySide6.QtCore import Qt, Signal,QObject,QCoreApplication
-
+import threading
+from PySide6.QtCore import Signal,QObject
 from atklip.controls import pandas_ta as ta
 from atklip.controls.ma_type import  PD_MAType
 from atklip.controls.ohlcv import   OHLCV
-
 from .candle import JAPAN_CANDLE
 from .heikinashi import HEIKINASHI
 
@@ -397,24 +378,65 @@ class N_SMOOTH_CANDLE(QObject):
         if _new_time == _last_time:
             _is_update =  True
         
-        for i in range(self.n):
-            highs = ta.ma(self.mamode, df["high"],length=self.ma_leng).dropna().round(self._precision)
-            lows = ta.ma(self.mamode, df["low"],length=self.ma_leng).dropna().round(self._precision)
-            closes = ta.ma(self.mamode, df["close"],length=self.ma_leng).dropna().round(self._precision)
-            opens = ta.ma(self.mamode, df["open"],length=self.ma_leng).dropna().round(self._precision)
-            hl2s = ta.ma(self.mamode, df["hl2"],length=self.ma_leng).dropna().round(self._precision)
-            hlc3s = ta.ma(self.mamode, df["hlc3"],length=self.ma_leng).dropna().round(self._precision)
-            ohlc4s = ta.ma(self.mamode, df["ohlc4"],length=self.ma_leng).dropna().round(self._precision)
+        
+        for _ in range(self.n):
+            threads = []
+            results = {}
+
+            # Tạo thread cho mỗi phép tính MA
+            columns_to_calculate = [
+                ("high", "high"),
+                ("low", "low"),
+                ("close", "close"),
+                ("open", "open"),
+                ("hl2", "hl2"),
+                ("hlc3", "hlc3"),
+                ("ohlc4", "ohlc4")
+            ]
+
+            for col_key, col_name in columns_to_calculate:
+                
+                thread = threading.Thread(
+                    target=self.calculate_ma,
+                    args=(results, col_key, df)
+                )
+                threads.append(thread)
+                thread.start()
+
+            # Đợi tất cả các thread hoàn thành
+            for thread in threads:
+                thread.join()
+
+            # Tạo DataFrame mới từ kết quả
+            df = pd.DataFrame({
+                "open": results.get('open', pd.Series(dtype='float64')),
+                "high": results.get('high', pd.Series(dtype='float64')),
+                "low": results.get('low', pd.Series(dtype='float64')),
+                "close": results.get('close', pd.Series(dtype='float64')),
+                "hl2": results.get('hl2', pd.Series(dtype='float64')),
+                "hlc3": results.get('hlc3', pd.Series(dtype='float64')),
+                "ohlc4": results.get('ohlc4', pd.Series(dtype='float64'))
+            })
+        
+        
+        # for i in range(self.n):
+        #     highs = ta.ma(self.mamode, df["high"],length=self.ma_leng).dropna().round(self._precision)
+        #     lows = ta.ma(self.mamode, df["low"],length=self.ma_leng).dropna().round(self._precision)
+        #     closes = ta.ma(self.mamode, df["close"],length=self.ma_leng).dropna().round(self._precision)
+        #     opens = ta.ma(self.mamode, df["open"],length=self.ma_leng).dropna().round(self._precision)
+        #     hl2s = ta.ma(self.mamode, df["hl2"],length=self.ma_leng).dropna().round(self._precision)
+        #     hlc3s = ta.ma(self.mamode, df["hlc3"],length=self.ma_leng).dropna().round(self._precision)
+        #     ohlc4s = ta.ma(self.mamode, df["ohlc4"],length=self.ma_leng).dropna().round(self._precision)
             
             
-            df = pd.DataFrame({ "open": opens,
-                                    "high": highs,
-                                    "low": lows,
-                                    "close": closes,
-                                    "hl2": hl2s,
-                                    "hlc3": hlc3s,
-                                    "ohlc4": ohlc4s
-                                })
+        #     df = pd.DataFrame({ "open": opens,
+        #                             "high": highs,
+        #                             "low": lows,
+        #                             "close": closes,
+        #                             "hl2": hl2s,
+        #                             "hlc3": hlc3s,
+        #                             "ohlc4": ohlc4s
+        #                         })
         
         update_df = pd.DataFrame({ "open": [df["open"].iloc[-1]],
                                     "high": [df["high"].iloc[-1]],
@@ -445,28 +467,74 @@ class N_SMOOTH_CANDLE(QObject):
         self.ma_leng = ma_ma_leng
         self.n = n_smooth_ma_leng
     
+    def calculate_ma(self,result_dict, column, source_df):
+            """Helper function to calculate MA for a specific column"""
+            ma = ta.ma(self.mamode, source_df[column], length=self.ma_leng)
+            result_dict[column] = ma.dropna().round(self._precision)
+    
     def _gen_data(self):
         df = self._candles.get_df()
         volumes = df["volume"]
         times = df["time"]
         indexs = df["index"]
-        for i in range(self.n):
-            highs = ta.ma(self.mamode, df["high"],length=self.ma_leng).dropna().round(self._precision)
-            lows = ta.ma(self.mamode, df["low"],length=self.ma_leng).dropna().round(self._precision)
-            closes = ta.ma(self.mamode, df["close"],length=self.ma_leng).dropna().round(self._precision)
-            opens = ta.ma(self.mamode, df["open"],length=self.ma_leng).dropna().round(self._precision)
-            hl2s = ta.ma(self.mamode, df["hl2"],length=self.ma_leng).dropna().round(self._precision)
-            hlc3s = ta.ma(self.mamode, df["hlc3"],length=self.ma_leng).dropna().round(self._precision)
-            ohlc4s = ta.ma(self.mamode, df["ohlc4"],length=self.ma_leng).dropna().round(self._precision)
+
+        for _ in range(self.n):
+            threads = []
+            results = {}
+
+            # Tạo thread cho mỗi phép tính MA
+            columns_to_calculate = [
+                ("high", "high"),
+                ("low", "low"),
+                ("close", "close"),
+                ("open", "open"),
+                ("hl2", "hl2"),
+                ("hlc3", "hlc3"),
+                ("ohlc4", "ohlc4")
+            ]
+
+            for col_key, col_name in columns_to_calculate:
+                
+                thread = threading.Thread(
+                    target=self.calculate_ma,
+                    args=(results, col_key, df)
+                )
+                threads.append(thread)
+                thread.start()
+
+            # Đợi tất cả các thread hoàn thành
+            for thread in threads:
+                thread.join()
+
+            # Tạo DataFrame mới từ kết quả
+            df = pd.DataFrame({
+                "open": results.get('open', pd.Series(dtype='float64')),
+                "high": results.get('high', pd.Series(dtype='float64')),
+                "low": results.get('low', pd.Series(dtype='float64')),
+                "close": results.get('close', pd.Series(dtype='float64')),
+                "hl2": results.get('hl2', pd.Series(dtype='float64')),
+                "hlc3": results.get('hlc3', pd.Series(dtype='float64')),
+                "ohlc4": results.get('ohlc4', pd.Series(dtype='float64'))
+            })
+        
+        
+        # for i in range(self.n):
+        #     highs = ta.ma(self.mamode, df["high"],length=self.ma_leng).dropna().round(self._precision)
+        #     lows = ta.ma(self.mamode, df["low"],length=self.ma_leng).dropna().round(self._precision)
+        #     closes = ta.ma(self.mamode, df["close"],length=self.ma_leng).dropna().round(self._precision)
+        #     opens = ta.ma(self.mamode, df["open"],length=self.ma_leng).dropna().round(self._precision)
+        #     hl2s = ta.ma(self.mamode, df["hl2"],length=self.ma_leng).dropna().round(self._precision)
+        #     hlc3s = ta.ma(self.mamode, df["hlc3"],length=self.ma_leng).dropna().round(self._precision)
+        #     ohlc4s = ta.ma(self.mamode, df["ohlc4"],length=self.ma_leng).dropna().round(self._precision)
             
-            df = pd.DataFrame({ "open": opens,
-                                    "high": highs,
-                                    "low": lows,
-                                    "close": closes,
-                                    "hl2": hl2s,
-                                    "hlc3": hlc3s,
-                                    "ohlc4": ohlc4s
-                                })
+        #     df = pd.DataFrame({ "open": opens,
+        #                             "high": highs,
+        #                             "low": lows,
+        #                             "close": closes,
+        #                             "hl2": hl2s,
+        #                             "hlc3": hlc3s,
+        #                             "ohlc4": ohlc4s
+        #                         })
         _new_len_df = len(df)
 
         self.df = pd.DataFrame({ "open": df["open"],
@@ -480,8 +548,73 @@ class N_SMOOTH_CANDLE(QObject):
                                     "time": times.tail(_new_len_df),
                                     "index": indexs.tail(_new_len_df)
                                 })
-                 
+
+
     def _gen_historic_data(self):
+        _pre_len = len(self.df)
+        df = self._candles.get_df().iloc[:-1*_pre_len]
+        volumes = df["volume"]
+        times = df["time"]
+        indexs = df["index"]
+        for _ in range(self.n):
+            threads = []
+            results = {}
+
+            # Tạo thread cho mỗi phép tính MA
+            columns_to_calculate = [
+                ("high", "high"),
+                ("low", "low"),
+                ("close", "close"),
+                ("open", "open"),
+                ("hl2", "hl2"),
+                ("hlc3", "hlc3"),
+                ("ohlc4", "ohlc4")
+            ]
+
+            for col_key, col_name in columns_to_calculate:
+                
+                thread = threading.Thread(
+                    target=self.calculate_ma,
+                    args=(results, col_key, df)
+                )
+                threads.append(thread)
+                thread.start()
+
+            # Đợi tất cả các thread hoàn thành
+            for thread in threads:
+                thread.join()
+
+            # Tạo DataFrame mới từ kết quả
+            df = pd.DataFrame({
+                "open": results.get('open', pd.Series(dtype='float64')),
+                "high": results.get('high', pd.Series(dtype='float64')),
+                "low": results.get('low', pd.Series(dtype='float64')),
+                "close": results.get('close', pd.Series(dtype='float64')),
+                "hl2": results.get('hl2', pd.Series(dtype='float64')),
+                "hlc3": results.get('hlc3', pd.Series(dtype='float64')),
+                "ohlc4": results.get('ohlc4', pd.Series(dtype='float64'))
+            })
+        _new_len_df = len(df)
+
+        _df = pd.DataFrame({ "open": df["open"],
+                            "high": df["high"],
+                            "low": df["low"],
+                            "close": df["close"],
+                            "hl2": df["hl2"],
+                            "hlc3": df["hlc3"],
+                            "ohlc4": df["ohlc4"],
+                            "volume": volumes.tail(_new_len_df),
+                            "time": times.tail(_new_len_df),
+                            "index": indexs.tail(_new_len_df)
+                                })
+        
+        self.df = pd.concat([_df,self.df],ignore_index=True)
+        
+        
+        # return df
+    
+          
+    def old_gen_historic_data(self):
         _pre_len = len(self.df)
         df = self._candles.get_df().iloc[:-1*_pre_len]
         volumes = df["volume"]

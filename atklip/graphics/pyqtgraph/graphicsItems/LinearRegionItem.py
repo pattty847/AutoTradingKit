@@ -264,7 +264,7 @@ class LinearRegionItem(GraphicsObject):
         
         if self._boundingRectCache != br:
             self._boundingRectCache = br
-            
+            self.prepareGeometryChange()
         
         return br
         
@@ -291,15 +291,18 @@ class LinearRegionItem(GraphicsObject):
             elif self.swapMode == 'push':
                 self.lines[1-i].setValue(self.lines[i].value())
         
-        
+        self.prepareGeometryChange()
         self.sigRegionChanged.emit(self)
 
+    @QtCore.Slot()
     def _line0Moved(self):
         self.lineMoved(0)
 
+    @QtCore.Slot()
     def _line1Moved(self):
         self.lineMoved(1)
 
+    @QtCore.Slot()
     def lineMoveFinished(self):
         self.sigRegionChangeFinished.emit(self)
 
@@ -317,11 +320,11 @@ class LinearRegionItem(GraphicsObject):
         if not self.moving:
             return
             
-        self.lines[0].blockSignals(True)  # only want to update once
+        self.blockLineSignal = True  # only want to update once
         for i, l in enumerate(self.lines):
             l.setPos(self.cursorOffsets[i] + ev.pos())
-        self.lines[0].blockSignals(False)
-        
+        self.prepareGeometryChange()
+        self.blockLineSignal = False
         
         if ev.isFinish():
             self.moving = False

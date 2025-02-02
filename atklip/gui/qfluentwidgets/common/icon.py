@@ -6,12 +6,13 @@ from PySide6.QtXml import QDomDocument
 from PySide6.QtCore import QRectF, Qt, QFile, QObject, QRect
 from PySide6.QtGui import QIcon, QIconEngine, QColor, QPixmap, QImage, QPainter, QAction
 from PySide6.QtSvg import QSvgRenderer
-
+from functools import lru_cache
 from .config import isDarkTheme, Theme
 from .overload import singledispatchmethod
-
+from typing import Optional, Dict
 import xml.etree.ElementTree as ET
 
+@lru_cache(maxsize=128) 
 def get_real_path(path_icon = "atklip/gui/qfluentwidgets/_rc/images/crypto"):
     path_icon_build = f"_internal/{path_icon}"
     if os.path.exists(path_icon):
@@ -19,6 +20,7 @@ def get_real_path(path_icon = "atklip/gui/qfluentwidgets/_rc/images/crypto"):
     else:
         return path_icon_build
 
+@lru_cache(maxsize=128) 
 def check_icon_exist(_icon:str):
     icon_path = f"{get_real_path()}/{_icon.lower()}.svg"
     if os.path.exists(icon_path):
@@ -29,6 +31,7 @@ def check_icon_exist(_icon:str):
 
 "https://s3-symbol-logo.tradingview.com/provider/binance.svg"
 "https://s3-symbol-logo.tradingview.com/crypto/XTVCETH.svg"
+@lru_cache(maxsize=128) 
 def change_svg_color(value:str, new_color):
     _ion_path = "atklip/gui/qfluentwidgets/_rc/images/icons"
     path = f'{get_real_path(_ion_path)}/{value.lower()}_white.svg'
@@ -44,6 +47,7 @@ def change_svg_color(value:str, new_color):
     file.close()
     return new_path
 
+@lru_cache(maxsize=128) 
 def change_svg(value:str):
     path = f'atklip/gui/qfluentwidgets/_rc/images/icons/{value}'
     new_path = f'atklip/gui/qfluentwidgets/_rc/images/icons/{value.lower()}'
@@ -60,6 +64,7 @@ def change_svg(value:str):
     
     return new_path
 
+@lru_cache(maxsize=128) 
 def svg_to_pixmap(self, svg_filename: str, width: int, height: int, color: QColor) -> QPixmap:
     renderer = QSvgRenderer(svg_filename)
     pixmap = QPixmap(width, height)
@@ -72,7 +77,7 @@ def svg_to_pixmap(self, svg_filename: str, width: int, height: int, color: QColo
     painter.end()
     return pixmap
 
-
+@lru_cache(maxsize=128) 
 def getIconColor(theme=Theme.AUTO, reverse=False):
     """ get the color of icon based on theme """
     if not reverse:
@@ -86,7 +91,6 @@ def getIconColor(theme=Theme.AUTO, reverse=False):
         color = dc if theme == Theme.DARK else lc
 
     return color
-
 
 def drawSvgIcon(icon, painter, rect):
     """ draw svg icon
@@ -105,7 +109,65 @@ def drawSvgIcon(icon, painter, rect):
     renderer = QSvgRenderer(icon)
     renderer.render(painter, QRectF(rect))
 
+def paireSVG(
+    svg_content: str,
+    target_id: Optional[str] = "path1",
+    attributes: Optional[Dict[str, str]] = None,
+    verbose: bool = True
+) -> str:
+    """
+    Chỉnh sửa thuộc tính của phần tử SVG theo ID và trả về SVG đã sửa đổi.
 
+    Parameters
+    ----------
+    svg_content : str
+        Nội dung SVG đầu vào dạng chuỗi
+    target_id : str, optional
+        ID của phần tử path cần chỉnh sửa (mặc định: "path1")
+    attributes : dict, optional
+        Dictionary chứa các thuộc tính cần thay đổi (ví dụ: {'fill': '#FF0000'})
+    verbose : bool, optional
+        Hiển thị thông tin debug (mặc định: False)
+
+    Returns
+    -------
+    str
+        Nội dung SVG đã chỉnh sửa dạng chuỗi UTF-8
+    """
+    # Khởi tạo giá trị mặc định cho attributes
+    if attributes is None:
+        attributes = {'fill': '#FF0000'}  # Giá trị mặc định nếu không cung cấp
+
+    try:
+        # Parse SVG và xử lý namespace
+        namespaces = {'svg': 'http://www.w3.org/2000/svg'}
+        root = ET.fromstring(svg_content)
+        
+        # Tìm phần tử target theo ID
+        xpath_query = f'.//svg:path[@id="{target_id}"]'
+        target_element = root.find(xpath_query, namespaces)
+
+        if target_element is not None:
+            # Cập nhật attributes
+            for attr, value in attributes.items():
+                target_element.set(attr, value)
+                if verbose:
+                    print(f"Đã cập nhật {attr} thành {value} cho {target_id}")
+        else:
+            if verbose:
+                print(f"Không tìm thấy phần tử với ID '{target_id}'")
+
+        # Xuất kết quả với định dạng đúng
+        return ET.tostring(root, encoding='utf-8', method='xml').decode()
+
+    except ET.ParseError as e:
+        print(f"Lỗi parse SVG: {str(e)}")
+        return svg_content  # Trả về nguyên bản nếu có lỗi
+    except Exception as e:
+        print(f"Lỗi không xác định: {str(e)}")
+        return svg_content
+
+@lru_cache(maxsize=128) 
 def writeSvg(iconPath: str, indexes=None, **attributes):
     """ write svg with specified attributes
 
@@ -127,26 +189,10 @@ def writeSvg(iconPath: str, indexes=None, **attributes):
     """
     if not iconPath.lower().endswith('.svg'):
         return ""
-
     f = QFile(iconPath)
     f.open(QFile.ReadOnly)
-
-    dom = QDomDocument()
-    dom.setContent(f.readAll().toStdString())
-
-    f.close()
-
-    # change the color of each path
-    pathNodes = dom.elementsByTagName('path')
-    indexes = range(pathNodes.length()) if not indexes else indexes
-    for i in indexes:
-        element = pathNodes.at(i).toElement()
-
-        for k, v in attributes.items():
-            element.setAttribute(k, v)
-
-    return dom.toString()
-
+    return paireSVG(svg_content=f.readAll().toStdString(),attributes=attributes)
+    
 
 def drawIcon(icon, painter, rect, state=QIcon.Off, **attributes):
     """ draw icon
@@ -173,7 +219,7 @@ def drawIcon(icon, painter, rect, state=QIcon.Off, **attributes):
         icon = QIcon(icon)
         icon.paint(painter, QRectF(rect).toRect(), Qt.AlignCenter, state=state)
 
-
+@lru_cache(maxsize=128) 
 def get_exchange_icon(exchange):
         if exchange == "coinbaseexchange":
             return EchangeIcon.COINBASE_PRO.path(), "Coinbase Exchange", "SPOT & FUTURES"
@@ -225,14 +271,11 @@ def get_exchange_icon(exchange):
             return  EchangeIcon.BINGX.path(), "BingX", "SPOT & FUTURES"
         return None, "Binance"
 
-
+@lru_cache(maxsize=128) 
 def get_symbol_icon(symbol:str):
         _symbol = symbol.lower()
         re_symbol = re.findall(r'(.*?)/', _symbol)
         return re_symbol[0]
-
-
-
 
 class FluentIconEngine(QIconEngine):
     """ Fluent icon engine """
@@ -395,14 +438,13 @@ class FluentIconBase:
             rect = QRectF(rect).toRect()
             painter.drawPixmap(rect, icon.pixmap(QRectF(rect).toRect().size()))
 
+@lru_cache(maxsize=128) 
 def toQIcon(icon: Union[QIcon, FluentIconBase, str]) -> QIcon:
     """ convet `icon` to `QIcon` """
     if isinstance(icon, str):
         return QIcon(icon)
-
     if isinstance(icon, FluentIconBase):
         return icon.icon()
-
     return icon
 
 class CurrencyIcon(FluentIconBase, Enum):

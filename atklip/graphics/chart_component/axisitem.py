@@ -32,11 +32,10 @@ class Axis:
 class CustomDateAxisItem(AxisItem):
 
     def __init__(self, orientation,context=None, pen=None, textPen=None, axisPen=None, linkView=None, parent=None, maxTickLength=-5,
-                 showValues=True, text='', units='', unitPrefix='', vb=None, **kwargs) -> None:
+                 showValues=True, vb=None, **kwargs) -> None:
         self.tick_position_indexes: Optional[List] = None
         super().__init__(orientation, pen=pen, textPen=textPen, linkView=linkView, parent=parent,
-                         maxTickLength=maxTickLength, showValues=showValues, text=text, units=units,
-                         unitPrefix=unitPrefix, **kwargs)
+                         maxTickLength=maxTickLength, showValues=showValues, **kwargs)
         
         self.style['tickTextOffset'] = [1, 1]
         # self.style['textFillLimits'] = [ 
@@ -422,8 +421,19 @@ class CustomDateAxisItem(AxisItem):
 class CustomPriceAxisItem(AxisItem):
     update_basement_feature_signal = Signal()
     
-    def __init__(self, orientation, context=None,pen=None, textPen=None, tickPen=None, linkView=None, parent=None, maxTickLength=-5, showValues=True, text='', units='', unitPrefix='', vb=None, **args):
-        super().__init__(orientation, pen, textPen, tickPen, linkView, parent, maxTickLength, showValues, text, units, unitPrefix, **args)
+    def __init__(self, orientation, context=None,pen=None, textPen=None, tickPen=None, linkView=None, parent=None, maxTickLength=-5, showValues=True, vb=None, **args):
+        
+        super().__init__(orientation,
+            pen=pen,
+            textPen=textPen,
+            tickPen = tickPen,
+            linkView=linkView,
+            parent=parent,
+            maxTickLength=maxTickLength,
+            showValues=showValues,
+            **args,)
+        
+        # super().__init__(orientation, pen, textPen, tickPen, linkView, parent, maxTickLength, showValues, text, units, unitPrefix, **args)
         self.setCursor(QCursor(Qt.CursorShape.SizeVerCursor))
         self.setTickFont("Segoe UI")
         self.setContentsMargins(1,1,1,1)

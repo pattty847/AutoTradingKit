@@ -1,4 +1,5 @@
 # coding:utf-8
+from functools import lru_cache
 from math import floor
 from io import BytesIO
 from typing import Union
@@ -13,7 +14,7 @@ from scipy.ndimage.filters import gaussian_filter
 from .exception_handler import exceptionHandler
 
 
-
+@lru_cache(maxsize=128) 
 def gaussianBlur(image, blurRadius=18, brightFactor=1, blurPicSize= None):
     if isinstance(image, str) and not image.startswith(':'):
         image = Image.open(image)
@@ -49,7 +50,7 @@ def gaussianBlur(image, blurRadius=18, brightFactor=1, blurPicSize= None):
 
     return QPixmap.fromImage(QImage(image.data, w, h, c*w, format))
 
-
+@lru_cache(maxsize=128) 
 # https://github.com/python-pillow/Pillow/blob/main/src/PIL/ImageQt.py
 def fromqpixmap(im: Union[QImage, QPixmap]):
     """
@@ -135,6 +136,7 @@ class DominantColor:
 
         return newPalette
 
+    @lru_cache(maxsize=128) 
     @staticmethod
     def rgb2hsv(rgb):
         """ convert rgb to hsv """
@@ -154,6 +156,7 @@ class DominantColor:
         v = mx
         return (h, s, v)
 
+    @lru_cache(maxsize=128) 
     @staticmethod
     def hsv2rgb(h, s, v):
         """ convert hsv to rgb """

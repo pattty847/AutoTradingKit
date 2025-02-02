@@ -379,7 +379,7 @@ class CircleSurface(pg.GraphicsObject):
         self.mkPath()
         
     def mkPath(self):
-        
+        self.prepareGeometryChange()
         r = self.r
         d = self.d
         h2 = d/2.
@@ -530,7 +530,7 @@ class Ray(pg.GraphicsObject, ParamObj):
         p.drawPath(self.path)
         
     def mkPath(self):
-        
+        self.prepareGeometryChange()
         self.path = QtGui.QPainterPath()
         self.path.moveTo(self['start'])
         if self['end'] is not None:

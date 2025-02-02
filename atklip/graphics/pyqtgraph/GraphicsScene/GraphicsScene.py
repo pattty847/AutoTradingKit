@@ -109,6 +109,7 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         self.prepareForPaint()
         return QtWidgets.QGraphicsScene.render(self, *args)
 
+    @QtCore.Slot()
     def prepareForPaint(self):
         """Called before every render. This method will inform items that the scene is about to
         be rendered by emitting sigPrepareForPaint.
@@ -245,7 +246,7 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
     def mouseDoubleClickEvent(self, ev):
         super().mouseDoubleClickEvent(ev)
         if self.mouseGrabberItem() is None:  ## nobody claimed press; we are free to generate drag/click events
-            self.clickEvents.append(MouseClickEvent(ev, _double=True))
+            self.clickEvents.append(MouseClickEvent(ev, double=True))
         
     def sendHoverEvents(self, ev, exitOnly=False):
         ## if exitOnly, then just inform all previously hovered items that the mouse has left.
@@ -536,6 +537,7 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
         self.contextMenuItem = event.acceptedItem
         return self.contextMenu
 
+    @QtCore.Slot()
     def showExportDialog(self):
         if self.exportDialog is None:
             from . import exportDialog

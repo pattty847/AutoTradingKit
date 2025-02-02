@@ -1,4 +1,5 @@
 import datetime as dt
+from functools import lru_cache
 from math import floor
 import re
 from numba import jit,njit
@@ -6,10 +7,10 @@ from typing import List
 from typing import Union
 import numpy as np
 
-
+@lru_cache(maxsize=2000) 
 def round_(v):
     return np.floor(v+0.5)
-
+@lru_cache(maxsize=128) 
 def convert_precision(number):
     if isinstance(number,str):
         if "1e" in number:

@@ -11,7 +11,7 @@ from PySide6.QtWidgets import (QWidget, QFrame, QLabel, QHBoxLayout, QVBoxLayout
 
 from ...common.auto_wrap import TextWrap
 from ...common.style_sheet import FluentStyleSheet, themeColor
-from ...common.icon import FluentIconBase, Theme, isDarkTheme, writeSvg, drawSvgIcon, drawIcon
+from ...common.icon import FluentIconBase, Theme, isDarkTheme, drawSvgIcon, drawIcon
 from ...common.icon import FluentIcon as FIF
 from .button import TransparentToolButton
 

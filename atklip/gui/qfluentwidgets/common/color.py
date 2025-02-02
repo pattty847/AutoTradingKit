@@ -1,6 +1,7 @@
 # coding: utf-8
 import colorsys
 from enum import Enum
+from functools import lru_cache
 from typing import Union
 
 from PySide6.QtGui import QColor
@@ -65,6 +66,7 @@ class FluentThemeColor(Enum):
 
 
 # Color Utility
+@lru_cache(maxsize=128) 
 def hsv2rgb(h_or_color: Union[tuple, int], s: int = 0, v: int = 0, a: int = None) -> tuple:
     """Convert hsv color to rgb color.
 
@@ -85,7 +87,7 @@ def hsv2rgb(h_or_color: Union[tuple, int], s: int = 0, v: int = 0, a: int = None
     if a is not None: return r * 255, g * 255, b * 255, a
     return r * 255, g * 255, b * 255
 
-
+@lru_cache(maxsize=128) 
 def rgb2hsv(r_or_color: Union[tuple, int], g: int = 0, b: int = 0, a: int = None) -> tuple:
     """Convert rgb color to hsv color.
 
@@ -106,7 +108,7 @@ def rgb2hsv(r_or_color: Union[tuple, int], g: int = 0, b: int = 0, a: int = None
     if a is not None: return h * 100, s * 100, v * 100, a
     return h * 100, s * 100, v * 100
 
-
+@lru_cache(maxsize=128) 
 def hex2rgb(hex: str) -> tuple:
     """Convert hex color to rgb color.
 
@@ -119,7 +121,7 @@ def hex2rgb(hex: str) -> tuple:
     rgb = tuple(int(hex[i:i+2], 16) for i in (0,2,4))
     return rgb
 
-
+@lru_cache(maxsize=128) 
 def rgb2hex(r_or_color: Union[tuple, int], g: int = 0, b: int = 0, a: int = 0) -> str:
     """Convert rgb color to hex color.
 
@@ -135,7 +137,7 @@ def rgb2hex(r_or_color: Union[tuple, int], g: int = 0, b: int = 0, a: int = 0) -
     hex = '%02x%02x%02x' % (int(r), int(g), int(b))
     return hex
 
-
+@lru_cache(maxsize=128) 
 def hex2hsv(hex: str) -> tuple:
     """Convert hex color to hsv color.
 
@@ -145,7 +147,7 @@ def hex2hsv(hex: str) -> tuple:
 
     return rgb2hsv(hex2rgb(hex))
 
-
+@lru_cache(maxsize=128) 
 def hsv2hex(h_or_color: Union[tuple, int], s: int = 0, v: int = 0, a: int = 0) -> str:
     """Convert hsv color to hex color.
 

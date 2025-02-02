@@ -1,5 +1,6 @@
 # coding:utf-8
 from enum import Enum
+from functools import lru_cache
 from string import Template
 from typing import List, Union
 import weakref
@@ -269,7 +270,7 @@ class StyleSheetCompose(StyleSheetBase):
 
         self.sources.remove(source)
 
-
+@lru_cache(maxsize=128) 
 def getStyleSheetFromFile(file: Union[str, QFile]):
     """ get style sheet from qss file """
     f = QFile(file)
@@ -278,7 +279,7 @@ def getStyleSheetFromFile(file: Union[str, QFile]):
     f.close()
     return qss
 
-
+@lru_cache(maxsize=128) 
 def getStyleSheet(source: Union[str, StyleSheetBase], theme=Theme.AUTO):
     """ get style sheet
 
