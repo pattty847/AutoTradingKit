@@ -94,7 +94,7 @@ class FastWorker(QObject):
             pass
         # self.threadpool.start(self)
     
-    @Slot()
+    # @Slot()
     def run(self):
         try:
             self.fn(*self.args, **self.kwargs)
@@ -123,8 +123,7 @@ class SimpleWorker(QObject):
         except RuntimeError:
             pass
     
-
-    @Slot()
+    # @Slot()
     def run(self):
         try:
             self.fn(*self.args, **self.kwargs)
@@ -151,7 +150,7 @@ class CandleWorker(QObject):
         except RuntimeError:
             pass
 
-    @Slot()
+    # @Slot()
     def run(self):
         try:
             self.fn(*self.args, **self.kwargs)
@@ -196,7 +195,7 @@ class ThreadingAsyncWorker(QObject):
         except Exception as e:
             pass
         
-    @Slot()
+    # @Slot()
     def run(self):
         try:
             self.loop.run_until_complete(self.fn(*self.args, **self.kwargs))
@@ -208,7 +207,6 @@ class ThreadingAsyncWorker(QObject):
                 self.signals.finished.emit()
             except:
                 pass
-
 
 class RequestAsyncWorker(QObject):
     "Worker này dùng để update  data trong một cho graph object khi có data mới"
@@ -229,7 +227,7 @@ class RequestAsyncWorker(QObject):
     def stop_thread(self):
         self.signals.deleteLater()
         self.deleteLater()
-    @Slot()
+    # @Slot()
     def run(self):
         try:
             asyncio.run(self.fn(*self.args, **self.kwargs))

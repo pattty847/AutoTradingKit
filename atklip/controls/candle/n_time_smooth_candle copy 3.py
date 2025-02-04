@@ -86,6 +86,8 @@ class N_SMOOTH_CANDLE(QObject):
         self.worker = ApiThreadPool
         self.connect_signals()
 
+
+    
     def change_input(self,candles=None,dict_candle_params: dict={}):
 
         if candles != None:
@@ -553,10 +555,21 @@ class N_SMOOTH_CANDLE(QObject):
         self.map_time_ohlcv: Dict[int, OHLCV] = {}
         self.dict_n_frame.clear()
         self.dict_n_ma.clear()
+        
         df = self._candles.get_df()
         self.process = ReturnProcess(self.pro_gen_data,self.callback,df,self.n,self.mamode,self.ma_leng,self._precision)
         self.process.start()
+        
+        # self.df = self._gen_data(df=self._candles.get_df())
 
+        # self.is_genering = False
+        # if self.first_gen == False:
+        #     self.first_gen = True
+        #     self.is_genering = False
+        # self.start_index:int = self.df["index"].iloc[0]
+        # self.stop_index:int = self.df["index"].iloc[-1]
+        # self.is_current_update = True
+        # self.sig_reset_all.emit()
     
     def update_ma_ohlc(self,lastcandle:OHLCV):
         _new_time = lastcandle.time
@@ -566,72 +579,77 @@ class N_SMOOTH_CANDLE(QObject):
         times = df["time"]
         indexs = df["index"]
         _last_time = self.df["time"].iloc[-1]
-        _is_update = False
+        self._is_update = False
 
         if _new_time == _last_time:
-            _is_update =  True
+            self._is_update =  True
         
-        for i in range(self.n):
-            highs = ta.ma(self.mamode, df["high"],length=self.ma_leng).dropna().round(self._precision)
-            lows = ta.ma(self.mamode, df["low"],length=self.ma_leng).dropna().round(self._precision)
-            closes = ta.ma(self.mamode, df["close"],length=self.ma_leng).dropna().round(self._precision)
-            opens = ta.ma(self.mamode, df["open"],length=self.ma_leng).dropna().round(self._precision)
-            hl2s = ta.ma(self.mamode, df["hl2"],length=self.ma_leng).dropna().round(self._precision)
-            hlc3s = ta.ma(self.mamode, df["hlc3"],length=self.ma_leng).dropna().round(self._precision)
-            ohlc4s = ta.ma(self.mamode, df["ohlc4"],length=self.ma_leng).dropna().round(self._precision)
+        self.process = ReturnProcess(self.pro_gen_data,self.callback_update_ma_ohlc,df,self.n,self.mamode,self.ma_leng,self._precision)
+        self.process.start()
+        
+        # for i in range(self.n):
+        #     highs = ta.ma(self.mamode, df["high"],length=self.ma_leng).dropna().round(self._precision)
+        #     lows = ta.ma(self.mamode, df["low"],length=self.ma_leng).dropna().round(self._precision)
+        #     closes = ta.ma(self.mamode, df["close"],length=self.ma_leng).dropna().round(self._precision)
+        #     opens = ta.ma(self.mamode, df["open"],length=self.ma_leng).dropna().round(self._precision)
+        #     hl2s = ta.ma(self.mamode, df["hl2"],length=self.ma_leng).dropna().round(self._precision)
+        #     hlc3s = ta.ma(self.mamode, df["hlc3"],length=self.ma_leng).dropna().round(self._precision)
+        #     ohlc4s = ta.ma(self.mamode, df["ohlc4"],length=self.ma_leng).dropna().round(self._precision)
             
             
-            df = pd.DataFrame({ "open": opens,
-                                    "high": highs,
-                                    "low": lows,
-                                    "close": closes,
-                                    "hl2": hl2s,
-                                    "hlc3": hlc3s,
-                                    "ohlc4": ohlc4s
-                                })
+        #     df = pd.DataFrame({ "open": opens,
+        #                             "high": highs,
+        #                             "low": lows,
+        #                             "close": closes,
+        #                             "hl2": hl2s,
+        #                             "hlc3": hlc3s,
+        #                             "ohlc4": ohlc4s
+        #                         })
         
-        update_df = pd.DataFrame({ "open": [df["open"].iloc[-1]],
-                                    "high": [df["high"].iloc[-1]],
-                                    "low": [df["low"].iloc[-1]],
-                                    "close": [df["close"].iloc[-1]],
-                                    "hl2": [df["hl2"].iloc[-1]],
-                                    "hlc3": [df["hlc3"].iloc[-1]],
-                                    "ohlc4": [df["ohlc4"].iloc[-1]],
-                                    "volume": [volumes.iloc[-1]],
-                                    "time": [times.iloc[-1]],
-                                    "index": [indexs.iloc[-1]]
-                                })
-        
-        if _is_update:
+        # update_df = pd.DataFrame({ "open": [df["open"].iloc[-1]],
+        #                             "high": [df["high"].iloc[-1]],
+        #                             "low": [df["low"].iloc[-1]],
+        #                             "close": [df["close"].iloc[-1]],
+        #                             "hl2": [df["hl2"].iloc[-1]],
+        #                             "hlc3": [df["hlc3"].iloc[-1]],
+        #                             "ohlc4": [df["ohlc4"].iloc[-1]],
+        #                             "volume": [volumes.iloc[-1]],
+        #                             "time": [times.iloc[-1]],
+        #                             "index": [indexs.iloc[-1]]
+        #                         })
+    
+    def callback_update_ma_ohlc(self,future: Future):
+        update_df = future.result()
+        if self._is_update:
             self.df.iloc[-1] = update_df.iloc[-1]
         else:
             self.df = pd.concat([self.df,update_df],ignore_index=True)
         
-        return _is_update
-    
+        _open,_high,_low,_close,hl2,hlc3,ohlc4,_volume,_time,_index = self.df["open"].iloc[-1],self.df["high"].iloc[-1],self.df["low"].iloc[-1],self.df["close"].iloc[-1],\
+            self.df["hl2"].iloc[-1], self.df["hlc3"].iloc[-1], self.df["ohlc4"].iloc[-1],self.df["volume"].iloc[-1],\
+                self.df["time"].iloc[-1],self.df["index"].iloc[-1]
+        
+        ohlcv = OHLCV(_open,_high,_low,_close,hl2,hlc3,ohlc4,_volume,_time,_index)
+        if self._is_update:
+            self.start_index:int = self.df["index"].iloc[0]
+            self.stop_index:int = self.df["index"].iloc[-1]
+            self.is_current_update = True
+            self.sig_update_candle.emit([ohlcv])
+            return False
+        else:
+            self.start_index:int = self.df["index"].iloc[0]
+            self.stop_index:int = self.df["index"].iloc[-1]
+            self.is_current_update = True
+            self.sig_add_candle.emit([ohlcv])
+            return True
+        
     
     def update(self, _candle:List[OHLCV]):
         self.is_current_update = False
         if (self.first_gen == True) and (self.is_genering == False):
             new_candle = _candle[-1]
-            is_update = self.update_ma_ohlc(new_candle)
+            self.update_ma_ohlc(new_candle)
+            return
 
-            _open,_high,_low,_close,hl2,hlc3,ohlc4,_volume,_time,_index = self.df["open"].iloc[-1],self.df["high"].iloc[-1],self.df["low"].iloc[-1],self.df["close"].iloc[-1],\
-                self.df["hl2"].iloc[-1], self.df["hlc3"].iloc[-1], self.df["ohlc4"].iloc[-1],self.df["volume"].iloc[-1],\
-                    self.df["time"].iloc[-1],self.df["index"].iloc[-1]
-            
-            ohlcv = OHLCV(_open,_high,_low,_close,hl2,hlc3,ohlc4,_volume,_time,_index)
-            if is_update:
-                self.start_index:int = self.df["index"].iloc[0]
-                self.stop_index:int = self.df["index"].iloc[-1]
-                self.is_current_update = True
-                self.sig_update_candle.emit([ohlcv])
-                return False
-            else:
-                self.start_index:int = self.df["index"].iloc[0]
-                self.stop_index:int = self.df["index"].iloc[-1]
-                self.is_current_update = True
-                self.sig_add_candle.emit([ohlcv])
-                return True
         self.is_current_update = True
         return False

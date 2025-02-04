@@ -20,7 +20,8 @@ from .unique_object_id import ObjManager
 
 from atklip.app_utils import *
 
-from atklip.appmanager import FastStartThread,AppLogger,ThreadPoolExecutor_global,SimpleWorker
+from atklip.appmanager import FastStartThread,AppLogger,SimpleWorker,ReturnProcess
+
 from atklip.appmanager.object.unique_object_id import objmanager, UniqueManager
 
 from atklip.graphics.chart_component.indicator_panel import IndicatorPanel
@@ -212,8 +213,8 @@ class Chart(ViewPlotWidget):
             if isinstance(self.worker,FastStartThread):
                 self.worker.stop_thread()
         
-        worker = FastStartThread(self.on_replay_mode_reset_exchange,index,is_goto)
-        worker.start_thread()
+        self.worker = FastStartThread(self.on_replay_mode_reset_exchange,index,is_goto)
+        self.worker.start_thread()
     
     async def on_replay_mode_reset_exchange(self,index:int|float,is_goto: bool=False):
         data = [] 
@@ -676,7 +677,7 @@ class Chart(ViewPlotWidget):
             self.container_indicator_wg.add_indicator_panel(panel)
             #self.sig_add_item.emit(candle)
             self.add_item(candle)
-            candle.first_setup_candle()
+            # candle.first_setup_candle()
             if isinstance(candle.source,JAPAN_CANDLE): 
                 candle.source.sig_add_candle.emit(candle.source.candles[-2:])
                 ohlcv = candle.source.candles[-1]

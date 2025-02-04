@@ -4,7 +4,7 @@ from typing import List,Dict
 from atklip.controls.ohlcv import OHLCV
 from .candle import JAPAN_CANDLE
 from psygnal import Signal
-from atklip.app_api.workers import ApiThreadPool
+from atklip.appmanager import ThreadPoolExecutor_global as ApiThreadPool
 
 
 import numpy as np
@@ -38,7 +38,8 @@ class HEIKINASHI(QObject):
         self.exchange_id:str
         self.symbol:str
         self.interval:str
-        
+        self.start_index:int = 0
+        self.stop_index:int = 0
         self.first_gen = False
         self._source_name = "HEIKINASHI"
         self.precision = self.chart.get_precision()

@@ -29,7 +29,7 @@ class CandleStick(GraphicsObject):
         """Choose colors of candle"""
         GraphicsObject.__init__(self)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
-        self.setZValue(500)
+        # self.setZValue(500)
         
         self.chart:Chart|SubChart = chart
         self.precision = self.chart._precision
@@ -109,6 +109,12 @@ class CandleStick(GraphicsObject):
         self.source.sig_update_candle.connect(self.update_asyncworker,Qt.ConnectionType.AutoConnection)
         self.source.sig_add_candle.connect(self.update_asyncworker,Qt.ConnectionType.AutoConnection)
         self.source.sig_add_historic.connect(self.threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
+        
+        if not (isinstance(self.source,JAPAN_CANDLE) or isinstance(self.source,HEIKINASHI)):
+            self.source.fisrt_gen_data()
+        else:
+            self.first_setup_candle()
+        
     
     @property
     def is_all_updated(self):
@@ -196,40 +202,40 @@ class CandleStick(GraphicsObject):
 
     
     def get_source(self,_type:IndicatorType,mamode:PD_MAType=PD_MAType.EMA, period:int=3,n:int=3):
-
+        candle = None
         if _type.value == "japan" or _type.value == "Sub_Chart":
+            candle = self.chart.jp_candle
             return self.chart.jp_candle, None,None, n
 
         elif _type.value == "smooth_jp":
-            smooth_jp_candle = SMOOTH_CANDLE(self.precision,self.chart.jp_candle,mamode,period)
-            smooth_jp_candle._source_name = f"sm_jp {self.chart.symbol} {self.chart.interval}"
-            self.chart.update_sources(smooth_jp_candle)
-            smooth_jp_candle.fisrt_gen_data()
-            return smooth_jp_candle, mamode,period, n
+            candle = SMOOTH_CANDLE(self.precision,self.chart.jp_candle,mamode,period)
+            candle._source_name = f"sm_jp {self.chart.symbol} {self.chart.interval}"
+            self.chart.update_sources(candle)
+            return candle, mamode,period, n
         
         elif _type.value == "n_smooth_jp":
-            n_smooth_jp = N_SMOOTH_CANDLE(self.precision,self.chart.jp_candle,n,mamode,period)
-            n_smooth_jp._source_name = f"n_smooth_jp {self.chart.symbol} {self.chart.interval}"
-            self.chart.update_sources(n_smooth_jp)
-            n_smooth_jp.fisrt_gen_data()
-            return n_smooth_jp, mamode, period,n
+            candle = N_SMOOTH_CANDLE(self.precision,self.chart.jp_candle,n,mamode,period)
+            candle._source_name = f"n_smooth_jp {self.chart.symbol} {self.chart.interval}"
+            self.chart.update_sources(candle)
+            return candle, mamode, period,n
         
         elif _type.value == "heikin":
+            candle = self.chart.heikinashi
             return self.chart.heikinashi, None,None, n
             
         elif _type.value == "smooth_heikin":
-            smooth_heikin = SMOOTH_CANDLE(self.precision,self.chart.heikinashi,mamode,period)
-            smooth_heikin._source_name = f"sm_heikin {self.chart.symbol} {self.chart.interval}"
-            self.chart.update_sources(smooth_heikin)
-            smooth_heikin.fisrt_gen_data()
-            return smooth_heikin, mamode,period, n
+            candle = SMOOTH_CANDLE(self.precision,self.chart.heikinashi,mamode,period)
+            candle._source_name = f"sm_heikin {self.chart.symbol} {self.chart.interval}"
+            self.chart.update_sources(candle)
+            return candle, mamode,period, n
             
         elif _type.value == "n_smooth_heikin":
-            n_smooth_heikin = N_SMOOTH_CANDLE(self.precision,self.chart.heikinashi,n,mamode,period)
-            n_smooth_heikin._source_name = f"n_smooth_heikin {self.chart.symbol} {self.chart.interval}"
-            self.chart.update_sources(n_smooth_heikin)
-            n_smooth_heikin.fisrt_gen_data()
-            return n_smooth_heikin, mamode, period,n
+            candle = N_SMOOTH_CANDLE(self.precision,self.chart.heikinashi,n,mamode,period)
+            candle._source_name = f"n_smooth_heikin {self.chart.symbol} {self.chart.interval}"
+            self.chart.update_sources(candle)
+            return candle, mamode, period,n
+
+
             
     def get_inputs(self):
         if isinstance(self.source,JAPAN_CANDLE) or isinstance(self.source,HEIKINASHI):

@@ -28,8 +28,8 @@ class JAPAN_CANDLE(QObject):
         self.first_gen = False
         self.signal_delete.connect(self.deleteLater)
         self.df = pd.DataFrame([])
-        self.start_index:int = None
-        self.stop_index:int = None
+        self.start_index:int = 0
+        self.stop_index:int = 0
         self.is_current_update = False
         
     

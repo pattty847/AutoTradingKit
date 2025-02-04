@@ -15,7 +15,7 @@ from .titlebar import TitleBar
 from .mainlayout import MainWidget
 from atklip.app_utils import *
 from atklip.appmanager.setting import AppConfig
-from atklip.appmanager.worker.threadpool import ThreadPoolExecutor_global
+from atklip.appmanager.worker.threadpool import ThreadPoolExecutor_global,ProcessPoolExecutor_global
 if TYPE_CHECKING:
     from atklip.gui.qfluentwidgets.components import TabBar
 "thiếu quản lý tab khi xóa 1 tab bất kỳ, switch to tab khác và xóa tab muốn xóa, thử lưu router key vào 1 dict"
@@ -48,9 +48,10 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
         self.tabBar.tabCloseRequested.connect(self.onTabCloseRequested)
         qconfig.themeChangedFinished.connect(self._onThemeChangedFinished)
         FluentStyleSheet.FLUENT_WINDOW.apply(self)
-        
         self.TabInterface:MainWidget = None
-        
+        "đảm bảo ProcessPoolExecutor được kích hoạt trước"
+        ProcessPoolExecutor_global.submit(print,"start game")
+        ThreadPoolExecutor_global.submit(print,"start game")
         self.onTabAddRequested()
         self.initWindow()
     
@@ -65,7 +66,7 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
         if self.TabInterface:
             h =  self.TabInterface.splitter.height()
             self.TabInterface.splitter.setSizes([800,0])
-        
+        self.resize(1260, 800)
         self.show()    
 
     def load_pre_config(self):
@@ -111,7 +112,8 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
                 if isinstance(interface,MainWidget):
                     asyncio.run(interface.chartbox_splitter.chart.close())
         self.hide()
-        ThreadPoolExecutor_global.shutdown()
+        ThreadPoolExecutor_global.shutdown(wait=False)
+        ProcessPoolExecutor_global.shutdown(wait=False)
         self.deleteLater()
     
     def onTabChanged(self, index: int):

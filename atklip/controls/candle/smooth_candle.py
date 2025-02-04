@@ -6,7 +6,7 @@ from atklip.controls.ma_type import  PD_MAType
 from atklip.controls.ohlcv import   OHLCV
 from .candle import JAPAN_CANDLE
 from .heikinashi import HEIKINASHI
-from atklip.app_api.workers import ApiThreadPool
+from atklip.appmanager import ThreadPoolExecutor_global as ApiThreadPool
 
 import numpy as np
 import time
@@ -54,7 +54,8 @@ class SMOOTH_CANDLE(QObject):
             self.mamode:PD_MAType = mamode
             self.ma_leng:int= ma_leng
             self._precision = precision
-        
+        self.start_index:int = 0
+        self.stop_index:int = 0
         self._candles: JAPAN_CANDLE|HEIKINASHI =_candles
                 
         self.first_gen = False
@@ -66,8 +67,6 @@ class SMOOTH_CANDLE(QObject):
         self.df = pd.DataFrame([])
         self.connect_signals()
         
-        self.start_index:int = None
-        self.stop_index:int = None
 
     
     def change_input(self,candles=None,dict_candle_params: dict={}):
