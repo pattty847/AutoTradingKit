@@ -15,7 +15,7 @@ from .titlebar import TitleBar
 from .mainlayout import MainWidget
 from atklip.app_utils import *
 from atklip.appmanager.setting import AppConfig
-from atklip.appmanager.worker.threadpool import ThreadPoolExecutor_global,ProcessPoolExecutor_global
+from atklip.appmanager.worker.threadpool import ThreadPoolExecutor_global,Heavy_ProcessPoolExecutor_global
 if TYPE_CHECKING:
     from atklip.gui.qfluentwidgets.components import TabBar
 "thiếu quản lý tab khi xóa 1 tab bất kỳ, switch to tab khác và xóa tab muốn xóa, thử lưu router key vào 1 dict"
@@ -25,6 +25,9 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
     def __init__(self, parent=None):
         self._isMicaEnabled = False
         super().__init__(parent=parent)
+        "đảm bảo ProcessPoolExecutor được kích hoạt trước"
+        Heavy_ProcessPoolExecutor_global.submit(print,"start game")
+        # ThreadPoolExecutor_global.submit(print,"start game")
         self.setTitleBar(TitleBar(self))
         self.tabBar:TabBar = self.titleBar.tabBar
         
@@ -49,9 +52,7 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
         qconfig.themeChangedFinished.connect(self._onThemeChangedFinished)
         FluentStyleSheet.FLUENT_WINDOW.apply(self)
         self.TabInterface:MainWidget = None
-        "đảm bảo ProcessPoolExecutor được kích hoạt trước"
-        ProcessPoolExecutor_global.submit(print,"start game")
-        ThreadPoolExecutor_global.submit(print,"start game")
+        
         self.onTabAddRequested()
         self.initWindow()
     
@@ -112,8 +113,8 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
                 if isinstance(interface,MainWidget):
                     asyncio.run(interface.chartbox_splitter.chart.close())
         self.hide()
-        ThreadPoolExecutor_global.shutdown(wait=False)
-        ProcessPoolExecutor_global.shutdown(wait=False)
+        ThreadPoolExecutor_global.shutdown(wait=True)
+        Heavy_ProcessPoolExecutor_global.shutdown(wait=True)
         self.deleteLater()
     
     def onTabChanged(self, index: int):

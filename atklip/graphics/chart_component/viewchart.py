@@ -20,7 +20,7 @@ from .unique_object_id import ObjManager
 
 from atklip.app_utils import *
 
-from atklip.appmanager import FastStartThread,AppLogger,SimpleWorker,ReturnProcess
+from atklip.appmanager import FastStartThread,AppLogger,SimpleWorker,HeavyProcess
 
 from atklip.appmanager.object.unique_object_id import objmanager, UniqueManager
 
@@ -306,10 +306,7 @@ class Chart(ViewPlotWidget):
                 break
             if is_updated:
                 break
-                    
-        
-        
-        
+                     
     
     def replay_loop_start(self):
         _ohlcv = []
@@ -629,10 +626,10 @@ class Chart(ViewPlotWidget):
                         firt_run = True   
             else:
                 break
-            try:
-                await asyncio.sleep(self.time_delay)
-            except:
-                pass
+            # try:
+            #     await asyncio.sleep(self.time_delay)
+            # except:
+            #     pass
         try:
             AppLogger.writer("INFO",f"{__name__} - {symbol}-{interval} have closed")
             print(f"turn-off {symbol}-{interval}")

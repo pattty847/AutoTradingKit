@@ -26,7 +26,6 @@ from .sma import sma
 from .smma import smma
 from .ssf import ssf
 from .ssf3 import ssf3
-from .supertrend import supertrend, SuperTrend
 from .swma import swma
 from .t3 import t3
 from .tema import tema
@@ -35,6 +34,7 @@ from .vidya import vidya
 from .wcp import wcp
 from .wma import wma
 from .zlma import zlma
+from .supertrend import supertrend, SuperTrend
 
 
 # __all__ = [

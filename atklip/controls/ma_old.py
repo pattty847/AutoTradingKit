@@ -280,6 +280,7 @@ class MA(QObject):
         self.is_histocric_load = False
         _pre_len = len(self.df)
         df:pd.DataFrame = self._candles.get_df().iloc[:-1*_pre_len]
+        
         process = HeavyProcess(self._gen_data,self.call_back_add_historic,df,self.mamode,self.source,self.length,self.zl_mode)
         process.start()
 
@@ -289,45 +290,33 @@ class MA(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.length*10)
                         
-            process = HeavyProcess(self._gen_data,self.callback_add,df,self.mamode,self.source,self.length,self.zl_mode)
-            process.start()
+            data = ma(self.mamode,source=df[self.source],length=self.length,mamode=self.zl_mode).round(6)
             
-    def callback_add(self,future:Future):
-        index,data = future.result()
-        _data = data.iloc[-1]
-        _index = index.iloc[-1]
+            _data = data.iloc[-1]
             
-        new_frame = pd.DataFrame({
-                            'index':[_index],
-                            "data":[_data]
-                            })
-        self.df = pd.concat([self.df,new_frame],ignore_index=True)            
-        self.xdata = np.concatenate((self.xdata,np.array([_index])))
-        self.ydata = np.concatenate((self.ydata,np.array([_data])))
-        self.sig_add_candle.emit()
+            new_frame = pd.DataFrame({
+                                'index':[new_candle.index],
+                                "data":[_data]
+                                })
+            
+            self.df = pd.concat([self.df,new_frame],ignore_index=True)            
+            self.xdata = np.concatenate((self.xdata,np.array([new_candle.index])))
+            self.ydata = np.concatenate((self.ydata,np.array([_data])))
+            self.sig_add_candle.emit()
         self.is_current_update = True
             
-    def callback_update(self,future:Future):
-        index,data = future.result()
-        _data = data.iloc[-1]
-        _index = index.iloc[-1]
-
-        self.df.iloc[-1] = [_index,data.iloc[-1]]
-        self.xdata[-1] = _index
-        self.ydata[-1] = _data
-        self.sig_update_candle.emit()
-        self.is_current_update = True
-    
+        
     def update(self, new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]
         self.is_current_update = False
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.length*10)
-            process = HeavyProcess(self._gen_data,self.callback_update,df,self.mamode,self.source,self.length,self.zl_mode)
-            process.start()
-            
-            
-            
+            data = ma(self.mamode,source=df[self.source],length=self.length,mamode=self.zl_mode).round(6)
+            self.df.iloc[-1] = [new_candle.index,data.iloc[-1]]
+            self.xdata[-1] = new_candle.index
+            self.ydata[-1] = data.iloc[-1]
+            self.sig_update_candle.emit()
+        self.is_current_update = True
             
             
             

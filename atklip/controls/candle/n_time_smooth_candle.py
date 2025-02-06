@@ -6,13 +6,13 @@ import pandas as pd
 from typing import Any, Dict, List,Tuple
 from dataclasses import dataclass
 
-from atklip.controls import pandas_ta as ta
+from atklip.controls.ma import ma
 from atklip.controls.ma_type import  PD_MAType
 from atklip.controls.ohlcv import   OHLCV
 
 from .candle import JAPAN_CANDLE
 from .heikinashi import HEIKINASHI
-from atklip.appmanager import ThreadPoolExecutor_global as ApiThreadPool, ReturnProcess
+from atklip.appmanager import ThreadPoolExecutor_global as ApiThreadPool, HeavyProcess
 
 
 from functools import lru_cache
@@ -49,9 +49,9 @@ class N_SMOOTH_CANDLE(QObject):
     signal_delete = Signal()
     sig_update_source = Signal()
     
-    def __init__(self,precision,candles,n,mamode,ma_leng,dict_candle_params: dict={}) -> None:
+    def __init__(self,chart,candles,n,mamode,ma_leng,dict_candle_params: dict={}) -> None:
         super().__init__(parent=None)
-        
+        self.chart = chart
         if candles != None:
             self._candles : JAPAN_CANDLE|HEIKINASHI = candles
         if dict_candle_params!={}:
@@ -61,7 +61,7 @@ class N_SMOOTH_CANDLE(QObject):
             self.mamode:str = dict_candle_params["mamode"]
             self.ma_leng:int= dict_candle_params["ma_leng"]
             self.source:str = dict_candle_params["source"]
-            self._precision = dict_candle_params["precision"]
+            self.precision = dict_candle_params["precision"]
             self.canlde_id = dict_candle_params["canlde_id"]
             self.chart_id = dict_candle_params["chart_id"]
             self.name:str=dict_candle_params.get("name")
@@ -70,7 +70,7 @@ class N_SMOOTH_CANDLE(QObject):
             self.mamode:PD_MAType = mamode
             self.ma_leng:int= ma_leng
             self.n:int = n
-            self._precision = precision
+            self.precision = self.chart.get_precision()
         
         self.start_index:int = 0
         self.stop_index:int = 0
@@ -81,11 +81,21 @@ class N_SMOOTH_CANDLE(QObject):
         self.first_gen = False
         self.is_genering = True
         self._is_update = False
+        self.n_len:int=0
         self._source_name = f"N_SMOOTH_CANDLE_{self.ma_leng}_{self.n}"
         self.df = pd.DataFrame([])
         self.worker = ApiThreadPool
         self.connect_signals()
 
+    @property
+    def precision(self):
+        return self.chart.get_precision()
+    
+    @precision.setter
+    def precision(self,precision):
+        self._precision = precision
+
+    
     def change_input(self,candles=None,dict_candle_params: dict={}):
 
         if candles != None:
@@ -100,7 +110,7 @@ class N_SMOOTH_CANDLE(QObject):
             self.mamode:str = dict_candle_params["mamode"]
             self.ma_leng:int= dict_candle_params["ma_leng"]
             self.source:str = dict_candle_params["source"]
-            self._precision = dict_candle_params["precision"]
+            self.precision = dict_candle_params["precision"]
             self.canlde_id = dict_candle_params["canlde_id"]
             self.chart_id = dict_candle_params["chart_id"]
             self.name:str=dict_candle_params.get("name")
@@ -398,13 +408,13 @@ class N_SMOOTH_CANDLE(QObject):
         times = df["time"]
         indexs = df["index"]
         for i in range(self.n):
-            highs = ta.ma(self.mamode, df["high"],length=self.ma_leng).dropna().round(self._precision)
-            lows = ta.ma(self.mamode, df["low"],length=self.ma_leng).dropna().round(self._precision)
-            closes = ta.ma(self.mamode, df["close"],length=self.ma_leng).dropna().round(self._precision)
-            opens = ta.ma(self.mamode, df["open"],length=self.ma_leng).dropna().round(self._precision)
-            hl2s = ta.ma(self.mamode, df["hl2"],length=self.ma_leng).dropna().round(self._precision)
-            hlc3s = ta.ma(self.mamode, df["hlc3"],length=self.ma_leng).dropna().round(self._precision)
-            ohlc4s = ta.ma(self.mamode, df["ohlc4"],length=self.ma_leng).dropna().round(self._precision)
+            highs = ma(self.mamode, df["high"],length=self.ma_leng).dropna().round(self.precision)
+            lows = ma(self.mamode, df["low"],length=self.ma_leng).dropna().round(self.precision)
+            closes = ma(self.mamode, df["close"],length=self.ma_leng).dropna().round(self.precision)
+            opens = ma(self.mamode, df["open"],length=self.ma_leng).dropna().round(self.precision)
+            hl2s = ma(self.mamode, df["hl2"],length=self.ma_leng).dropna().round(self.precision)
+            hlc3s = ma(self.mamode, df["hlc3"],length=self.ma_leng).dropna().round(self.precision)
+            ohlc4s = ma(self.mamode, df["ohlc4"],length=self.ma_leng).dropna().round(self.precision)
             
             df = pd.DataFrame({ "open": opens,
                                     "high": highs,
@@ -428,33 +438,19 @@ class N_SMOOTH_CANDLE(QObject):
                                     "index": indexs.tail(_new_len_df)
                                 })
     
-    def callback(self, future: Future):
-        # print("zoooooooooooooooooooooooooooooooooooooo")
-        # print(future.result())
-        self.df = future.result()
-        self.is_genering = False
-        if self.first_gen == False:
-            self.first_gen = True
-            self.is_genering = False
-        self.start_index:int = self.df["index"].iloc[0]
-        self.stop_index:int = self.df["index"].iloc[-1]
-        self.is_current_update = True
-        self.sig_reset_all.emit()
-        return future.result()
-    
     @staticmethod
-    def pro_gen_data(df:pd.DataFrame,n,mamode,ma_leng,_precision):
+    def pro_gen_data(df:pd.DataFrame,n,mamode,ma_leng,precision):
         volumes = df["volume"]
         times = df["time"]
         indexs = df["index"]
         for i in range(n):
-            highs = ta.ma(mamode, df["high"],length=ma_leng).dropna().round(_precision)
-            lows = ta.ma(mamode, df["low"],length=ma_leng).dropna().round(_precision)
-            closes = ta.ma(mamode, df["close"],length=ma_leng).dropna().round(_precision)
-            opens = ta.ma(mamode, df["open"],length=ma_leng).dropna().round(_precision)
-            hl2s = ta.ma(mamode, df["hl2"],length=ma_leng).dropna().round(_precision)
-            hlc3s = ta.ma(mamode, df["hlc3"],length=ma_leng).dropna().round(_precision)
-            ohlc4s = ta.ma(mamode, df["ohlc4"],length=ma_leng).dropna().round(_precision)
+            highs = ma(mamode, df["high"],length=ma_leng).dropna().round(precision)
+            lows = ma(mamode, df["low"],length=ma_leng).dropna().round(precision)
+            closes = ma(mamode, df["close"],length=ma_leng).dropna().round(precision)
+            opens = ma(mamode, df["open"],length=ma_leng).dropna().round(precision)
+            hl2s = ma(mamode, df["hl2"],length=ma_leng).dropna().round(precision)
+            hlc3s = ma(mamode, df["hlc3"],length=ma_leng).dropna().round(precision)
+            ohlc4s = ma(mamode, df["ohlc4"],length=ma_leng).dropna().round(precision)
             
             df = pd.DataFrame({ "open": opens,
                                     "high": highs,
@@ -478,45 +474,6 @@ class N_SMOOTH_CANDLE(QObject):
                                     "index": indexs.tail(_new_len_df)
                                 })
                  
-    def _gen_historic_data(self):
-        _pre_len = len(self.df)
-        df = self._candles.get_df().iloc[:-1*_pre_len]
-        volumes = df["volume"]
-        times = df["time"]
-        indexs = df["index"]
-        for i in range(self.n):
-            highs = ta.ma(self.mamode, df["high"],length=self.ma_leng).dropna().round(self._precision)
-            lows = ta.ma(self.mamode, df["low"],length=self.ma_leng).dropna().round(self._precision)
-            closes = ta.ma(self.mamode, df["close"],length=self.ma_leng).dropna().round(self._precision)
-            opens = ta.ma(self.mamode, df["open"],length=self.ma_leng).dropna().round(self._precision)
-            hl2s = ta.ma(self.mamode, df["hl2"],length=self.ma_leng).dropna().round(self._precision)
-            hlc3s = ta.ma(self.mamode, df["hlc3"],length=self.ma_leng).dropna().round(self._precision)
-            ohlc4s = ta.ma(self.mamode, df["ohlc4"],length=self.ma_leng).dropna().round(self._precision)
-            
-            df = pd.DataFrame({ "open": opens,
-                                    "high": highs,
-                                    "low": lows,
-                                    "close": closes,
-                                    "hl2": hl2s,
-                                    "hlc3": hlc3s,
-                                    "ohlc4": ohlc4s
-                                })
-        
-        _new_len_df = len(df)
-
-        _df = pd.DataFrame({ "open": df["open"],
-                            "high": df["high"],
-                            "low": df["low"],
-                            "close": df["close"],
-                            "hl2": df["hl2"],
-                            "hlc3": df["hlc3"],
-                            "ohlc4": df["ohlc4"],
-                            "volume": volumes.tail(_new_len_df),
-                            "time": times.tail(_new_len_df),
-                            "index": indexs.tail(_new_len_df)
-                                })
-        
-        self.df = pd.concat([_df,self.df],ignore_index=True)
 
     def gen_candles(self):
         for i in range(len(self.df)):
@@ -532,18 +489,56 @@ class N_SMOOTH_CANDLE(QObject):
                     self.candles.append(ohlcv)
     
     
-    def gen_historic_data(self,n_len):
-        self.is_genering = True
-        self.is_histocric_load = False
-        self._gen_historic_data()
+    def _gen_historic_data(self, future: Future):
+        # print("zoooooooooooooooooooooooooooooooooooooo")
+        # print(future.result())
+        df = future.result()
+        volumes = df["volume"]
+        times = df["time"]
+        indexs = df["index"]
+        _new_len_df = len(df)
+        _df = pd.DataFrame({ "open": df["open"],
+                            "high": df["high"],
+                            "low": df["low"],
+                            "close": df["close"],
+                            "hl2": df["hl2"],
+                            "hlc3": df["hlc3"],
+                            "ohlc4": df["ohlc4"],
+                            "volume": volumes.tail(_new_len_df),
+                            "time": times.tail(_new_len_df),
+                            "index": indexs.tail(_new_len_df)
+                                })
+        self.df = pd.concat([_df,self.df],ignore_index=True)
+        
         self.is_genering = False
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
         self.is_histocric_load = True
-        self.sig_add_historic.emit(n_len)
+        self.sig_add_historic.emit(self.n_len)
         return self.candles
+        
+        
+    def gen_historic_data(self,n_len):
+        self.n_len = n_len
+        self.is_genering = True
+        self.is_histocric_load = False
+        _pre_len = len(self.df)
+        df = self._candles.get_df().iloc[:-1*_pre_len]
+        process = HeavyProcess(self.pro_gen_data,self._gen_historic_data,df,self.n,self.mamode,self.ma_leng,self.precision)
+        process.start()
     
+    def callback(self, future: Future):
+        self.df = future.result()
+        self.is_genering = False
+        if self.first_gen == False:
+            self.first_gen = True
+            self.is_genering = False
+        self.start_index:int = self.df["index"].iloc[0]
+        self.stop_index:int = self.df["index"].iloc[-1]
+        self.is_current_update = True
+        self.sig_reset_all.emit()
+        return future.result()
     
     def fisrt_gen_data(self):
         self.is_current_update = False
@@ -554,84 +549,46 @@ class N_SMOOTH_CANDLE(QObject):
         self.dict_n_frame.clear()
         self.dict_n_ma.clear()
         df = self._candles.get_df()
-        self.process = ReturnProcess(self.pro_gen_data,self.callback,df,self.n,self.mamode,self.ma_leng,self._precision)
-        self.process.start()
+        process = HeavyProcess(self.pro_gen_data,self.callback,df,self.n,self.mamode,self.ma_leng,self.precision)
+        process.start()
 
-    
-    def update_ma_ohlc(self,lastcandle:OHLCV):
-        _new_time = lastcandle.time
-        df = self._candles.get_df().tail(self.ma_leng*(self.n+1))
-        
-        volumes = df["volume"]
-        times = df["time"]
-        indexs = df["index"]
-        _last_time = self.df["time"].iloc[-1]
-        _is_update = False
-
-        if _new_time == _last_time:
-            _is_update =  True
-        
-        for i in range(self.n):
-            highs = ta.ma(self.mamode, df["high"],length=self.ma_leng).dropna().round(self._precision)
-            lows = ta.ma(self.mamode, df["low"],length=self.ma_leng).dropna().round(self._precision)
-            closes = ta.ma(self.mamode, df["close"],length=self.ma_leng).dropna().round(self._precision)
-            opens = ta.ma(self.mamode, df["open"],length=self.ma_leng).dropna().round(self._precision)
-            hl2s = ta.ma(self.mamode, df["hl2"],length=self.ma_leng).dropna().round(self._precision)
-            hlc3s = ta.ma(self.mamode, df["hlc3"],length=self.ma_leng).dropna().round(self._precision)
-            ohlc4s = ta.ma(self.mamode, df["ohlc4"],length=self.ma_leng).dropna().round(self._precision)
-            
-            
-            df = pd.DataFrame({ "open": opens,
-                                    "high": highs,
-                                    "low": lows,
-                                    "close": closes,
-                                    "hl2": hl2s,
-                                    "hlc3": hlc3s,
-                                    "ohlc4": ohlc4s
-                                })
-        
-        update_df = pd.DataFrame({ "open": [df["open"].iloc[-1]],
-                                    "high": [df["high"].iloc[-1]],
-                                    "low": [df["low"].iloc[-1]],
-                                    "close": [df["close"].iloc[-1]],
-                                    "hl2": [df["hl2"].iloc[-1]],
-                                    "hlc3": [df["hlc3"].iloc[-1]],
-                                    "ohlc4": [df["ohlc4"].iloc[-1]],
-                                    "volume": [volumes.iloc[-1]],
-                                    "time": [times.iloc[-1]],
-                                    "index": [indexs.iloc[-1]]
-                                })
-        
-        if _is_update:
+    def callback_update_ma_ohlc(self,future: Future):
+        update_df = future.result()
+        if self._is_update:
             self.df.iloc[-1] = update_df.iloc[-1]
         else:
             self.df = pd.concat([self.df,update_df],ignore_index=True)
         
-        return _is_update
-    
+        _open,_high,_low,_close,hl2,hlc3,ohlc4,_volume,_time,_index = self.df["open"].iloc[-1],self.df["high"].iloc[-1],self.df["low"].iloc[-1],self.df["close"].iloc[-1],\
+            self.df["hl2"].iloc[-1], self.df["hlc3"].iloc[-1], self.df["ohlc4"].iloc[-1],self.df["volume"].iloc[-1],\
+                self.df["time"].iloc[-1],self.df["index"].iloc[-1]
+        
+        ohlcv = OHLCV(_open,_high,_low,_close,hl2,hlc3,ohlc4,_volume,_time,_index)
+        if self._is_update:
+            self.start_index:int = self.df["index"].iloc[0]
+            self.stop_index:int = self.df["index"].iloc[-1]
+            self.is_current_update = True
+            self.sig_update_candle.emit([ohlcv])
+        else:
+            self.start_index:int = self.df["index"].iloc[0]
+            self.stop_index:int = self.df["index"].iloc[-1]
+            self.is_current_update = True
+            self.sig_add_candle.emit([ohlcv])
+        
     
     def update(self, _candle:List[OHLCV]):
         self.is_current_update = False
         if (self.first_gen == True) and (self.is_genering == False):
             new_candle = _candle[-1]
-            is_update = self.update_ma_ohlc(new_candle)
+            _new_time = new_candle.time
+            df = self._candles.get_df().tail(self.ma_leng*(self.n+1))
+            _last_time = self.df["time"].iloc[-1]
+            self._is_update = False
 
-            _open,_high,_low,_close,hl2,hlc3,ohlc4,_volume,_time,_index = self.df["open"].iloc[-1],self.df["high"].iloc[-1],self.df["low"].iloc[-1],self.df["close"].iloc[-1],\
-                self.df["hl2"].iloc[-1], self.df["hlc3"].iloc[-1], self.df["ohlc4"].iloc[-1],self.df["volume"].iloc[-1],\
-                    self.df["time"].iloc[-1],self.df["index"].iloc[-1]
+            if _new_time == _last_time:
+                self._is_update =  True
             
-            ohlcv = OHLCV(_open,_high,_low,_close,hl2,hlc3,ohlc4,_volume,_time,_index)
-            if is_update:
-                self.start_index:int = self.df["index"].iloc[0]
-                self.stop_index:int = self.df["index"].iloc[-1]
-                self.is_current_update = True
-                self.sig_update_candle.emit([ohlcv])
-                return False
-            else:
-                self.start_index:int = self.df["index"].iloc[0]
-                self.stop_index:int = self.df["index"].iloc[-1]
-                self.is_current_update = True
-                self.sig_add_candle.emit([ohlcv])
-                return True
-        self.is_current_update = True
-        return False
+            process = HeavyProcess(self.pro_gen_data,self.callback_update_ma_ohlc,df,self.n,self.mamode,self.ma_leng,self.precision)
+            process.start()
+        else:
+            self.is_current_update = True

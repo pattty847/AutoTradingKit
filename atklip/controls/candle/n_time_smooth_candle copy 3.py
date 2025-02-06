@@ -12,7 +12,7 @@ from atklip.controls.ohlcv import   OHLCV
 
 from .candle import JAPAN_CANDLE
 from .heikinashi import HEIKINASHI
-from atklip.appmanager import ThreadPoolExecutor_global as ApiThreadPool, ReturnProcess
+from atklip.appmanager import ThreadPoolExecutor_global as ApiThreadPool, HeavyProcess
 
 
 from functools import lru_cache
@@ -557,7 +557,7 @@ class N_SMOOTH_CANDLE(QObject):
         self.dict_n_ma.clear()
         
         df = self._candles.get_df()
-        self.process = ReturnProcess(self.pro_gen_data,self.callback,df,self.n,self.mamode,self.ma_leng,self._precision)
+        self.process = HeavyProcess(self.pro_gen_data,self.callback,df,self.n,self.mamode,self.ma_leng,self._precision)
         self.process.start()
         
         # self.df = self._gen_data(df=self._candles.get_df())
@@ -584,7 +584,7 @@ class N_SMOOTH_CANDLE(QObject):
         if _new_time == _last_time:
             self._is_update =  True
         
-        self.process = ReturnProcess(self.pro_gen_data,self.callback_update_ma_ohlc,df,self.n,self.mamode,self.ma_leng,self._precision)
+        self.process = HeavyProcess(self.pro_gen_data,self.callback_update_ma_ohlc,df,self.n,self.mamode,self.ma_leng,self._precision)
         self.process.start()
         
         # for i in range(self.n):

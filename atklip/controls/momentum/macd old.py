@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-from concurrent.futures import Future
 from pandas import concat, DataFrame, Series
-from atklip.appmanager.worker.return_worker import HeavyProcess
 from atklip.controls.pandas_ta.ma import ma
 from atklip.controls.pandas_ta._typing import DictLike, Int
 from atklip.controls.pandas_ta.maps import Imports
@@ -294,8 +292,7 @@ class MACD(QObject):
         self.worker.submit(self.fisrt_gen_data)
     
     
-    @staticmethod
-    def paire_data(INDICATOR:DataFrame):
+    def paire_data(self,INDICATOR:DataFrame):
         try:
             column_names = INDICATOR.columns.tolist()
             macd_name = ''
@@ -315,76 +312,71 @@ class MACD(QObject):
             return macd,histogram,signalma
         except:
             return Series([]),Series([]),Series([])
+    def calculate(self,df: pd.DataFrame):
+        INDICATOR = macd(close=df[self.source],
+                        fast=self.fast_period,
+                        slow=self.slow_period,
+                        signal = self.signal_period,
+                        mamode=self.mamode,
+                        offset=self.offset)
+        return self.paire_data(INDICATOR)
     
-
-    @staticmethod
-    def calculate(df: pd.DataFrame,source,fast_period,slow_period,signal_period,mamode,offset):
-        INDICATOR = macd(close=df[source],
-                        fast=fast_period,
-                        slow=slow_period,
-                        signal = signal_period,
-                        mamode=mamode,
-                        offset=offset)
-        column_names = INDICATOR.columns.tolist()
-        macd_name = ''
-        histogram_name = ''
-        signalma_name = ''
-        for name in column_names:
-            if name.__contains__("MACD"):
-                macd_name = name
-            elif name.__contains__("HISTOGRAM"):
-                histogram_name = name
-            elif name.__contains__("SIGNAL"):
-                signalma_name = name
-
-        macd_data = INDICATOR[macd_name].dropna().round(6)
-        histogram = INDICATOR[histogram_name].dropna().round(6)
-        signalma = INDICATOR[signalma_name].dropna().round(6)
+    def fisrt_gen_data(self):
+        self.is_current_update = False
+        self.is_genering = True
+        self.df = pd.DataFrame([])
         
-        _len = min([len(histogram),len(macd_data),len(signalma), int(len(df)-slow_period)])
+        df:pd.DataFrame = self._candles.get_df()
+        
+        macd_data,histogram,signalma = self.calculate(df)
+        _len = min([len(histogram),len(macd_data),len(signalma), int(len(df)-self.slow_period)])
+        
+        print([_len,len(histogram),len(macd_data),len(signalma), int(len(df)-self.slow_period),len(df),self.slow_period])
         
         _index = df["index"]
-        return pd.DataFrame({
+        self.df = pd.DataFrame({
                             'index':_index.tail(_len),
                             "macd":macd_data.tail(_len),
                             "histogram":histogram.tail(_len),
                             "signalma":signalma.tail(_len)
                             })
-    
-    
-    def call_back_first_gen(self, future: Future):
-        self.df = future.result()
+        
         self.xdata,self.macd_data,self.histogram,self.signalma = self.df["index"].to_numpy(),\
                                                                     self.df["macd"].to_numpy(),\
                                                                     self.df["histogram"].to_numpy(),\
                                                                     self.df["signalma"].to_numpy()
+        
         self.is_genering = False
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
         self.is_current_update = True
         self.sig_reset_all.emit()
-    
-    def fisrt_gen_data(self):
-        self.is_current_update = False
-        self.is_genering = True
-        self.df = pd.DataFrame([])
-        df:pd.DataFrame = self._candles.get_df()
-        process = HeavyProcess(self.calculate,
-                               self.call_back_first_gen,
-                               df,
-                               self.source,
-                               self.fast_period,
-                               self.slow_period,
-                               self.signal_period,
-                               self.mamode,
-                               self.offset)
-        process.start()
         
     
-    def call_back_gen_historic_data(self, future: Future):
-        _df = future.result()
-        _len = len(_df)
+    def add_historic(self,n:int):
+        self.is_genering = True
+        self.is_histocric_load = False
+        _pre_len = len(self.df)
+        candle_df = self._candles.get_df()
+        df:pd.DataFrame = candle_df.head(-_pre_len)
+        
+        macd_data,histogram,signalma = self.calculate(df)
+
+        _len = min([len(histogram),len(macd_data),len(signalma), int(len(df)-self.slow_period)])
+        
+        print([_len,len(histogram),len(macd_data),len(signalma), int(len(df)-self.slow_period),len(df),self.slow_period])
+        
+        _index = df["index"]
+        
+        _df = pd.DataFrame({
+                            'index':_index.tail(_len),
+                            "macd":macd_data.tail(_len),
+                            "histogram":histogram.tail(_len),
+                            "signalma":signalma.tail(_len)
+                            })
+        
+        
         self.df = pd.concat([_df,self.df],ignore_index=True)        
         
         self.xdata = np.concatenate((_df["index"].to_numpy(), self.xdata)) 
@@ -399,33 +391,6 @@ class MACD(QObject):
         self.is_histocric_load = True
         self.sig_add_historic.emit(_len)
     
-    def add_historic(self,n:int):
-        self.is_genering = True
-        self.is_histocric_load = False
-        _pre_len = len(self.df)
-        candle_df = self._candles.get_df()
-        df:pd.DataFrame = candle_df.head(-_pre_len)
-        
-        process = HeavyProcess(self.calculate,
-                               self.call_back_gen_historic_data,
-                               df,
-                               self.source,
-                               self.fast_period,
-                               self.slow_period,
-                               self.signal_period,
-                               self.mamode,
-                               self.offset)
-        process.start()
-        
-    
-    def update_calculate(self,df: pd.DataFrame):
-        INDICATOR = macd(close=df[self.source],
-                        fast=self.fast_period,
-                        slow=self.slow_period,
-                        signal = self.signal_period,
-                        mamode=self.mamode,
-                        offset=self.offset)
-        return self.paire_data(INDICATOR)
     
     def add(self,new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]
@@ -433,7 +398,7 @@ class MACD(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.slow_period*5)
                     
-            macd_data,histogram,signalma = self.update_calculate(df)
+            macd_data,histogram,signalma = self.calculate(df)
             
             new_frame = pd.DataFrame({
                                     'index':[new_candle.index],
@@ -458,7 +423,7 @@ class MACD(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.slow_period*5)
                     
-            macd_data,histogram,signalma = self.update_calculate(df)
+            macd_data,histogram,signalma = self.calculate(df)
                     
             self.df.iloc[-1] = [new_candle.index,macd_data.iloc[-1],histogram.iloc[-1],signalma.iloc[-1]]
                     

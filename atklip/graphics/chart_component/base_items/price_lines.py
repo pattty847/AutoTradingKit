@@ -44,7 +44,8 @@ class PriceLine(InfiniteLine):
             lastcandle:OHLCV=lastcandle[-1]
         _open = lastcandle.open
         _close = lastcandle.close
-        colorline = "green" if _close >= _open else "red"
+                
+        colorline = '#089981' if _close >= _open else '#f23645'
         self.pen.setColor(mkColor(colorline))
         self.setPos(_close)
         self.prepareGeometryChange()
@@ -54,7 +55,7 @@ class PriceLine(InfiniteLine):
         
         colorline = "white"
         if isinstance(lastcandle, list):
-            colorline = "green" if lastcandle[-1].close >= lastcandle[-1].open else "red"
+            colorline = '#089981' if lastcandle[-1].close >= lastcandle[-1].open else '#f23645'
             self.pen.setColor(mkColor(colorline))
             self.setPos(lastcandle[-1].close)
 

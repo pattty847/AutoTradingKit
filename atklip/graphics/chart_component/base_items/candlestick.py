@@ -208,13 +208,13 @@ class CandleStick(GraphicsObject):
             return self.chart.jp_candle, None,None, n
 
         elif _type.value == "smooth_jp":
-            candle = SMOOTH_CANDLE(self.precision,self.chart.jp_candle,mamode,period)
+            candle = SMOOTH_CANDLE(self.chart,self.chart.jp_candle,mamode,period)
             candle._source_name = f"sm_jp {self.chart.symbol} {self.chart.interval}"
             self.chart.update_sources(candle)
             return candle, mamode,period, n
         
         elif _type.value == "n_smooth_jp":
-            candle = N_SMOOTH_CANDLE(self.precision,self.chart.jp_candle,n,mamode,period)
+            candle = N_SMOOTH_CANDLE(self.chart,self.chart.jp_candle,n,mamode,period)
             candle._source_name = f"n_smooth_jp {self.chart.symbol} {self.chart.interval}"
             self.chart.update_sources(candle)
             return candle, mamode, period,n
@@ -224,13 +224,13 @@ class CandleStick(GraphicsObject):
             return self.chart.heikinashi, None,None, n
             
         elif _type.value == "smooth_heikin":
-            candle = SMOOTH_CANDLE(self.precision,self.chart.heikinashi,mamode,period)
+            candle = SMOOTH_CANDLE(self.chart,self.chart.heikinashi,mamode,period)
             candle._source_name = f"sm_heikin {self.chart.symbol} {self.chart.interval}"
             self.chart.update_sources(candle)
             return candle, mamode,period, n
             
         elif _type.value == "n_smooth_heikin":
-            candle = N_SMOOTH_CANDLE(self.precision,self.chart.heikinashi,n,mamode,period)
+            candle = N_SMOOTH_CANDLE(self.chart,self.chart.heikinashi,n,mamode,period)
             candle._source_name = f"n_smooth_heikin {self.chart.symbol} {self.chart.interval}"
             self.chart.update_sources(candle)
             return candle, mamode, period,n
@@ -290,7 +290,7 @@ class CandleStick(GraphicsObject):
             last_candle = self.source.last_data()
             last_close_price_ = last_candle.close
             last_open_price_ = last_candle.open
-            colorline = "green" if last_close_price_ >= last_open_price_ else "red"
+            colorline = '#089981' if last_close_price_ >= last_open_price_ else '#f23645'
             last_color,last_close_price = colorline,last_close_price_
             return last_close_price,last_color
         else:
@@ -361,13 +361,11 @@ class CandleStick(GraphicsObject):
             p.setPen(self.outline_pen)
             p.setBrush(self.has["styles"]["brush_lowcolor"])
             # brush = self.has["styles"]["brush_lowcolor"]
-            
         else:
             self.outline_pen = mkPen(color=self.has["styles"]["pen_highcolor"],width=0.7) 
             p.setPen(self.outline_pen)
             p.setBrush(self.has["styles"]["brush_highcolor"])
             # brush = self.has["styles"]["brush_highcolor"]
-        
         if close == _open:
             if _max != _min:
                 line = QLineF(QPointF(t, _min), QPointF(t, _max))

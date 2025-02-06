@@ -43,51 +43,6 @@ class FastStartThread(QObject):
         finally:
             self.deleteLater()
 
-# class FastStartThread(QObject):
-#     "Worker này dùng để emit candle data"
-#     finished = Signal()
-#     error = Signal(str)
-#     update_signal = Signal() # dùng để emit toàn bộ candle data khi có nến mới
-#     lastcandle = Signal(list) # dùng để emit 2 nến cuối cùng
-#     def __init__(self,exchange:None, fn, *args, **kwargs):
-#         super(FastStartThread, self).__init__(None)
-#         self.exchange = exchange
-#         self.fn = fn
-#         self.args = args
-#         self.kwargs = kwargs
-#         self._thread = Thread(target=self.run, daemon=True, args=())
-#         self.loop = asyncio.new_event_loop()
-#         asyncio.set_event_loop(self.loop)
-#         self.finished.connect(self.stop_thread)
-#         self.destroyed.connect(self.stop_thread)
-#         self.parent().destroyed.connect(self.stop_thread)
-    
-#     def start_thread(self):
-#         self._thread.start()
-    
-#     def stop_thread(self):
-#         if self.loop != None:
-#             try:
-#                 asyncio.set_event_loop(None)
-#                 self.loop.call_soon_threadsafe(self.loop.stop)
-#             except Exception as e:
-#                 traceback.print_exception(e)
-#         self.deleteLater()
-    
-#     def create_task(self, coro: Coroutine) -> None:
-#         self.loop.call_soon_threadsafe(self.loop.create_task, coro)
-
-#     def run(self):
-#         try:
-#             self.create_task(self.fn(*self.args, **self.kwargs))
-#             self.loop.run_forever()
-#         except Exception as e:
-#             traceback.print_exception(e)
-#             self.error.emit(str(e))
-#         finally:
-#             pass
-
-
 class ThreadingAsyncWorker(QObject):
     finished = Signal()
     error = Signal(str)

@@ -115,10 +115,11 @@ import numpy as np
 import pandas as pd
 from typing import List
 from atklip.controls.ohlcv import   OHLCV
-from atklip.controls.candle import JAPAN_CANDLE,HEIKINASHI,SMOOTH_CANDLE,N_SMOOTH_CANDLE
 from atklip.appmanager import ThreadPoolExecutor_global as ApiThreadPool
-
 from PySide6.QtCore import Signal,QObject
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from atklip.controls.candle import JAPAN_CANDLE,HEIKINASHI,SMOOTH_CANDLE,N_SMOOTH_CANDLE
 
 class SuperTrend(QObject):
     sig_update_candle = Signal()
@@ -201,7 +202,7 @@ class SuperTrend(QObject):
         self._candles.signal_delete.connect(self.signal_delete)
     
     
-    def change_source(self,_candles:JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE):
+    def change_source(self,_candles):
         self.disconnect_signals()
         self._candles =_candles
         self.connect_signals()

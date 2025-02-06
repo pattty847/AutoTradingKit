@@ -11,6 +11,5 @@ QThreadPool_global.setMaxThreadCount(num_threads)
 global ThreadPoolExecutor_global
 ThreadPoolExecutor_global = ThreadPoolExecutor(max_workers=num_threads*20)
 
-global ProcessPoolExecutor_global
-ProcessPoolExecutor_global = ProcessPoolExecutor(max_workers=num_threads,max_tasks_per_child=num_threads*5)
-
+global Heavy_ProcessPoolExecutor_global
+Heavy_ProcessPoolExecutor_global = ProcessPoolExecutor(max_workers=int(num_threads/2)) #,max_tasks_per_child=num_threads*10

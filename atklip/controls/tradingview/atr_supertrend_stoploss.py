@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 
+from atklip.appmanager.worker.return_worker import HeavyProcess
 from atklip.controls.momentum import macd
 from atklip.controls.tradingview.atr_stoploss import atr_stoploss
 from atklip.controls.overlap.supertrend import supertrend
@@ -246,7 +247,7 @@ class SuperTrendWithStopLoss(QObject):
             return long_stoploss,short_stoploss,SUPERTd
         except:
             return pd.Series([]),pd.Series([]),pd.Series([])
-        
+      
     def calculate(self,df: pd.DataFrame):
         INDICATOR = supertrend_with_stoploss(df,
                                             supertrend_length=self.supertrend_length,
@@ -277,8 +278,6 @@ class SuperTrendWithStopLoss(QObject):
                             "short_stoploss":short_stoploss.tail(_len),
                             "SUPERTd":SUPERTd.tail(_len)
                             })
-        
-        
         self.xdata,self.long_stoploss,self.short_stoploss,self.SUPERTd = self.df["index"].to_numpy(),\
                                                                         self.df["long_stoploss"].to_numpy(),\
                                                                         self.df["short_stoploss"].to_numpy(),\
@@ -289,8 +288,7 @@ class SuperTrendWithStopLoss(QObject):
             self.is_genering = False
         self.is_current_update = True
         self.sig_reset_all.emit()
-        
-        
+ 
     def add_historic(self,n:int):
         self.is_genering = True
         self.is_histocric_load = False
