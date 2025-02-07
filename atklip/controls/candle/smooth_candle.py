@@ -372,47 +372,6 @@ class SMOOTH_CANDLE(QObject):
         return None,None,None,None,None,None,None,None,None,None
     
     
-    def update_ma_ohlc(self,lastcandle:OHLCV):
-        _new_time = lastcandle.time
-        _last_time = self.df["time"].iloc[-1]
-        df:pd.DataFrame = self._candles.get_df(self.ma_leng*5)
-        highs = ta.ma(self.mamode, df["high"],length=self.ma_leng).dropna().round(self.precision)
-        lows = ta.ma(self.mamode, df["low"],length=self.ma_leng).dropna().round(self.precision)
-        closes = ta.ma(self.mamode, df["close"],length=self.ma_leng).dropna().round(self.precision)
-        opens = ta.ma(self.mamode, df["open"],length=self.ma_leng).dropna().round(self.precision)
-        hl2s = ta.ma(self.mamode, df["hl2"],length=self.ma_leng).dropna().round(self.precision)
-        hlc3s = ta.ma(self.mamode, df["hlc3"],length=self.ma_leng).dropna().round(self.precision)
-        ohlc4s = ta.ma(self.mamode, df["ohlc4"],length=self.ma_leng).dropna().round(self.precision)
-
-        if _new_time == _last_time:
-            self.df.iloc[-1] = [opens.iloc[-1],
-                                highs.iloc[-1],
-                                lows.iloc[-1],
-                                closes.iloc[-1],
-                                hl2s.iloc[-1],
-                                hlc3s.iloc[-1],
-                                ohlc4s.iloc[-1],
-                                lastcandle.volume,
-                                lastcandle.time,
-                                lastcandle.index]
-            return True
-        else:
-            new_df = pd.DataFrame({ "open": [opens.iloc[-1]],
-                                    "high": [highs.iloc[-1]],
-                                    "low": [lows.iloc[-1]],
-                                    "close": [closes.iloc[-1]],
-                                    "hl2": [hl2s.iloc[-1]],
-                                    "hlc3": [hlc3s.iloc[-1]],
-                                    "ohlc4": [ohlc4s.iloc[-1]],
-                                    "volume": [lastcandle.volume],
-                                    "time": [lastcandle.time],
-                                    "index": [lastcandle.index]
-                                })
-
-            self.df = pd.concat([self.df,new_df],ignore_index=True)
-            return False
-
-
     def compute(self,index, i:int):
         _index = index[i]
         ohlc = self.get_ma_ohlc_at_index(None,i)
@@ -493,8 +452,8 @@ class SMOOTH_CANDLE(QObject):
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
-        self.start_index:int = self.df["index"].iloc[0]
-        self.stop_index:int = self.df["index"].iloc[-1]
+        # self.start_index:int = self.df["index"].iloc[0]
+        # self.stop_index:int = self.df["index"].iloc[-1]
         self.is_current_update = True
         self.sig_reset_all.emit()
     
@@ -509,29 +468,48 @@ class SMOOTH_CANDLE(QObject):
         process = HeavyProcess(self.pro_gen_data,self.call_back_first_gen,df,self.mamode,self.ma_leng,self.precision)
         process.start()
 
+    
+    def callback_update_ma_ohlc(self,future: Future):
+        update_df = future.result()
+        
+        if self._is_update:
+            self.df.iloc[-1] = update_df.iloc[-1]
+        else:            
+            self.df = pd.concat([self.df,update_df.iloc[[-1]]],ignore_index=True)
+        
+        _open, _high, _low, _close, hl2, hlc3, ohlc4,_volume, _time,_index = self.get_ma_ohlc_at_index(None,-1)
+        ha_candle = OHLCV(_open,_high,_low,_close,hl2,hlc3,ohlc4,_volume,_time,_index)
+        if self._is_update:
+            # self.start_index:int = self.df["index"].iloc[0]
+            # self.stop_index:int = self.df["index"].iloc[-1]
+            self.is_current_update = True
+            self.sig_update_candle.emit([ha_candle])
+            return False
+        else:
+            # self.start_index:int = self.df["index"].iloc[0]
+            # self.stop_index:int = self.df["index"].iloc[-1]
+            self.is_current_update = True
+            self.sig_add_candle.emit([ha_candle])
+            return True
+        
     def update(self, _candle:List[OHLCV]):
         # print(_candle)
         self.is_current_update = False
         if (self.first_gen == True) and (self.is_genering == False):
             new_candle = _candle[-1]
-            is_update = self.update_ma_ohlc(new_candle)
-            _open, _high, _low, _close, hl2, hlc3, ohlc4,_volume, _time,_index = self.get_ma_ohlc_at_index(None,-1)
-            ha_candle = OHLCV(_open,_high,_low,_close,hl2,hlc3,ohlc4,new_candle.volume,new_candle.time,_index)
-            if is_update:
-                self.start_index:int = self.df["index"].iloc[0]
-                self.stop_index:int = self.df["index"].iloc[-1]
+
+            _new_time = new_candle.time
+            _last_time = self.df["time"].iloc[-1]
+            self._is_update = False
+            if _new_time == _last_time:
+                self._is_update =  True
                 
-                self.is_current_update = True
-                self.sig_update_candle.emit([ha_candle])
-                return False
-            else:
-                self.start_index:int = self.df["index"].iloc[0]
-                self.stop_index:int = self.df["index"].iloc[-1]
-                
-                self.is_current_update = True
-                self.sig_add_candle.emit([ha_candle])
-                return True
-        self.is_current_update = True
-        return False
+            df:pd.DataFrame = self._candles.get_df(self.ma_leng*5)
+            
+            process = HeavyProcess(self.pro_gen_data,self.callback_update_ma_ohlc,df,self.mamode,self.ma_leng,self.precision)
+            process.start()
+        else:
+            self.is_current_update = True
+            return False
 
 

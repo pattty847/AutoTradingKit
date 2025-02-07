@@ -322,8 +322,8 @@ class CandleStick(GraphicsObject):
             
     def boundingRect(self) -> QRectF:
         x_left,x_right = int(self.chart.xAxis.range[0]),int(self.chart.xAxis.range[1])   
-        start_index = self.source.start_index
-        stop_index = self.source.stop_index
+        start_index = self.chart.jp_candle.start_index
+        stop_index = self.chart.jp_candle.stop_index
         if x_left > start_index:
             self._start = x_left+2
         elif x_left > stop_index:

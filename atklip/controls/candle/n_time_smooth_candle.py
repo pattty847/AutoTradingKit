@@ -534,8 +534,8 @@ class N_SMOOTH_CANDLE(QObject):
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
-        self.start_index:int = self.df["index"].iloc[0]
-        self.stop_index:int = self.df["index"].iloc[-1]
+        # self.start_index:int = self.df["index"].iloc[0]
+        # self.stop_index:int = self.df["index"].iloc[-1]
         self.is_current_update = True
         self.sig_reset_all.emit()
         return future.result()
@@ -556,8 +556,8 @@ class N_SMOOTH_CANDLE(QObject):
         update_df = future.result()
         if self._is_update:
             self.df.iloc[-1] = update_df.iloc[-1]
-        else:
-            self.df = pd.concat([self.df,update_df],ignore_index=True)
+        else:            
+            self.df = pd.concat([self.df,update_df.iloc[[-1]]],ignore_index=True)
         
         _open,_high,_low,_close,hl2,hlc3,ohlc4,_volume,_time,_index = self.df["open"].iloc[-1],self.df["high"].iloc[-1],self.df["low"].iloc[-1],self.df["close"].iloc[-1],\
             self.df["hl2"].iloc[-1], self.df["hlc3"].iloc[-1], self.df["ohlc4"].iloc[-1],self.df["volume"].iloc[-1],\
@@ -565,13 +565,13 @@ class N_SMOOTH_CANDLE(QObject):
         
         ohlcv = OHLCV(_open,_high,_low,_close,hl2,hlc3,ohlc4,_volume,_time,_index)
         if self._is_update:
-            self.start_index:int = self.df["index"].iloc[0]
-            self.stop_index:int = self.df["index"].iloc[-1]
+            # self.start_index:int = self.df["index"].iloc[0]
+            # self.stop_index:int = self.df["index"].iloc[-1]
             self.is_current_update = True
             self.sig_update_candle.emit([ohlcv])
         else:
-            self.start_index:int = self.df["index"].iloc[0]
-            self.stop_index:int = self.df["index"].iloc[-1]
+            # self.start_index:int = self.df["index"].iloc[0]
+            # self.stop_index:int = self.df["index"].iloc[-1]
             self.is_current_update = True
             self.sig_add_candle.emit([ohlcv])
         
