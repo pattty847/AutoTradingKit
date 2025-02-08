@@ -63,9 +63,9 @@ class ENTRY(GraphicsObject):
         self.old_w = []
         self.setAcceptHoverEvents(True)
 
-        sig_reset_all.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
+        sig_reset_all.connect(self.threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
         lastcandle.connect(self.threadpool_asyncworker,Qt.ConnectionType.SingleShotConnection)
-        self.proxy_update_signal = Signal_Proxy(update_signal,slot=self.threadpool_asyncworker,connect_type=Qt.ConnectionType.AutoConnection)
+        self.proxy_update_signal = Signal_Proxy(update_signal,slot=self.threadpool_asyncworker,connect_type=Qt.ConnectionType.QueuedConnection)
         
         self.threadpool_asyncworker()
 
@@ -199,9 +199,9 @@ class SingleHistogram(GraphicsObject):
         self.setAcceptHoverEvents(True)
         self.precision = precision
 
-        self.yaxis_lastprice.connect(change_lastprice,Qt.ConnectionType.AutoConnection)
-        lastcandle.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
-        sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
+        self.yaxis_lastprice.connect(change_lastprice,Qt.ConnectionType.QueuedConnection)
+        lastcandle.connect(self.threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
+        sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
 
     def setup_color(self, colors):
         self.inbound_color = colors.get("in") if colors.get("in") else "#c824d3"

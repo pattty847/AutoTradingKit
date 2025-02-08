@@ -179,7 +179,7 @@ class MACD(QObject):
         self.is_genering = True
         self.is_current_update = False
         self.is_histocric_load = False
-        self.name = f"MACD {self.source} {self.mamode} {self.slow_period} {self.fast_period} {self.signal_period}"
+        self._name = f"MACD {self.source} {self.mamode} {self.slow_period} {self.fast_period} {self.signal_period}"
 
         self.df = pd.DataFrame([])
         self.worker = ApiThreadPool
@@ -214,7 +214,7 @@ class MACD(QObject):
             
             ta_param = f"{obj_id}-{ta_name}-{self.source}-{self.mamode}-{self.slow_period}-{self.fast_period}-{self.signal_period}"
 
-            self.indicator_name = ta_param
+            self._name = ta_param
         
         self.first_gen = False
         self.is_genering = True
@@ -248,11 +248,11 @@ class MACD(QObject):
     
     
     @property
-    def indicator_name(self):
-        return self.name
-    @indicator_name.setter
-    def indicator_name(self,_name):
-        self.name = _name
+    def name(self):
+        return self._name
+    @name.setter
+    def name(self,_name):
+        self._name = _name
     
     def get_df(self,n:int=None):
         if not n:
@@ -352,7 +352,7 @@ class MACD(QObject):
                             })
     
     
-    def call_back_first_gen(self, future: Future):
+    def callback_first_gen(self, future: Future):
         self.df = future.result()
         self.xdata,self.macd_data,self.histogram,self.signalma = self.df["index"].to_numpy(),\
                                                                     self.df["macd"].to_numpy(),\
@@ -371,7 +371,7 @@ class MACD(QObject):
         self.df = pd.DataFrame([])
         df:pd.DataFrame = self._candles.get_df()
         process = HeavyProcess(self.calculate,
-                               self.call_back_first_gen,
+                               self.callback_first_gen,
                                df,
                                self.source,
                                self.fast_period,
@@ -382,7 +382,7 @@ class MACD(QObject):
         process.start()
         
     
-    def call_back_gen_historic_data(self, future: Future):
+    def callback_gen_historic_data(self, future: Future):
         _df = future.result()
         _len = len(_df)
         self.df = pd.concat([_df,self.df],ignore_index=True)        
@@ -407,7 +407,7 @@ class MACD(QObject):
         df:pd.DataFrame = candle_df.head(-_pre_len)
         
         process = HeavyProcess(self.calculate,
-                               self.call_back_gen_historic_data,
+                               self.callback_gen_historic_data,
                                df,
                                self.source,
                                self.fast_period,
@@ -418,7 +418,7 @@ class MACD(QObject):
         process.start()
         
     
-    def update_calculate(self,df: pd.DataFrame):
+    def add_update_calculate(self,df: pd.DataFrame):
         INDICATOR = macd(close=df[self.source],
                         fast=self.fast_period,
                         slow=self.slow_period,
@@ -433,7 +433,7 @@ class MACD(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.slow_period*5)
                     
-            macd_data,histogram,signalma = self.update_calculate(df)
+            macd_data,histogram,signalma = self.add_update_calculate(df)
             
             new_frame = pd.DataFrame({
                                     'index':[new_candle.index],
@@ -458,7 +458,7 @@ class MACD(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(self.slow_period*5)
                     
-            macd_data,histogram,signalma = self.update_calculate(df)
+            macd_data,histogram,signalma = self.add_update_calculate(df)
                     
             self.df.iloc[-1] = [new_candle.index,macd_data.iloc[-1],histogram.iloc[-1],signalma.iloc[-1]]
                     

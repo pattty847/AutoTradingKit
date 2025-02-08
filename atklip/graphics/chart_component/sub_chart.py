@@ -54,7 +54,7 @@ class SubChart(PlotWidget):
     sig_reload_indicator_panel = Signal()
     sig_update_source = Signal(object)
 
-    def __init__(self,chart, parent:None,indicator_name:None,mainwindow:None,background: str = "#161616",) -> None: #str = "#f0f0f0"
+    def __init__(self,chart, parent:None,name:None,mainwindow:None,background: str = "#161616",) -> None: #str = "#f0f0f0"
         kwargs = {Crosshair.ENABLED: True,
           Crosshair.LINE_PEN: mkPen(color="#eaeaea", width=0.5,style=Qt.DashLine),
           Crosshair.TEXT_KWARGS: {"color": "#eaeaea"}} 
@@ -76,7 +76,7 @@ class SubChart(PlotWidget):
         self.setOptimizationFlag(QGraphicsView.OptimizationFlag.DontAdjustForAntialiasing, True)
         self._parent = parent
         self._parent.destroyed.connect(lambda :asyncio.run(self.close()))
-        self.indicator_name,self.mainwindow = indicator_name,mainwindow
+        self.name,self.mainwindow = name,mainwindow
         # self.setCacheMode(QGraphicsView.CacheModeFlag.CacheBackground)
 
         self.exchange_name, self.symbol, self.interval =self.Chart.exchange_name, self.Chart.symbol,self.Chart.interval
@@ -149,7 +149,7 @@ class SubChart(PlotWidget):
         self.Chart.get_precision()
     
     def set_data_dataconnect(self):
-        self.setup_indicator((self.indicator_name,self.mainwindow))
+        self.setup_indicator((self.name,self.mainwindow))
         self.jp_candle.sig_add_candle.emit(self.jp_candle.candles[-2:])
 
     def add_to_exchanges(self,new_echange):

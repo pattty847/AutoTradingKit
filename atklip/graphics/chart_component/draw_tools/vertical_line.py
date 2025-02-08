@@ -63,10 +63,10 @@ class Vertical_line(InfiniteLine):
             self.clearMarkers()
 
     def setObjectName(self, name):
-        self.indicator_name = name
+        self.name = name
 
     def objectName(self):
-        return self.indicator_name
+        return self.name
     
     def get_inputs(self):
         inputs =  {}

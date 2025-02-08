@@ -34,7 +34,7 @@ class Entry(SpecialROI):
         
         self.price_precision = f".{self.chart._precision}f"
         
-        self.indicator_name = None
+        self.name = None
         self.isSelected = False
         self.id = id
         self.reverse = False
@@ -165,10 +165,10 @@ class Entry(SpecialROI):
         # self.update(self.boundingRect())
     
     def setObjectName(self, name):
-        self.indicator_name = name
+        self.name = name
 
     def objectName(self):
-        return self.indicator_name
+        return self.name
 
     def get_inputs(self):
         inputs =  {}

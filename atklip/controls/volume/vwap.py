@@ -152,7 +152,7 @@ class VWAP(QObject):
         self.is_genering = True
         self.is_current_update = False
         self.is_histocric_load = False
-        self.name = f"{self.mamode.lower()} {self.source} {self.length} {self.std_dev_mult}"
+        self._name = f"{self.mamode.lower()} {self.source} {self.length} {self.std_dev_mult}"
 
         self.df = pd.DataFrame([])
         self.worker = ApiThreadPool
@@ -187,7 +187,7 @@ class VWAP(QObject):
             
             ta_param = f"{obj_id}-{ta_name}-{self.source}-{self.mamode}-{self.length}-{self.std_dev_mult}"
 
-            self.indicator_name = ta_param
+            self._name = ta_param
         
         self.first_gen = False
         self.is_genering = True
@@ -220,11 +220,11 @@ class VWAP(QObject):
         self.started_worker()
     
     @property
-    def indicator_name(self):
-        return self.name
-    @indicator_name.setter
-    def indicator_name(self,_name):
-        self.name = _name
+    def name(self):
+        return self._name
+    @name.setter
+    def name(self,_name):
+        self._name = _name
     
     def get_df(self,n:int=None):
         if not n:

@@ -27,11 +27,11 @@ class INDICATOR(QObject):
         self.worker = ApiThreadPool
 
     @property
-    def indicator_name(self):
-        return self.name
-    @indicator_name.setter
-    def indicator_name(self,_name):
-        self.name = _name
+    def name(self):
+        return self._name
+    @name.setter
+    def name(self,_name):
+        self._name = _name
     @property
     def source_name(self)-> str:
         return self._source_name
@@ -92,15 +92,17 @@ class INDICATOR(QObject):
     @staticmethod
     def calculate(df: pd.DataFrame,source,fast_period,slow_period,signal_period,mamode,offset):...
     
-    def call_back_first_gen(self, future: Future):...
+    def callback_first_gen(self, future: Future):...
     
     def fisrt_gen_data(self):...
     
-    def call_back_gen_historic_data(self, future: Future):...
+    def callback_gen_historic_data(self, future: Future):...
     
     def add_historic(self,n:int):...
         
-    def update_calculate(self,df: pd.DataFrame):...
+    def add_update_calculate(self,df: pd.DataFrame):...
+    
+    def callback_add(self):...
     
     def add(self,new_candles:List[OHLCV]):...
         

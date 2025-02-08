@@ -20,7 +20,7 @@ from .unique_object_id import ObjManager
 
 from atklip.app_utils import *
 
-from atklip.appmanager import FastStartThread,AppLogger,SimpleWorker,HeavyProcess
+from atklip.appmanager import FastStartThread,AppLogger,SimpleWorker
 
 from atklip.appmanager.object.unique_object_id import objmanager, UniqueManager
 
@@ -300,7 +300,7 @@ class Chart(ViewPlotWidget):
         while not is_updated:
             print("all updated",is_updated)
             is_updated =  self.check_all_indicator_updated()
-            time.sleep(0.01)
+            time.sleep(0.1)
             if self.replay_mode or not self.exchange_name:
                 self.trading_mode = False
                 break
@@ -308,7 +308,7 @@ class Chart(ViewPlotWidget):
                 break
                      
     
-    def replay_loop_start(self):
+    async def replay_loop_start(self):
         _ohlcv = []
         while self.is_running_replay:    
             try:
@@ -367,7 +367,7 @@ class Chart(ViewPlotWidget):
                         while not is_updated:
                             print("all updated",is_updated)
                             is_updated =  self.check_all_indicator_updated()
-                            time.sleep(0.01)
+                            await asyncio.sleep(0.1)
                             if self.replay_mode or not self.exchange_name:
                                 self.trading_mode = False
                                 break
@@ -376,7 +376,7 @@ class Chart(ViewPlotWidget):
                     else:
                         break
                     try:
-                        time.sleep(1/self.replay_speed)
+                        await asyncio.sleep(1/self.replay_speed)
                     except:
                         pass
             else:
@@ -604,7 +604,7 @@ class Chart(ViewPlotWidget):
                     while not is_updated:
                         print("all updated",is_updated)
                         is_updated =  self.check_all_indicator_updated()
-                        time.sleep(0.01)
+                        await asyncio.sleep(0.1)
                         if self.replay_mode or not self.exchange_name:
                             self.trading_mode = False
                             break

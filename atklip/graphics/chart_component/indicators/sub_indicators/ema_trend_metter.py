@@ -76,7 +76,7 @@ class EMATrendMetter(GraphicsObject):
                 
         self.INDICATOR  = EMA_TREND_METTER(self.has["inputs"]["source"], self.model.__dict__)
         
-        self.chart.sig_update_source.connect(self.change_source,Qt.ConnectionType.AutoConnection)   
+        self.chart.sig_update_source.connect(self.change_source,Qt.ConnectionType.QueuedConnection)   
         self.signal_delete.connect(self.delete)
     
     @property
@@ -111,11 +111,11 @@ class EMATrendMetter(GraphicsObject):
                     pass
     
     def connect_signals(self):
-        self.INDICATOR.sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
-        self.INDICATOR.sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
-        self.INDICATOR.sig_add_candle.connect(self.add_worker,Qt.ConnectionType.AutoConnection)
-        self.INDICATOR.sig_add_historic.connect(self.add_historic_worker,Qt.ConnectionType.AutoConnection)
-        self.INDICATOR.signal_delete.connect(self.replace_source,Qt.ConnectionType.AutoConnection)
+        self.INDICATOR.sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
+        self.INDICATOR.sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.QueuedConnection)
+        self.INDICATOR.sig_add_candle.connect(self.add_worker,Qt.ConnectionType.QueuedConnection)
+        self.INDICATOR.sig_add_historic.connect(self.add_historic_worker,Qt.ConnectionType.QueuedConnection)
+        self.INDICATOR.signal_delete.connect(self.replace_source,Qt.ConnectionType.QueuedConnection)
     
     def fisrt_gen_data(self):
         self.connect_signals()
@@ -274,9 +274,9 @@ class EMATrendMetter(GraphicsObject):
         super().mousePressEvent(ev)
 
     def setObjectName(self, name):
-        self.indicator_name = name
+        self.name = name
 
     def objectName(self):
-        return self.indicator_name
+        return self.name
     
 

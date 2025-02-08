@@ -199,11 +199,11 @@ class IndicatorManager:
                     
                 if list_indicators != []:
                     for indicator in list_indicators:
-                        # output.update({indicator.indicator_name: "Done"})
+                        # output.update({indicator.name: "Done"})
                         while True:
                             if indicator.is_histocric_load == True:
-                                # output.update({indicator.indicator_name: indicator.get_data(stop=_len)})
-                                output.update({indicator.indicator_name: "Done"})
+                                # output.update({indicator.name: indicator.get_data(stop=_len)})
+                                output.update({indicator.name: "Done"})
                                 indicator.is_histocric_load = False
                                 break
         
@@ -256,11 +256,11 @@ class IndicatorManager:
                     
                 if list_indicators != []:
                     for indicator in list_indicators:
-                        # output.update({indicator.indicator_name: "Done"})
+                        # output.update({indicator.name: "Done"})
                         while True:
                             if indicator.is_current_update == True:
-                                # output.update({indicator.indicator_name: indicator.get_data(stop=_len)})
-                                output.update({indicator.indicator_name: "Done"})
+                                # output.update({indicator.name: indicator.get_data(stop=_len)})
+                                output.update({indicator.name: "Done"})
                                 indicator.is_current_update = False
                                 break
         
@@ -316,11 +316,11 @@ class IndicatorManager:
                     
                 if list_indicators != []:
                     for indicator in list_indicators:
-                        # output.update({indicator.indicator_name: "Done"})
+                        # output.update({indicator.name: "Done"})
                         while True:
                             if indicator.is_current_update == True:
-                                # output.update({indicator.indicator_name: indicator.get_data(stop=_len)})
-                                output.update({indicator.indicator_name: "Done"})
+                                # output.update({indicator.name: indicator.get_data(stop=_len)})
+                                output.update({indicator.name: "Done"})
                                 indicator.is_current_update = False
                                 break
         
@@ -396,7 +396,7 @@ class IndicatorManager:
                             for indicator in list_indicators:
                                 while True:
                                     if indicator.is_current_update == True:
-                                        candle_data.update({indicator.indicator_name: indicator.get_data(start=-2,stop=0)})
+                                        candle_data.update({indicator.name: indicator.get_data(start=-2,stop=0)})
                                         indicator.is_current_update = False
                                         break
                                     
@@ -416,7 +416,7 @@ class IndicatorManager:
     def add_indicator(self,ta_infor: dict,source_name: str=""):
         """_summary_
         Args:
-            ta_param: indicator.indicator_name = ta_param
+            ta_param: indicator.name = ta_param
             source_name: candle.source_name
         Returns:
             _type_: _description_
@@ -594,7 +594,7 @@ class IndicatorManager:
         
         
         if indicator != None:
-            indicator.indicator_name = ta_param
+            indicator.name = ta_param
             indicator.source_name = source_name
             
             old_indicator = self.map_indicator.get(obj_id,None)
@@ -642,7 +642,7 @@ class IndicatorManager:
     def get_indicator(self,ta_infor: dict):
         """_summary_
         Args:
-            ta_param: indicator.indicator_name = ta_param
+            ta_param: indicator.name = ta_param
             source_name: candle.source_name
         Returns:
             _type_: _description_
@@ -658,7 +658,7 @@ class IndicatorManager:
     def change_input_indicator(self,new_ta_infor: dict):
         """_summary_
         Args:
-            ta_param: indicator.indicator_name = ta_param
+            ta_param: indicator.name = ta_param
             source_name: candle.source_name
         Returns:
             _type_: _description_
@@ -829,7 +829,7 @@ class IndicatorManager:
                         indicator.change_input(candles=_candles,dict_ta_params={})
                         while True:
                             if indicator.is_current_update:
-                                output.update({indicator.indicator_name: indicator.get_data()})
+                                output.update({indicator.name: indicator.get_data()})
             del self.map_candle_indicator[smth_candle]
             del self.map_candle[source_name]
             smth_candle = None
@@ -863,7 +863,7 @@ class IndicatorManager:
         output = []
         if list_indicators != []:
             for indicator in list_indicators:
-                output.append(indicator.indicator_name)
+                output.append(indicator.name)
         return {"indicators":output}
     
     def get_all_candles_on_chart(self,candle_infor)-> dict:

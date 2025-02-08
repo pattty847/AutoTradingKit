@@ -92,10 +92,10 @@ class TrendlinesROI(BasePolyLineROI):
                 self.setSelected(False)
 
     def setObjectName(self, name):
-        self.indicator_name = name
+        self.name = name
 
     def objectName(self):
-        return self.indicator_name
+        return self.name
     def set_lock(self,btn):
         print(btn,btn.isChecked())
         if btn.isChecked():

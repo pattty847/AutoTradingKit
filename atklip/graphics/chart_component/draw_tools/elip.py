@@ -35,7 +35,7 @@ class Ellipse(ROI):
         
         self.drawtool:DrawTool= drawtool
         self.chart:Chart = self.drawtool.chart
-        self.indicator_name = None
+        self.name = None
         self.isSelected = False
         self.finished = False
         self.reverse = False
@@ -117,10 +117,10 @@ class Ellipse(ROI):
             self.stateChanged()
     
     def setObjectName(self, name):
-        self.indicator_name = name
+        self.name = name
 
     def objectName(self):
-        return self.indicator_name
+        return self.name
 
     def get_inputs(self):
         inputs =  {}

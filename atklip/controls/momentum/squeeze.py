@@ -244,7 +244,7 @@ class SQEEZE(QObject):
         self.is_genering = True
         self.is_current_update = False
         self.is_histocric_load = False
-        self.name = f"SQEEZE {self.bb_length} {self.bb_std} {self.kc_length} {self.kc_scalar} {self.mom_length} {self.mom_smooth} {self.mamode.lower()}"
+        self._name = f"SQEEZE {self.bb_length} {self.bb_std} {self.kc_length} {self.kc_scalar} {self.mom_length} {self.mom_smooth} {self.mamode.lower()}"
 
         self.df = pd.DataFrame([])
         self.worker = ApiThreadPool
@@ -288,7 +288,7 @@ class SQEEZE(QObject):
             
             ta_param = f"{obj_id}-{ta_name}-{self.bb_length} {self.bb_std} {self.kc_length} {self.kc_scalar} {self.mom_length} {self.mom_smooth} {self.mamode.lower()}"
 
-            self.indicator_name = ta_param
+            self._name = ta_param
             
         self.first_gen = False
         self.is_genering = True
@@ -322,11 +322,11 @@ class SQEEZE(QObject):
         self.started_worker()
     
     @property
-    def indicator_name(self):
-        return self.name
-    @indicator_name.setter
-    def indicator_name(self,_name):
-        self.name = _name
+    def name(self):
+        return self._name
+    @name.setter
+    def name(self,_name):
+        self._name = _name
     
     def get_df(self,n:int=None):
         if not n:

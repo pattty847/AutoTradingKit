@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
+from concurrent.futures import Future
 from pandas import DataFrame, Series
+from atklip.appmanager.worker.return_worker import HeavyProcess
 from atklip.controls.pandas_ta._typing import DictLike, Int
 from atklip.controls.pandas_ta.utils import v_offset, v_pos_default, v_series
 
@@ -107,7 +109,7 @@ class DONCHIAN(QObject):
         self.is_genering = True
         self.is_current_update = False
         self.is_histocric_load = False
-        self.name = f"DC {self.lower_length} {self.upper_length}"
+        self._name = f"DC {self.lower_length} {self.upper_length}"
 
         self.df = pd.DataFrame([])
         self.worker = ApiThreadPool
@@ -139,7 +141,7 @@ class DONCHIAN(QObject):
             
             ta_param = f"{obj_id}-{ta_name}-{self.lower_length}-{self.upper_length}"
 
-            self.indicator_name = ta_param
+            self._name = ta_param
         
         self.first_gen = False
         self.is_genering = True
@@ -172,11 +174,11 @@ class DONCHIAN(QObject):
         self.started_worker()
     
     @property
-    def indicator_name(self):
-        return self.name
-    @indicator_name.setter
-    def indicator_name(self,_name):
-        self.name = _name
+    def name(self):
+        return self._name
+    @name.setter
+    def name(self,_name):
+        self._name = _name
     
     def get_df(self,n:int=None):
         if not n:
@@ -232,41 +234,56 @@ class DONCHIAN(QObject):
         cb = INDICATOR[mid_name].dropna().round(6)
         ub = INDICATOR[upper_name].dropna().round(6)
         return lb,cb,ub
-    def calculate(self,df: pd.DataFrame):
+
+    @staticmethod
+    def calculate(df: pd.DataFrame,lower_length,upper_length,offset):
+        df = df.copy()
+        df = df.reset_index(drop=True)
         INDICATOR = donchian(high=df["high"],
                             low=df["low"],
-                            lower_length=self.lower_length,
-                            upper_length=self.upper_length,
-                            offset=self.offset)
-        return self.paire_data(INDICATOR)
-        return None,None,None
+                            lower_length=lower_length,
+                            upper_length=upper_length,
+                            offset=offset)
+        
+        column_names = INDICATOR.columns.tolist()
+        lower_name = ''
+        mid_name = ''
+        upper_name = ''
+        for name in column_names:
+            if name.__contains__("DCL_"):
+                lower_name = name
+            elif name.__contains__("DCM_"):
+                mid_name = name
+            elif name.__contains__("DCU_"):
+                upper_name = name
+
+        lb = INDICATOR[lower_name].dropna().round(6)
+        cb = INDICATOR[mid_name].dropna().round(6)
+        ub = INDICATOR[upper_name].dropna().round(6)
+        _len = min([len(lb),len(cb),len(ub)])
+        _index = df["index"]
+        return pd.DataFrame({
+                            'index':_index.tail(_len),
+                            "lb":lb.tail(_len),
+                            "cb":cb.tail(_len),
+                            "ub":ub.tail(_len)
+                            })
+    
+    
     def fisrt_gen_data(self):
         self.is_current_update = False
         self.is_genering = True
         self.df = pd.DataFrame([])
         
         df:pd.DataFrame = self._candles.get_df()
-        lb,cb,ub = self.calculate(df)
-
-        _len = min([len(lb),len(cb),len(ub)])
-        _index = df["index"].tail(_len)
-        
-        self.df = pd.DataFrame({
-                            'index':_index,
-                            "lb":lb.tail(_len),
-                            "cb":cb.tail(_len),
-                            "ub":ub.tail(_len)
-                            })
-                
-        self.xdata,self.lb,self.cb,self.ub = self.df["index"].to_numpy(),self.df["lb"].to_numpy(),self.df["cb"].to_numpy(),self.df["ub"].to_numpy()
-        
-        self.is_genering = False
-        if self.first_gen == False:
-            self.first_gen = True
-            self.is_genering = False
-        
-        self.is_current_update = True
-        self.sig_reset_all.emit()
+        process = HeavyProcess(self.calculate,
+                               self.callback_first_gen,
+                               df,
+                               self.lower_length,
+                               self.upper_length,
+                               self.offset)
+        process.start()       
+     
     
     def add_historic(self,n:int):
         self.is_genering = True
@@ -274,25 +291,67 @@ class DONCHIAN(QObject):
         _pre_len = len(self.df)
         df:pd.DataFrame = self._candles.get_df().iloc[:-1*_pre_len]
         
-        lb,cb,ub = self.calculate(df)
-
-        _len = min([len(lb),len(cb),len(ub)])
-        _index = df["index"].tail(_len)
+        process = HeavyProcess(self.calculate,
+                               self.callback_gen_historic_data,
+                               df,
+                               self.lower_length,
+                               self.upper_length,
+                               self.offset)
+        process.start() 
         
-        _df = pd.DataFrame({
-                            'index':_index,
-                            "lb":lb.tail(_len),
-                            "cb":cb.tail(_len),
-                            "ub":ub.tail(_len)
-                            })
+    
+    def add(self,new_candles:List[OHLCV]):
+        new_candle:OHLCV = new_candles[-1]
+        self.is_current_update = False
+        if (self.first_gen == True) and (self.is_genering == False):
+            df:pd.DataFrame = self._candles.get_df(self.upper_length+self.lower_length+5)
+            process = HeavyProcess(self.calculate,
+                               self.callback_add,
+                               df,
+                               self.lower_length,
+                               self.upper_length,
+                               self.offset)
+            process.start() 
+            
+        else:     
+            self.is_current_update = True
+            
+    
+    def update(self, new_candles:List[OHLCV]):
+        new_candle:OHLCV = new_candles[-1]
+        self.is_current_update = False
+        if (self.first_gen == True) and (self.is_genering == False):
+            df:pd.DataFrame = self._candles.get_df(self.upper_length+self.lower_length+5)
+            process = HeavyProcess(self.calculate,
+                               self.callback_update,
+                               df,
+                               self.lower_length,
+                               self.upper_length,
+                               self.offset)
+            process.start() 
+        else:     
+            self.is_current_update = True
+            
+    def callback_first_gen(self, future: Future):
+        self.df = future.result()
+        self.xdata,self.lb,self.cb,self.ub = self.df["index"].to_numpy(),self.df["lb"].to_numpy(),self.df["cb"].to_numpy(),self.df["ub"].to_numpy()
+        self.is_genering = False
+        if self.first_gen == False:
+            self.first_gen = True
+            self.is_genering = False
+        self.is_current_update = True
+        self.sig_reset_all.emit()
         
+    
+    def callback_gen_historic_data(self, future: Future):
+        _df = future.result()
+        _len = len(_df)
         self.df = pd.concat([_df,self.df],ignore_index=True)
-        
         self.xdata = np.concatenate((_df["index"].to_numpy(), self.xdata)) 
         self.lb = np.concatenate((_df["lb"].to_numpy(), self.lb))   
         self.cb = np.concatenate((_df["cb"].to_numpy(), self.cb))
         self.ub = np.concatenate((_df["ub"].to_numpy(), self.ub))
-        
+                
         self.is_genering = False
         if self.first_gen == False:
             self.first_gen = True
@@ -300,46 +359,36 @@ class DONCHIAN(QObject):
         self.is_histocric_load = True
         self.sig_add_historic.emit(_len)
     
-    def add(self,new_candles:List[OHLCV]):
-        self.is_current_update = False
-        new_candle:OHLCV = new_candles[-1]
-        if (self.first_gen == True) and (self.is_genering == False):
-            df:pd.DataFrame = self._candles.get_df(self.upper_length+self.lower_length+5)
-                    
-            lb,cb,ub = self.calculate(df)
- 
-            new_frame = pd.DataFrame({
-                                    'index':[new_candle.index],
-                                    "lb":[lb.iloc[-1]],
-                                    "cb":[cb.iloc[-1]],
-                                    "ub":[ub.iloc[-1]]
-                                    })
-            
-            self.df = pd.concat([self.df,new_frame],ignore_index=True)
-                                
-            self.xdata = np.concatenate((self.xdata,np.array([new_candle.index])))
-            self.lb = np.concatenate((self.lb,np.array([lb.iloc[-1]])))
-            self.cb = np.concatenate((self.cb,np.array([cb.iloc[-1]])))
-            self.ub = np.concatenate((self.ub,np.array([ub.iloc[-1]])))
-            
-            self.sig_add_candle.emit()
-            
-        self.is_current_update = True
-            
-        
-    def update(self, new_candles:List[OHLCV]):
-        new_candle:OHLCV = new_candles[-1]
-        self.is_current_update = False
-        if (self.first_gen == True) and (self.is_genering == False):
-            df:pd.DataFrame = self._candles.get_df(self.upper_length+self.lower_length+5)
-                    
-            lb,cb,ub = self.calculate(df)
+    def callback_add(self,future: Future):
+        df = future.result()
+        last_index = df["index"].iloc[-1]
+        last_lb = df["lb"].iloc[-1]
+        last_cb = df["cb"].iloc[-1]
+        last_ub = df["ub"].iloc[-1]
+         
+        new_frame = pd.DataFrame({
+                                'index':[last_index],
+                                "lb":[last_lb],
+                                "cb":[last_cb],
+                                "ub":[last_ub]
+                                })
 
-            self.df.iloc[-1] = [new_candle.index,lb.iloc[-1],cb.iloc[-1],ub.iloc[-1]]
-                    
-            self.xdata[-1],self.lb[-1],self.cb[-1],self.ub[-1] = new_candle.index,lb.iloc[-1],cb.iloc[-1],ub.iloc[-1]
-            self.sig_update_candle.emit()
-            
+        self.df = pd.concat([self.df,new_frame],ignore_index=True)                     
+        self.xdata = np.concatenate((self.xdata,np.array([last_index])))
+        self.lb = np.concatenate((self.lb,np.array([last_lb])))
+        self.cb = np.concatenate((self.cb,np.array([last_cb])))
+        self.ub = np.concatenate((self.ub,np.array([last_ub])))
+        self.sig_add_candle.emit()
         self.is_current_update = True
-            
-            
+    
+    def callback_update(self,future: Future):
+        df = future.result()
+        last_index = df["index"].iloc[-1]
+        last_lb = df["lb"].iloc[-1]
+        last_cb = df["cb"].iloc[-1]
+        last_ub = df["ub"].iloc[-1]      
+        self.df.iloc[-1] = [last_index,last_lb,last_cb,last_ub]
+        self.xdata[-1],self.lb[-1],self.cb[-1],self.ub[-1] = last_index,last_lb,last_cb,last_ub
+        self.sig_update_candle.emit()
+        self.is_current_update = True
+    

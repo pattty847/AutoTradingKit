@@ -39,7 +39,7 @@ class IndicatorPanel(QWidget):
 
         self.indicator_panel = indicator_panel()
         self.indicator_panel.setupUi(self)
-        self.lb_indicator_name = self.indicator_panel.indicator_name
+        self.lb_indicator_name = self.indicator_panel.name
         self.btn_setting = self.indicator_panel.btn_indicator_setting
         self.btn_show_hide = self.indicator_panel.showhide
         self.btn_more = self.indicator_panel.btn_more_option

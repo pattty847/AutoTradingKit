@@ -60,10 +60,10 @@ class OptimationLine(GraphicsObject):
         self._start:int = None
         self._stop:int = None
         
-        self.sig_reset_histogram.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
-        self.sig_add_histogram.connect(self.update_asyncworker,Qt.ConnectionType.AutoConnection)
-        self.sig_update_histogram.connect(self.update_asyncworker,Qt.ConnectionType.AutoConnection)
-        self.sig_load_historic_histogram.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
+        self.sig_reset_histogram.connect(self.threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
+        self.sig_add_histogram.connect(self.update_asyncworker,Qt.ConnectionType.QueuedConnection)
+        self.sig_update_histogram.connect(self.update_asyncworker,Qt.ConnectionType.QueuedConnection)
+        self.sig_load_historic_histogram.connect(self.threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
 
     def get_inputs(self):
         inputs =  {}
@@ -314,10 +314,10 @@ class SuperTrendLine(GraphicsObject):
         self._start:int = None
         self._stop:int = None
         
-        self.sig_reset_histogram.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
-        self.sig_add_histogram.connect(self.update_asyncworker,Qt.ConnectionType.AutoConnection)
-        self.sig_update_histogram.connect(self.update_asyncworker,Qt.ConnectionType.AutoConnection)
-        self.sig_load_historic_histogram.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
+        self.sig_reset_histogram.connect(self.threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
+        self.sig_add_histogram.connect(self.update_asyncworker,Qt.ConnectionType.QueuedConnection)
+        self.sig_update_histogram.connect(self.update_asyncworker,Qt.ConnectionType.QueuedConnection)
+        self.sig_load_historic_histogram.connect(self.threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
 
     def get_inputs(self):
         inputs =  {}
@@ -573,10 +573,10 @@ class TrendLine(GraphicsObject):
         self._start:int = None
         self._stop:int = None
         
-        self.sig_reset_histogram.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
-        self.sig_add_histogram.connect(self.update_asyncworker,Qt.ConnectionType.AutoConnection)
-        self.sig_update_histogram.connect(self.update_asyncworker,Qt.ConnectionType.AutoConnection)
-        self.sig_load_historic_histogram.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
+        self.sig_reset_histogram.connect(self.threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
+        self.sig_add_histogram.connect(self.update_asyncworker,Qt.ConnectionType.QueuedConnection)
+        self.sig_update_histogram.connect(self.update_asyncworker,Qt.ConnectionType.QueuedConnection)
+        self.sig_load_historic_histogram.connect(self.threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
 
     def get_inputs(self):
         inputs =  {}

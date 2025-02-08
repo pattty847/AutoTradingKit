@@ -160,7 +160,7 @@ class UTBOT_ALERT_WITH_BB(QObject):
         self.is_genering = True
         self.is_current_update = False
         self.is_histocric_load = False
-        self.name = f"ATKPRO Ver_1.0"
+        self._name = f"ATKPRO Ver_1.0"
 
         self.df = pd.DataFrame([])
         self.worker = ApiThreadPool
@@ -197,7 +197,7 @@ class UTBOT_ALERT_WITH_BB(QObject):
             
             ta_param = f"{obj_id}-{ta_name} {self.atr_length} {self.channel_length}"
 
-            self.indicator_name = ta_param
+            self._name = ta_param
         
         self.first_gen = False
         self.is_genering = True
@@ -230,11 +230,11 @@ class UTBOT_ALERT_WITH_BB(QObject):
         self.started_worker()
     
     @property
-    def indicator_name(self):
-        return self.name
-    @indicator_name.setter
-    def indicator_name(self,_name):
-        self.name = _name
+    def name(self):
+        return self._name
+    @name.setter
+    def name(self,_name):
+        self._name = _name
     
     def get_df(self,n:int=None):
         if not n:

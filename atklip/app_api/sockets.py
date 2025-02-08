@@ -124,7 +124,7 @@ async def add_smooth_candle(request: Request):
 async def add_indicator(request: Request):
     """_summary_
         ta_infor : {
-            ta_param: indicator.indicator_name = ta_param
+            ta_param: indicator.name = ta_param
             source_name: candle.source_name
         }
     Args:
@@ -140,7 +140,7 @@ async def add_indicator(request: Request):
             if indicator == None:
                 list_done.append({f"Indicator is not supported ":ta_infor})
                 continue
-            list_done.append({indicator.indicator_name: f"{indicator.indicator_name} has been added"})  
+            list_done.append({indicator.name: f"{indicator.name} has been added"})  
     return  {"result": list_done}
 
 @app.get("/get-indicator-data/")
@@ -258,7 +258,7 @@ async def change_smooth_candle_input(request: Request):
             indicator.change_input(candles=candle)
             while True:
                 if indicator.is_current_update == True:
-                    output_data.update({indicator.indicator_name: indicator.get_data()})
+                    output_data.update({indicator.name: indicator.get_data()})
                     indicator.is_current_update = False
                     break
            

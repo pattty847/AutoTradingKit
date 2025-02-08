@@ -32,8 +32,6 @@ class FastStartThread(QObject):
             self.deleteLater()
         except:
             pass
-
-    @Slot()
     def run(self):
         try:
             self.loop.run_until_complete(self.fn(*self.args, **self.kwargs))
@@ -61,7 +59,6 @@ class ThreadingAsyncWorker(QObject):
     
     def stop_thread(self):
         self.deleteLater()
-    @Slot()
     def run(self):
         try:
             asyncio.run(self.fn(*self.args, **self.kwargs))
@@ -92,7 +89,6 @@ class RequestAsyncWorker(QObject):
     def stop_thread(self):
 
         self.deleteLater()
-    @Slot()
     def run(self):
         try:
             asyncio.run(self.fn(*self.args, **self.kwargs))
@@ -130,7 +126,6 @@ class FastWorker(QObject):
     def stop_thread(self):
         self.signals.deleteLater()
         self.deleteLater()
-    @Slot()
     def run(self):
         try:
             self.fn(*self.args, **self.kwargs)

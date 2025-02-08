@@ -99,7 +99,7 @@ class CCI(QObject):
         self.is_genering = True
         self.is_current_update = False
         self.is_histocric_load = False
-        self.name = f"CCI {self.length} {self.c}"
+        self._name = f"CCI {self.length} {self.c}"
 
         self.df = pd.DataFrame([])
         self.worker = ApiThreadPool
@@ -131,7 +131,7 @@ class CCI(QObject):
             
             ta_param = f"{obj_id}-{ta_name}-{self.length}-{self.c}"
 
-            self.indicator_name = ta_param
+            self._name = ta_param
         
         self.first_gen = False
         self.is_genering = True
@@ -165,11 +165,11 @@ class CCI(QObject):
     
     
     @property
-    def indicator_name(self):
-        return self.name
-    @indicator_name.setter
-    def indicator_name(self,_name):
-        self.name = _name
+    def name(self):
+        return self._name
+    @name.setter
+    def name(self,_name):
+        self._name = _name
     
     def get_df(self,n:int=None):
         if not n:

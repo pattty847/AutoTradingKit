@@ -68,7 +68,7 @@ class BasicMOM(PlotDataItem):
         self.price_line = PriceLine()  # for z value
         self.price_line.setParentItem(self)
         self.destroyed.connect(self.price_line.deleteLater)
-        self.last_pos.connect(self.price_line.update_price_line_indicator,Qt.ConnectionType.AutoConnection)
+        self.last_pos.connect(self.price_line.update_price_line_indicator,Qt.ConnectionType.QueuedConnection)
 
         self.price_high = PriceLine(color="green",width=1,movable=True)  # for z value
         self.price_high.setParentItem(self)
@@ -78,11 +78,11 @@ class BasicMOM(PlotDataItem):
         self.price_low.setParentItem(self)
         self.price_low.setPos(self.has["inputs"]["price_low"])
         
-        self.sig_change_yaxis_range.connect(get_last_pos_worker, Qt.ConnectionType.AutoConnection)
+        self.sig_change_yaxis_range.connect(get_last_pos_worker, Qt.ConnectionType.QueuedConnection)
         
         self.INDICATOR  = MOM(self.has["inputs"]["source"], self.model.__dict__)
         
-        self.chart.sig_update_source.connect(self.change_source,Qt.ConnectionType.AutoConnection)   
+        self.chart.sig_update_source.connect(self.change_source,Qt.ConnectionType.QueuedConnection)   
         self.signal_delete.connect(self.delete)
     
     @property
@@ -115,11 +115,11 @@ class BasicMOM(PlotDataItem):
                     pass
     
     def connect_signals(self):
-        self.INDICATOR.sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
-        self.INDICATOR.sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
-        self.INDICATOR.sig_add_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
-        self.INDICATOR.sig_add_historic.connect(self.add_historic_worker,Qt.ConnectionType.AutoConnection)
-        self.INDICATOR.signal_delete.connect(self.replace_source,Qt.ConnectionType.AutoConnection)
+        self.INDICATOR.sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
+        self.INDICATOR.sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.QueuedConnection)
+        self.INDICATOR.sig_add_candle.connect(self.setdata_worker,Qt.ConnectionType.QueuedConnection)
+        self.INDICATOR.sig_add_historic.connect(self.add_historic_worker,Qt.ConnectionType.QueuedConnection)
+        self.INDICATOR.signal_delete.connect(self.replace_source,Qt.ConnectionType.QueuedConnection)
     
     def fisrt_gen_data(self):
         self.connect_signals()
@@ -300,10 +300,10 @@ class BasicMOM(PlotDataItem):
         super().mousePressEvent(ev)
 
     def setObjectName(self, name):
-        self.indicator_name = name
+        self.name = name
 
     def objectName(self):
-        return self.indicator_name
+        return self.name
     
     
     def get_yaxis_param(self):

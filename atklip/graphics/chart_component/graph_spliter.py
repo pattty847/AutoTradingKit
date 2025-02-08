@@ -190,7 +190,7 @@ class GraphSplitter(ViewSplitter):
         "Tạo Indicator panel và setup cho Chart hoặc Sub-Indicator"
         """('Basic Indicator', 'SMA-Simple Moving Average')"""
         indicator_type = data[0]
-        indicator_name = data[1]
+        name = data[1]
         if indicator_type =="Sub Indicator":
             self.create_sub_indicator(data)
         elif indicator_type =="Basic Indicator":
@@ -216,33 +216,33 @@ class GraphSplitter(ViewSplitter):
         if indicators:
             print(indicators)
     
-    def create_sub_chart(self,indicator_name:IndicatorType):
-        panel = SubChart(self.chart,self,indicator_name,self.mainwindow)
-        #panel.setup_indicator((indicator_name,self.mainwindow))
+    def create_sub_chart(self,name:IndicatorType):
+        panel = SubChart(self.chart,self,name,self.mainwindow)
+        #panel.setup_indicator((name,self.mainwindow))
         self.add_sub_panel(panel)
         QApplication.processEvents()
     
-    def create_sub_indicator(self,indicator_name:IndicatorType):
+    def create_sub_indicator(self,name:IndicatorType):
         panel = ViewSubPanel(self.chart,self)
-        indicator = panel.setup_indicator((indicator_name,self.mainwindow))
+        indicator = panel.setup_indicator((name,self.mainwindow))
         if indicator:
             self.chart.indicators.append(indicator) 
         self.add_sub_panel(panel)
         QApplication.processEvents()
 
-    def create_basic_indicator(self,indicator_name:IndicatorType):
-        self.chart.setup_indicator((indicator_name,self.mainwindow))
+    def create_basic_indicator(self,name:IndicatorType):
+        self.chart.setup_indicator((name,self.mainwindow))
         QApplication.processEvents()
     
-    def create_candle_indicator(self,indicator_name:IndicatorType):
-        self.chart.setup_indicator((indicator_name,self.mainwindow))
+    def create_candle_indicator(self,name:IndicatorType):
+        self.chart.setup_indicator((name,self.mainwindow))
         QApplication.processEvents()
         
-    def create_advand_indicator(self,indicator_name:IndicatorType):
-        self.chart.setup_indicator((indicator_name,self.mainwindow))
+    def create_advand_indicator(self,name:IndicatorType):
+        self.chart.setup_indicator((name,self.mainwindow))
         QApplication.processEvents()
 
-    def create_normal_indicator(self,indicator_name:IndicatorType):
+    def create_normal_indicator(self,name:IndicatorType):
         QApplication.processEvents()
 
     def setup_chart(self,mainwindow,current_ex:str="",current_symbol:str="",curent_interval:str=""):

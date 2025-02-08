@@ -112,7 +112,7 @@ class MA(QObject):
         self.is_genering = True
         self.is_current_update = False
         self.is_histocric_load = False
-        self.name = f"{self.mamode} {self.source} {self.length}"
+        self._name = f"{self.mamode} {self.source} {self.length}"
 
         self.df = pd.DataFrame([])
         self.worker = ApiThreadPool
@@ -145,7 +145,7 @@ class MA(QObject):
             
             ta_param = f"{obj_id}-{ta_name}-{self.source}-{self.mamode}-{self.length}"
 
-            self.indicator_name = ta_param
+            self._name = ta_param
         
         self.first_gen = False
         self.is_genering = True
@@ -178,11 +178,11 @@ class MA(QObject):
         self.started_worker()
     
     @property
-    def indicator_name(self):
-        return self.name
-    @indicator_name.setter
-    def indicator_name(self,_name):
-        self.name = _name
+    def name(self):
+        return self._name
+    @name.setter
+    def name(self,_name):
+        self._name = _name
     
     def get_df(self,n:int=None):
         if not n:
@@ -222,7 +222,7 @@ class MA(QObject):
     def started_worker(self):
         self.worker.submit(self.fisrt_gen_data)
     
-    def call_back_first_gen(self,future:Future):
+    def callback_first_gen(self,future:Future):
         _index,data = future.result()
         
         self.df = pd.DataFrame({
@@ -251,7 +251,7 @@ class MA(QObject):
         self.is_genering = True
         self.df = pd.DataFrame([])
         df:pd.DataFrame = self._candles.get_df()
-        process = HeavyProcess(self._gen_data,self.call_back_first_gen,df,self.mamode,self.source,self.length,self.zl_mode)
+        process = HeavyProcess(self._gen_data,self.callback_first_gen,df,self.mamode,self.source,self.length,self.zl_mode)
         process.start()
     
     def call_back_add_historic(self,future:Future):

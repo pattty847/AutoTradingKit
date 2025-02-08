@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
+from concurrent.futures import Future
 from numpy import nan
 from pandas import DataFrame, Series
+from atklip.appmanager.worker.return_worker import HeavyProcess
 from atklip.controls.pandas_ta._typing import DictLike, Int, IntFloat
 from atklip.controls.pandas_ta.overlap import hl2
 from atklip.controls.pandas_ta.utils import v_mamode, v_offset, v_pos_default, v_series
@@ -142,7 +144,7 @@ class SuperTrend(QObject):
         self.is_genering = True
         self.is_current_update = False
         self.is_histocric_load = False
-        self.name = f"SuperTrend {self.length} {self.atr_length} {self.multiplier} {self.atr_mamode}"
+        self._name = f"SuperTrend {self.length} {self.atr_length} {self.multiplier} {self.atr_mamode}"
 
         self.df = pd.DataFrame([])
         self.worker = ApiThreadPool
@@ -176,7 +178,7 @@ class SuperTrend(QObject):
             
             ta_param = f"{obj_id}-{ta_name}-{self.length} {self.atr_length} {self.multiplier} {self.atr_mamode}"
 
-            self.indicator_name = ta_param
+            self._name = ta_param
         
         self.first_gen = False
         self.is_genering = True
@@ -210,11 +212,11 @@ class SuperTrend(QObject):
     
     
     @property
-    def indicator_name(self):
-        return self.name
-    @indicator_name.setter
-    def indicator_name(self,_name):
-        self.name = _name
+    def name(self):
+        return self._name
+    @name.setter
+    def name(self,_name):
+        self._name = _name
     
     def get_df(self,n:int=None):
         if not n:
@@ -281,43 +283,65 @@ class SuperTrend(QObject):
             return SUPERTt,SUPERTd
         except:
             return Series([]),Series([])
-    def calculate(self,df: pd.DataFrame):
+    
+    @staticmethod
+    def calculate(df: pd.DataFrame,length,atr_length,multiplier,atr_mamode):
+        _index = df["index"]
+        # df = df.copy()
+        # df = df.reset_index(drop=True)
         INDICATOR = supertrend(high=df["high"], 
                                 low=df["low"], 
                                 close=df["close"],
-                                length = self.length, 
-                                atr_length = self.atr_length,
-                                multiplier = self.multiplier,
-                                atr_mamode = self.atr_mamode,
+                                length = length, 
+                                atr_length = atr_length,
+                                multiplier = multiplier,
+                                atr_mamode = atr_mamode,
                                 )
-        return self.paire_data(INDICATOR)
+        
+        column_names = INDICATOR.columns.tolist()
+        SUPERT_name = ''
+        SUPERTd_name = ''
+        SUPERTl_name = ''
+        SUPERTs_name = ''
+        for name in column_names:
+            if name.__contains__("SUPERTt"):
+                SUPERT_name = name
+            elif name.__contains__("SUPERTd"):
+                SUPERTd_name = name
+            elif name.__contains__("SUPERTl"):
+                SUPERTl_name = name
+            elif name.__contains__("SUPERTs"):
+                SUPERTs_name = name
+                
+
+        SUPERTt = INDICATOR[SUPERT_name].dropna().round(6)
+        SUPERTd = INDICATOR[SUPERTd_name].dropna().round(6)
+        # SUPERTl = INDICATOR[SUPERTl_name].round(6)
+        # SUPERTs = INDICATOR[SUPERTs_name].round(6)
+        _len = min([len(SUPERTt),len(SUPERTd)])
+        
+        return pd.DataFrame({
+                            'index':_index.tail(_len),
+                            "SUPERTt":SUPERTt.tail(_len),
+                            "SUPERTd":SUPERTd.tail(_len)
+                            })
+    
     
     def fisrt_gen_data(self):
-        
         self.is_current_update = False
         self.is_genering = True
         self.df = pd.DataFrame([])
         
         df:pd.DataFrame = self._candles.get_df()
-        
-        SUPERTt,SUPERTd = self.calculate(df)
-        _len = min([len(SUPERTt),len(SUPERTd)])
-        _index = df["index"]
-        self.df = pd.DataFrame({
-                            'index':_index.tail(_len),
-                            "SUPERTt":SUPERTt.tail(_len),
-                            "SUPERTd":SUPERTd.tail(_len)
-                            })
-        
-        self.xdata,self.SUPERTt,self.SUPERTd = self.df["index"].to_numpy(),self.df["SUPERTt"].to_numpy(),self.df["SUPERTd"].to_numpy()
-        
-        
-        self.is_genering = False
-        if self.first_gen == False:
-            self.first_gen = True
-            self.is_genering = False
-        self.is_current_update = True
-        self.sig_reset_all.emit()
+        process = HeavyProcess(self.calculate,
+                               self.callback_first_gen,
+                               df,
+                               self.length,
+                               self.atr_length,
+                               self.multiplier,
+                               self.atr_mamode)
+        process.start()       
+     
     
     def add_historic(self,n:int):
         self.is_genering = True
@@ -325,14 +349,63 @@ class SuperTrend(QObject):
         _pre_len = len(self.df)
         df:pd.DataFrame = self._candles.get_df().iloc[:-1*_pre_len]
         
-        SUPERTt,SUPERTd = self.calculate(df)
-        _len = min([len(SUPERTt),len(SUPERTd)])
-        _index = df["index"]
-        _df = pd.DataFrame({
-                            'index':_index.tail(_len),
-                            "SUPERTt":SUPERTt.tail(_len),
-                            "SUPERTd":SUPERTd.tail(_len)
-                            })
+        process = HeavyProcess(self.calculate,
+                               self.callback_gen_historic_data,
+                               df,
+                               self.length,
+                               self.atr_length,
+                               self.multiplier,
+                               self.atr_mamode)
+        process.start() 
+        
+    
+    def add(self,new_candles:List[OHLCV]):
+        new_candle:OHLCV = new_candles[-1]
+        self.is_current_update = False
+        if (self.first_gen == True) and (self.is_genering == False):
+            df:pd.DataFrame = self._candles.get_df(self.length*5)
+            process = HeavyProcess(self.calculate,
+                               self.callback_add,
+                               df,
+                               self.length,
+                               self.atr_length,
+                               self.multiplier,
+                               self.atr_mamode)
+            process.start() 
+            
+        else:     
+            self.is_current_update = True
+            
+    
+    def update(self, new_candles:List[OHLCV]):
+        new_candle:OHLCV = new_candles[-1]
+        self.is_current_update = False
+        if (self.first_gen == True) and (self.is_genering == False):
+            df:pd.DataFrame = self._candles.get_df(self.length*5)
+            process = HeavyProcess(self.calculate,
+                               self.callback_update,
+                               df,
+                               self.length,
+                               self.atr_length,
+                               self.multiplier,
+                               self.atr_mamode)
+            process.start() 
+        else:     
+            self.is_current_update = True
+            
+    def callback_first_gen(self, future: Future):
+        self.df = future.result()
+        self.xdata,self.SUPERTt,self.SUPERTd = self.df["index"].to_numpy(),self.df["SUPERTt"].to_numpy(),self.df["SUPERTd"].to_numpy()
+        self.is_genering = False
+        if self.first_gen == False:
+            self.first_gen = True
+            self.is_genering = False
+        self.is_current_update = True
+        self.sig_reset_all.emit()
+        
+    def callback_gen_historic_data(self, future: Future):
+        _df = future.result()
+        _len = len(_df)
         
         self.df = pd.concat([_df,self.df],ignore_index=True)
         
@@ -340,55 +413,38 @@ class SuperTrend(QObject):
         self.SUPERTd = np.concatenate((_df["SUPERTd"].to_numpy(), self.SUPERTd))   
         self.SUPERTt = np.concatenate((_df["SUPERTt"].to_numpy(), self.SUPERTt))
 
-        
         self.is_genering = False
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
         self.is_histocric_load = True
         self.sig_add_historic.emit(_len)
-    
-    
-    def add(self,new_candles:List[OHLCV]):
-        new_candle:OHLCV = new_candles[-1]
-        self.is_current_update = False
-        if (self.first_gen == True) and (self.is_genering == False):
-            df:pd.DataFrame = self._candles.get_df(self.length*5)
-            
-            SUPERTt,SUPERTd= self.calculate(df)
-            _len = min([len(SUPERTt),len(SUPERTd)])
-            _index = df["index"]
-            new_frame = pd.DataFrame({
-                                'index':[new_candle.index],
-                                "SUPERTt":[SUPERTt.iloc[-1]],
-                                "SUPERTd":[SUPERTd.iloc[-1]],
-                                })
-            
-            
-            self.df = pd.concat([self.df,new_frame],ignore_index=True)
-            
-            self.xdata = np.append(self.xdata,new_candle.index)
-            self.SUPERTd = np.append(self.SUPERTd,new_frame["SUPERTd"].iloc[-1])   
-            self.SUPERTt = np.append(self.SUPERTt,new_frame["SUPERTt"].iloc[-1])
-
-            self.sig_add_candle.emit()
-        self.is_current_update = True
-            
         
-    def update(self, new_candles:List[OHLCV]):
-        new_candle:OHLCV = new_candles[-1]
-        self.is_current_update = False
-        if (self.first_gen == True) and (self.is_genering == False):
-            df:pd.DataFrame = self._candles.get_df(self.length*5)
-            
-            SUPERTt,SUPERTd = self.calculate(df)
-            
-            self.df.iloc[-1] = [new_candle.index,SUPERTt.iloc[-1],SUPERTd.iloc[-1]]
-            
-            self.xdata[-1],self.SUPERTt[-1],self.SUPERTd[-1] = new_candle.index,SUPERTt.iloc[-1],SUPERTd.iloc[-1]
-
-            self.sig_update_candle.emit()
+    def callback_add(self,future: Future):
+        df = future.result()
+        last_index = df["index"].iloc[-1]
+        last_SUPERTt = df["SUPERTt"].iloc[-1]
+        last_SUPERTd = df["SUPERTd"].iloc[-1]
+ 
+        new_frame = pd.DataFrame({
+                                'index':[last_index],
+                                "SUPERTt":[last_SUPERTt],
+                                "SUPERTd":[last_SUPERTd],
+                                })
+        self.df = pd.concat([self.df,new_frame],ignore_index=True)
+        
+        self.xdata = np.concatenate((self.xdata,np.array([last_index])))
+        self.SUPERTd = np.concatenate((self.SUPERTd,np.array([last_SUPERTd])))
+        self.SUPERTt = np.concatenate((self.SUPERTt,np.array([last_SUPERTt])))
+        self.sig_add_candle.emit()
         self.is_current_update = True
-            
-            
-
+    
+    def callback_update(self,future: Future):
+        df = future.result()
+        last_index = df["index"].iloc[-1]
+        last_SUPERTt = df["SUPERTt"].iloc[-1]
+        last_SUPERTd = df["SUPERTd"].iloc[-1]
+        self.df.iloc[-1] = [last_index,last_SUPERTt,last_SUPERTd]
+        self.xdata[-1],self.SUPERTt[-1],self.SUPERTd[-1] = last_index,last_SUPERTt,last_SUPERTd
+        self.sig_update_candle.emit()
+        self.is_current_update = True

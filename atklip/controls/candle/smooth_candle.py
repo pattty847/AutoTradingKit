@@ -404,7 +404,7 @@ class SMOOTH_CANDLE(QObject):
         self.mamode = mamode
         self.ma_leng = ma_ma_leng
     
-    def call_back_gen_historic_data(self, future: Future):
+    def callback_gen_historic_data(self, future: Future):
         _df = future.result()
         self.df = pd.concat([_df,self.df], ignore_index=True)
         self.is_genering = False
@@ -420,7 +420,7 @@ class SMOOTH_CANDLE(QObject):
         self.is_histocric_load = False
         _pre_len = len(self.df)
         df:pd.DataFrame = self._candles.get_df().iloc[:-1*_pre_len]
-        process = HeavyProcess(self.pro_gen_data,self.call_back_gen_historic_data,df,self.mamode,self.ma_leng,self.precision)
+        process = HeavyProcess(self.pro_gen_data,self.callback_gen_historic_data,df,self.mamode,self.ma_leng,self.precision)
         process.start()
     
     @staticmethod
@@ -446,7 +446,7 @@ class SMOOTH_CANDLE(QObject):
                                     "index": df["index"].tail(_len)
                                 })  
         
-    def call_back_first_gen(self, future: Future):
+    def callback_first_gen(self, future: Future):
         self.df = future.result()
         self.is_genering = False
         if self.first_gen == False:
@@ -465,7 +465,7 @@ class SMOOTH_CANDLE(QObject):
         self.map_index_ohlcv: Dict[int, OHLCV] = {}
         self.map_time_ohlcv: Dict[int, OHLCV] = {}
         df:pd.DataFrame = self._candles.get_df()
-        process = HeavyProcess(self.pro_gen_data,self.call_back_first_gen,df,self.mamode,self.ma_leng,self.precision)
+        process = HeavyProcess(self.pro_gen_data,self.callback_first_gen,df,self.mamode,self.ma_leng,self.precision)
         process.start()
 
     

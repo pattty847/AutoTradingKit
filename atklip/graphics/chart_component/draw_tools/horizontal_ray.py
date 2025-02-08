@@ -392,10 +392,10 @@ class Horizontal_ray(CustomLineSegmentROI):
                 self.setSelected(False)
 
     def setObjectName(self, name):
-        self.indicator_name = name
+        self.name = name
 
     def objectName(self):
-        return self.indicator_name
+        return self.name
     
     def get_pos_point(self):
         return self.listPoints()[0]

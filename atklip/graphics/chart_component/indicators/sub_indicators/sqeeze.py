@@ -85,13 +85,13 @@ class BaSicSqeeze(GraphicsObject):
 
         self.picture: QPicture = QPicture()
         
-        self.last_pos.connect(self.price_line.update_price_line_indicator,Qt.ConnectionType.AutoConnection)
+        self.last_pos.connect(self.price_line.update_price_line_indicator,Qt.ConnectionType.QueuedConnection)
 
-        self.sig_change_yaxis_range.connect(get_last_pos_worker, Qt.ConnectionType.AutoConnection)
+        self.sig_change_yaxis_range.connect(get_last_pos_worker, Qt.ConnectionType.QueuedConnection)
         
         self.INDICATOR  = SQEEZE(self.has["inputs"]["source"], self.model.__dict__)
         
-        self.chart.sig_update_source.connect(self.change_source,Qt.ConnectionType.AutoConnection)   
+        self.chart.sig_update_source.connect(self.change_source,Qt.ConnectionType.QueuedConnection)   
         self.signal_delete.connect(self.delete)
     
     @property
@@ -134,11 +134,11 @@ class BaSicSqeeze(GraphicsObject):
                     pass
     
     def connect_signals(self):
-        self.INDICATOR.sig_reset_all.connect(self.reset_indicator,Qt.ConnectionType.AutoConnection)
-        self.INDICATOR.sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
-        self.INDICATOR.sig_add_candle.connect(self.add_worker,Qt.ConnectionType.AutoConnection)
-        self.INDICATOR.sig_add_historic.connect(self.add_historic_worker,Qt.ConnectionType.AutoConnection)
-        self.INDICATOR.signal_delete.connect(self.replace_source,Qt.ConnectionType.AutoConnection)
+        self.INDICATOR.sig_reset_all.connect(self.reset_indicator,Qt.ConnectionType.QueuedConnection)
+        self.INDICATOR.sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.QueuedConnection)
+        self.INDICATOR.sig_add_candle.connect(self.add_worker,Qt.ConnectionType.QueuedConnection)
+        self.INDICATOR.sig_add_historic.connect(self.add_historic_worker,Qt.ConnectionType.QueuedConnection)
+        self.INDICATOR.signal_delete.connect(self.replace_source,Qt.ConnectionType.QueuedConnection)
     
     def fisrt_gen_data(self):
         self.connect_signals()
@@ -343,7 +343,7 @@ class BaSicSqeeze(GraphicsObject):
         super().mousePressEvent(ev)
 
     def setObjectName(self, name):
-        self.indicator_name = name
+        self.name = name
 
     def objectName(self):
-        return self.indicator_name
+        return self.name

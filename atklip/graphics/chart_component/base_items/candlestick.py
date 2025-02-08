@@ -46,7 +46,6 @@ class CandleStick(GraphicsObject):
             else:
                 name = f"{self.source.source_name} {mamode.name} {period} {n}"
             
-            
             self.has = {
             "is_candle": True,
             "name": name,
@@ -106,8 +105,8 @@ class CandleStick(GraphicsObject):
         
         self.source.sig_reset_all.connect(self.update_source,Qt.ConnectionType.QueuedConnection)
         
-        self.source.sig_update_candle.connect(self.update_asyncworker,Qt.ConnectionType.AutoConnection)
-        self.source.sig_add_candle.connect(self.update_asyncworker,Qt.ConnectionType.AutoConnection)
+        self.source.sig_update_candle.connect(self.update_asyncworker,Qt.ConnectionType.QueuedConnection)
+        self.source.sig_add_candle.connect(self.update_asyncworker,Qt.ConnectionType.QueuedConnection)
         self.source.sig_add_historic.connect(self.threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
         
         if not (isinstance(self.source,JAPAN_CANDLE) or isinstance(self.source,HEIKINASHI)):
@@ -234,8 +233,6 @@ class CandleStick(GraphicsObject):
             candle._source_name = f"n_smooth_heikin {self.chart.symbol} {self.chart.interval}"
             self.chart.update_sources(candle)
             return candle, mamode, period,n
-
-
             
     def get_inputs(self):
         if isinstance(self.source,JAPAN_CANDLE) or isinstance(self.source,HEIKINASHI):
@@ -387,7 +384,8 @@ class CandleStick(GraphicsObject):
         self._to_update = False
         
         x_data, y_data = data[0],data[1]
-        w = (x_data[-1] - x_data[-2]) / 5
+        # w = (x_data[-1] - x_data[-2]) / 5
+        w = 1 / 5
         _open,_max,_min,close = y_data[0],y_data[1],y_data[2],y_data[3]
         if self._is_change_source:
             self._bar_picutures.clear()
@@ -397,7 +395,7 @@ class CandleStick(GraphicsObject):
         self.chart.sig_update_y_axis.emit()
         # self.prepareGeometryChange()
         # self.informViewBoundsChanged()
-        self.update(self.boundingRect())
+        # self.update(self.boundingRect())
     
     def updateData(self, data) -> None:
         """y_data must be in format [[open, close, min, max], ...]"""
@@ -414,7 +412,7 @@ class CandleStick(GraphicsObject):
         self.chart.sig_update_y_axis.emit()
         # self.prepareGeometryChange()
         # self.informViewBoundsChanged()
-        self.update(self.boundingRect())
+        # self.update(self.boundingRect())
         
         
     def update_last_data(self,candles, setdata) -> None:

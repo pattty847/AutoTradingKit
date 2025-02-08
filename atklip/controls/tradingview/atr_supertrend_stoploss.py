@@ -1,3 +1,4 @@
+from concurrent.futures import Future
 import numpy as np
 import pandas as pd
 
@@ -52,7 +53,7 @@ def supertrend_with_stoploss(data:pd.DataFrame,
     Returns:
         pd.DataFrame: DataFrame với các cột 'Positive_Cloud_Uptrend' và 'Negative_Cloud_Uptrend'.
     """
-    data = data.copy()
+    # data = data.copy()
     # Kiểm tra các cột bắt buộc
     required_columns = ['open', 'high', 'low', 'close']
     for col in required_columns:
@@ -124,7 +125,7 @@ class SuperTrendWithStopLoss(QObject):
         self.is_genering = True
         self.is_current_update = False
         self.is_histocric_load = False
-        self.name = f"SuperTrendWithStopLoss"
+        self._name = f"SuperTrendWithStopLoss"
 
         self.df = pd.DataFrame([])
         self.worker = ApiThreadPool
@@ -161,7 +162,7 @@ class SuperTrendWithStopLoss(QObject):
             
             ta_param = f"{obj_id}-{ta_name}-{self.atr_length}-{self.atr_mamode}-{self.atr_multiplier}"
 
-            self.indicator_name = ta_param
+            self._name = ta_param
         
         self.first_gen = False
         self.is_genering = True
@@ -195,11 +196,11 @@ class SuperTrendWithStopLoss(QObject):
     
     
     @property
-    def indicator_name(self):
-        return self.name
-    @indicator_name.setter
-    def indicator_name(self,_name):
-        self.name = _name
+    def name(self):
+        return self._name
+    @name.setter
+    def name(self,_name):
+        self._name = _name
     
     def get_df(self,n:int=None):
         if not n:
@@ -247,37 +248,103 @@ class SuperTrendWithStopLoss(QObject):
             return long_stoploss,short_stoploss,SUPERTd
         except:
             return pd.Series([]),pd.Series([]),pd.Series([])
-      
-    def calculate(self,df: pd.DataFrame):
-        INDICATOR = supertrend_with_stoploss(df,
-                                            supertrend_length=self.supertrend_length,
-                                            supertrend_atr_length=self.supertrend_atr_length,
-                                            supertrend_multiplier=self.supertrend_multiplier,
-                                            supertrend_atr_mamode=self.supertrend_atr_mamode,
-                                            atr_length=self.atr_length,
-                                            atr_mamode=self.atr_mamode,
-                                            atr_multiplier=self.atr_multiplier,
-                                             )
-        return self.paire_data(INDICATOR)
     
-    def fisrt_gen_data(self):
-        self.is_current_update = False
-        self.is_genering = True
-        self.df = pd.DataFrame([])
+    @staticmethod
+    def calculate(df: pd.DataFrame,supertrend_length,supertrend_atr_length,
+                                    supertrend_multiplier,supertrend_atr_mamode,
+                                    atr_length,atr_mamode,atr_multiplier):
         
-        df:pd.DataFrame = self._candles.get_df()
+        df = df.copy()
+        df = df.reset_index(drop=True)
         
-        long_stoploss,short_stoploss,SUPERTd = self.calculate(df)
+        INDICATOR = supertrend_with_stoploss(df,
+                                            supertrend_length=supertrend_length,
+                                            supertrend_atr_length=supertrend_atr_length,
+                                            supertrend_multiplier=supertrend_multiplier,
+                                            supertrend_atr_mamode=supertrend_atr_mamode,
+                                            atr_length=atr_length,
+                                            atr_mamode=atr_mamode,
+                                            atr_multiplier=atr_multiplier,
+                                             )
+        
+        long_stoploss = INDICATOR["long_stoploss"].dropna().round(6)
+        short_stoploss = INDICATOR["short_stoploss"].dropna().round(6)
+        SUPERTd = INDICATOR["SUPERTd"].dropna()
         
         _len = min([len(long_stoploss),len(short_stoploss),len(SUPERTd)])
         
         _index = df["index"]
-        self.df = pd.DataFrame({
+        return pd.DataFrame({
                             'index':_index.tail(_len),
                             "long_stoploss":long_stoploss.tail(_len),
                             "short_stoploss":short_stoploss.tail(_len),
                             "SUPERTd":SUPERTd.tail(_len)
                             })
+        
+    
+
+    def fisrt_gen_data(self):
+        self.is_current_update = False
+        self.is_genering = True
+        self.df = pd.DataFrame([])
+        df:pd.DataFrame = self._candles.get_df()
+        process = HeavyProcess(self.calculate,
+                               self.callback_first_gen,
+                               df,
+                               self.supertrend_length,self.supertrend_atr_length,
+                                self.supertrend_multiplier,self.supertrend_atr_mamode,
+                                self.atr_length,self.atr_mamode,self.atr_multiplier)
+        process.start()
+        
+    
+    def add_historic(self,n:int):
+        self.is_genering = True
+        self.is_histocric_load = False
+        _pre_len = len(self.df)
+        candle_df = self._candles.get_df()
+        df:pd.DataFrame = candle_df.head(-_pre_len)
+        
+        process = HeavyProcess(self.calculate,
+                               self.callback_gen_historic_data,
+                               df,
+                               self.supertrend_length,self.supertrend_atr_length,
+                                self.supertrend_multiplier,self.supertrend_atr_mamode,
+                                self.atr_length,self.atr_mamode,self.atr_multiplier)
+        process.start()
+       
+    def add(self,new_candles:List[OHLCV]):
+        new_candle:OHLCV = new_candles[-1]
+        self.is_current_update = False
+        if (self.first_gen == True) and (self.is_genering == False):
+            df:pd.DataFrame = self._candles.get_df(self.supertrend_length+self.atr_length+self.supertrend_atr_length+10)
+            process = HeavyProcess(self.calculate,
+                               self.callback_add,
+                               df,
+                               self.supertrend_length,self.supertrend_atr_length,
+                                self.supertrend_multiplier,self.supertrend_atr_mamode,
+                                self.atr_length,self.atr_mamode,self.atr_multiplier)
+            process.start()
+        else:
+            self.is_current_update = True
+            
+    def update(self, new_candles:List[OHLCV]):
+        new_candle:OHLCV = new_candles[-1]
+        self.is_current_update = False
+        if (self.first_gen == True) and (self.is_genering == False):
+            df:pd.DataFrame = self._candles.get_df(self.supertrend_length+self.atr_length+self.supertrend_atr_length+10)
+            process = HeavyProcess(self.calculate,
+                               self.callback_update,
+                               df,
+                               self.supertrend_length,self.supertrend_atr_length,
+                                self.supertrend_multiplier,self.supertrend_atr_mamode,
+                                self.atr_length,self.atr_mamode,self.atr_multiplier)
+            process.start() 
+        else:
+            self.is_current_update = True
+    
+    def callback_first_gen(self, future: Future):
+        self.df = future.result()
+        
         self.xdata,self.long_stoploss,self.short_stoploss,self.SUPERTd = self.df["index"].to_numpy(),\
                                                                         self.df["long_stoploss"].to_numpy(),\
                                                                         self.df["short_stoploss"].to_numpy(),\
@@ -288,27 +355,12 @@ class SuperTrendWithStopLoss(QObject):
             self.is_genering = False
         self.is_current_update = True
         self.sig_reset_all.emit()
- 
-    def add_historic(self,n:int):
-        self.is_genering = True
-        self.is_histocric_load = False
-        _pre_len = len(self.df)
-        candle_df = self._candles.get_df()
-        df:pd.DataFrame = candle_df.head(-_pre_len)
         
-        long_stoploss,short_stoploss,SUPERTd = self.calculate(df)
-        
-        _len = min([len(long_stoploss),len(short_stoploss),len(SUPERTd)])
-        
-        _index = df["index"]
-        _df = pd.DataFrame({
-                            'index':_index.tail(_len),
-                            "long_stoploss":long_stoploss.tail(_len),
-                            "short_stoploss":short_stoploss.tail(_len),
-                            "SUPERTd":SUPERTd.tail(_len)
-                            })
-        
-        
+    
+    def callback_gen_historic_data(self, future: Future):
+        _df = future.result()
+        _len = len(_df)
+      
         self.df = pd.concat([_df,self.df],ignore_index=True)        
         
         self.xdata = np.concatenate((_df["index"].to_numpy(), self.xdata)) 
@@ -322,42 +374,43 @@ class SuperTrendWithStopLoss(QObject):
             self.is_genering = False
         self.is_histocric_load = True
         self.sig_add_historic.emit(_len)
-    
-    
-    def add(self,new_candles:List[OHLCV]):
-        new_candle:OHLCV = new_candles[-1]
-        self.is_current_update = False
-        if (self.first_gen == True) and (self.is_genering == False):
-            df:pd.DataFrame = self._candles.get_df(self.supertrend_length+self.atr_length+self.supertrend_atr_length+10)
-            
-            long_stoploss,short_stoploss,SUPERTd = self.calculate(df)
         
-            new_frame = pd.DataFrame({
-                                'index':[new_candle.index],
-                                "long_stoploss":[long_stoploss.iloc[-1]],
-                                "short_stoploss":[short_stoploss.iloc[-1]],
-                                "SUPERTd":[SUPERTd.iloc[-1]]
+    
+    def callback_add(self,future: Future):
+        df = future.result()
+        last_index = df["index"].iloc[-1]
+        last_long_stoploss = df["long_stoploss"].iloc[-1]
+        last_short_stoploss = df["short_stoploss"].iloc[-1]
+        last_SUPERTd = df["SUPERTd"].iloc[-1]
+        
+        
+        new_frame = pd.DataFrame({
+                                'index':[last_index],
+                                "long_stoploss":[last_long_stoploss],
+                                "short_stoploss":[last_short_stoploss],
+                                "SUPERTd":[last_SUPERTd]
                                 })
             
-            self.df = pd.concat([self.df,new_frame],ignore_index=True)
-            
-            self.xdata = np.concatenate((self.xdata,np.array([new_candle.index])))
-            self.long_stoploss = np.concatenate((self.long_stoploss,np.array([long_stoploss.iloc[-1]])))
-            self.short_stoploss = np.concatenate((self.short_stoploss,np.array([short_stoploss.iloc[-1]])))
-            self.SUPERTd = np.concatenate((self.SUPERTd,np.array([SUPERTd.iloc[-1]])))
-    
-            self.sig_add_candle.emit()
+        self.df = pd.concat([self.df,new_frame],ignore_index=True)
+        
+        self.xdata = np.concatenate((self.xdata,np.array([last_index])))
+        self.long_stoploss = np.concatenate((self.long_stoploss,np.array([last_long_stoploss])))
+        self.short_stoploss = np.concatenate((self.short_stoploss,np.array([last_short_stoploss])))
+        self.SUPERTd = np.concatenate((self.SUPERTd,np.array([last_SUPERTd])))
+
+        self.sig_add_candle.emit()
         self.is_current_update = True
         
-    def update(self, new_candles:List[OHLCV]):
-        new_candle:OHLCV = new_candles[-1]
-        self.is_current_update = False
-        if (self.first_gen == True) and (self.is_genering == False):
-            df:pd.DataFrame = self._candles.get_df(self.supertrend_length+self.atr_length+self.supertrend_atr_length+10)
-            long_stoploss,short_stoploss,SUPERTd = self.calculate(df)
-            self.df.iloc[-1] = [new_candle.index,long_stoploss.iloc[-1],short_stoploss.iloc[-1],SUPERTd.iloc[-1]]
-            self.xdata[-1],self.long_stoploss[-1],self.short_stoploss[-1],self.SUPERTd[-1]  = new_candle.index,long_stoploss.iloc[-1],short_stoploss.iloc[-1],SUPERTd.iloc[-1]
-            self.sig_update_candle.emit()
+    
+    def callback_update(self,future: Future):
+        df = future.result()
+        last_index = df["index"].iloc[-1]
+        last_long_stoploss = df["long_stoploss"].iloc[-1]
+        last_short_stoploss = df["short_stoploss"].iloc[-1]
+        last_SUPERTd = df["SUPERTd"].iloc[-1]
+        
+        self.df.iloc[-1] = [last_index,last_long_stoploss,last_short_stoploss,last_SUPERTd]
+        self.xdata[-1],self.long_stoploss[-1],self.short_stoploss[-1],self.SUPERTd[-1]  = last_index,last_long_stoploss,last_short_stoploss,last_SUPERTd
+        self.sig_update_candle.emit()
         self.is_current_update = True
-            
-            
+        

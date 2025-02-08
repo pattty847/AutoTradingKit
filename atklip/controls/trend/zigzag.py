@@ -250,7 +250,7 @@ class OLD_ZIGZAG(QObject):
         self.first_gen = False
         self.is_genering = True
         
-        self.name = f"ZIGZAG {self.legs} {self.deviation}"
+        self._name = f"ZIGZAG {self.legs} {self.deviation}"
 
         self.df = pd.DataFrame([])
         
@@ -269,7 +269,7 @@ class OLD_ZIGZAG(QObject):
                     pass
     
     def connect_signals(self):
-        self._candles.sig_reset_all.connect(self.started_worker,Qt.ConnectionType.AutoConnection)
+        self._candles.sig_reset_all.connect(self.started_worker,Qt.ConnectionType.QueuedConnection)
         self._candles.sig_update_candle.connect(self.update_worker,Qt.ConnectionType.QueuedConnection)
         self._candles.sig_add_candle.connect(self.add_worker,Qt.ConnectionType.QueuedConnection)
         self._candles.signal_delete.connect(self.signal_delete)
@@ -305,11 +305,11 @@ class OLD_ZIGZAG(QObject):
             self.started_worker()
     
     @property
-    def indicator_name(self):
-        return self.name
-    @indicator_name.setter
-    def indicator_name(self,_name):
-        self.name = _name
+    def name(self):
+        return self._name
+    @name.setter
+    def name(self,_name):
+        self._name = _name
     
     def get_df(self,n:int=None):
         if not n:
@@ -575,7 +575,7 @@ class ZIGZAG(QObject):
         self.is_genering = True
         self.list_zizgzag:list = []
         self.is_current_update = False
-        self.name = f"ZIGZAG {self.legs} {self.deviation}"
+        self._name = f"ZIGZAG {self.legs} {self.deviation}"
 
         self.df = pd.DataFrame([])
         
@@ -595,7 +595,7 @@ class ZIGZAG(QObject):
                     pass
     
     def connect_signals(self):
-        self._candles.sig_reset_all.connect(self.started_worker,Qt.ConnectionType.AutoConnection)
+        self._candles.sig_reset_all.connect(self.started_worker,Qt.ConnectionType.QueuedConnection)
         self._candles.sig_update_candle.connect(self.update_worker,Qt.ConnectionType.QueuedConnection)
         self._candles.sig_add_candle.connect(self.add_worker,Qt.ConnectionType.QueuedConnection)
         self._candles.signal_delete.connect(self.signal_delete)
@@ -631,11 +631,11 @@ class ZIGZAG(QObject):
             self.started_worker()
     
     @property
-    def indicator_name(self):
-        return self.name
-    @indicator_name.setter
-    def indicator_name(self,_name):
-        self.name = _name
+    def name(self):
+        return self._name
+    @name.setter
+    def name(self,_name):
+        self._name = _name
     
     def get_df(self,n:int=None):
         if not n:

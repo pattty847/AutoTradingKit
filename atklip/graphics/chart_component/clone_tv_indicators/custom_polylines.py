@@ -190,7 +190,7 @@ class RangePolyLine(BasePolyLine):     # for date price range
         self.texts = []
         self.arrows = []
         self.finished = False
-        self.indicator_name="Ruler..."
+        self.name="Ruler..."
         super().__init__(*args, **kwargs)
         # self.on_click.connect(self.chart.show_popup_setting_tool)
 
@@ -210,7 +210,7 @@ class RangePolyLine(BasePolyLine):     # for date price range
             self.stateChanged()
 
     def setObjectName(self, name):
-        self.indicator_name = name
+        self.name = name
 
     def mouseClickEvent(self, ev):
         if ev.button() == Qt.MouseButton.LeftButton:
@@ -220,7 +220,7 @@ class RangePolyLine(BasePolyLine):     # for date price range
         ev.ignore()
 
     def objectName(self):
-        return self.indicator_name
+        return self.name
         
     def addSegment(self, h1, h2, index=None):
         super().addSegment(h1, h2, index)
@@ -334,14 +334,14 @@ class FinPolyLine(PolyLineROI):     # for ruler
         self.vb = vb # init before parent constructor
         self.texts = []
         self.arrows = []
-        self.indicator_name="Ruler..."
+        self.name="Ruler..."
         super().__init__(*args, **kwargs)
 
     def setObjectName(self, name):
-        self.indicator_name = name
+        self.name = name
 
     def objectName(self):
-        return self.indicator_name
+        return self.name
         
     def addSegment(self, h1, h2, index=None):
         super().addSegment(h1, h2, index)

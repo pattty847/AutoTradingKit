@@ -83,7 +83,7 @@ class RangePolyLine(SpecialROI):     # for date price range
         self.doubleclick = False
         self.segments = []
         self.isSelected = False
-        self.indicator_name="Ruler..."
+        self.name="Ruler..."
         
         
         self.v_arrow = ArrowItem(angle=90, tipAngle=30, baseAngle=20, headLen=10, tailWidth=1, pen=None, brush=draw_line_color)
@@ -235,7 +235,7 @@ class RangePolyLine(SpecialROI):     # for date price range
     
 
     def setObjectName(self, name):
-        self.indicator_name = name
+        self.name = name
 
     def mouseClickEvent(self, ev):
         if ev.button() == Qt.MouseButton.LeftButton:
@@ -248,7 +248,7 @@ class RangePolyLine(SpecialROI):     # for date price range
         super().mouseClickEvent(ev)
     
     def objectName(self):
-        return self.indicator_name
+        return self.name
     
     
     def setPoint(self,pos_x, pos_y):
