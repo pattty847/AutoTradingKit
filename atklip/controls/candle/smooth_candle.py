@@ -69,7 +69,12 @@ class SMOOTH_CANDLE(QObject):
         self.worker = ApiThreadPool
         self.df = pd.DataFrame([])
         self.connect_signals()
-        
+    @property
+    def is_current_update(self)-> bool:
+        return self._is_current_update
+    @is_current_update.setter
+    def is_current_update(self,_is_current_update):
+        self._is_current_update = _is_current_update 
     @property
     def precision(self):
         return self.chart.get_precision()

@@ -566,26 +566,27 @@ class ZIGZAG(QObject):
     def __init__(self,parent,_candles,legs,deviation,retrace=False,last_extreme=False) -> None:
         super().__init__(parent=parent)
         self._candles: JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE =_candles
-
         self.legs :Int = legs
         self.deviation: IntFloat = deviation
         self.retrace: bool = retrace
         self.last_extreme: bool = last_extreme
-        
         # self.signal_delete.connect(self.deleteLater)
         self.first_gen = False
         self.is_genering = True
         self.list_zizgzag:list = []
         self.is_current_update = False
         self._name = f"ZIGZAG {self.legs} {self.deviation}"
-
         self.df = pd.DataFrame([])
-        
         self.x_data,self.y_data  = np.array([]),np.array([])
-        
-
         self.connect_signals()
-        
+    
+    @property
+    def is_current_update(self)-> bool:
+        return self._is_current_update
+    @is_current_update.setter
+    def is_current_update(self,_is_current_update):
+        self._is_current_update = _is_current_update
+     
     def disconnect_signals(self):
         try:
             self._candles.sig_reset_all.disconnect(self.started_worker)

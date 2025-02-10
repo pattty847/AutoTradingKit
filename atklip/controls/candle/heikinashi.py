@@ -47,7 +47,12 @@ class HEIKINASHI(QObject):
         self.worker = ApiThreadPool
         self.is_current_update = False
         # self.signal_delete.connect(self.delete)
-    
+    @property
+    def is_current_update(self)-> bool:
+        return self._is_current_update
+    @is_current_update.setter
+    def is_current_update(self,_is_current_update):
+        self._is_current_update = _is_current_update
     def set_candle_infor(self,exchange_id,symbol,interval):
         self.exchange_id = exchange_id
         self.symbol = symbol

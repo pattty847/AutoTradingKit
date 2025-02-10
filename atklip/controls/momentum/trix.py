@@ -139,7 +139,12 @@ class TRIX(QObject):
         self.xdata,self.trix_ , self.signalma = np.array([]),np.array([]),np.array([])
 
         self.connect_signals()
-    
+    @property
+    def is_current_update(self)-> bool:
+        return self._is_current_update
+    @is_current_update.setter
+    def is_current_update(self,_is_current_update):
+        self._is_current_update = _is_current_update
     @property
     def source_name(self)-> str:
         return self._source_name
