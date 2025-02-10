@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
+from concurrent.futures import Future
 from numpy import nan
 from pandas import DataFrame, Series
+from atklip.appmanager.worker.return_worker import HeavyProcess
 from atklip.controls.pandas_ta._typing import DictLike, Int, IntFloat
 from atklip.controls.pandas_ta.ma import ma
 from atklip.controls.pandas_ta.utils import (
@@ -364,114 +366,165 @@ class STC(QObject):
         stoch = INDICATOR[stoch_name].dropna().round(6)
         return stc_,macd,stoch
     
-    def calculate(self,df: pd.DataFrame):
-        INDICATOR = stc(close= df[self.source],
-                        tclength= self.tclength,
-                        fast = self.fast,
-                        slow = self.slow,
-                        mamode= self.mamode,
-                        factor=self.factor,
-                        offset=self.offset
-                        ).dropna().round(6)
-        return self.paire_data(INDICATOR)
-    
-    def fisrt_gen_data(self):
-        self.is_current_update = False
-        self.is_genering = True
-        self.df = pd.DataFrame([])
+    @staticmethod
+    def calculate(df: pd.DataFrame,source,tclength,fast,slow,mamode,factor,offset):
+        df = df.copy()
+        df = df.reset_index(drop=True)
         
-        df:pd.DataFrame = self._candles.get_df()
+        INDICATOR = stc(close= df[source],
+                        tclength= tclength,
+                        fast = fast,
+                        slow = slow,
+                        mamode= mamode,
+                        factor=factor,
+                        offset=offset
+                        ).dropna()
         
-        stc_,macd,stoch = self.calculate(df)
+        column_names = INDICATOR.columns.tolist()
+        
+        stc_name = ''
+        stoch_name = ''
+        macd_name = ''
+        for name in column_names:
+            if name.__contains__("STC") and stc_name == "":
+                stc_name = name
+            if name.__contains__("STCstoch") and stoch_name == "":
+                stoch_name = name
+            if name.__contains__("STCmacd") and macd_name == "":
+                macd_name = name
+        stc_ = INDICATOR[stc_name].dropna().round(6)
+        macd = INDICATOR[macd_name].dropna().round(6)
+        stoch = INDICATOR[stoch_name].dropna().round(6)
         
         _len = min([len(stc_),len(macd),len(stoch)])
         _index = df["index"].tail(_len)
         
-        self.df = pd.DataFrame({
+        return pd.DataFrame({
                             'index':_index,
                             "stc":stc_.tail(_len),
                             "macd":macd.tail(_len),
                             "stoch":stoch.tail(_len)
                             })
-                
-        self.xdata,self.stc_,self.macd,self.stoch = self.df["index"].to_numpy(),self.df["stc"].to_numpy(),self.df["macd"].to_numpy(),self.df["stoch"].to_numpy()
-        self.is_genering = False
-        if self.first_gen == False:
-            self.first_gen = True
-            self.is_genering = False
         
-        self.is_current_update = True
-        self.sig_reset_all.emit()
+        
+        
+
+    def fisrt_gen_data(self):
+        self.is_current_update = False
+        self.is_genering = True
+        self.df = pd.DataFrame([])
+        df:pd.DataFrame = self._candles.get_df()
+        process = HeavyProcess(self.calculate,
+                               self.callback_first_gen,
+                               df,
+                               self.source,self.tclength,
+                               self.fast,self.slow,
+                               self.mamode,self.factor,self.offset)
+        process.start()
+        
     
     def add_historic(self,n:int):
         self.is_genering = True
         self.is_histocric_load = False
         _pre_len = len(self.df)
-        df:pd.DataFrame = self._candles.get_df().iloc[:-1*_pre_len]
-        stc_,macd,stoch = self.calculate(df)
+        candle_df = self._candles.get_df()
+        df:pd.DataFrame = candle_df.head(-_pre_len)
         
-        _len = min([len(stc_),len(macd),len(stoch)])
-        _index = df["index"].tail(_len)
+        process = HeavyProcess(self.calculate,
+                               self.callback_gen_historic_data,
+                               df,
+                               self.source,self.tclength,
+                               self.fast,self.slow,
+                               self.mamode,self.factor,self.offset)
+        process.start()
+       
+    def add(self,new_candles:List[OHLCV]):
+        new_candle:OHLCV = new_candles[-1]
+        self.is_current_update = False
+        if (self.first_gen == True) and (self.is_genering == False):
+            df:pd.DataFrame = self._candles.get_df(self.slow*5)
+            process = HeavyProcess(self.calculate,
+                               self.callback_add,
+                               df,
+                               self.source,self.tclength,
+                               self.fast,self.slow,
+                               self.mamode,self.factor,self.offset)
+            process.start()
+        else:
+            self.is_current_update = True
+            
+    def update(self, new_candles:List[OHLCV]):
+        new_candle:OHLCV = new_candles[-1]
+        self.is_current_update = False
+        if (self.first_gen == True) and (self.is_genering == False):
+            df:pd.DataFrame = self._candles.get_df(self.slow*5)
+            process = HeavyProcess(self.calculate,
+                               self.callback_update,
+                               df,
+                               self.source,self.tclength,
+                               self.fast,self.slow,
+                               self.mamode,self.factor,self.offset)
+            process.start() 
+        else:
+            self.is_current_update = True
+    
+    def callback_first_gen(self, future: Future):
+        self.df = future.result()
+        self.xdata,self.stc_,self.macd,self.stoch = self.df["index"].to_numpy(),self.df["stc"].to_numpy(),self.df["macd"].to_numpy(),self.df["stoch"].to_numpy()
+        self.is_genering = False
+        if self.first_gen == False:
+            self.first_gen = True
+            self.is_genering = False
+        self.is_current_update = True
+        self.sig_reset_all.emit()
         
-        _df = pd.DataFrame({
-                            'index':_index,
-                            "stc":stc_.tail(_len),
-                            "macd":macd.tail(_len),
-                            "stoch":stoch.tail(_len)
-                            })
+        
+    def callback_gen_historic_data(self, future: Future):
+        _df = future.result()
+        _len = len(_df)
         self.df = pd.concat([_df,self.df],ignore_index=True)
-        
         self.xdata = np.concatenate((_df["index"].to_numpy(), self.xdata))
         self.stc_ = np.concatenate((_df["stc"].to_numpy(), self.stc_))
         self.macd = np.concatenate((_df["macd"].to_numpy(), self.macd))
         self.stoch = np.concatenate((_df["stoch"].to_numpy(), self.stoch))
-        
         self.is_genering = False
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
         self.is_histocric_load = True
         self.sig_add_historic.emit(_len)
-    
-    def add(self,new_candles:List[OHLCV]):
-        new_candle:OHLCV = new_candles[-1]
-        self.is_current_update = False
-        if (self.first_gen == True) and (self.is_genering == False):
-            df:pd.DataFrame = self._candles.get_df(self.slow*5)
-                    
-            stc_,macd,stoch = self.calculate(df)
-            
-            new_frame = pd.DataFrame({
-                                    'index':[new_candle.index],
-                                    "stc":[stc_.iloc[-1]],
-                                    "macd":[macd.iloc[-1]],
-                                    "stoch":[stoch.iloc[-1]]
+        
+         
+    def callback_add(self,future: Future):
+        df = future.result()
+        last_index = df["index"].iloc[-1]
+        last_stc = df["stc"].iloc[-1]
+        last_macd = df["macd"].iloc[-1]
+        last_stoch = df["stoch"].iloc[-1]
+        
+        new_frame = pd.DataFrame({
+                                    'index':[last_index],
+                                    "stc":[last_stc],
+                                    "macd":[last_macd],
+                                    "stoch":[last_stoch]
                                     })
             
-            self.df = pd.concat([self.df,new_frame],ignore_index=True)
-                        
-            self.xdata = np.concatenate((self.xdata,np.array([new_candle.index])))
-            self.stc_ = np.concatenate((self.stc_,np.array([stc_.iloc[-1]])))
-            self.macd = np.concatenate((self.macd,np.array([macd.iloc[-1]])))             
-            self.stoch = np.concatenate((self.stoch,np.array([stoch.iloc[-1]])))             
-            
-            
-            self.sig_add_candle.emit()
+        self.df = pd.concat([self.df,new_frame],ignore_index=True)     
+        self.xdata = np.concatenate((self.xdata,np.array([last_index])))
+        self.stc_ = np.concatenate((self.stc_,np.array([last_stc])))
+        self.macd = np.concatenate((self.macd,np.array([last_macd])))             
+        self.stoch = np.concatenate((self.stoch,np.array([last_stoch])))             
+        self.sig_add_candle.emit()
         self.is_current_update = True
         
-    def update(self, new_candles:List[OHLCV]):
-        new_candle:OHLCV = new_candles[-1]
-        self.is_current_update = False
-        if (self.first_gen == True) and (self.is_genering == False):
-            df:pd.DataFrame = self._candles.get_df(self.slow*5)
-                    
-            stc_,macd,stoch = self.calculate(df)
-                    
-            self.df.iloc[-1] = [new_candle.index,stc_.iloc[-1],macd.iloc[-1],stoch.iloc[-1]]
-                    
-            self.xdata[-1],self.stc_[-1],self.macd[-1],self.stoch[-1] = new_candle.index,stc_.iloc[-1],macd.iloc[-1],stoch.iloc[-1]
-            
-            
-            
-            self.sig_update_candle.emit()
+    def callback_update(self,future: Future):
+        df = future.result()
+        last_index = df["index"].iloc[-1]
+        last_stc = df["stc"].iloc[-1]
+        last_macd = df["macd"].iloc[-1]
+        last_stoch = df["stoch"].iloc[-1]
+        self.df.iloc[-1] = [last_index,last_stc,last_macd,last_stoch]
+        self.xdata[-1],self.stc_[-1],self.macd[-1],self.stoch[-1] = last_index,last_stc,last_macd,last_stoch
+        self.sig_update_candle.emit()
         self.is_current_update = True
+        

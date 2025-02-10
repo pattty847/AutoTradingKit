@@ -90,16 +90,16 @@ class UTBOT_WITH_BBAND(GraphicsObject):
 
         self.INDICATOR  = UTBOT_ALERT_WITH_BB(self.has["inputs"]["source"], self.model.__dict__)
         
-        self.supertrend = SuperTrendWithStopLoss(self.has["inputs"]["source"], self.supertmodel.__dict__)
+        # self.supertrend = SuperTrendWithStopLoss(self.has["inputs"]["source"], self.supertmodel.__dict__)
         
-        self.rsi  = RSI(self.has["inputs"]["source"], self.rsi_model.__dict__)
+        # self.rsi  = RSI(self.has["inputs"]["source"], self.rsi_model.__dict__)
                 
         self.chart.sig_update_source.connect(self.change_source,Qt.ConnectionType.QueuedConnection)   
         self.signal_delete.connect(self.delete)
     
     @property
     def is_all_updated(self):
-        is_updated = self.INDICATOR.is_current_update and self.supertrend.is_current_update and self.rsi.is_current_update
+        is_updated = self.INDICATOR.is_current_update # and self.supertrend.is_current_update and self.rsi.is_current_update
         return is_updated
     
     @property
@@ -162,8 +162,8 @@ class UTBOT_WITH_BBAND(GraphicsObject):
     def fisrt_gen_data(self):
         self.connect_signals()
         self.INDICATOR.fisrt_gen_data()
-        self.supertrend.fisrt_gen_data()
-        self.rsi.fisrt_gen_data()
+        # self.supertrend.fisrt_gen_data()
+        # self.rsi.fisrt_gen_data()
     
     def check_pivot_points(self,df:pd.DataFrame,_type:str="high",n = 10, m=20):
         _len = len(df)

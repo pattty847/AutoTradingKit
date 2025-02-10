@@ -14,16 +14,16 @@ numba
 ccxt
 PyOpenGL
 cython
-fastapi
-uvicorn
-multitasking
+# fastapi
+# uvicorn
+# multitasking
 pandas-datareader
 pyarrow
 arrow
 setuptools
-streamlit
+# streamlit
 tulipy
-polars[all]
+# polars[all]
 polars-lts-cpu
 python-rapidjson
 humanize
@@ -31,5 +31,5 @@ websockets
 wsproto
 httptools
 psygnal
-slowapi
+# slowapi
 winloop

@@ -173,7 +173,6 @@ class BasicZIGZAG(PlotDataItem):
         if _input == "pen_zz_line" or _input == "width_zz_line" or _input == "style_zz_line":
             self.setPen(color=self.has["styles"]["pen_zz_line"], width=self.has["styles"]["width_zz_line"],style=self.has["styles"]["style_zz_line"])
         
-
     def setVisible(self, visible):
         if visible:
             self.show()
@@ -207,7 +206,6 @@ class BasicZIGZAG(PlotDataItem):
             self.setData(xData,lb)
         except Exception as e:
             pass
-        
         # self.prepareGeometryChange()
         # self.informViewBoundsChanged()
 
@@ -216,7 +214,6 @@ class BasicZIGZAG(PlotDataItem):
         setdata.emit((xdata,zz_value))
         # self.last_pos.emit((self.has["inputs"]["indicator_type"],stc[-1]))
         
-
     def mousePressEvent(self, ev):
         if ev.button() == Qt.MouseButton.LeftButton:
             self.on_click.emit(self)

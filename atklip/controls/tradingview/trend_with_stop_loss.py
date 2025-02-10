@@ -1,6 +1,8 @@
+from concurrent.futures import Future
 import numpy as np
 import pandas as pd
 
+from atklip.appmanager.worker.return_worker import HeavyProcess
 from atklip.controls.momentum import macd
 from atklip.controls.tradingview.atr_stoploss import atr_stoploss
 
@@ -256,31 +258,32 @@ class TrendWithStopLoss(QObject):
             return long_stoploss,short_stoploss,Uptrend,Downtrend
         except:
             return pd.Series([]),pd.Series([]),pd.Series([]),pd.Series([])
-        
-    def calculate(self,df: pd.DataFrame):
-        INDICATOR = trend_with_stoploss(df,
-                        macd_fast=self.fast_period,
-                        macd_slow=self.slow_period,
-                        macd_signal = self.signal_period,
-                        macd_mamode = self.macd_mamode,
-                        atr_length = self.atr_length,
-                        atr_mamode = self.atr_mamode,
-                        atr_multiplier = self.atr_multiplier)
-        return self.paire_data(INDICATOR)
     
-    def fisrt_gen_data(self):
-        self.is_current_update = False
-        self.is_genering = True
-        self.df = pd.DataFrame([])
+    @staticmethod
+    def calculate(df: pd.DataFrame,fast_period,slow_period,
+                                    signal_period,macd_mamode,
+                                    atr_length,atr_mamode,atr_multiplier):
+        df = df.copy()
+        df = df.reset_index(drop=True)
         
-        df:pd.DataFrame = self._candles.get_df()
+        INDICATOR = trend_with_stoploss(df,
+                        macd_fast=fast_period,
+                        macd_slow=slow_period,
+                        macd_signal = signal_period,
+                        macd_mamode = macd_mamode,
+                        atr_length = atr_length,
+                        atr_mamode = atr_mamode,
+                        atr_multiplier = atr_multiplier)
         
-        long_stoploss,short_stoploss,Uptrend,Downtrend = self.calculate(df)
+        long_stoploss = INDICATOR["long_stoploss"].dropna().round(6)
+        short_stoploss = INDICATOR["short_stoploss"].dropna().round(6)
+        Uptrend = INDICATOR["Uptrend"].dropna()
+        Downtrend = INDICATOR["Downtrend"].dropna()
         
         _len = min([len(long_stoploss),len(short_stoploss),len(Uptrend), len(Downtrend)])
         
         _index = df["index"]
-        self.df = pd.DataFrame({
+        return pd.DataFrame({
                             'index':_index.tail(_len),
                             "long_stoploss":long_stoploss.tail(_len),
                             "short_stoploss":short_stoploss.tail(_len),
@@ -288,21 +291,20 @@ class TrendWithStopLoss(QObject):
                             "Downtrend":Downtrend.tail(_len),
                             })
         
+    def fisrt_gen_data(self):
+        self.is_current_update = False
+        self.is_genering = True
+        self.df = pd.DataFrame([])
+        df:pd.DataFrame = self._candles.get_df()
+        process = HeavyProcess(self.calculate,
+                               self.callback_first_gen,
+                               df,
+                               self.fast_period,self.slow_period,
+                                self.signal_period,self.macd_mamode,
+                                self.atr_length,self.atr_mamode,self.atr_multiplier)
+        process.start()
         
-        self.xdata,self.long_stoploss,self.short_stoploss,self.Uptrend,self.Downtrend = self.df["index"].to_numpy(),\
-                                                                                    self.df["long_stoploss"].to_numpy(),\
-                                                                                    self.df["short_stoploss"].to_numpy(),\
-                                                                                    self.df["Uptrend"].to_numpy(),\
-                                                                                    self.df["Downtrend"].to_numpy()
-                                                                                        
-        self.is_genering = False
-        if self.first_gen == False:
-            self.first_gen = True
-            self.is_genering = False
-        self.is_current_update = True
-        self.sig_reset_all.emit()
-        
-        
+    
     def add_historic(self,n:int):
         self.is_genering = True
         self.is_histocric_load = False
@@ -310,78 +312,111 @@ class TrendWithStopLoss(QObject):
         candle_df = self._candles.get_df()
         df:pd.DataFrame = candle_df.head(-_pre_len)
         
-        long_stoploss,short_stoploss,Uptrend,Downtrend = self.calculate(df)
-        
-        _len = min([len(long_stoploss),len(short_stoploss),len(Uptrend), len(Downtrend)])
-        
-        _index = df["index"]
-        
-        _df = pd.DataFrame({
-                            'index':_index.tail(_len),
-                            "long_stoploss":long_stoploss.tail(_len),
-                            "short_stoploss":short_stoploss.tail(_len),
-                            "Uptrend":Uptrend.tail(_len),
-                            "Downtrend":Downtrend.tail(_len),
-                            })
-
+        process = HeavyProcess(self.calculate,
+                               self.callback_gen_historic_data,
+                               df,
+                               self.fast_period,self.slow_period,
+                                self.signal_period,self.macd_mamode,
+                                self.atr_length,self.atr_mamode,self.atr_multiplier)
+        process.start()
+       
+    def add(self,new_candles:List[OHLCV]):
+        new_candle:OHLCV = new_candles[-1]
+        self.is_current_update = False
+        if (self.first_gen == True) and (self.is_genering == False):
+            df:pd.DataFrame = self._candles.get_df(self.slow_period*5)
+            process = HeavyProcess(self.calculate,
+                               self.callback_add,
+                               df,
+                               self.fast_period,self.slow_period,
+                                self.signal_period,self.macd_mamode,
+                                self.atr_length,self.atr_mamode,self.atr_multiplier)
+            process.start()
+        else:
+            self.is_current_update = True
+            
+    def update(self, new_candles:List[OHLCV]):
+        new_candle:OHLCV = new_candles[-1]
+        self.is_current_update = False
+        if (self.first_gen == True) and (self.is_genering == False):
+            df:pd.DataFrame = self._candles.get_df(self.slow_period*5)
+            process = HeavyProcess(self.calculate,
+                               self.callback_update,
+                               df,
+                               self.fast_period,self.slow_period,
+                                self.signal_period,self.macd_mamode,
+                                self.atr_length,self.atr_mamode,self.atr_multiplier)
+            process.start() 
+        else:
+            self.is_current_update = True
+    
+    def callback_first_gen(self, future: Future):
+        self.df = future.result()
+        self.xdata,self.long_stoploss,self.short_stoploss,self.Uptrend,self.Downtrend = self.df["index"].to_numpy(),\
+                                                                                    self.df["long_stoploss"].to_numpy(),\
+                                                                                    self.df["short_stoploss"].to_numpy(),\
+                                                                                    self.df["Uptrend"].to_numpy(),\
+                                                                                    self.df["Downtrend"].to_numpy()                                           
+        self.is_genering = False
+        if self.first_gen == False:
+            self.first_gen = True
+            self.is_genering = False
+        self.is_current_update = True
+        self.sig_reset_all.emit()
+    
+    def callback_gen_historic_data(self, future: Future):
+        _df = future.result()
+        _len = len(_df)
         self.df = pd.concat([_df,self.df],ignore_index=True)        
-        
         self.xdata = np.concatenate((_df["index"].to_numpy(), self.xdata)) 
         self.long_stoploss = np.concatenate((_df["long_stoploss"].to_numpy(), self.long_stoploss)) 
         self.short_stoploss = np.concatenate((_df["short_stoploss"].to_numpy(), self.short_stoploss)) 
         self.Uptrend = np.concatenate((_df["Uptrend"].to_numpy(), self.Uptrend)) 
         self.Downtrend = np.concatenate((_df["Downtrend"].to_numpy(), self.Downtrend)) 
-        
-        
         self.is_genering = False
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
         self.is_histocric_load = True
         self.sig_add_historic.emit(_len)
-    
-    
-    def add(self,new_candles:List[OHLCV]):
-        new_candle:OHLCV = new_candles[-1]
-        self.is_current_update = False
-        if (self.first_gen == True) and (self.is_genering == False):
-            df:pd.DataFrame = self._candles.get_df(self.slow_period*5)
-            
-            long_stoploss,short_stoploss,Uptrend,Downtrend = self.calculate(df)
         
-            # _len = min([len(long_stoploss),len(short_stoploss),len(Uptrend), len(Downtrend)])
-            
-            # _index = df["index"]
-            
-            new_frame = pd.DataFrame({
-                                'index':[new_candle.index],
-                                "long_stoploss":[long_stoploss.iloc[-1]],
-                                "short_stoploss":[short_stoploss.iloc[-1]],
-                                "Uptrend":[Uptrend.iloc[-1]],
-                                "Downtrend":[Downtrend.iloc[-1]],
+    
+    def callback_add(self,future: Future):
+        df = future.result()
+        last_index = df["index"].iloc[-1]
+        last_long_stoploss = df["long_stoploss"].iloc[-1]
+        last_short_stoploss = df["short_stoploss"].iloc[-1]
+        last_Uptrend = df["Uptrend"].iloc[-1]
+        last_Downtrend = df["Downtrend"].iloc[-1]
+        
+        new_frame = pd.DataFrame({
+                                'index':[last_index],
+                                "long_stoploss":[last_long_stoploss],
+                                "short_stoploss":[last_short_stoploss],
+                                "Uptrend":[last_Uptrend],
+                                "Downtrend":[last_Downtrend],
                                 })
             
-            self.df = pd.concat([self.df,new_frame],ignore_index=True)
-            
-            self.xdata = np.concatenate((self.xdata,np.array([new_candle.index])))
-            self.long_stoploss = np.concatenate((self.long_stoploss,np.array([long_stoploss.iloc[-1]])))
-            self.short_stoploss = np.concatenate((self.short_stoploss,np.array([short_stoploss.iloc[-1]])))
-            self.Uptrend = np.concatenate((self.Uptrend,np.array([Uptrend.iloc[-1]])))
-            self.Downtrend = np.concatenate((self.Downtrend,np.array([Downtrend.iloc[-1]])))
-    
-            self.sig_add_candle.emit()
+        self.df = pd.concat([self.df,new_frame],ignore_index=True)
+        
+        self.xdata = np.concatenate((self.xdata,np.array([last_index])))
+        self.long_stoploss = np.concatenate((self.long_stoploss,np.array([last_long_stoploss])))
+        self.short_stoploss = np.concatenate((self.short_stoploss,np.array([last_short_stoploss])))
+        self.Uptrend = np.concatenate((self.Uptrend,np.array([last_Uptrend])))
+        self.Downtrend = np.concatenate((self.Downtrend,np.array([last_Downtrend])))
+        self.sig_add_candle.emit()
         self.is_current_update = True
         
-    def update(self, new_candles:List[OHLCV]):
-        new_candle:OHLCV = new_candles[-1]
-        self.is_current_update = False
-        if (self.first_gen == True) and (self.is_genering == False):
-            df:pd.DataFrame = self._candles.get_df(self.slow_period*5)
-            long_stoploss,short_stoploss,Uptrend,Downtrend = self.calculate(df)
-            self.df.iloc[-1] = [new_candle.index,long_stoploss.iloc[-1],short_stoploss.iloc[-1],Uptrend.iloc[-1],Downtrend.iloc[-1]]
-            self.xdata[-1],self.long_stoploss[-1],self.short_stoploss[-1],self.Uptrend[-1] ,self.Downtrend[-1] = new_candle.index,long_stoploss.iloc[-1],short_stoploss.iloc[-1],Uptrend.iloc[-1],Downtrend.iloc[-1]
-
-            self.sig_update_candle.emit()
-        self.is_current_update = True
-            
+    def callback_update(self,future: Future):
+        df = future.result()
+        last_index = df["index"].iloc[-1]
+        last_long_stoploss = df["long_stoploss"].iloc[-1]
+        last_short_stoploss = df["short_stoploss"].iloc[-1]
+        last_Uptrend = df["Uptrend"].iloc[-1]
+        last_Downtrend = df["Downtrend"].iloc[-1]
+        
+        self.df.iloc[-1] = [last_index,last_long_stoploss,last_short_stoploss,last_Uptrend,last_Downtrend]
+        self.xdata[-1],self.long_stoploss[-1],self.short_stoploss[-1],self.Uptrend[-1] ,self.Downtrend[-1] = last_index,last_long_stoploss,last_short_stoploss,last_Uptrend,last_Downtrend
+        self.sig_update_candle.emit()
+        self.is_current_update = True          
             

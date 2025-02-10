@@ -70,14 +70,13 @@ class CustomCandlePattern(GraphicsObject):
                 
         self.INDICATOR  = ProCandlePattern(self.has["inputs"]["source"])
         
-        self.supertrend = SuperTrendWithStopLoss(self.has["inputs"]["source"], self.supertmodel.__dict__)
         
         self.chart.sig_update_source.connect(self.change_source,Qt.ConnectionType.QueuedConnection)   
         self.signal_delete.connect(self.delete)
         
     @property
     def is_all_updated(self):
-        is_updated = (self.INDICATOR.is_current_update and self.supertrend.is_current_update)
+        is_updated = self.INDICATOR.is_current_update
         return is_updated
     
     @property
@@ -120,7 +119,6 @@ class CustomCandlePattern(GraphicsObject):
     def fisrt_gen_data(self):
         self.connect_signals()
         self.INDICATOR.fisrt_gen_data()
-        self.supertrend.fisrt_gen_data()
        
     def delete(self):
         self.INDICATOR.deleteLater()
@@ -204,11 +202,6 @@ class CustomCandlePattern(GraphicsObject):
             row = df.iloc[i-1]
             index = row['index']
             
-            supertrenddf = self.supertrend.df.loc[self.supertrend.df['index'] == index]
-            SUPERTd = 0
-            if not supertrenddf.empty:
-                SUPERTd = supertrenddf.iloc[-1]["SUPERTd"]
-
             if row['bearish_ziad_francis'] == True:
                 text = 'bearish_ziadfrancis'
             elif row['bearish_miharris'] == True:
@@ -216,7 +209,7 @@ class CustomCandlePattern(GraphicsObject):
             elif row['bearish_miharris2'] == True:
                 text = 'bearish_miharris2'
                 
-            if index and text and SUPERTd<0:
+            if index and text:
                 ohlc =  self.chart.jp_candle.map_index_ohlcv.get(index)
                 if ohlc:
                     obj = TextItem("",color="red")
@@ -241,7 +234,7 @@ class CustomCandlePattern(GraphicsObject):
                 text = 'bull_miharris2'
             
             
-            if index and text and SUPERTd>0:
+            if index and text:
                 ohlc =  self.chart.jp_candle.map_index_ohlcv.get(index)
                 if ohlc:
                     # obj = TextBoxROI(size=5,symbol="o",pen="green",brush = "green", drawtool=self.chart.drawtool)
@@ -276,10 +269,6 @@ class CustomCandlePattern(GraphicsObject):
 
             index = row['index']
             
-            supertrenddf = self.supertrend.df.loc[self.supertrend.df['index'] == index]
-            SUPERTd = 0
-            if not supertrenddf.empty:
-                SUPERTd = supertrenddf.iloc[-1]["SUPERTd"]
             
             if row['bearish_ziad_francis'] == True:
                 text = 'bearish_ziadfrancis'
@@ -353,11 +342,6 @@ class CustomCandlePattern(GraphicsObject):
             return
 
             
-        supertrenddf = self.supertrend.df.loc[self.supertrend.df['index'] == index]
-        SUPERTd = 0
-        if not supertrenddf.empty:
-            SUPERTd = supertrenddf.iloc[-1]["SUPERTd"]
-        
         
         if row['bearish_ziad_francis'] == True:
             text = 'bearish_ziadfrancis'
@@ -366,7 +350,7 @@ class CustomCandlePattern(GraphicsObject):
         elif row['bearish_miharris2'] == True:
             text = 'bearish_miharris2'
     
-        if index and text and SUPERTd<0:
+        if index and text:
             if self.list_patterns.get(index):
                 return
             ohlc =  self.chart.jp_candle.map_index_ohlcv.get(index)
@@ -391,7 +375,7 @@ class CustomCandlePattern(GraphicsObject):
         elif row['bull_miharris2'] == True:
             text = 'bull_miharris2'
             
-        if index and text and SUPERTd>0:
+        if index and text:
             if self.list_patterns.get(index):
                 return
             ohlc =  self.chart.jp_candle.map_index_ohlcv.get(index)

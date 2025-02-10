@@ -19,7 +19,6 @@ if TYPE_CHECKING:
     from atklip.graphics.chart_component.sub_panel_indicator import ViewSubPanel
 
 
-
 class VolumeWithMA(GraphicsObject):
     """DEMA EMA HMA SMA SMMA TEMA TRIX ZLEMA WMA"""
     on_click = Signal(object)

@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
+from concurrent.futures import Future
 from numpy import floor, isnan, nan, zeros, zeros_like
 from numba import njit
 from pandas import Series, DataFrame
+from atklip.appmanager.worker.return_worker import HeavyProcess
 from atklip.controls.pandas_ta._typing import DictLike, Int, IntFloat
 from atklip.controls.pandas_ta.utils import (
     v_bool,
@@ -684,64 +686,115 @@ class ZIGZAG(QObject):
             
         return x_data,y_data
     
-    def calculate(self,list_zizgzag, candles: List[OHLCV],process:str=""):
-        
+    
+    @staticmethod
+    def calculate(list_zizgzag, candles: List[OHLCV],process:str="",deviation:float=1):
         if process == "add" or process == "update":
-            self.list_zizgzag = update_zz(list_zizgzag=list_zizgzag,
+            list_zizgzag = update_zz(list_zizgzag=list_zizgzag,
                                 ohlcv=candles[-1],
-                                percent= self.deviation
+                                percent= deviation
                                 )
         elif process == "load":
-            self.list_zizgzag = load_zz(list_zizgzag=list_zizgzag,
+            list_zizgzag = load_zz(list_zizgzag=list_zizgzag,
                                 candles=candles,
-                                percent= self.deviation
+                                percent= deviation
                                 )
         else:
-            self.list_zizgzag = my_zigzag(list_zizgzag=list_zizgzag,
+            list_zizgzag = my_zigzag(list_zizgzag=list_zizgzag,
                                 candles=candles,
-                                percent= self.deviation
-                                )
-
-        return self.paire_data(self.list_zizgzag)
-    
-    def fisrt_gen_data(self):
-        self.is_genering = True
-        self.is_current_update = False
-        self.df = pd.DataFrame([])
+                                percent= deviation)
         
-        self.x_data,self.y_data = self.calculate([],self._candles.candles)
-
+        if len(list_zizgzag) == 2:
+            if percent_caculator(list_zizgzag[0][1],list_zizgzag[1][1]) >= deviation:
+                x_data = [x[0] for x in list_zizgzag]
+                y_data = [x[1] for x in list_zizgzag]   
+            else:
+                x_data,y_data = [],[]
+        else:
+            x_data = [x[0] for x in list_zizgzag]
+            y_data = [x[1] for x in list_zizgzag]  
+ 
+        return list_zizgzag,x_data,y_data
+           
+    def fisrt_gen_data(self):
+        self.is_current_update = False
+        self.is_genering = True
+        self.df = pd.DataFrame([])
+        self.list_zizgzag = []
+        process = HeavyProcess(self.calculate,
+                               self.callback_first_gen,
+                               self.list_zizgzag, 
+                               self._candles.candles,
+                               "",
+                               self.deviation)
+        process.start()
+        
+    
+    def add_historic(self,n:int):
+        self.is_genering = True
+        self.is_histocric_load = False
+        process = HeavyProcess(self.calculate,
+                               self.callback_gen_historic_data,
+                               self.list_zizgzag, 
+                               self._candles.candles,
+                               "load",
+                               self.deviation)
+        process.start()
+       
+    def add(self,new_candles:List[OHLCV]):
+        new_candle:OHLCV = new_candles[-1]
+        self.is_current_update = False
+        if (self.first_gen == True) and (self.is_genering == False):
+            process = HeavyProcess(self.calculate,
+                               self.callback_add,
+                               self.list_zizgzag, 
+                               self._candles.candles,
+                               "add",
+                               self.deviation)
+            process.start()
+        else:
+            self.is_current_update = True
+            
+    def update(self, new_candles:List[OHLCV]):
+        new_candle:OHLCV = new_candles[-1]
+        self.is_current_update = False
+        if (self.first_gen == True) and (self.is_genering == False):
+            process = HeavyProcess(self.calculate,
+                               self.callback_update,
+                               self.list_zizgzag, 
+                               self._candles.candles,
+                               "update",
+                               self.deviation)
+            process.start() 
+        else:
+            self.is_current_update = True
+    
+    def callback_first_gen(self, future: Future):
+        self.list_zizgzag,self.x_data,self.y_data = future.result()
         self.is_genering = False
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
         self.is_current_update = True
         self.sig_reset_all.emit()
-    
-    def add_historic(self,_len:int):
-        self.is_genering = True
-        self.is_current_update = False
-        self.x_data,self.y_data = self.calculate(self.list_zizgzag,self._candles.candles,"load")
+        
+    def callback_gen_historic_data(self, future: Future):
+        self.list_zizgzag,self.x_data,self.y_data = future.result()
         self.is_genering = False
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
         self.is_current_update = True
+        _len = len(self.list_zizgzag)
         self.sig_add_historic.emit(_len)
-    
-    def add(self,new_candles:List[OHLCV]):
-        new_candle:OHLCV = new_candles[-1]
-        self.is_current_update = False
-        if (self.first_gen == True) and (self.is_genering == False):
-            self.x_data,self.y_data = self.calculate(self.list_zizgzag,self._candles.candles,"add")
-            self.sig_add_candle.emit()
+        
+    def callback_add(self,future: Future):
+        self.list_zizgzag,self.x_data,self.y_data = future.result()
+        self.sig_add_candle.emit()
         self.is_current_update = True
         
-    def update(self, new_candles:List[OHLCV]):
-        new_candle:OHLCV = new_candles[-1]
-        self.is_current_update = False
-        if (self.first_gen == True) and (self.is_genering == False):
-            self.x_data,self.y_data = self.calculate(self.list_zizgzag,self._candles.candles,"update")
-            self.sig_update_candle.emit()
+    def callback_update(self,future: Future):
+        self.list_zizgzag,self.x_data,self.y_data = future.result()
+        self.sig_update_candle.emit()
         self.is_current_update = True
 

@@ -1,5 +1,7 @@
+from concurrent.futures import Future
 import numpy as np
 import pandas as pd
+from atklip.appmanager.worker.return_worker import HeavyProcess
 from atklip.controls.ma import ema
 
 def ema_trend_metter(df: pd.DataFrame, base_ema_length: int=13, ema_length_1: int=21, ema_length_2: int=34, ema_length_3: int=55) -> pd.DataFrame:
@@ -170,62 +172,103 @@ class EMA_TREND_METTER(QObject):
         downtrend = INDICATOR[downtrend_name].dropna().round(6)
         return uptrend,downtrend
     
-    def calculate(self,df: pd.DataFrame):
+    @staticmethod
+    def calculate(df: pd.DataFrame,base_ema_length,ema_length_1,ema_length_2,ema_length_3):
+        df = df.copy()
+        df = df.reset_index(drop=True)
+        
         INDICATOR = ema_trend_metter(df=df,
-                                    base_ema_length = self.base_ema_length,
-                                    ema_length_1 = self.ema_length_1,
-                                    ema_length_2 = self.ema_length_2,
-                                    ema_length_3 = self.ema_length_3).dropna()
-        return self.paire_data(INDICATOR)
-    
-    def fisrt_gen_data(self):
-        self.is_current_update = False
-        self.is_genering = True
-        self.df = pd.DataFrame([])
+                                    base_ema_length = base_ema_length,
+                                    ema_length_1 = ema_length_1,
+                                    ema_length_2 = ema_length_2,
+                                    ema_length_3 = ema_length_3).dropna()
         
-        df:pd.DataFrame = self._candles.get_df()
-        
-        uptrend, downtrend = self.calculate(df)
-        
+        uptrend_name = 'up'
+        downtrend_name = 'down'
+        uptrend = INDICATOR[uptrend_name].dropna().round(6)
+        downtrend = INDICATOR[downtrend_name].dropna().round(6)
+ 
         _len = min([len(uptrend),len(downtrend)])
         _index = df["index"].tail(_len)
 
-        self.df = pd.DataFrame({
+        return pd.DataFrame({
                             'index':_index,
                             "uptrend":uptrend.tail(_len),
                             "downtrend":downtrend.tail(_len)
                             })
-        self.xdata,self.uptrend, self.downtrend = self.df["index"].to_numpy(),\
-                                                self.df["uptrend"].to_numpy(),\
-                                                self.df["downtrend"].to_numpy()
         
-        self.is_genering = False
-        if self.first_gen == False:
-            self.first_gen = True
-            self.is_genering = False
+    def fisrt_gen_data(self):
+        self.is_current_update = False
+        self.is_genering = True
+        self.df = pd.DataFrame([])
+        df:pd.DataFrame = self._candles.get_df()
+        process = HeavyProcess(self.calculate,
+                               self.callback_first_gen,
+                               df,
+                               self.base_ema_length,self.ema_length_1,self.ema_length_2,self.ema_length_3)
+        process.start()
         
-        self.is_current_update = True
-        self.sig_reset_all.emit()
-    
     
     def add_historic(self,n:int):
         self.is_genering = True
         self.is_histocric_load = False
         _pre_len = len(self.df)
-        df:pd.DataFrame = self._candles.get_df().iloc[:-1*_pre_len]
+        candle_df = self._candles.get_df()
+        df:pd.DataFrame = candle_df.head(-_pre_len)
         
+        process = HeavyProcess(self.calculate,
+                               self.callback_gen_historic_data,
+                               df,
+                               self.base_ema_length,self.ema_length_1,self.ema_length_2,self.ema_length_3)
+        process.start()
+       
+    def add(self,new_candles:List[OHLCV]):
+        new_candle:OHLCV = new_candles[-1]
+        self.is_current_update = False
+        if (self.first_gen == True) and (self.is_genering == False):
+            df:pd.DataFrame = self._candles.get_df(self.base_ema_length+
+                                                   self.ema_length_1+
+                                                   self.ema_length_2+
+                                                   self.ema_length_3+5)
+            process = HeavyProcess(self.calculate,
+                               self.callback_add,
+                               df,
+                               self.base_ema_length,self.ema_length_1,self.ema_length_2,self.ema_length_3)
+            process.start()
+        else:
+            self.is_current_update = True
+            
+    def update(self, new_candles:List[OHLCV]):
+        new_candle:OHLCV = new_candles[-1]
+        self.is_current_update = False
+        if (self.first_gen == True) and (self.is_genering == False):
+            df:pd.DataFrame = self._candles.get_df(self.base_ema_length+
+                                                   self.ema_length_1+
+                                                   self.ema_length_2+
+                                                   self.ema_length_3+5)
+            process = HeavyProcess(self.calculate,
+                               self.callback_update,
+                               df,
+                               self.base_ema_length,self.ema_length_1,self.ema_length_2,self.ema_length_3)
+            process.start() 
+        else:
+            self.is_current_update = True
+    
+    def callback_first_gen(self, future: Future):
+        self.df = future.result()
+        self.xdata,self.uptrend, self.downtrend = self.df["index"].to_numpy(),\
+                                                self.df["uptrend"].to_numpy(),\
+                                                self.df["downtrend"].to_numpy()
+        self.is_genering = False
+        if self.first_gen == False:
+            self.first_gen = True
+            self.is_genering = False
+        self.is_current_update = True
+        self.sig_reset_all.emit()
         
-        uptrend, downtrend = self.calculate(df)
-        
-        _len = min([len(uptrend),len(downtrend)])
-        _index = df["index"].tail(_len)
-
-        _df = pd.DataFrame({
-                            'index':_index,
-                            "uptrend":uptrend.tail(_len),
-                            "downtrend":downtrend.tail(_len)
-                            })
-
+    def callback_gen_historic_data(self, future: Future):
+        _df = future.result()
+        _len = len(_df)
         self.df = pd.concat([_df,self.df],ignore_index=True)
 
         self.xdata = np.concatenate((_df["index"].to_numpy(), self.xdata)) 
@@ -238,49 +281,31 @@ class EMA_TREND_METTER(QObject):
             self.is_genering = False
         self.is_histocric_load = True
         self.sig_add_historic.emit(_len)
-    
-    def add(self,new_candles:List[OHLCV]):
-        new_candle:OHLCV = new_candles[-1]
-        self.is_current_update = False
-        if (self.first_gen == True) and (self.is_genering == False):
-            df:pd.DataFrame = self._candles.get_df(self.base_ema_length+
-                                                   self.ema_length_1+
-                                                   self.ema_length_2+
-                                                   self.ema_length_3+5)
-                    
-            uptrend, downtrend = self.calculate(df)
-            
-            new_frame = pd.DataFrame({
-                                    'index':[new_candle.index],
-                                    "uptrend":[uptrend.iloc[-1]],
-                                    "downtrend":[downtrend.iloc[-1]]
+        
+    def callback_add(self,future: Future):
+        df = future.result()
+        last_index = df["index"].iloc[-1]
+        last_uptrend = df["uptrend"].iloc[-1]
+        last_downtrend = df["downtrend"].iloc[-1]
+        new_frame = pd.DataFrame({
+                                    'index':[last_index],
+                                    "uptrend":[last_uptrend],
+                                    "downtrend":[last_downtrend]
                                     })
-            
-            self.df = pd.concat([self.df,new_frame],ignore_index=True)
-            
-            self.xdata = np.concatenate((self.xdata,np.array([new_candle.index])))
-            self.uptrend = np.concatenate((self.uptrend,np.array([uptrend.iloc[-1]])))
-            self.downtrend = np.concatenate((self.downtrend,np.array([downtrend.iloc[-1]]))) 
-                                            
-            self.sig_add_candle.emit()
+        self.df = pd.concat([self.df,new_frame],ignore_index=True)
+        self.xdata = np.concatenate((self.xdata,np.array([last_index])))
+        self.uptrend = np.concatenate((self.uptrend,np.array([last_uptrend])))
+        self.downtrend = np.concatenate((self.downtrend,np.array([last_downtrend])))                            
+        self.sig_add_candle.emit()
         self.is_current_update = True
-            
         
-    def update(self, new_candles:List[OHLCV]):
-        new_candle:OHLCV = new_candles[-1]
-        self.is_current_update = False
-        
-        if (self.first_gen == True) and (self.is_genering == False):
-            df:pd.DataFrame = self._candles.get_df(self.base_ema_length+
-                                                   self.ema_length_1+
-                                                   self.ema_length_2+
-                                                   self.ema_length_3+5)
-            
-            uptrend, downtrend = self.calculate(df)
-            
-            self.df.iloc[-1] = [new_candle.index,uptrend.iloc[-1],downtrend.iloc[-1]]
-            
-            self.xdata[-1],self.uptrend[-1], self.downtrend[-1]  = new_candle.index,uptrend.iloc[-1],downtrend.iloc[-1]
-            self.sig_update_candle.emit()
+    def callback_update(self,future: Future):
+        df = future.result()
+        last_index = df["index"].iloc[-1]
+        last_uptrend = df["uptrend"].iloc[-1]
+        last_downtrend = df["downtrend"].iloc[-1]
+        self.df.iloc[-1] = [last_index,last_uptrend,last_downtrend]
+        self.xdata[-1],self.uptrend[-1], self.downtrend[-1]  = last_index,last_uptrend,last_downtrend
+        self.sig_update_candle.emit()
         self.is_current_update = True
-            
+        

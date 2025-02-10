@@ -528,6 +528,7 @@ class Chart(ViewPlotWidget):
     
     async def loop_watch_ohlcv(self,symbol,interval,exchange_name):
         self.trading_mode = True
+        self.sig_show_process.emit(False)
         if not self.worker_reload:
             await self.reload_market()
         elif isinstance(self.worker_reload,asyncio.Task):

@@ -76,19 +76,19 @@ def find_nearest_index(lst, special_value):
         index = min(range(len(lst)), key=lambda i: abs(lst[i] - special_value))
         return index
     
-@njit(cache=True) 
+#@njit(cache=True) 
 def cal_line_price_fibo(top, bot, percent, direct=1):
     diff = (top - bot) * percent
     if direct == 1:
         return top - diff
     return bot + diff
 
-@njit(cache=True) 
+#@njit(cache=True) 
 def divide_with_remainder(a, b):
     quotient, remainder = divmod(a, b)
     return quotient, remainder
 
-@njit(cache=True)
+#@njit(cache=True)
 def percent_caculator(start, stop):
     percent = ((start - stop) / start) * 100
     if percent > 0:
@@ -97,7 +97,7 @@ def percent_caculator(start, stop):
         return round(abs(percent),4)
 
 
-@njit(cache=True)
+#@njit(cache=True)
 def calculate_stoploss(_type,start, percent):
     if _type == "long":
         stop = start*(1-percent/100)
@@ -127,7 +127,7 @@ def binary_search(x,arr,length):
     else:
         return left
 
-@njit(cache=True)
+#@njit(cache=True)
 def supersmoother_fast(source, period):
     if not isinstance(source,np.ndarray):
         source = np.array(source)

@@ -6,7 +6,6 @@ import traceback
 import asyncio
 from PySide6.QtCore import Signal, QObject, QCoreApplication, Slot,QThread,Qt
 from .threadpool import ThreadPoolExecutor_global
-import multiprocess as mp
 
 
 class FastStartThread(QObject):

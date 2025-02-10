@@ -1,5 +1,7 @@
+from concurrent.futures import Future
 import pandas as pd
 import numpy as np
+from atklip.appmanager.worker.return_worker import HeavyProcess
 import atklip.controls.pandas_ta as ta
 
 def candle_pattern(df:pd.DataFrame,C_Len: int= 14,C_ShadowPercent:float = 5.0):
@@ -364,65 +366,91 @@ class ProCandlePattern(QObject):
     def paire_data(self,INDICATOR:pd.DataFrame|pd.Series):
         return
     
-    def calculate(self,df: pd.DataFrame):
-        # INDICATOR = candle_pattern(df)
-        INDICATOR = identify_patterns(df)
-        
-        return INDICATOR
     
+    @staticmethod
+    def calculate(df: pd.DataFrame):
+        df = df.copy()
+        df = df.reset_index(drop=True)
+        INDICATOR = identify_patterns(df)
+        return INDICATOR
+        
     def fisrt_gen_data(self):
         self.is_current_update = False
         self.is_genering = True
         self.df = pd.DataFrame([])
         df:pd.DataFrame = self._candles.get_df()
+        process = HeavyProcess(self.calculate,
+                               self.callback_first_gen,
+                               df)
+        process.start()
         
-        self.df = self.calculate(df)
-        
-        self.is_genering = False
-        if self.first_gen == False:
-            self.first_gen = True
-            self.is_genering = False
-        
-        self.is_current_update = True
-        self.sig_reset_all.emit()
     
     def add_historic(self,n:int):
         self.is_genering = True
         self.is_histocric_load = False
         _pre_len = len(self.df)
-        df:pd.DataFrame = self._candles.get_df().iloc[:-1*_pre_len]
+        candle_df = self._candles.get_df()
+        df:pd.DataFrame = candle_df.head(-_pre_len)
         
-        _df= self.calculate(df)
-        _len = len(_df)
-        self.df = pd.concat([_df,self.df],ignore_index=True)
-        
-        self.is_genering = False
-        if self.first_gen == False:
-            self.first_gen = True
-            self.is_genering = False
-        self.is_histocric_load = True
-        self.sig_add_historic.emit(_len)
-    
+        process = HeavyProcess(self.calculate,
+                               self.callback_gen_historic_data,
+                               df)
+        process.start()
+       
     def add(self,new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]
         self.is_current_update = False
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(10)
-            _df:pd.DataFrame  = self.calculate(df)
-            
-            _new_df = _df.iloc[[-1]]
-            self.df = pd.concat([self.df,_new_df],ignore_index=True)
-            self.sig_add_candle.emit()
-        
-        self.is_current_update = True
+            process = HeavyProcess(self.calculate,
+                               self.callback_add,
+                               df)
+            process.start()
+        else:
+            self.is_current_update = True
             
     def update(self, new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]
         self.is_current_update = False
         if (self.first_gen == True) and (self.is_genering == False):
             df:pd.DataFrame = self._candles.get_df(10)
-            _df = self.calculate(df)
-            self.df.iloc[-1] = _df.iloc[-1]
-            self.sig_update_candle.emit()
+            process = HeavyProcess(self.calculate,
+                               self.callback_update,
+                               df)
+            process.start() 
+        else:
+            self.is_current_update = True
+    
+    def callback_first_gen(self, future: Future):
+        self.df = future.result()
+        self.is_genering = False
+        if self.first_gen == False:
+            self.first_gen = True
+            self.is_genering = False
         self.is_current_update = True
+        self.sig_reset_all.emit()
+    
+    def callback_gen_historic_data(self, future: Future):
+        _df = future.result()
+        _len = len(_df)
+        self.df = pd.concat([_df,self.df],ignore_index=True)
+        self.is_genering = False
+        if self.first_gen == False:
+            self.first_gen = True
+            self.is_genering = False
+        self.is_histocric_load = True
+        self.sig_add_historic.emit(_len)
            
+    def callback_add(self,future: Future):
+        _df = future.result()
+        _new_df = _df.iloc[[-1]]
+        self.df = pd.concat([self.df,_new_df],ignore_index=True)
+        self.sig_add_candle.emit()
+        self.is_current_update = True
+  
+    def callback_update(self,future: Future):
+        _df = future.result()
+        self.df.iloc[-1] = _df.iloc[-1]
+        self.sig_update_candle.emit()
+        self.is_current_update = True
+    

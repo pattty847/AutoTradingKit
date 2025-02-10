@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
+from concurrent.futures import Future
 from pandas import Series
+from atklip.appmanager.worker.return_worker import HeavyProcess
 from atklip.controls.pandas_ta._typing import DictLike, Int
 from atklip.controls.pandas_ta._typing import DictLike
 from atklip.controls.overlap.dema import dema
@@ -237,27 +239,83 @@ class VolumeWithMa(QObject):
 
     def started_worker(self):
         self.worker.submit(self.fisrt_gen_data)
+    
+    @staticmethod
+    def calculate(df: pd.DataFrame,mamode,source,length,zl_mode):
+        # df = df.copy()
+        # df = df.reset_index(drop=True)
+        data = ma(mamode,source=df["volume"],length=length,mamode=zl_mode).dropna().round(6)
+        _len = len(data)
+            
+        return pd.DataFrame({
+                            'index':df["index"].tail(_len),
+                            "data":data,
+                            "volume":df["volume"].tail(_len),
+                            "close":df["close"].tail(_len),
+                            "open":df["open"].tail(_len)
+                            })
         
     def fisrt_gen_data(self):
         self.is_current_update = False
         self.is_genering = True
         self.df = pd.DataFrame([])
         df:pd.DataFrame = self._candles.get_df()
+        process = HeavyProcess(self.calculate,
+                               self.callback_first_gen,
+                               df,
+                               self.mamode,self.source,
+                               self.length,self.zl_mode)
+        process.start()
         
-        data = ma(self.mamode,source=df[self.source],length=self.length,mamode=self.zl_mode).dropna().round(6)
+    
+    def add_historic(self,n:int):
+        self.is_genering = True
+        self.is_histocric_load = False
+        _pre_len = len(self.df)
+        candle_df = self._candles.get_df()
+        df:pd.DataFrame = candle_df.head(-_pre_len)
         
-        _len = len(data)
-        _index = df["index"].tail(_len)
+        process = HeavyProcess(self.calculate,
+                               self.callback_gen_historic_data,
+                               df,
+                               self.mamode,self.source,
+                               self.length,self.zl_mode)
+        process.start()
+       
+    def add(self,new_candles:List[OHLCV]):
+        new_candle:OHLCV = new_candles[-1]
+        self.is_current_update = False
+        if (self.first_gen == True) and (self.is_genering == False):
+            df:pd.DataFrame = self._candles.get_df(self.length*10)
+            process = HeavyProcess(self.calculate,
+                               self.callback_add,
+                               df,
+                               self.mamode,self.source,
+                               self.length,self.zl_mode)
+            process.start()
+        else:
+            self.is_current_update = True
             
-        self.df = pd.DataFrame({
-                            'index':_index,
-                            "data":data
-                            })
-        
+    def update(self, new_candles:List[OHLCV]):
+        new_candle:OHLCV = new_candles[-1]
+        self.is_current_update = False
+        if (self.first_gen == True) and (self.is_genering == False):
+            df:pd.DataFrame = self._candles.get_df(self.length*10)
+            process = HeavyProcess(self.calculate,
+                               self.callback_update,
+                               df,
+                               self.mamode,self.source,
+                               self.length,self.zl_mode)
+            process.start() 
+        else:
+            self.is_current_update = True
+    
+    def callback_first_gen(self, future: Future):
+        self.df = future.result()
         self.xdata,self.ydata = self.df["index"].to_numpy(),self.df["data"].to_numpy()
-        self.volume = df["volume"].tail(_len).to_numpy()
-        self.close = df["close"].tail(_len).to_numpy()
-        self.open = df["open"].tail(_len).to_numpy()
+        self.volume = self.df["volume"].to_numpy()
+        self.close = self.df["close"].to_numpy()
+        self.open = self.df["open"].to_numpy()
         
         self.is_genering = False
         if self.first_gen == False:
@@ -266,77 +324,64 @@ class VolumeWithMa(QObject):
         self.is_current_update = True
         self.sig_reset_all.emit()
         
-    def add_historic(self,n:int):
-        self.is_genering = True
-        self.is_histocric_load = False
-        _pre_len = len(self.df)
-        df:pd.DataFrame = self._candles.get_df().iloc[:-1*_pre_len]
         
-        data = ma(self.mamode,source=df[self.source],length=self.length,mamode=self.zl_mode).dropna().round(6)
-        
-        
-        _len = len(data)
-        _index = df["index"].tail(_len)
-            
-        _df = pd.DataFrame({
-                            'index':_index,
-                            "data":data
-                            })
-        
+    def callback_gen_historic_data(self, future: Future):
+        _df = future.result()
+        _len = len(_df)
         self.df = pd.concat([_df,self.df],ignore_index=True)
-        
         self.xdata = np.concatenate((_df["index"].to_numpy(), self.xdata)) 
         self.ydata = np.concatenate((_df["data"].to_numpy(), self.ydata))  
-        self.volume = np.concatenate((df["volume"].tail(_len).to_numpy(), self.volume))  
-        self.close = np.concatenate((df["close"].tail(_len).to_numpy(), self.close))  
-        self.open = np.concatenate((df["open"].tail(_len).to_numpy(), self.open))  
-           
+        self.volume = np.concatenate((_df["volume"].tail(_len).to_numpy(), self.volume))  
+        self.close = np.concatenate((_df["close"].tail(_len).to_numpy(), self.close))  
+        self.open = np.concatenate((_df["open"].tail(_len).to_numpy(), self.open))  
         self.is_genering = False
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False        
         self.is_histocric_load = True
         self.sig_add_historic.emit(_len)
-    
-    def add(self,new_candles:List[OHLCV]):
-        self.is_current_update = False
-        new_candle:OHLCV = new_candles[-1]
-        if (self.first_gen == True) and (self.is_genering == False):
-            df:pd.DataFrame = self._candles.get_df(self.length*10)
-                        
-            data = ma(self.mamode,source=df[self.source],length=self.length,mamode=self.zl_mode).round(6)
-            
-            _data = data.iloc[-1]
-            
-            new_frame = pd.DataFrame({
-                                'index':[new_candle.index],
-                                "data":[_data]
-                                })
-            
-            self.df = pd.concat([self.df,new_frame],ignore_index=True)            
-            self.xdata = np.concatenate((self.xdata,np.array([new_candle.index])))
-            self.ydata = np.concatenate((self.ydata,np.array([_data])))
-            self.volume = np.concatenate((self.volume,np.array([new_candle.volume])))
-            self.close = np.concatenate((self.close,np.array([new_candle.close])))
-            self.open = np.concatenate((self.open,np.array([new_candle.open])))
-            self.sig_add_candle.emit()
-        self.is_current_update = True
-            
         
-    def update(self, new_candles:List[OHLCV]):
-        new_candle:OHLCV = new_candles[-1]
-        self.is_current_update = False
-        if (self.first_gen == True) and (self.is_genering == False):
-            df:pd.DataFrame = self._candles.get_df(self.length*10)
-            data = ma(self.mamode,source=df[self.source],length=self.length,mamode=self.zl_mode).round(6)
-            self.df.iloc[-1] = [new_candle.index,data.iloc[-1]]
-            self.xdata[-1] = new_candle.index
-            self.ydata[-1] = data.iloc[-1]
-            self.volume[-1] = new_candle.volume
-            self.close[-1] = new_candle.close
-            self.open[-1] = new_candle.open
-            self.sig_update_candle.emit()
+        
+    def callback_add(self,future: Future):
+        df = future.result()
+        last_index = df["index"].iloc[-1]
+        last_data = df["data"].iloc[-1]
+        last_volume = df["volume"].iloc[-1]
+        last_close = df["close"].iloc[-1]
+        last_open = df["open"].iloc[-1]
+        
+        new_frame = pd.DataFrame({
+                            'index':[last_index],
+                            "data":[last_data],
+                            "volume":[last_volume],
+                            "close":[last_close],
+                            "open":[last_open]
+                            })
+            
+        self.df = pd.concat([self.df,new_frame],ignore_index=True)            
+        self.xdata = np.concatenate((self.xdata,np.array([last_index])))
+        self.ydata = np.concatenate((self.ydata,np.array([last_data])))
+        self.volume = np.concatenate((self.volume,np.array([last_volume])))
+        self.close = np.concatenate((self.close,np.array([last_close])))
+        self.open = np.concatenate((self.open,np.array([last_open])))
+        self.sig_add_candle.emit()
         self.is_current_update = True
-            
-            
-            
+        
+        
+    def callback_update(self,future: Future):
+        df = future.result()
+        last_index = df["index"].iloc[-1]
+        last_data = df["data"].iloc[-1]
+        last_volume = df["volume"].iloc[-1]
+        last_close = df["close"].iloc[-1]
+        last_open = df["open"].iloc[-1]
+        
+        self.df.iloc[-1] = [last_index,last_data,last_volume,last_close,last_open]
+        self.xdata[-1] = last_index
+        self.ydata[-1] = last_data
+        self.volume[-1] = last_volume
+        self.close[-1] = last_close
+        self.open[-1] = last_open
+        self.sig_update_candle.emit()
+        self.is_current_update = True
+       

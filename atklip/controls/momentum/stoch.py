@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
+from concurrent.futures import Future
 from pandas import DataFrame, Series
+from atklip.appmanager.worker.return_worker import HeavyProcess
 from atklip.controls.pandas_ta._typing import DictLike, Int
 from atklip.controls.pandas_ta.ma import ma
 from atklip.controls.pandas_ta.maps import Imports
@@ -284,118 +286,149 @@ class STOCH(QObject):
         signalma = INDICATOR[signalma_name].dropna().round(6)
         return stoch_,signalma
     
-    def calculate(self,df: pd.DataFrame):
+    @staticmethod
+    def calculate(df: pd.DataFrame,smooth_k_period,k_period,d_period,mamode,offset):
+        df = df.copy()
+        df = df.reset_index(drop=True)
+        
         INDICATOR = stoch(high=df["high"],
                         low=df["low"],
                         close=df["close"],
-                        smooth_k=self.smooth_k_period,
-                        k = self.k_period,
-                        d = self.d_period,
-                        mamode=self.mamode,
-                        offset=self.offset).dropna().round(6)
-        return self.paire_data(INDICATOR)
-    
+                        smooth_k=smooth_k_period,
+                        k = k_period,
+                        d = d_period,
+                        mamode=mamode,
+                        offset=offset).dropna()
+        
+        column_names = INDICATOR.columns.tolist()
+        stoch_name = ''
+        signalma_name = ''
+        for name in column_names:
+            if name.__contains__("STOCHk"):
+                stoch_name = name
+            elif name.__contains__("STOCHd"):
+                signalma_name = name
+
+        stoch_ = INDICATOR[stoch_name].dropna().round(6)
+        signalma = INDICATOR[signalma_name].dropna().round(6)
+        
+        _len = min([len(stoch_),len(signalma)])
+        _index = df["index"]
+        
+        return pd.DataFrame({
+                            'index':_index.tail(_len),
+                            "stoch":stoch_.tail(_len),
+                            "signalma":signalma.tail(_len)
+                            })
+        
+        
+        
+
     def fisrt_gen_data(self):
         self.is_current_update = False
         self.is_genering = True
         self.df = pd.DataFrame([])
-        
         df:pd.DataFrame = self._candles.get_df()
+        process = HeavyProcess(self.calculate,
+                               self.callback_first_gen,
+                               df,
+                               self.smooth_k_period,self.k_period,
+                               self.d_period,self.mamode,self.offset)
+        process.start()
         
-        stoch_, signalma = self.calculate(df)
-        
-        _index = df["index"]
-        
-        _len = min([len(stoch_),len(signalma)])
-        _index = df["index"].tail(_len)
-
-        self.df = pd.DataFrame({
-                            'index':_index,
-                            "stoch":stoch_.tail(_len),
-                            "signalma":signalma.tail(_len)
-                            })
-                
-        self.xdata,self.stoch_,self.signalma = self.df["index"].to_numpy(),\
-                                                self.df["stoch"].to_numpy(),\
-                                                self.df["signalma"].to_numpy()
-        
-        self.is_genering = False
-        if self.first_gen == False:
-            self.first_gen = True
-            self.is_genering = False
-        
-        self.is_current_update = True
-        self.sig_reset_all.emit()
-    
     
     def add_historic(self,n:int):
         self.is_genering = True
         self.is_histocric_load = False
         _pre_len = len(self.df)
-        df:pd.DataFrame = self._candles.get_df().iloc[:-1*_pre_len]
+        candle_df = self._candles.get_df()
+        df:pd.DataFrame = candle_df.head(-_pre_len)
         
-        stoch_, signalma = self.calculate(df)
+        process = HeavyProcess(self.calculate,
+                               self.callback_gen_historic_data,
+                               df,
+                               self.smooth_k_period,self.k_period,
+                               self.d_period,self.mamode,self.offset)
+        process.start()
+       
+    def add(self,new_candles:List[OHLCV]):
+        new_candle:OHLCV = new_candles[-1]
+        self.is_current_update = False
+        if (self.first_gen == True) and (self.is_genering == False):
+            df:pd.DataFrame = self._candles.get_df(self.k_period*5)
+            process = HeavyProcess(self.calculate,
+                               self.callback_add,
+                               df,
+                               self.smooth_k_period,self.k_period,
+                               self.d_period,self.mamode,self.offset)
+            process.start()
+        else:
+            self.is_current_update = True
+            
+    def update(self, new_candles:List[OHLCV]):
+        new_candle:OHLCV = new_candles[-1]
+        self.is_current_update = False
+        if (self.first_gen == True) and (self.is_genering == False):
+            df:pd.DataFrame = self._candles.get_df(self.k_period*5)
+            process = HeavyProcess(self.calculate,
+                               self.callback_update,
+                               df,
+                               self.smooth_k_period,self.k_period,
+                               self.d_period,self.mamode,self.offset)
+            process.start() 
+        else:
+            self.is_current_update = True
+    
+    def callback_first_gen(self, future: Future):
+        self.df = future.result()
+        self.xdata,self.stoch_,self.signalma = self.df["index"].to_numpy(),\
+                                                self.df["stoch"].to_numpy(),\
+                                                self.df["signalma"].to_numpy()
+        self.is_genering = False
+        if self.first_gen == False:
+            self.first_gen = True
+            self.is_genering = False
+        self.is_current_update = True
+        self.sig_reset_all.emit()
         
-        _len = min([len(stoch_),len(signalma)])
-        _index = df["index"].tail(_len)
-
-        _df = pd.DataFrame({
-                            'index':_index,
-                            "stoch":stoch_.tail(_len),
-                            "signalma":signalma.tail(_len)
-                            })
-        
+    def callback_gen_historic_data(self, future: Future):
+        _df = future.result()
+        _len = len(_df)
         self.df = pd.concat([_df,self.df],ignore_index=True)
-        
-        
         self.xdata = np.concatenate((_df["index"].to_numpy(), self.xdata))
         self.stoch_ = np.concatenate((_df["stoch"].to_numpy(), self.stoch_))
         self.signalma = np.concatenate((_df["signalma"].to_numpy(), self.signalma))
-        
         self.is_genering = False
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
         self.is_histocric_load = True
         self.sig_add_historic.emit(_len)
-    
-    
-    def add(self,new_candles:List[OHLCV]):
-        new_candle:OHLCV = new_candles[-1]
-        self.is_current_update = False
-        if (self.first_gen == True) and (self.is_genering == False):
-            df:pd.DataFrame = self._candles.get_df(self.k_period*5)
-                    
-            stoch_, signalma = self.calculate(df)
-            
-            new_frame = pd.DataFrame({
-                                    'index':[new_candle.index],
-                                    "stoch":[stoch_.iloc[-1]],
-                                    "signalma":[signalma.iloc[-1]]
-                                    })
-            
-            self.df = pd.concat([self.df,new_frame],ignore_index=True)
-            
-            self.xdata = np.concatenate((self.xdata,np.array([new_candle.index])))
-            self.stoch_ = np.concatenate((self.stoch_,np.array([stoch_.iloc[-1]])))
-            self.signalma = np.concatenate((self.signalma,np.array([signalma.iloc[-1]])))             
-            
-            
-            self.sig_add_candle.emit()
-        self.is_current_update = True
-            
         
-    def update(self, new_candles:List[OHLCV]):
-        new_candle:OHLCV = new_candles[-1]
-        self.is_current_update = False
-        if (self.first_gen == True) and (self.is_genering == False):
-            df:pd.DataFrame = self._candles.get_df(self.k_period*5)
-                    
-            stoch_, signalma = self.calculate(df)
-                    
-            self.df.iloc[-1] = [new_candle.index,stoch_.iloc[-1],signalma.iloc[-1]]
-                    
-            self.xdata[-1],self.stoch_[-1],self.signalma[-1]  = new_candle.index,stoch_.iloc[-1],signalma.iloc[-1]
-            self.sig_update_candle.emit()
+    def callback_add(self,future: Future):
+        df = future.result()
+        last_index = df["index"].iloc[-1]
+        last_signalma = df["signalma"].iloc[-1]
+        last_stoch = df["stoch"].iloc[-1]
+        new_frame = pd.DataFrame({
+                                    'index':[last_index],
+                                    "stoch":[last_stoch],
+                                    "signalma":[last_signalma]
+                                    })
+        self.df = pd.concat([self.df,new_frame],ignore_index=True)
+        self.xdata = np.concatenate((self.xdata,np.array([last_index])))
+        self.stoch_ = np.concatenate((self.stoch_,np.array([last_stoch])))
+        self.signalma = np.concatenate((self.signalma,np.array([last_signalma])))             
+        self.sig_add_candle.emit()
         self.is_current_update = True
-            
+        
+    def callback_update(self,future: Future):
+        df = future.result()
+        last_index = df["index"].iloc[-1]
+        last_signalma = df["signalma"].iloc[-1]
+        last_stoch = df["stoch"].iloc[-1]
+        self.df.iloc[-1] = [last_index,last_stoch,last_signalma]       
+        self.xdata[-1],self.stoch_[-1],self.signalma[-1]  = last_index,last_stoch,last_signalma
+        self.sig_update_candle.emit()
+        self.is_current_update = True
+        

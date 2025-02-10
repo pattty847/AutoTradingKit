@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
+from concurrent.futures import Future
 from numpy import isnan
 from pandas import DataFrame, Series
+from atklip.appmanager.worker.return_worker import HeavyProcess
 from atklip.controls.pandas_ta._typing import DictLike, Int, IntFloat
 from atklip.controls.pandas_ta.ma import ma
 from atklip.controls.pandas_ta.utils import (
@@ -271,114 +273,137 @@ class TSI(QObject):
         signalma = INDICATOR[signalma_name].dropna().round(6)
         return tsi_,signalma
     
-    def calculate(self,df: pd.DataFrame):
-        INDICATOR = tsi(close=df[self.source],
-                        fast=self.fast_period,
-                        slow=self.slow_period,
-                        signal = self.signal_period,
-                        mamode=self.mamode.lower(),
-                        drift=self.drift,
-                        offset=self.offset
-                            ).dropna().round(6)
-        return self.paire_data(INDICATOR)
     
-    def fisrt_gen_data(self):
-        self.is_current_update = False
-        self.is_genering = True
-        self.df = pd.DataFrame([])
-        
-        df:pd.DataFrame = self._candles.get_df()
-        
-        tsi_, signalma = self.calculate(df)
-        
+    @staticmethod
+    def calculate(df: pd.DataFrame,source,fast_period,slow_period,signal_period,mamode,drift,offset):
+        df = df.copy()
+        df = df.reset_index(drop=True)
+        INDICATOR = tsi(close=df[source],
+                        fast=fast_period,
+                        slow=slow_period,
+                        signal = signal_period,
+                        mamode=mamode.lower(),
+                        drift=drift,
+                        offset=offset
+                            ).dropna()
+        column_names = INDICATOR.columns.tolist()
+        tsi_name = ''
+        signalma_name = ''
+        for name in column_names:
+            if name.__contains__("TSI_"):
+                tsi_name = name
+            elif name.__contains__("TSIs_"):
+                signalma_name = name
+        tsi_ = INDICATOR[tsi_name].dropna().round(6)
+        signalma = INDICATOR[signalma_name].dropna().round(6)
         _len = min([len(tsi_),len(signalma)])
         _index = df["index"].tail(_len)
-
-        self.df = pd.DataFrame({
+        return pd.DataFrame({
                             'index':_index,
                             "tsi":tsi_.tail(_len),
                             "signalma":signalma.tail(_len)
                             })
-                
-        self.xdata,self.tsi_ , self.signalma = self.df["index"].to_numpy(),\
-                                                self.df["tsi"].to_numpy(),\
-                                                self.df["signalma"].to_numpy()
         
-        self.is_genering = False
-        if self.first_gen == False:
-            self.first_gen = True
-            self.is_genering = False
+    def fisrt_gen_data(self):
+        self.is_current_update = False
+        self.is_genering = True
+        self.df = pd.DataFrame([])
+        df:pd.DataFrame = self._candles.get_df()
+        process = HeavyProcess(self.calculate,
+                               self.callback_first_gen,
+                               df,
+                               self.source,self.fast_period,self.slow_period,self.signal_period,self.mamode,self.drift,self.offset)
+        process.start()
         
-        self.is_current_update = True
-        self.sig_reset_all.emit()
-    
     
     def add_historic(self,n:int):
         self.is_genering = True
         self.is_histocric_load = False
         _pre_len = len(self.df)
-        df:pd.DataFrame = self._candles.get_df().iloc[:-1*_pre_len]
+        candle_df = self._candles.get_df()
+        df:pd.DataFrame = candle_df.head(-_pre_len)
         
-        tsi_, signalma = self.calculate(df)
+        process = HeavyProcess(self.calculate,
+                               self.callback_gen_historic_data,
+                               df,
+                               self.source,self.fast_period,self.slow_period,self.signal_period,self.mamode,self.drift,self.offset)
+        process.start()
+       
+    def add(self,new_candles:List[OHLCV]):
+        new_candle:OHLCV = new_candles[-1]
+        self.is_current_update = False
+        if (self.first_gen == True) and (self.is_genering == False):
+            df:pd.DataFrame = self._candles.get_df(self.slow_period*5)
+            process = HeavyProcess(self.calculate,
+                               self.callback_add,
+                               df,
+                               self.source,self.fast_period,self.slow_period,self.signal_period,self.mamode,self.drift,self.offset)
+            process.start()
+        else:
+            self.is_current_update = True
+            
+    def update(self, new_candles:List[OHLCV]):
+        new_candle:OHLCV = new_candles[-1]
+        self.is_current_update = False
+        if (self.first_gen == True) and (self.is_genering == False):
+            df:pd.DataFrame = self._candles.get_df(self.slow_period*5)
+            process = HeavyProcess(self.calculate,
+                               self.callback_update,
+                               df,
+                               self.source,self.fast_period,self.slow_period,self.signal_period,self.mamode,self.drift,self.offset)
+            process.start() 
+        else:
+            self.is_current_update = True
+    
+    def callback_first_gen(self, future: Future):
+        self.df = future.result()
+        self.xdata,self.tsi_ , self.signalma = self.df["index"].to_numpy(),\
+                                                self.df["tsi"].to_numpy(),\
+                                                self.df["signalma"].to_numpy()
+        self.is_genering = False
+        if self.first_gen == False:
+            self.first_gen = True
+            self.is_genering = False
+        self.is_current_update = True
+        self.sig_reset_all.emit() 
         
-        _len = min([len(tsi_),len(signalma)])
-        _index = df["index"].tail(_len)
-
-        _df = pd.DataFrame({
-                            'index':_index,
-                            "tsi":tsi_.tail(_len),
-                            "signalma":signalma.tail(_len)
-                            })
-        
+    def callback_gen_historic_data(self, future: Future):
+        _df = future.result()
+        _len = len(_df)
         self.df = pd.concat([_df,self.df],ignore_index=True)
-        
-        
         self.xdata = np.concatenate((_df["index"].to_numpy(), self.xdata)) 
         self.tsi_ = np.concatenate((_df["tsi"].to_numpy(), self.tsi_))   
         self.signalma = np.concatenate((_df["signalma"].to_numpy(), self.signalma))
-        
         self.is_genering = False
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
         self.is_histocric_load = True
         self.sig_add_historic.emit(_len)
-    
-    def add(self,new_candles:List[OHLCV]):
-        new_candle:OHLCV = new_candles[-1]
-        self.is_current_update = False
-        if (self.first_gen == True) and (self.is_genering == False):
-            df:pd.DataFrame = self._candles.get_df(self.slow_period*5)
-                    
-            tsi_, signalma = self.calculate(df)
-            
-            new_frame = pd.DataFrame({
-                                    'index':[new_candle.index],
-                                    "tsi":[tsi_.iloc[-1]],
-                                    "signalma":[signalma.iloc[-1]]
+                
+    def callback_add(self,future: Future):
+        df = future.result()
+        last_index = df["index"].iloc[-1]
+        last_tsi = df["tsi"].iloc[-1]
+        last_signalma = df["signalma"].iloc[-1]
+        new_frame = pd.DataFrame({
+                                    'index':[last_index],
+                                    "tsi":[last_tsi],
+                                    "signalma":[last_signalma]
                                     })
-            
-            self.df = pd.concat([self.df,new_frame],ignore_index=True)
-            
-                                            
-            self.xdata = np.concatenate((self.xdata,np.array([new_candle.index])))
-            self.tsi_ = np.concatenate((self.tsi_,np.array([tsi_.iloc[-1]])))
-            self.signalma = np.concatenate((self.signalma,np.array([signalma.iloc[-1]])))
-            
-            self.is_current_update = True
-            self.sig_add_candle.emit()
+        self.df = pd.concat([self.df,new_frame],ignore_index=True)       
+        self.xdata = np.concatenate((self.xdata,np.array([last_index])))
+        self.tsi_ = np.concatenate((self.tsi_,np.array([last_tsi])))
+        self.signalma = np.concatenate((self.signalma,np.array([last_signalma]))) 
+        self.is_current_update = True
+        self.sig_add_candle.emit()
         
-    def update(self, new_candles:List[OHLCV]):
-        new_candle:OHLCV = new_candles[-1]
-        self.is_current_update = False
-        if (self.first_gen == True) and (self.is_genering == False):
-            df:pd.DataFrame = self._candles.get_df(self.slow_period*5)
-                    
-            tsi_, signalma = self.calculate(df)
-                    
-            self.df.iloc[-1] = [new_candle.index,tsi_.iloc[-1],signalma.iloc[-1]]
-                    
-            self.xdata[-1],self.tsi_[-1] , self.signalma[-1]  = new_candle.index,tsi_.iloc[-1],signalma.iloc[-1]
-            
-            self.is_current_update = True
-            self.sig_update_candle.emit()
+    def callback_update(self,future: Future):
+        df = future.result()
+        last_index = df["index"].iloc[-1]
+        last_tsi = df["tsi"].iloc[-1]
+        last_signalma = df["signalma"].iloc[-1]
+        self.df.iloc[-1] = [last_index,last_tsi,last_signalma]
+        self.xdata[-1],self.tsi_[-1], self.signalma[-1]  = last_index,last_tsi,last_signalma
+        self.sig_update_candle.emit()
+        self.is_current_update = True
