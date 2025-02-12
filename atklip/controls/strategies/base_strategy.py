@@ -150,7 +150,7 @@ class StrategyBase(QObject):
             self.is_current_update = False
             self.sig_add_candle.emit()
             
-        self.is_current_update = True
+        #self.is_current_update = True
             
         
     def update(self, new_candles:List[OHLCV]):
@@ -158,7 +158,7 @@ class StrategyBase(QObject):
         if (self.first_gen == True) and (self.is_genering == False):
             self.is_current_update = False
             self.sig_update_candle.emit()
-        self.is_current_update = True
+        #self.is_current_update = True
             
 
     

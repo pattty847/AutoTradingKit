@@ -541,7 +541,7 @@ class N_SMOOTH_CANDLE(QObject):
             self.is_genering = False
         # self.start_index:int = self.df["index"].iloc[0]
         # self.stop_index:int = self.df["index"].iloc[-1]
-        self.is_current_update = True
+        #self.is_current_update = True
         self.sig_reset_all.emit()
         return future.result()
     
@@ -572,12 +572,12 @@ class N_SMOOTH_CANDLE(QObject):
         if self._is_update:
             # self.start_index:int = self.df["index"].iloc[0]
             # self.stop_index:int = self.df["index"].iloc[-1]
-            self.is_current_update = True
+            #self.is_current_update = True
             self.sig_update_candle.emit([ohlcv])
         else:
             # self.start_index:int = self.df["index"].iloc[0]
             # self.stop_index:int = self.df["index"].iloc[-1]
-            self.is_current_update = True
+            #self.is_current_update = True
             self.sig_add_candle.emit([ohlcv])
         
     
@@ -596,4 +596,5 @@ class N_SMOOTH_CANDLE(QObject):
             process = HeavyProcess(self.pro_gen_data,self.callback_update_ma_ohlc,df,self.n,self.mamode,self.ma_leng,self.precision)
             process.start()
         else:
-            self.is_current_update = True
+            pass
+            #self.is_current_update = True

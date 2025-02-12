@@ -272,7 +272,7 @@ class ATKBOT_ALERT(QObject):
             self.first_gen = True
             self.is_genering = False
         
-        self.is_current_update = True
+        #self.is_current_update = True
         self.sig_reset_all.emit()
           
     
@@ -345,7 +345,7 @@ class ATKBOT_ALERT(QObject):
             
             self.sig_add_candle.emit()
             
-        self.is_current_update = True
+        #self.is_current_update = True
             
         
     def update(self, new_candles:List[OHLCV]):
@@ -365,7 +365,7 @@ class ATKBOT_ALERT(QObject):
             self.xdata[-1],self.long[-1],self.short[-1] = new_candle.index,_long.iloc[-1],_short.iloc[-1]
             
             self.sig_update_candle.emit()
-        self.is_current_update = True
+        #self.is_current_update = True
             
 
     

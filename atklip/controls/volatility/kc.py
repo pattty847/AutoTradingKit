@@ -333,8 +333,9 @@ class KC(QObject):
                                self.offset)
             process.start() 
             
-        else:     
-            self.is_current_update = True
+        else:
+            pass
+            #self.is_current_update = True
             
     
     def update(self, new_candles:List[OHLCV]):
@@ -348,8 +349,9 @@ class KC(QObject):
                                self.length,
                                self.offset)
             process.start() 
-        else:     
-            self.is_current_update = True
+        else:
+            pass
+            #self.is_current_update = True
             
     def callback_first_gen(self, future: Future):
         self.df = future.result()
@@ -358,7 +360,7 @@ class KC(QObject):
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
-        self.is_current_update = True
+        #self.is_current_update = True
         self.sig_reset_all.emit()
         
     
@@ -398,7 +400,7 @@ class KC(QObject):
         self.cb = np.concatenate((self.cb,np.array([last_cb])))
         self.ub = np.concatenate((self.ub,np.array([last_ub])))
         self.sig_add_candle.emit()
-        self.is_current_update = True
+        #self.is_current_update = True
     
     def callback_update(self,future: Future):
         df = future.result()
@@ -409,7 +411,7 @@ class KC(QObject):
         self.df.iloc[-1] = [last_index,last_lb,last_cb,last_ub]
         self.xdata[-1],self.lb[-1],self.cb[-1],self.ub[-1] = last_index,last_lb,last_cb,last_ub
         self.sig_update_candle.emit()
-        self.is_current_update = True
+        #self.is_current_update = True
     
     
     
@@ -450,7 +452,7 @@ class KC(QObject):
     #         self.first_gen = True
     #         self.is_genering = False
         
-    #     self.is_current_update = True
+    #     #self.is_current_update = True
     #     self.sig_reset_all.emit()
     
     # def add_historic(self,n:int):
@@ -507,7 +509,7 @@ class KC(QObject):
     #         self.ub = np.concatenate((self.ub,np.array([ub.iloc[-1]])))
     #         self.sig_add_candle.emit()
             
-    #     self.is_current_update = True
+    #     #self.is_current_update = True
             
         
     # def update(self, new_candles:List[OHLCV]):
@@ -520,6 +522,6 @@ class KC(QObject):
     #         self.xdata[-1],self.lb[-1],self.cb[-1],self.ub[-1] = new_candle.index,lb.iloc[-1],cb.iloc[-1],ub.iloc[-1]
     #         self.sig_update_candle.emit()
             
-    #     self.is_current_update = True
+    #     #self.is_current_update = True
             
             

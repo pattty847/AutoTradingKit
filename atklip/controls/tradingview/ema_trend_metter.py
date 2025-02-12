@@ -241,7 +241,8 @@ class EMA_TREND_METTER(QObject):
                                self.base_ema_length,self.ema_length_1,self.ema_length_2,self.ema_length_3)
             process.start()
         else:
-            self.is_current_update = True
+            pass
+            #self.is_current_update = True
             
     def update(self, new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]
@@ -257,7 +258,8 @@ class EMA_TREND_METTER(QObject):
                                self.base_ema_length,self.ema_length_1,self.ema_length_2,self.ema_length_3)
             process.start() 
         else:
-            self.is_current_update = True
+            pass
+            #self.is_current_update = True
     
     def callback_first_gen(self, future: Future):
         self.df = future.result()
@@ -268,7 +270,7 @@ class EMA_TREND_METTER(QObject):
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
-        self.is_current_update = True
+        #self.is_current_update = True
         self.sig_reset_all.emit()
         
     def callback_gen_historic_data(self, future: Future):
@@ -302,7 +304,7 @@ class EMA_TREND_METTER(QObject):
         self.uptrend = np.concatenate((self.uptrend,np.array([last_uptrend])))
         self.downtrend = np.concatenate((self.downtrend,np.array([last_downtrend])))                            
         self.sig_add_candle.emit()
-        self.is_current_update = True
+        #self.is_current_update = True
         
     def callback_update(self,future: Future):
         df = future.result()
@@ -312,5 +314,5 @@ class EMA_TREND_METTER(QObject):
         self.df.iloc[-1] = [last_index,last_uptrend,last_downtrend]
         self.xdata[-1],self.uptrend[-1], self.downtrend[-1]  = last_index,last_uptrend,last_downtrend
         self.sig_update_candle.emit()
-        self.is_current_update = True
+        #self.is_current_update = True
         

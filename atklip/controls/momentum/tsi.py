@@ -345,7 +345,8 @@ class TSI(QObject):
                                self.source,self.fast_period,self.slow_period,self.signal_period,self.mamode,self.drift,self.offset)
             process.start()
         else:
-            self.is_current_update = True
+            pass
+            #self.is_current_update = True
             
     def update(self, new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]
@@ -358,7 +359,8 @@ class TSI(QObject):
                                self.source,self.fast_period,self.slow_period,self.signal_period,self.mamode,self.drift,self.offset)
             process.start() 
         else:
-            self.is_current_update = True
+            pass
+            #self.is_current_update = True
     
     def callback_first_gen(self, future: Future):
         self.df = future.result()
@@ -369,7 +371,7 @@ class TSI(QObject):
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
-        self.is_current_update = True
+        #self.is_current_update = True
         self.sig_reset_all.emit() 
         
     def callback_gen_historic_data(self, future: Future):
@@ -400,7 +402,7 @@ class TSI(QObject):
         self.xdata = np.concatenate((self.xdata,np.array([last_index])))
         self.tsi_ = np.concatenate((self.tsi_,np.array([last_tsi])))
         self.signalma = np.concatenate((self.signalma,np.array([last_signalma]))) 
-        self.is_current_update = True
+        #self.is_current_update = True
         self.sig_add_candle.emit()
         
     def callback_update(self,future: Future):
@@ -411,4 +413,4 @@ class TSI(QObject):
         self.df.iloc[-1] = [last_index,last_tsi,last_signalma]
         self.xdata[-1],self.tsi_[-1], self.signalma[-1]  = last_index,last_tsi,last_signalma
         self.sig_update_candle.emit()
-        self.is_current_update = True
+        #self.is_current_update = True

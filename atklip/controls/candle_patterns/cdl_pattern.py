@@ -284,7 +284,7 @@ class AllCandlePattern(QObject):
             self.first_gen = True
             self.is_genering = False
         
-        self.is_current_update = True
+        #self.is_current_update = True
         self.sig_reset_all.emit()
     
     def add_historic(self,n:int):
@@ -317,7 +317,7 @@ class AllCandlePattern(QObject):
             
             self.df = pd.concat([self.df,_new_df],ignore_index=True)
             self.sig_add_candle.emit()
-        self.is_current_update = True
+        #self.is_current_update = True
             
     def update(self, new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]
@@ -327,5 +327,5 @@ class AllCandlePattern(QObject):
             _df = self.calculate(df)
             self.df.iloc[-1] = _df.iloc[-1]
             self.sig_update_candle.emit()
-        self.is_current_update = True
+        #self.is_current_update = True
            

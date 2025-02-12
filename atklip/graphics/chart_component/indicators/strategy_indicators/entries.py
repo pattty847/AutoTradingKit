@@ -63,9 +63,9 @@ class ENTRY(GraphicsObject):
         self.old_w = []
         self.setAcceptHoverEvents(True)
 
-        sig_reset_all.connect(self.threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
+        sig_reset_all.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
         lastcandle.connect(self.threadpool_asyncworker,Qt.ConnectionType.SingleShotConnection)
-        self.proxy_update_signal = Signal_Proxy(update_signal,slot=self.threadpool_asyncworker,connect_type=Qt.ConnectionType.QueuedConnection)
+        self.proxy_update_signal = Signal_Proxy(update_signal,slot=self.threadpool_asyncworker,connect_type=Qt.ConnectionType.AutoConnection)
         
         self.threadpool_asyncworker()
 
@@ -93,8 +93,8 @@ class ENTRY(GraphicsObject):
     def threadpool_asyncworker(self):
         self.worker = None
         self.worker = FastWorker(self.update_last_data)
-        self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.QueuedConnection)
-        self.worker.signals.finished.connect(self.sig_change_yaxis_range,Qt.ConnectionType.QueuedConnection)
+        self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.AutoConnection)
+        self.worker.signals.finished.connect(self.sig_change_yaxis_range,Qt.ConnectionType.AutoConnection)
         self.worker.start()
         #self.threadpool.start(self.worker)
     def get_yaxis_param(self):
@@ -199,9 +199,9 @@ class SingleHistogram(GraphicsObject):
         self.setAcceptHoverEvents(True)
         self.precision = precision
 
-        self.yaxis_lastprice.connect(change_lastprice,Qt.ConnectionType.QueuedConnection)
-        lastcandle.connect(self.threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
-        sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
+        self.yaxis_lastprice.connect(change_lastprice,Qt.ConnectionType.AutoConnection)
+        lastcandle.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
+        sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
 
     def setup_color(self, colors):
         self.inbound_color = colors.get("in") if colors.get("in") else "#c824d3"
@@ -214,13 +214,13 @@ class SingleHistogram(GraphicsObject):
     def reset_threadpool_asyncworker(self):
         self.worker = None
         worker = FastWorker(self.update_last_data)
-        worker.signals.setdata.connect(self.setData,Qt.ConnectionType.QueuedConnection)
+        worker.signals.setdata.connect(self.setData,Qt.ConnectionType.AutoConnection)
         self.threadpool.start(worker)
     
     def threadpool_asyncworker(self, last_candle:List[OHLCV]):
         self.worker = None
         self.worker = FastWorker(self.update_last_data)
-        self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.QueuedConnection)
+        self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.AutoConnection)
         self.worker.start()
         #self.threadpool.start(self.worker)
 

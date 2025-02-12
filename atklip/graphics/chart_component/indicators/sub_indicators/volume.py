@@ -64,11 +64,11 @@ class Volume(GraphicsObject):
         self._to_update: bool = False
         self._is_change_source: bool = False
         
-        self.chart.jp_candle.sig_reset_all.connect(self.fisrt_gen_data,Qt.ConnectionType.QueuedConnection)
-        self.chart.jp_candle.sig_add_candle.connect(self.update_asyncworker,Qt.ConnectionType.QueuedConnection)
-        self.chart.jp_candle.sig_update_candle.connect(self.update_asyncworker,Qt.ConnectionType.QueuedConnection)
-        self.chart.jp_candle.sig_add_historic.connect(self.threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
-        self.sig_change_yaxis_range.connect(get_last_pos_worker, Qt.ConnectionType.QueuedConnection)
+        self.chart.jp_candle.sig_reset_all.connect(self.fisrt_gen_data,Qt.ConnectionType.AutoConnection)
+        self.chart.jp_candle.sig_add_candle.connect(self.update_asyncworker,Qt.ConnectionType.AutoConnection)
+        self.chart.jp_candle.sig_update_candle.connect(self.update_asyncworker,Qt.ConnectionType.AutoConnection)
+        self.chart.jp_candle.sig_add_historic.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
+        self.sig_change_yaxis_range.connect(get_last_pos_worker, Qt.ConnectionType.AutoConnection)
         
     
     @property
@@ -115,20 +115,20 @@ class Volume(GraphicsObject):
         self.worker = None
         self._is_change_source = True
         self.worker = FastWorker(self.update_last_data,True)
-        self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.QueuedConnection)
-        self.worker.signals.finished.connect(self.sig_change_yaxis_range,Qt.ConnectionType.QueuedConnection)
+        self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.AutoConnection)
+        self.worker.signals.finished.connect(self.sig_change_yaxis_range,Qt.ConnectionType.AutoConnection)
         self.worker.start()
 
     def threadpool_asyncworker(self,candle):
         self.worker = None
         self.worker = FastWorker(self.update_last_data,candle)
-        self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.QueuedConnection)
+        self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.AutoConnection)
         self.worker.start()
     
     def update_asyncworker(self,candles=None):
         self.worker = None
         self.worker = FastWorker(self.update_last_data,candles)
-        self.worker.signals.setdata.connect(self.updateData,Qt.ConnectionType.QueuedConnection)
+        self.worker.signals.setdata.connect(self.updateData,Qt.ConnectionType.AutoConnection)
         self.worker.start()    
     
     def updateData(self, data) -> None:

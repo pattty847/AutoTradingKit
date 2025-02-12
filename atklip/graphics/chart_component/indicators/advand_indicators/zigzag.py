@@ -74,7 +74,7 @@ class BasicZIGZAG(PlotDataItem):
                                 deviation= self.has["inputs"]["deviation"]
                                )
         
-        self.chart.sig_update_source.connect(self.change_source,Qt.ConnectionType.QueuedConnection)   
+        self.chart.sig_update_source.connect(self.change_source,Qt.ConnectionType.AutoConnection)   
         self.signal_delete.connect(self.delete)
     
     @property
@@ -101,11 +101,11 @@ class BasicZIGZAG(PlotDataItem):
                     pass
     
     def connect_signals(self):
-        self.INDICATOR.sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
-        self.INDICATOR.sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.QueuedConnection)
-        self.INDICATOR.sig_add_candle.connect(self.setdata_worker,Qt.ConnectionType.QueuedConnection)
-        self.INDICATOR.sig_add_historic.connect(self.add_historic_worker,Qt.ConnectionType.QueuedConnection)
-        self.INDICATOR.signal_delete.connect(self.replace_source,Qt.ConnectionType.QueuedConnection)
+        self.INDICATOR.sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
+        self.INDICATOR.sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
+        self.INDICATOR.sig_add_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
+        self.INDICATOR.sig_add_historic.connect(self.add_historic_worker,Qt.ConnectionType.AutoConnection)
+        self.INDICATOR.signal_delete.connect(self.replace_source,Qt.ConnectionType.AutoConnection)
     
     def fisrt_gen_data(self):
         self.connect_signals()
@@ -118,7 +118,7 @@ class BasicZIGZAG(PlotDataItem):
     def reset_indicator(self):
         self.worker = None
         self.worker = FastWorker(self.regen_indicator)
-        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.AutoConnection)
         self.worker.start()
     
   
@@ -182,12 +182,12 @@ class BasicZIGZAG(PlotDataItem):
     def setdata_worker(self):
         self.worker = None
         self.worker = FastWorker(self.update_data)
-        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.AutoConnection)
         self.worker.start()    
     def add_historic_worker(self,_len):
         self.worker = None
         self.worker = FastWorker(self.load_historic_data,_len)
-        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.AutoConnection)
         self.worker.start()
     def regen_indicator(self,setdata):
         xdata, zz_value = self.INDICATOR.get_data()
@@ -206,12 +206,14 @@ class BasicZIGZAG(PlotDataItem):
             self.setData(xData,lb)
         except Exception as e:
             pass
+        self.INDICATOR.is_current_update = True
         # self.prepareGeometryChange()
         # self.informViewBoundsChanged()
 
     def update_data(self,setdata):
         xdata, zz_value = self.INDICATOR.get_data()
         setdata.emit((xdata,zz_value))
+        self.INDICATOR.is_current_update = True
         # self.last_pos.emit((self.has["inputs"]["indicator_type"],stc[-1]))
         
     def mousePressEvent(self, ev):

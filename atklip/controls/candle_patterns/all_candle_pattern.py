@@ -487,7 +487,8 @@ class AllCandlePattern(QObject):
                                df)
             process.start()
         else:
-            self.is_current_update = True
+            pass
+            #self.is_current_update = True
             
     def update(self, new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]
@@ -499,7 +500,8 @@ class AllCandlePattern(QObject):
                                df)
             process.start() 
         else:
-            self.is_current_update = True
+            pass
+            #self.is_current_update = True
     
     def callback_first_gen(self, future: Future):
         self.df = future.result()
@@ -507,7 +509,7 @@ class AllCandlePattern(QObject):
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
-        self.is_current_update = True
+        #self.is_current_update = True
         self.sig_reset_all.emit()
     
     def callback_gen_historic_data(self, future: Future):
@@ -526,10 +528,10 @@ class AllCandlePattern(QObject):
         _new_df = _df.iloc[[-1]]
         self.df = pd.concat([self.df,_new_df],ignore_index=True)
         self.sig_add_candle.emit()
-        self.is_current_update = True
+        #self.is_current_update = True
   
     def callback_update(self,future: Future):
         _df = future.result()
         self.df.iloc[-1] = _df.iloc[-1]
         self.sig_update_candle.emit()
-        self.is_current_update = True
+        #self.is_current_update = True

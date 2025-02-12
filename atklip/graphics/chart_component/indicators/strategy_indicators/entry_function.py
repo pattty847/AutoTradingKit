@@ -193,9 +193,9 @@ class MACD(QObject):
                     pass
     
     def connect_signals(self):
-        self._candles.sig_reset_all.connect(self.started_worker,Qt.ConnectionType.QueuedConnection)
-        self._candles.sig_update_candle.connect(self.update_worker,Qt.ConnectionType.QueuedConnection)
-        self._candles.sig_add_candle.connect(self.add_worker,Qt.ConnectionType.QueuedConnection)
+        self._candles.sig_reset_all.connect(self.started_worker,Qt.ConnectionType.AutoConnection)
+        self._candles.sig_update_candle.connect(self.update_worker,Qt.ConnectionType.AutoConnection)
+        self._candles.sig_add_candle.connect(self.add_worker,Qt.ConnectionType.AutoConnection)
         self._candles.signal_delete.connect(self.signal_delete)
     
     

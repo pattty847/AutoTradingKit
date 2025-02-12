@@ -299,7 +299,7 @@ class TrendWithStopLoss(QObject):
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
-        self.is_current_update = True
+        #self.is_current_update = True
         self.sig_reset_all.emit()
         
         
@@ -370,7 +370,7 @@ class TrendWithStopLoss(QObject):
             self.Downtrend = np.concatenate((self.Downtrend,np.array([Downtrend.iloc[-1]])))
     
             self.sig_add_candle.emit()
-        self.is_current_update = True
+        #self.is_current_update = True
         
     def update(self, new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]
@@ -382,6 +382,6 @@ class TrendWithStopLoss(QObject):
             self.xdata[-1],self.long_stoploss[-1],self.short_stoploss[-1],self.Uptrend[-1] ,self.Downtrend[-1] = new_candle.index,long_stoploss.iloc[-1],short_stoploss.iloc[-1],Uptrend.iloc[-1],Downtrend.iloc[-1]
 
             self.sig_update_candle.emit()
-        self.is_current_update = True
+        #self.is_current_update = True
             
             

@@ -58,7 +58,7 @@ class CandlePattern(GraphicsObject):
                 
         self.INDICATOR  = AllCandlePattern(self.has["inputs"]["source"])
         
-        self.chart.sig_update_source.connect(self.change_source,Qt.ConnectionType.QueuedConnection)   
+        self.chart.sig_update_source.connect(self.change_source,Qt.ConnectionType.AutoConnection)   
         self.signal_delete.connect(self.delete)
     
     @property
@@ -84,11 +84,11 @@ class CandlePattern(GraphicsObject):
                     pass
     
     def connect_signals(self):
-        self.INDICATOR.sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
-        self.INDICATOR.sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.QueuedConnection)
-        self.INDICATOR.sig_add_candle.connect(self.add_worker,Qt.ConnectionType.QueuedConnection)
-        self.INDICATOR.sig_add_historic.connect(self.add_historic_worker,Qt.ConnectionType.QueuedConnection)
-        self.INDICATOR.signal_delete.connect(self.replace_source,Qt.ConnectionType.QueuedConnection)
+        self.INDICATOR.sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
+        self.INDICATOR.sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
+        self.INDICATOR.sig_add_candle.connect(self.add_worker,Qt.ConnectionType.AutoConnection)
+        self.INDICATOR.sig_add_historic.connect(self.add_historic_worker,Qt.ConnectionType.AutoConnection)
+        self.INDICATOR.signal_delete.connect(self.replace_source,Qt.ConnectionType.AutoConnection)
     
     def fisrt_gen_data(self):
         self.connect_signals()
@@ -101,7 +101,7 @@ class CandlePattern(GraphicsObject):
     def reset_indicator(self):
         self.worker = None
         self.worker = FastWorker(self.regen_indicator)
-        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.AutoConnection)
         self.worker.start()
 
     def regen_indicator(self,setdata):
@@ -466,18 +466,18 @@ class CandlePattern(GraphicsObject):
     def setdata_worker(self):
         self.worker = None
         self.worker = FastWorker(self.update_data)
-        self.worker.signals.setdata.connect(self.update_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.signals.setdata.connect(self.update_Data,Qt.ConnectionType.AutoConnection)
         self.worker.start()    
         
     def add_historic_worker(self,_len):
         self.worker = None
         self.worker = FastWorker(self.load_historic_data,_len)
-        self.worker.signals.setdata.connect(self.add_historic_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.signals.setdata.connect(self.add_historic_Data,Qt.ConnectionType.AutoConnection)
         self.worker.start() 
     def add_worker(self):
         self.worker = None
         self.worker = FastWorker(self.add_data)
-        self.worker.signals.setdata.connect(self.update_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.signals.setdata.connect(self.update_Data,Qt.ConnectionType.AutoConnection)
         self.worker.start()
     
     def load_historic_data(self,_len,setdata):

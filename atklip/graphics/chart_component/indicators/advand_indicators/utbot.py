@@ -73,7 +73,7 @@ class UTBOT(GraphicsObject):
 
         self.INDICATOR  = UTBOT_ALERT(self.has["inputs"]["source"], self.model.__dict__)
                 
-        self.chart.sig_update_source.connect(self.change_source,Qt.ConnectionType.QueuedConnection)   
+        self.chart.sig_update_source.connect(self.change_source,Qt.ConnectionType.AutoConnection)   
         self.signal_delete.connect(self.delete)
     
     @property
@@ -107,11 +107,11 @@ class UTBOT(GraphicsObject):
                     pass
     
     def connect_signals(self):
-        self.INDICATOR.sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
-        self.INDICATOR.sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.QueuedConnection)
-        self.INDICATOR.sig_add_candle.connect(self.add_worker,Qt.ConnectionType.QueuedConnection)
-        self.INDICATOR.sig_add_historic.connect(self.add_historic_worker,Qt.ConnectionType.QueuedConnection)
-        self.INDICATOR.signal_delete.connect(self.replace_source,Qt.ConnectionType.QueuedConnection)
+        self.INDICATOR.sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
+        self.INDICATOR.sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
+        self.INDICATOR.sig_add_candle.connect(self.add_worker,Qt.ConnectionType.AutoConnection)
+        self.INDICATOR.sig_add_historic.connect(self.add_historic_worker,Qt.ConnectionType.AutoConnection)
+        self.INDICATOR.signal_delete.connect(self.replace_source,Qt.ConnectionType.AutoConnection)
             
     def fisrt_gen_data(self):
         self.connect_signals()
@@ -174,7 +174,7 @@ class UTBOT(GraphicsObject):
     def reset_indicator(self):
         self.worker = None
         self.worker = FastWorker(self.regen_indicator)
-        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.AutoConnection)
         self.worker.start()
 
     def regen_indicator(self,setdata):
@@ -275,15 +275,12 @@ class UTBOT(GraphicsObject):
                 stoploss = entry_infor["stop_loss"]
                 
                 entry:Entry = entry_infor["entry"]
-                
-                
-                
+
                 if is_entry_closed or is_take_profit_2R:
                     continue
                 
                 entry_pos_1_5R:QPointF = entry.has["inputs"]["data"][2.5].chart_pos
                 entry_pos_2R:QPointF = entry.has["inputs"]["data"][3].chart_pos
-                
                 
                 profit_2R = entry_pos_2R.y()
                 profit_1_5R = entry_pos_1_5R.y()
@@ -352,6 +349,7 @@ class UTBOT(GraphicsObject):
                 obj.locked_handle()
                 obj.setPos(_x, _val)
                 self.list_pos[_x] = {"type":"short","obj":obj}
+        self.INDICATOR.is_current_update = True
 
     
     def add_historic_Data(self,data):
@@ -383,6 +381,7 @@ class UTBOT(GraphicsObject):
                 obj.locked_handle()
                 obj.setPos(_x, _val)
                 self.list_pos[_x] = {"type":"short","obj":obj}
+        self.INDICATOR.is_current_update = True
     
     def update_Data(self,data):
         xData:np.ndarray = data[0]
@@ -397,7 +396,8 @@ class UTBOT(GraphicsObject):
         _x = df.iloc[-1]['x']
         
         if self.list_pos.get(_x):
-                return
+            self.INDICATOR.is_current_update = True
+            return
 
         if df.iloc[-2]['long'] == True:
             _val = self.chart.jp_candle.map_index_ohlcv[_x].low
@@ -414,23 +414,24 @@ class UTBOT(GraphicsObject):
             obj.locked_handle()
             obj.setPos(_x, _val)
             self.list_pos[_x] = {"type":"short","obj":obj}
+        self.INDICATOR.is_current_update = True
         
     def setdata_worker(self):
         self.worker = None
         self.worker = FastWorker(self.update_data)
-        # self.worker.signals.setdata.connect(self.update_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.signals.setdata.connect(self.update_Data,Qt.ConnectionType.AutoConnection)
         self.worker.start()  
     
     def add_historic_worker(self,_len):
         self.worker = None
         self.worker = FastWorker(self.load_historic_data,_len)
-        self.worker.signals.setdata.connect(self.add_historic_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.signals.setdata.connect(self.add_historic_Data,Qt.ConnectionType.AutoConnection)
         self.worker.start() 
     
     def add_worker(self):
         self.worker = None
         self.worker = FastWorker(self.add_data)
-        self.worker.signals.setdata.connect(self.update_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.signals.setdata.connect(self.update_Data,Qt.ConnectionType.AutoConnection)
         self.worker.start()    
     
     def load_historic_data(self,_len,setdata):

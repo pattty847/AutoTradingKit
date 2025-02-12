@@ -340,7 +340,7 @@ class HEIKINASHI(QObject):
         self.first_gen = True
         # self.start_index:int = self.candles[0].index
         # self.stop_index:int = self.candles[-1].index
-        self.is_current_update = True
+        #self.is_current_update = True
         self.sig_reset_all.emit()
         return self.candles
     
@@ -424,7 +424,7 @@ class HEIKINASHI(QObject):
                     self.df = pd.concat([self.df, new_row], ignore_index=True)
                     # self.start_index:int = self.candles[0].index
                     # self.stop_index:int = self.candles[-1].index
-                    self.is_current_update = True
+                    #self.is_current_update = True
                     self.sig_add_candle.emit(self.candles[-2:])
                     #QCoreApplication.processEvents()
                     return True
@@ -466,10 +466,10 @@ class HEIKINASHI(QObject):
                         
                         # self.start_index:int = self.candles[0].index
                         # self.stop_index:int = self.candles[-1].index
-                        self.is_current_update = True
+                        #self.is_current_update = True
                         self.sig_update_candle.emit(self.candles[-2:])
                         #QCoreApplication.processEvents()
                         return False
-        self.is_current_update = True
+        #self.is_current_update = True
                     
                     

@@ -286,8 +286,9 @@ class VWMA(QObject):
                                self.offset)
             process.start() 
             
-        else:     
-            self.is_current_update = True
+        else:
+            pass
+            #self.is_current_update = True
             
     
     def update(self, new_candles:List[OHLCV]):
@@ -302,8 +303,9 @@ class VWMA(QObject):
                                self.length,
                                self.offset)
             process.start() 
-        else:     
-            self.is_current_update = True
+        else:
+            pass
+            #self.is_current_update = True
             
     def callback_first_gen(self, future: Future):
         self.df = future.result()
@@ -313,7 +315,7 @@ class VWMA(QObject):
             self.first_gen = True
             self.is_genering = False
         
-        self.is_current_update = True
+        #self.is_current_update = True
         self.sig_reset_all.emit()
         
     def callback_gen_historic_data(self, future: Future):
@@ -341,7 +343,7 @@ class VWMA(QObject):
         self.xdata = np.concatenate((self.xdata,np.array([last_index])))
         self.data = np.concatenate((self.data,np.array([last_data])))
         self.sig_add_candle.emit()
-        self.is_current_update = True
+        #self.is_current_update = True
         
     
     def callback_update(self,future: Future):
@@ -351,5 +353,5 @@ class VWMA(QObject):
         self.df.iloc[-1] = [last_index,last_data]
         self.xdata[-1],self.data[-1] = last_index,last_data
         self.sig_update_candle.emit()
-        self.is_current_update = True
+        #self.is_current_update = True
         

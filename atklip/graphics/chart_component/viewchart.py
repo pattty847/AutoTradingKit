@@ -298,7 +298,7 @@ class Chart(ViewPlotWidget):
         
         is_updated =  self.check_all_indicator_updated()
         while not is_updated:
-            print("all updated",is_updated)
+            # print("all updated",is_updated)
             is_updated =  self.check_all_indicator_updated()
             time.sleep(0.1)
             if self.replay_mode or not self.exchange_name:
@@ -365,7 +365,7 @@ class Chart(ViewPlotWidget):
                         
                         is_updated =  self.check_all_indicator_updated()
                         while not is_updated:
-                            print("all updated",is_updated)
+                            # print("all updated",is_updated)
                             is_updated =  self.check_all_indicator_updated()
                             await asyncio.sleep(0.1)
                             if self.replay_mode or not self.exchange_name:
@@ -522,8 +522,10 @@ class Chart(ViewPlotWidget):
     def check_all_indicator_updated(self):
         if self.indicators:
             for indicator in self.indicators:
+                # print(indicator.is_all_updated())
                 if not indicator.is_all_updated:
-                        return False
+                    # print("false--------",indicator)
+                    return False
         return True
     
     async def loop_watch_ohlcv(self,symbol,interval,exchange_name):
@@ -603,7 +605,7 @@ class Chart(ViewPlotWidget):
                     
                     is_updated =  self.check_all_indicator_updated()
                     while not is_updated:
-                        print("all updated",is_updated)
+                        # print("all updated",is_updated)
                         is_updated =  self.check_all_indicator_updated()
                         await asyncio.sleep(0.1)
                         if self.replay_mode or not self.exchange_name:
@@ -622,7 +624,7 @@ class Chart(ViewPlotWidget):
                                 self.roll_till_now()
                                 n = 0 
                     if not firt_run:
-                        if self.indicators == []:
+                        if self.candle_object == None:
                             self.first_run.emit()
                         firt_run = True   
             else:
@@ -683,7 +685,10 @@ class Chart(ViewPlotWidget):
                 self.sig_show_candle_infor.emit(data)
                 self.auto_xrange()
                 self.sig_show_process.emit(False)
-            self.indicators.append(candle) 
+            if not isinstance(candle.source,JAPAN_CANDLE):
+                self.indicators.append(candle) 
+            else:
+                self.candle_object = candle
 
         elif _group_indicator == "Advance Indicator":
             #________BASIC INDICATORS__________

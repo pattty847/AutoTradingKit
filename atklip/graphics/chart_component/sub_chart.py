@@ -129,10 +129,10 @@ class SubChart(PlotWidget):
         self.indicator_data = ()
         self.panel:IndicatorPanel = None
         
-        self.sig_add_item.connect(self.add_item,Qt.ConnectionType.QueuedConnection)
-        self.sig_remove_item.connect(self.remove_item,Qt.ConnectionType.QueuedConnection)
+        self.sig_add_item.connect(self.add_item,Qt.ConnectionType.AutoConnection)
+        self.sig_remove_item.connect(self.remove_item,Qt.ConnectionType.AutoConnection)
 
-        self.sig_add_indicator_panel.connect(self.setup_indicator,Qt.ConnectionType.QueuedConnection)
+        self.sig_add_indicator_panel.connect(self.setup_indicator,Qt.ConnectionType.AutoConnection)
         
         Signal_Proxy(self.sig_update_y_axis,self.yAxis.change_view)
         Signal_Proxy(self.crosshair_y_value_change,slot=self.yAxis.change_value,connect_type = Qt.ConnectionType.AutoConnection)

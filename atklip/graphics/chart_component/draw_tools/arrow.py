@@ -110,11 +110,11 @@ class Arrow(QGraphicsObject):
         self.signal_delete.connect(self.delete_source)
         self.sig_deleted_source.connect(self.chart.remove_source)
         
-        self.source.sig_reset_all.connect(self.update_source,Qt.ConnectionType.QueuedConnection)
+        self.source.sig_reset_all.connect(self.update_source,Qt.ConnectionType.AutoConnection)
         
         self.source.sig_update_candle.connect(self.update_asyncworker,Qt.ConnectionType.AutoConnection)
         self.source.sig_add_candle.connect(self.update_asyncworker,Qt.ConnectionType.AutoConnection)
-        self.source.sig_add_historic.connect(self.threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
+        self.source.sig_add_historic.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
   
     def delete_source(self):
         self.sig_deleted_source.emit(self.source)
@@ -266,13 +266,13 @@ class Arrow(QGraphicsObject):
     def threadpool_asyncworker(self,candles=None):
         self.worker = None
         self.worker = FastWorker(self.update_last_data,candles)
-        self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.QueuedConnection)
+        self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.AutoConnection)
         self.worker.start()
     
     def update_asyncworker(self,candles=None):
         self.worker = None
         self.worker = FastWorker(self.update_last_data,candles)
-        self.worker.signals.setdata.connect(self.updateData,Qt.ConnectionType.QueuedConnection)
+        self.worker.signals.setdata.connect(self.updateData,Qt.ConnectionType.AutoConnection)
         self.worker.start()
         
     def get_yaxis_param(self):

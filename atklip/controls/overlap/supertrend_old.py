@@ -316,7 +316,7 @@ class SuperTrend(QObject):
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
-        self.is_current_update = True
+        #self.is_current_update = True
         self.sig_reset_all.emit()
     
     def add_historic(self,n:int):
@@ -372,7 +372,7 @@ class SuperTrend(QObject):
             self.SUPERTt = np.append(self.SUPERTt,new_frame["SUPERTt"].iloc[-1])
 
             self.sig_add_candle.emit()
-        self.is_current_update = True
+        #self.is_current_update = True
             
         
     def update(self, new_candles:List[OHLCV]):
@@ -388,6 +388,6 @@ class SuperTrend(QObject):
             self.xdata[-1],self.SUPERTt[-1],self.SUPERTd[-1] = new_candle.index,SUPERTt.iloc[-1],SUPERTd.iloc[-1]
 
             self.sig_update_candle.emit()
-        self.is_current_update = True
+        #self.is_current_update = True
             
             

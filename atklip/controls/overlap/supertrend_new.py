@@ -373,8 +373,9 @@ class SuperTrend(QObject):
                                self.atr_mamode)
             process.start() 
             
-        else:     
-            self.is_current_update = True
+        else:
+            pass
+            #self.is_current_update = True
             
     
     def update(self, new_candles:List[OHLCV]):
@@ -390,8 +391,9 @@ class SuperTrend(QObject):
                                self.multiplier,
                                self.atr_mamode)
             process.start() 
-        else:     
-            self.is_current_update = True
+        else:
+            pass
+            #self.is_current_update = True
             
     def callback_first_gen(self, future: Future):
         self.df = future.result()
@@ -400,7 +402,7 @@ class SuperTrend(QObject):
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
-        self.is_current_update = True
+        #self.is_current_update = True
         self.sig_reset_all.emit()
         
     def callback_gen_historic_data(self, future: Future):
@@ -437,7 +439,7 @@ class SuperTrend(QObject):
         self.SUPERTd = np.concatenate((self.SUPERTd,np.array([last_SUPERTt])))
         self.SUPERTt = np.concatenate((self.SUPERTt,np.array([last_SUPERTd])))
         self.sig_add_candle.emit()
-        self.is_current_update = True
+        #self.is_current_update = True
     
     def callback_update(self,future: Future):
         df = future.result()
@@ -447,4 +449,4 @@ class SuperTrend(QObject):
         self.df.iloc[-1] = [last_index,last_SUPERTt,last_SUPERTd]
         self.xdata[-1],self.SUPERTt[-1],self.SUPERTd[-1] = last_index,last_SUPERTt,last_SUPERTd
         self.sig_update_candle.emit()
-        self.is_current_update = True
+        #self.is_current_update = True

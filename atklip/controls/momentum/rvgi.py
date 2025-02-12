@@ -319,7 +319,8 @@ class RVGI(QObject):
                                self.length,self.swma_length)
             process.start()
         else:
-            self.is_current_update = True
+            pass
+            #self.is_current_update = True
             
     def update(self, new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]
@@ -332,7 +333,8 @@ class RVGI(QObject):
                                self.length,self.swma_length)
             process.start() 
         else:
-            self.is_current_update = True
+            pass
+            #self.is_current_update = True
     
     def callback_first_gen(self, future: Future):
         self.df = future.result()
@@ -343,7 +345,7 @@ class RVGI(QObject):
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
-        self.is_current_update = True
+        #self.is_current_update = True
         self.sig_reset_all.emit()
         
         
@@ -376,7 +378,7 @@ class RVGI(QObject):
         self.xdata = np.concatenate((self.xdata,np.array([last_index])))
         self.rvgi_ = np.concatenate((self.rvgi_,np.array([last_rvgi])))
         self.signalma = np.concatenate((self.signalma,np.array([last_signalma])))
-        self.is_current_update = True
+        #self.is_current_update = True
         self.sig_add_candle.emit()
 
     def callback_update(self,future: Future):
@@ -386,7 +388,7 @@ class RVGI(QObject):
         last_signalma = df["signalma"].iloc[-1]
         self.df.iloc[-1] = [last_index,last_rvgi,last_signalma]   
         self.xdata[-1],self.rvgi_[-1] , self.signalma[-1]  = last_index,last_rvgi,last_signalma
-        self.is_current_update = True
+        #self.is_current_update = True
         self.sig_update_candle.emit()
 
 

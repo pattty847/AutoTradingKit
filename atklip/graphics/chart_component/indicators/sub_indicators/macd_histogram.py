@@ -47,10 +47,10 @@ class MACDHistogram(GraphicsObject):
         self._start:int = None
         self._stop:int = None
         
-        self.sig_reset_histogram.connect(self.threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
-        self.sig_add_histogram.connect(self.update_asyncworker,Qt.ConnectionType.QueuedConnection)
-        self.sig_update_histogram.connect(self.update_asyncworker,Qt.ConnectionType.QueuedConnection)
-        self.sig_load_historic_histogram.connect(self.threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
+        self.sig_reset_histogram.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
+        self.sig_add_histogram.connect(self.update_asyncworker,Qt.ConnectionType.AutoConnection)
+        self.sig_update_histogram.connect(self.update_asyncworker,Qt.ConnectionType.AutoConnection)
+        self.sig_load_historic_histogram.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
 
     def get_inputs(self):
         inputs =  {}
@@ -83,14 +83,14 @@ class MACDHistogram(GraphicsObject):
     def threadpool_asyncworker(self,data,_type):
         self.worker = None
         self.worker = FastWorker(self.update_last_data,data,_type)
-        self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.QueuedConnection)
+        self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.AutoConnection)
         self.worker.start()
     
     
     def update_asyncworker(self,data,_type):
         self.worker = None
         self.worker = FastWorker(self.update_last_data,data,_type)
-        self.worker.signals.setdata.connect(self.updateData,Qt.ConnectionType.QueuedConnection)
+        self.worker.signals.setdata.connect(self.updateData,Qt.ConnectionType.AutoConnection)
         self.worker.start()    
     
     def updateData(self, data) -> None:
@@ -265,13 +265,13 @@ class SingleMACDHistogram(GraphicsObject):
         self.old_w = []
         self.setAcceptHoverEvents(True)
 
-        sig_update_histogram.connect(self.threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
+        sig_update_histogram.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
 
     
     def threadpool_asyncworker(self, last_candle:List):
         self.worker = None
         self.worker = FastWorker(self.update_last_data,last_candle)
-        self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.QueuedConnection)
+        self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.AutoConnection)
         self.worker.start()
 
     def paint(self, p: QPainter, *args) -> None:

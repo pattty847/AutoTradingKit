@@ -103,11 +103,11 @@ class CandleStick(GraphicsObject):
         self.signal_delete.connect(self.delete_source)
         self.sig_deleted_source.connect(self.chart.remove_source)
         
-        self.source.sig_reset_all.connect(self.update_source,Qt.ConnectionType.QueuedConnection)
+        self.source.sig_reset_all.connect(self.update_source,Qt.ConnectionType.AutoConnection)
         
-        self.source.sig_update_candle.connect(self.update_asyncworker,Qt.ConnectionType.QueuedConnection)
-        self.source.sig_add_candle.connect(self.update_asyncworker,Qt.ConnectionType.QueuedConnection)
-        self.source.sig_add_historic.connect(self.threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
+        self.source.sig_update_candle.connect(self.update_asyncworker,Qt.ConnectionType.AutoConnection)
+        self.source.sig_add_candle.connect(self.update_asyncworker,Qt.ConnectionType.AutoConnection)
+        self.source.sig_add_historic.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
         
         if not (isinstance(self.source,JAPAN_CANDLE) or isinstance(self.source,HEIKINASHI)):
             self.source.fisrt_gen_data()
@@ -271,15 +271,15 @@ class CandleStick(GraphicsObject):
     def threadpool_asyncworker(self,candles=None|bool|list|int):
         self.worker = None
         self.worker = FastWorker(self.update_last_data,candles)
-        self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.QueuedConnection)
-        self.worker.signals.finished.connect(self.set_price_line,Qt.ConnectionType.QueuedConnection)
+        self.worker.signals.setdata.connect(self.setData,Qt.ConnectionType.AutoConnection)
+        self.worker.signals.finished.connect(self.set_price_line,Qt.ConnectionType.AutoConnection)
         self.worker.start()
     
     def update_asyncworker(self,candles=None):
         self.worker = None
         self.worker = FastWorker(self.update_last_data,candles)
-        self.worker.signals.setdata.connect(self.updateData,Qt.ConnectionType.QueuedConnection)
-        self.worker.signals.finished.connect(self.set_price_line,Qt.ConnectionType.QueuedConnection)
+        self.worker.signals.setdata.connect(self.updateData,Qt.ConnectionType.AutoConnection)
+        self.worker.signals.finished.connect(self.set_price_line,Qt.ConnectionType.AutoConnection)
         self.worker.start()
         
     def get_yaxis_param(self):
@@ -393,6 +393,7 @@ class CandleStick(GraphicsObject):
         [self.draw_candle(_open[index],_max[index],_min[index],close[index],w,x_data[index]) for index in range(len(x_data))]
         self._to_update = True
         self.chart.sig_update_y_axis.emit()
+        self.source.is_current_update = True
         # self.prepareGeometryChange()
         # self.informViewBoundsChanged()
         # self.update(self.boundingRect())
@@ -410,6 +411,7 @@ class CandleStick(GraphicsObject):
         self.draw_single_candle(_open,_max,_min,_close,w,t)
         self._to_update = True
         self.chart.sig_update_y_axis.emit()
+        self.source.is_current_update = True
         # self.prepareGeometryChange()
         # self.informViewBoundsChanged()
         # self.update(self.boundingRect())

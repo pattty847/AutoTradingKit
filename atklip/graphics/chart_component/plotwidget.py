@@ -7,7 +7,7 @@ from PySide6 import QtGui
 from PySide6.QtCore import Signal,Qt,QSize,QEvent,QTime
 from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import QGraphicsView,QWidget
-from atklip.graphics.pyqtgraph import mkPen, PlotWidget
+from atklip.graphics.pyqtgraph import mkPen, PlotWidget,setConfigOption
 
 
 from atklip.controls.candle import JAPAN_CANDLE
@@ -24,7 +24,6 @@ from atklip.graphics.chart_component.indicators import ATKBOT
 if TYPE_CHECKING:
     from .viewbox import PlotViewBox
     from .axisitem import CustomDateAxisItem, CustomPriceAxisItem
-    
 
 class Crosshair:
     """Keyword arguments related to Crosshair used in LivePlotWidget"""
@@ -70,8 +69,10 @@ class ViewPlotWidget(PlotWidget):
         # self.sigSceneMouseMoved.
         
         super().__init__(parent=parent,background=background, plotItem= self.PlotItem,**kwargs)
+        
+        # self.useOpenGL(True)
         self.crosshair_enabled = kwargs.get(Crosshair.ENABLED, False)
-                
+        
         self.setViewportUpdateMode(QGraphicsView.ViewportUpdateMode.BoundingRectViewportUpdate)
         self.setRenderHint(QPainter.RenderHint.Antialiasing, False)
         self.setCacheMode(QGraphicsView.CacheModeFlag.CacheBackground)
@@ -83,6 +84,7 @@ class ViewPlotWidget(PlotWidget):
         self.mainwindow:QWidget = None
 
         self.indicators:List = []
+        self.candle_object = None
         self.drawtools:List = []
         
         self.is_trading = False
@@ -146,8 +148,8 @@ class ViewPlotWidget(PlotWidget):
         self.replay_obj:ReplayObject =None
         self.atkobj:ATKBOT = None
         
-        Signal_Proxy(signal=self.sig_add_item,slot=self.add_item,connect_type=Qt.ConnectionType.QueuedConnection)
-        Signal_Proxy(signal=self.sig_remove_item,slot=self.remove_item,connect_type=Qt.ConnectionType.QueuedConnection)
+        Signal_Proxy(signal=self.sig_add_item,slot=self.add_item,connect_type=Qt.ConnectionType.AutoConnection)
+        Signal_Proxy(signal=self.sig_remove_item,slot=self.remove_item,connect_type=Qt.ConnectionType.AutoConnection)
 
         global_signal.sig_show_hide_cross.connect(self.show_hide_cross,Qt.ConnectionType.AutoConnection)
 

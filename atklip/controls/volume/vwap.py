@@ -315,7 +315,7 @@ class VWAP(QObject):
             self.first_gen = True
             self.is_genering = False
         
-        self.is_current_update = True
+        #self.is_current_update = True
         self.sig_reset_all.emit()
     
     def add_historic(self,n:int):
@@ -374,7 +374,7 @@ class VWAP(QObject):
             self.ub = np.concatenate((self.ub,np.array([ub.iloc[-1]])))
             
             self.sig_add_candle.emit()
-        self.is_current_update = True
+        #self.is_current_update = True
             
         
     def update(self, new_candles:List[OHLCV]):
@@ -390,6 +390,6 @@ class VWAP(QObject):
             self.xdata[-1],self.lb[-1],self.cb[-1],self.ub[-1] = new_candle.index,lb.iloc[-1],cb.iloc[-1],ub.iloc[-1]
             
             self.sig_update_candle.emit()
-        self.is_current_update = True
+        #self.is_current_update = True
             
             

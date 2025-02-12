@@ -350,7 +350,7 @@ class MACD(QObject):
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
-        self.is_current_update = True
+        #self.is_current_update = True
         self.sig_reset_all.emit()
         
     
@@ -415,7 +415,7 @@ class MACD(QObject):
             self.signalma = np.concatenate((self.signalma,np.array([signalma.iloc[-1]])))
 
             self.sig_add_candle.emit()
-        self.is_current_update = True
+        #self.is_current_update = True
         
     def update(self, new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]
@@ -430,6 +430,6 @@ class MACD(QObject):
             self.xdata[-1],self.macd_data[-1],self.histogram[-1],self.signalma[-1] = new_candle.index,macd_data.iloc[-1],histogram.iloc[-1],signalma.iloc[-1]
 
             self.sig_update_candle.emit()
-        self.is_current_update = True
+        #self.is_current_update = True
             
             

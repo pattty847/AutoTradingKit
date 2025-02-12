@@ -330,7 +330,8 @@ class SuperTrendWithStopLoss(QObject):
                                 self.atr_length,self.atr_mamode,self.atr_multiplier)
             process.start()
         else:
-            self.is_current_update = True
+            pass
+            #self.is_current_update = True
             
     def update(self, new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]
@@ -345,7 +346,8 @@ class SuperTrendWithStopLoss(QObject):
                                 self.atr_length,self.atr_mamode,self.atr_multiplier)
             process.start() 
         else:
-            self.is_current_update = True
+            pass
+            #self.is_current_update = True
     
     def callback_first_gen(self, future: Future):
         self.df = future.result()
@@ -358,7 +360,7 @@ class SuperTrendWithStopLoss(QObject):
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
-        self.is_current_update = True
+        #self.is_current_update = True
         self.sig_reset_all.emit()
         
     
@@ -404,7 +406,7 @@ class SuperTrendWithStopLoss(QObject):
         self.SUPERTd = np.concatenate((self.SUPERTd,np.array([last_SUPERTd])))
 
         self.sig_add_candle.emit()
-        self.is_current_update = True
+        #self.is_current_update = True
         
     
     def callback_update(self,future: Future):
@@ -417,5 +419,5 @@ class SuperTrendWithStopLoss(QObject):
         self.df.iloc[-1] = [last_index,last_long_stoploss,last_short_stoploss,last_SUPERTd]
         self.xdata[-1],self.long_stoploss[-1],self.short_stoploss[-1],self.SUPERTd[-1]  = last_index,last_long_stoploss,last_short_stoploss,last_SUPERTd
         self.sig_update_candle.emit()
-        self.is_current_update = True
+        #self.is_current_update = True
         

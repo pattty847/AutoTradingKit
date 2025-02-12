@@ -326,7 +326,7 @@ class CUSTOM_UTBOT_ALERT(QObject):
             self.first_gen = True
             self.is_genering = False
         
-        self.is_current_update = True
+        #self.is_current_update = True
         self.sig_reset_all.emit()
           
     
@@ -399,7 +399,7 @@ class CUSTOM_UTBOT_ALERT(QObject):
             
             self.sig_add_candle.emit()
             
-        self.is_current_update = True
+        #self.is_current_update = True
             
         
     def update(self, new_candles:List[OHLCV]):
@@ -420,7 +420,7 @@ class CUSTOM_UTBOT_ALERT(QObject):
             print(self.df.iloc[-1])
             
             self.sig_update_candle.emit()
-        self.is_current_update = True
+        #self.is_current_update = True
             
 
     

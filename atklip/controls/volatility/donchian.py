@@ -318,8 +318,9 @@ class DONCHIAN(QObject):
                                self.offset)
             process.start() 
             
-        else:     
-            self.is_current_update = True
+        else:
+            pass
+            #self.is_current_update = True
             
     
     def update(self, new_candles:List[OHLCV]):
@@ -334,8 +335,9 @@ class DONCHIAN(QObject):
                                self.upper_length,
                                self.offset)
             process.start() 
-        else:     
-            self.is_current_update = True
+        else:
+            pass
+            #self.is_current_update = True
             
     def callback_first_gen(self, future: Future):
         self.df = future.result()
@@ -344,7 +346,7 @@ class DONCHIAN(QObject):
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
-        self.is_current_update = True
+        #self.is_current_update = True
         self.sig_reset_all.emit()
         
     
@@ -384,7 +386,7 @@ class DONCHIAN(QObject):
         self.cb = np.concatenate((self.cb,np.array([last_cb])))
         self.ub = np.concatenate((self.ub,np.array([last_ub])))
         self.sig_add_candle.emit()
-        self.is_current_update = True
+        #self.is_current_update = True
     
     def callback_update(self,future: Future):
         df = future.result()
@@ -395,5 +397,5 @@ class DONCHIAN(QObject):
         self.df.iloc[-1] = [last_index,last_lb,last_cb,last_ub]
         self.xdata[-1],self.lb[-1],self.cb[-1],self.ub[-1] = last_index,last_lb,last_cb,last_ub
         self.sig_update_candle.emit()
-        self.is_current_update = True
+        #self.is_current_update = True
     

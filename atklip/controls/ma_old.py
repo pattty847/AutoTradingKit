@@ -236,7 +236,7 @@ class MA(QObject):
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
-        self.is_current_update = True
+        #self.is_current_update = True
         self.sig_reset_all.emit()
         
     @staticmethod
@@ -303,7 +303,7 @@ class MA(QObject):
             self.xdata = np.concatenate((self.xdata,np.array([new_candle.index])))
             self.ydata = np.concatenate((self.ydata,np.array([_data])))
             self.sig_add_candle.emit()
-        self.is_current_update = True
+        #self.is_current_update = True
             
         
     def update(self, new_candles:List[OHLCV]):
@@ -316,7 +316,7 @@ class MA(QObject):
             self.xdata[-1] = new_candle.index
             self.ydata[-1] = data.iloc[-1]
             self.sig_update_candle.emit()
-        self.is_current_update = True
+        #self.is_current_update = True
             
             
             

@@ -280,7 +280,7 @@ class UTBOT_ALERT(QObject):
                                 self.key_value_short,self.atr_short_period,self.ema_short_period)
             process.start()
         else:
-            self.is_current_update = True
+            #self.is_current_update = True
             
     def update(self, new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]
@@ -294,7 +294,7 @@ class UTBOT_ALERT(QObject):
                                 self.key_value_short,self.atr_short_period,self.ema_short_period)
             process.start() 
         else:
-            self.is_current_update = True
+            #self.is_current_update = True
     
     def callback_first_gen(self, future: Future):
         self.df = future.result()
@@ -306,7 +306,7 @@ class UTBOT_ALERT(QObject):
             self.first_gen = True
             self.is_genering = False
         
-        self.is_current_update = True
+        #self.is_current_update = True
         self.sig_reset_all.emit()
         
     
@@ -339,7 +339,7 @@ class UTBOT_ALERT(QObject):
         self.long = np.append(self.long,last_long)
         self.short = np.append(self.short,last_short)
         self.sig_add_candle.emit()
-        self.is_current_update = True
+        #self.is_current_update = True
         
     def callback_update(self,future: Future):
         df = future.result()
@@ -349,5 +349,5 @@ class UTBOT_ALERT(QObject):
         self.df.iloc[-1] = [last_index,last_long,last_short]
         self.xdata[-1],self.long[-1],self.short[-1] = last_index,last_long,last_short
         self.sig_update_candle.emit()
-        self.is_current_update = True
+        #self.is_current_update = True
           

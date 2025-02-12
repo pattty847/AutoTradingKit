@@ -148,7 +148,7 @@ class ATKBOT(GraphicsObject):
         
         self.Source: JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE = self.has["inputs"]["source"]
 
-        self.chart.sig_update_source.connect(self.change_source,Qt.ConnectionType.QueuedConnection)   
+        self.chart.sig_update_source.connect(self.change_source,Qt.ConnectionType.AutoConnection)   
         self.signal_delete.connect(self.delete)
     
     @property
@@ -261,11 +261,11 @@ class ATKBOT(GraphicsObject):
                     pass
     
     def connect_signals(self):
-        self.Source.sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.QueuedConnection)
-        self.Source.sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.QueuedConnection)
-        self.Source.sig_add_candle.connect(self.add_worker,Qt.ConnectionType.QueuedConnection)
-        self.Source.sig_add_historic.connect(self.add_historic_worker,Qt.ConnectionType.QueuedConnection)
-        self.Source.signal_delete.connect(self.replace_source,Qt.ConnectionType.QueuedConnection)
+        self.Source.sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
+        self.Source.sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
+        self.Source.sig_add_candle.connect(self.add_worker,Qt.ConnectionType.AutoConnection)
+        self.Source.sig_add_historic.connect(self.add_historic_worker,Qt.ConnectionType.AutoConnection)
+        self.Source.signal_delete.connect(self.replace_source,Qt.ConnectionType.AutoConnection)
             
     def fisrt_gen_data(self):
         self.connect_signals()
@@ -361,7 +361,7 @@ class ATKBOT(GraphicsObject):
         self.list_pos.clear() 
         self.worker = None
         self.worker = FastWorker(self.regen_indicator)
-        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.AutoConnection)
         self.worker.start()
 
     def regen_indicator(self,setdata):
@@ -748,19 +748,19 @@ class ATKBOT(GraphicsObject):
     def setdata_worker(self):
         self.worker = None
         self.worker = FastWorker(self.update_data)
-        self.worker.signals.setdata.connect(self.update_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.signals.setdata.connect(self.update_Data,Qt.ConnectionType.AutoConnection)
         self.worker.start()  
     
     def add_historic_worker(self,_len):
         self.worker = None
         self.worker = FastWorker(self.load_historic_data,_len)
-        self.worker.signals.setdata.connect(self.add_historic_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.signals.setdata.connect(self.add_historic_Data,Qt.ConnectionType.AutoConnection)
         self.worker.start() 
     
     def add_worker(self):
         self.worker = None
         self.worker = FastWorker(self.add_data)
-        self.worker.signals.setdata.connect(self.update_Data,Qt.ConnectionType.QueuedConnection)
+        self.worker.signals.setdata.connect(self.update_Data,Qt.ConnectionType.AutoConnection)
         self.worker.start()    
     
     def load_historic_data(self,_len,setdata):

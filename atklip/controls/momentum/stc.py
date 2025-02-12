@@ -456,7 +456,8 @@ class STC(QObject):
                                self.mamode,self.factor,self.offset)
             process.start()
         else:
-            self.is_current_update = True
+            pass
+            #self.is_current_update = True
             
     def update(self, new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]
@@ -471,7 +472,8 @@ class STC(QObject):
                                self.mamode,self.factor,self.offset)
             process.start() 
         else:
-            self.is_current_update = True
+            pass
+            #self.is_current_update = True
     
     def callback_first_gen(self, future: Future):
         self.df = future.result()
@@ -480,7 +482,7 @@ class STC(QObject):
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
-        self.is_current_update = True
+        #self.is_current_update = True
         self.sig_reset_all.emit()
         
         
@@ -520,7 +522,7 @@ class STC(QObject):
         self.macd = np.concatenate((self.macd,np.array([last_macd])))             
         self.stoch = np.concatenate((self.stoch,np.array([last_stoch])))             
         self.sig_add_candle.emit()
-        self.is_current_update = True
+        #self.is_current_update = True
         
     def callback_update(self,future: Future):
         df = future.result()
@@ -531,5 +533,5 @@ class STC(QObject):
         self.df.iloc[-1] = [last_index,last_stc,last_macd,last_stoch]
         self.xdata[-1],self.stc_[-1],self.macd[-1],self.stoch[-1] = last_index,last_stc,last_macd,last_stoch
         self.sig_update_candle.emit()
-        self.is_current_update = True
+        #self.is_current_update = True
         

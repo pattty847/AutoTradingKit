@@ -1,6 +1,6 @@
 import asyncio
 from functools import partial
-from atklip.graphics.pyqtgraph import GraphicsView,GraphicsLayout, SignalProxy
+from atklip.graphics.pyqtgraph import GraphicsView,GraphicsLayout, setConfigOption
 from atklip.graphics.pyqtgraph.dockarea import DockArea, Dock,DockLabel
 from atklip.graphics.chart_component import  CustomDateAxisItem
 from .viewchart import Chart
@@ -24,6 +24,8 @@ from PySide6.QtWidgets import QApplication
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from atklip.gui.views.mainlayout import MainWidget
+
+setConfigOption("crashWarning",True)
 
 class CustomDockArea(DockArea):
     def __init__(self, parent=None, temporary=False, home=None):
@@ -179,8 +181,8 @@ class GraphSplitter(ViewSplitter):
                                                                          "Candle Indicator":IndicatorType.N_SMOOTH_JP},
                                 IndicatorType.ATKBOT_SUPERTREND:[],
                                 IndicatorType.ATKBOT_CCI:[]}
-        self.sig_add_indicator_to_chart.connect(self.create_indicator,Qt.ConnectionType.QueuedConnection)
-        self.sig_add_sub_panel.connect(self.add_sub_panel,Qt.ConnectionType.QueuedConnection)
+        self.sig_add_indicator_to_chart.connect(self.create_indicator,Qt.ConnectionType.AutoConnection)
+        self.sig_add_sub_panel.connect(self.add_sub_panel,Qt.ConnectionType.AutoConnection)
 
     def reload_pre_indicator(self):
         "load pre saved indicator"

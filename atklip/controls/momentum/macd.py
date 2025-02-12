@@ -412,7 +412,8 @@ class MACD(QObject):
                                self.offset)
             process.start()
         else:
-            self.is_current_update = True
+            pass
+            #self.is_current_update = True
             
     def update(self, new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]
@@ -430,7 +431,8 @@ class MACD(QObject):
                                self.offset)
             process.start() 
         else:
-            self.is_current_update = True
+            pass
+            #self.is_current_update = True
     
     def callback_first_gen(self, future: Future):
         self.df = future.result()
@@ -442,7 +444,7 @@ class MACD(QObject):
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
-        self.is_current_update = True
+        #self.is_current_update = True
         self.sig_reset_all.emit()
     
     def callback_gen_historic_data(self, future: Future):
@@ -483,7 +485,7 @@ class MACD(QObject):
         self.histogram = np.concatenate((self.histogram,np.array([last_histogram])))
         self.signalma = np.concatenate((self.signalma,np.array([last_signalma])))
         self.sig_add_candle.emit()
-        self.is_current_update = True
+        #self.is_current_update = True
     
     def callback_update(self,future: Future):
         df = future.result()
@@ -495,6 +497,6 @@ class MACD(QObject):
         self.df.iloc[-1] = [last_index,last_macd,last_histogram,last_signalma]
         self.xdata[-1],self.macd_data[-1],self.histogram[-1],self.signalma[-1] = last_index,last_macd,last_histogram,last_signalma
         self.sig_update_candle.emit()
-        self.is_current_update = True
+        #self.is_current_update = True
             
             
