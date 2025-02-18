@@ -2,8 +2,8 @@ from collections import namedtuple
 
 import numpy as np
 
-from  .helpers import get_candle_source, slice_candles
-.ma import ma
+from jesse.helpers import get_candle_source, slice_candles
+from jesse.indicators.ma import ma
 
 ERI = namedtuple('ERI', ['bull', 'bear'])
 

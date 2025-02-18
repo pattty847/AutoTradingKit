@@ -18,6 +18,7 @@ from ...common.screen import getCurrentScreenGeometry
 from ...common.font import getFont
 from ...common.config import isDarkTheme
 from .scroll_bar import SmoothScrollDelegate
+from .tool_tip import ItemViewToolTipDelegate, ItemViewToolTipType
 
 
 class CustomMenuStyle(QProxyStyle):
@@ -107,6 +108,10 @@ class SubMenuItemWidget(QWidget):
 class MenuItemDelegate(QStyledItemDelegate):
     """ Menu item delegate """
 
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.tooltipDelegate = None
+
     def _isSeparator(self, index: QModelIndex):
         return index.model().data(index, Qt.DecorationRole) == "seperator"
 
@@ -125,6 +130,12 @@ class MenuItemDelegate(QStyledItemDelegate):
         painter.drawLine(0, rect.y() + 4, rect.width() + 12, rect.y() + 4)
 
         painter.restore()
+
+    def helpEvent(self, event, view, option, index):
+        if not self.tooltipDelegate:
+            self.tooltipDelegate = ItemViewToolTipDelegate(view, 100, ItemViewToolTipType.LIST)
+
+        return self.tooltipDelegate.helpEvent(event, view, option, index)
 
 
 class ShortcutMenuItemDelegate(MenuItemDelegate):
@@ -267,7 +278,7 @@ class RoundMenu(QMenu):
 
     def __init__(self, title="", parent=None):
         super().__init__(parent=parent)
-        self._title = title
+        self.setTitle(title)
         self._icon = QIcon()
         self._actions = []  # type: List[QAction]
         self._subMenus = []
@@ -364,6 +375,10 @@ class RoundMenu(QMenu):
 
         self._icon = icon
 
+    def setTitle(self, title: str):
+        self._title = title
+        super().setTitle(title)
+
     def addAction(self, action: Union[QAction, Action]):
         """ add action to menu
 
@@ -425,6 +440,8 @@ class RoundMenu(QMenu):
         # disable item if the action is not enabled
         if not action.isEnabled():
             item.setFlags(Qt.NoItemFlags)
+        if action.text() != action.toolTip():
+            item.setToolTip(action.toolTip())
 
         item.setData(Qt.UserRole, action)
         action.setProperty('item', item)
@@ -715,6 +732,9 @@ class RoundMenu(QMenu):
         item = action.property('item')  # type: QListWidgetItem
         item.setIcon(self._createItemIcon(action))
 
+        if action.text() != action.toolTip():
+            item.setToolTip(action.toolTip())
+
         self._adjustItemText(item, action)
 
         if action.isEnabled():
@@ -725,7 +745,7 @@ class RoundMenu(QMenu):
         self.view.adjustSize()
         self.adjustSize()
 
-    def exec(self, pos, ani=True, aniType=MenuAnimationType.NONE):
+    def exec(self, pos, ani=True, aniType=MenuAnimationType.DROP_DOWN):
         """ show menu
 
         Parameters
@@ -750,7 +770,7 @@ class RoundMenu(QMenu):
         if self.isSubMenu:
             self.menuItem.setSelected(True)
 
-    def exec_(self, pos: QPoint, ani=True, aniType=MenuAnimationType.NONE):
+    def exec_(self, pos: QPoint, ani=True, aniType=MenuAnimationType.DROP_DOWN):
         """ show menu
 
         Parameters
@@ -863,7 +883,7 @@ class DummyMenuAnimationManager(MenuAnimationManager):
         self.menu.move(self._endPosition(pos))
 
 
-@MenuAnimationManager.register(MenuAnimationType.NONE)
+@MenuAnimationManager.register(MenuAnimationType.DROP_DOWN)
 class DropDownMenuAnimationManager(MenuAnimationManager):
     """ Drop down menu animation manager """
 
@@ -885,7 +905,7 @@ class DropDownMenuAnimationManager(MenuAnimationManager):
         self.menu.setMask(QRegion(0, y, w, h))
 
 
-@MenuAnimationManager.register(MenuAnimationType.NONE)
+@MenuAnimationManager.register(MenuAnimationType.PULL_UP)
 class PullUpMenuAnimationManager(MenuAnimationManager):
     """ Pull up menu animation manager """
 
@@ -915,7 +935,7 @@ class PullUpMenuAnimationManager(MenuAnimationManager):
         self.menu.setMask(QRegion(0, y, w, h - 28))
 
 
-@MenuAnimationManager.register(MenuAnimationType.NONE)
+@MenuAnimationManager.register(MenuAnimationType.FADE_IN_DROP_DOWN)
 class FadeInDropDownMenuAnimationManager(MenuAnimationManager):
     """ Fade in drop down menu animation manager """
 
@@ -946,7 +966,7 @@ class FadeInDropDownMenuAnimationManager(MenuAnimationManager):
         return ss.width() - 100, max(ss.bottom() - pos.y() - 10, 1)
 
 
-@MenuAnimationManager.register(MenuAnimationType.NONE)
+@MenuAnimationManager.register(MenuAnimationType.FADE_IN_PULL_UP)
 class FadeInPullUpMenuAnimationManager(MenuAnimationManager):
     """ Fade in pull up menu animation manager """
 
@@ -1033,7 +1053,7 @@ class EditMenu(RoundMenu):
     def _parentSelectedText(self):
         raise NotImplementedError
 
-    def exec(self, pos, ani=True, aniType=MenuAnimationType.NONE):
+    def exec(self, pos, ani=True, aniType=MenuAnimationType.DROP_DOWN):
         self.clear()
         self.createActions()
 
@@ -1092,7 +1112,7 @@ class LineEditMenu(EditMenu):
     def _parentSelectedText(self):
         return self.parent().selectedText()
 
-    def exec(self, pos, ani=True, aniType=MenuAnimationType.NONE):
+    def exec(self, pos, ani=True, aniType=MenuAnimationType.DROP_DOWN):
         return super().exec(pos, ani, aniType)
 
 
@@ -1120,7 +1140,7 @@ class TextEditMenu(EditMenu):
 
         super()._onItemClicked(item)
 
-    def exec(self, pos, ani=True, aniType=MenuAnimationType.NONE):
+    def exec(self, pos, ani=True, aniType=MenuAnimationType.DROP_DOWN):
         return super().exec(pos, ani, aniType)
 
 
@@ -1224,7 +1244,7 @@ class CheckableMenu(RoundMenu):
         w = super()._adjustItemText(item, action)
         item.setSizeHint(QSize(w + 26, self.itemHeight))
 
-    def exec(self, pos, ani=True, aniType=MenuAnimationType.NONE):
+    def exec(self, pos, ani=True, aniType=MenuAnimationType.DROP_DOWN):
         return super().exec(pos, ani, aniType)
 
 
@@ -1276,7 +1296,7 @@ class LabelContextMenu(RoundMenu):
     def label(self) -> QLabel:
         return self.parent()
 
-    def exec(self, pos, ani=True, aniType=MenuAnimationType.NONE):
+    def exec(self, pos, ani=True, aniType=MenuAnimationType.DROP_DOWN):
         if self.label().hasSelectedText():
             self.addActions([self.copyAct, self.selectAllAct])
         else:

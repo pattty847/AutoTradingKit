@@ -1,1 +1,1 @@
-from .tab_interface import TabInterface
+from .tab_interface import BottomInterface

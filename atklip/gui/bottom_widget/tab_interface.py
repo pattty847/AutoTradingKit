@@ -6,7 +6,7 @@ from atklip.gui.qfluentwidgets.components import  TabBar
 from .position_table import  PositionTable
 from .titlebar import TitleBar
 
-class TabInterface(QWidget):
+class BottomInterface(QWidget):
     """ Tab interface """
     def __init__(self, parent=None):
         super().__init__(parent=parent)

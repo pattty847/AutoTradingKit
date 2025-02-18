@@ -2,7 +2,7 @@ from collections import namedtuple
 
 import numpy as np
 
-from  .helpers import slice_candles
+from jesse.helpers import slice_candles
 
 PIVOT = namedtuple('PIVOT', ['r4', 'r3', 'r2', 'r1', 'pp', 's1', 's2', 's3', 's4'])
 

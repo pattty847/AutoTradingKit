@@ -3,7 +3,7 @@ from typing import Union
 import numpy as np
 from numba import njit
 
-from  .helpers import get_candle_source, slice_candles
+from jesse.helpers import get_candle_source, slice_candles
 
 
 def mwdx(candles: np.ndarray, factor: float = 0.2, source_type: str = "close", sequential: bool = False) -> Union[

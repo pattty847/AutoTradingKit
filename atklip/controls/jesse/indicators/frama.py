@@ -3,7 +3,7 @@ from typing import Union
 import numpy as np
 from numba import njit
 
-from  .helpers import slice_candles
+from jesse.helpers import slice_candles
 
 
 def frama(candles: np.ndarray, window: int = 10, FC: int = 1, SC: int = 300, sequential: bool = False) -> Union[

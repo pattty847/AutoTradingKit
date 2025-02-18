@@ -8,7 +8,7 @@ from PySide6.QtCore import QPropertyAnimation,QEasingCurve, Signal, Qt,QEvent,QT
 from atklip.gui.qfluentwidgets.common.icon import *
 from atklip.appmanager.setting import AppConfig
 # from atklip.gui.components.possition_table import PositionTable
-from atklip.gui.bottom_widget.tab_interface import TabInterface
+from atklip.gui.bottom_widget.tab_interface import BottomInterface
 
 if TYPE_CHECKING:
     from .fluentwindow import WindowBase
@@ -20,9 +20,7 @@ class MainWidget(QWidget,Ui_MainWidget):
         self._parent:WindowBase = parent
         self.setObjectName(name)
         self.setupUi(self)
-        
-        
-                
+     
         self.maxExtend = 250
 
         self.tabItem = tabItem
@@ -37,16 +35,12 @@ class MainWidget(QWidget,Ui_MainWidget):
         "signal from drawbar"
         self.drawbar.sig_draw_object_name.connect(self.draw_tool)
         self.drawbar.sig_delete_all.connect(self.chartbox_splitter.chart.delete_all_draw_obj)
-        
-        
-        
+
         self.chartbox_splitter.chart.sig_reset_drawbar_favorite_btn.connect(self.drawbar.reset_drawbar)
         
         self.chartbox_splitter.chart.sig_reload_indicator_panel.connect(self.show_favorite_draw_btn)
         
         self.tool_name:str = None
-        
-        
         
         "signal from TopBar--------start"
         self.topbar.sig_change_symbol.connect(self.chartbox_splitter.chart.on_reset_exchange,Qt.ConnectionType.AutoConnection)
@@ -66,14 +60,13 @@ class MainWidget(QWidget,Ui_MainWidget):
         if self.progress.isVisible():
                 self.progress.run_process(True)
                 
-        
         self.topbar.mode.clicked.connect(self.chartbox_splitter.chart.change_mode)
         
         "khởi tạo indicator menu, symbol menu trước. đang test"
         self.topbar.setup_indicator_menu()
         self.topbar.setup_symbol_menu()
         
-        self.TabInterface = TabInterface(self)
+        self.TabInterface = BottomInterface(self)
         
         self.layout_bottom.setContentsMargins(0,0,0,0)
         self.layout_bottom.addWidget(self.TabInterface) #,0,alignment=Qt.AlignmentFlag.AlignVCenter

@@ -2,9 +2,9 @@ import sys
 
 from PySide6.QtCore import Qt, QSize, QUrl, QPoint
 from PySide6.QtGui import QIcon, QDesktopServices, QColor
-from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget, QFrame, QStackedWidget
+from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget, QFrame, QStackedWidget,QApplication
 
-from atklip.gui import (NavigationItemPosition, MessageBox, MSFluentTitleBar, MSFluentWindow,
+from atklip.gui import (qrouter, MessageBox, MSFluentTitleBar, MSFluentWindow,
                             TabBar, SubtitleLabel, setFont, TabCloseButtonDisplayMode, IconWidget, FluentStyleSheet,
                             TransparentDropDownToolButton, TransparentToolButton, setTheme, Theme, isDarkTheme)
 from atklip.gui import FluentIcon as FIF
@@ -13,6 +13,37 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .fluentwindow import WindowBase
+
+
+class _TabBar(TabBar):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        
+        
+    def removeTab(self, index: int):
+        if not 0 <= index < len(self.items):
+            return
+        # adjust current index
+        if index < self.currentIndex():
+            self._currentIndex -= 1
+        elif index == self.currentIndex():
+            if self.currentIndex() > 0:
+                self.setCurrentIndex(self.currentIndex() - 1)
+                QApplication.processEvents()
+            elif len(self.items) == 1:
+                self._currentIndex = -1
+            else:
+                self.setCurrentIndex(1)
+                self._currentIndex = 0
+                QApplication.processEvents()
+        # remove tab
+        item = self.items.pop(index)
+        self.itemMap.pop(item.routeKey())
+        self.hBoxLayout.removeWidget(item)
+        # qrouter.remove(item.routeKey())
+        item.deleteLater()
+        # remove shadow
+        self.update()
 
 
 class TitleBar(MSFluentTitleBar):
@@ -37,18 +68,15 @@ class TitleBar(MSFluentTitleBar):
         self.hBoxLayout.insertLayout(4, self.toolButtonLayout)
 
         # add tab bar
-        self.tabBar = TabBar(self)
+        self.tabBar = _TabBar(self)
 
         self.tabBar.setMovable(False)
         self.tabBar.setTabMaximumWidth(180)
-        # self.tabBar.setTabShadowEnabled(True)
+        self.tabBar.setTabShadowEnabled(True)
         self.tabBar.setTabSelectedBackgroundColor(QColor(255, 255, 255, 125), QColor(255, 255, 255, 50))
 
         self.tabBar.setScrollable(True)
         self.tabBar.setCloseButtonDisplayMode(TabCloseButtonDisplayMode.ON_HOVER)
-
-        self.tabBar.tabCloseRequested.connect(self.tabBar.removeTab)
-        #self.tabBar.currentChanged.connect(lambda i: print(self.tabBar.tabText(i)))
 
         self.hBoxLayout.insertWidget(5, self.tabBar, 1)
         self.hBoxLayout.setStretch(6, 0)

@@ -3,7 +3,7 @@ from .macd import macd
 from .sma import sma
 from .stddev import stddev
 import numpy as np
-from  .helpers import get_candle_source, slice_candles
+from jesse.helpers import get_candle_source, slice_candles
 
 WaddahAttarExplosionTuple = namedtuple(
     'WaddahAttarExplosionTuple', ['explosion_line', 'trend_power', 'trend_direction']

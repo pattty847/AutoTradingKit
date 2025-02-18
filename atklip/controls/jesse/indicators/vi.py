@@ -3,7 +3,7 @@ from collections import namedtuple
 import numpy as np
 from numba import njit
 
-from  .helpers import slice_candles
+from jesse.helpers import slice_candles
 
 VI = namedtuple('VI', ['plus', 'minus'])
 

@@ -5,7 +5,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon, QColor, QPainter
 from PySide6.QtWidgets import QHBoxLayout, QApplication, QApplication, QStackedWidget
 
-from atklip.gui.qfluentwidgets import isDarkTheme
+from atklip.gui.qfluentwidgets import StackedWidget
 from atklip.gui.qfluentwidgets.common import CryptoIcon as CI
 from atklip.gui.qfluentwidgets.common import screen,FluentIconBase,qconfig, qrouter, FluentStyleSheet, isDarkTheme, BackgroundAnimationWidget
 from atklip.gui.qfluentwidgets.common.icon import *
@@ -29,7 +29,7 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
         Heavy_ProcessPoolExecutor_global.submit(print,"start game")
         # ThreadPoolExecutor_global.submit(print,"start game")
         self.setTitleBar(TitleBar(self))
-        self.tabBar:TabBar = self.titleBar.tabBar
+        self.tabBar = self.titleBar.tabBar
         
         self.hBoxLayout = QHBoxLayout(self)
         self.hBoxLayout.setSpacing(0)
@@ -45,13 +45,12 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
         
         # enable mica effect on win11
         self.setMicaEffectEnabled(False)
-
+        
         self.tabBar.currentChanged.connect(self.onTabChanged)
         self.tabBar.tabAddRequested.connect(self.onTabAddRequested)
         self.tabBar.tabCloseRequested.connect(self.onTabCloseRequested)
         qconfig.themeChangedFinished.connect(self._onThemeChangedFinished)
         FluentStyleSheet.FLUENT_WINDOW.apply(self)
-        self.TabInterface:MainWidget = None
         
         self.onTabAddRequested()
         self.initWindow()
@@ -63,10 +62,6 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
         w, h = desktop.width(), desktop.height()
         self.resize(1260, 800)
         self.move(w//2 - self.width()//2, h//2 - self.height()//2)
-        
-        if self.TabInterface:
-            h =  self.TabInterface.splitter.height()
-            self.TabInterface.splitter.setSizes([800,0])
         self.resize(1260, 800)
         self.show()    
 
@@ -92,11 +87,6 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
             if interface.progress.isVisible():
                 interface.progress.run_process(True)
 
-    
-    def addInterface(self, interface: MainWidget) -> None:
-        """ add sub interface """
-        self.stackedWidget.addWidget(interface)
-
     def removeInterface(self, interface: MainWidget) -> None:
         """ add sub interface """
         self.stackedWidget.removeWidget(interface)
@@ -104,6 +94,7 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
         interface.deleteLater()
         
     def onTabCloseRequested(self, index):
+        print(index,self.tabBar.tab)
         self.tabBar.removeTab(index)
         self.removeInterface(self.stackedWidget.widget(index))
     def close_window(self):
@@ -118,12 +109,14 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
         self.deleteLater()
     
     def onTabChanged(self, index: int):
+        print("index--",index)
         objectName = self.tabBar.currentTab().routeKey()
         TabInterface = self.findChild(MainWidget, objectName)
         old_interface = self.stackedWidget.currentWidget()
         old_interface.hide()
         TabInterface.resize(old_interface.width(),old_interface.height())
         self.switchTo(TabInterface)
+        
     def onTabAddRequested(self):
         current_ex,current_symbol,curent_interval = self.load_pre_config()
         _is_icon_exist = check_icon_exist(current_symbol)
@@ -132,29 +125,19 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
         else :
             icon_path = CI.BTC.path()
         routeKey = f'{current_symbol}-{curent_interval}-{self.tabBar.count()}'
-        print(routeKey)
         self.addTab(routeKey, f"{current_symbol} {curent_interval}", icon_path,current_ex,current_symbol,curent_interval)
         
-
     def addTab(self, routeKey, text, icon,current_ex,current_symbol,curent_interval):
         tabItem = self.tabBar.addTab(routeKey, text, icon)
         self.tabBar.setCurrentTab(routeKey)
-        
-        print("tabItem",tabItem)
-        
-        # self.stackedWidget.resize(self.width(), self.height() - self.titleBar.height())
-        
-        self.TabInterface = MainWidget(self,tabItem,routeKey,current_ex,current_symbol,curent_interval)
-        
-        print("self.TabInterface",self.TabInterface)
-        
-        # old_interface = self.stackedWidget.currentWidget()
-        # if isinstance(old_interface,MainWidget):
-        #     old_interface.hide()
-        #     TabInterface.resize(old_interface.width(),old_interface.height())
-        self.TabInterface.progress.run_process(True)
-        self.addInterface(self.TabInterface)
-        self.switchTo(self.TabInterface)
+        TabInterface = MainWidget(self,tabItem,routeKey,current_ex,current_symbol,curent_interval)
+                
+        old_interface = self.stackedWidget.currentWidget()
+        if isinstance(old_interface,MainWidget):
+            old_interface.hide()
+            TabInterface.resize(old_interface.width(),old_interface.height())
+        self.stackedWidget.addWidget(TabInterface)
+        self.switchTo(TabInterface)
 
     def setTabIcon(self, index: int, icon: Union[QIcon, FluentIconBase, str]):
         """ set tab icon """
@@ -167,23 +150,12 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
         if not interface.isVisible():
             interface.show()
         self.stackedWidget.setCurrentWidget(interface)
-        # self.resize(self.width(), self.height() - self.titleBar.height())
         interface.resize(self.stackedWidget.width(), self.stackedWidget.height())
-
-    def _onCurrentInterfaceChanged(self, widget: MainWidget):
-        #widget = self.stackedWidget.widget(index)
-        qrouter.push(self.stackedWidget, widget.objectName())
-        old_interface = self.stackedWidget.currentWidget()
-        old_interface.hide()
-        widget.resize(old_interface.width(),old_interface.height())
-        self.switchTo(widget)
-        self._updateStackedBackground()
 
     def _updateStackedBackground(self):
         isTransparent = self.stackedWidget.currentWidget().property("isStackedTransparent")
         if bool(self.stackedWidget.property("isTransparent")) == isTransparent:
             return
-        
         self.stackedWidget.setProperty("isTransparent", isTransparent)
         self.stackedWidget.setStyle(QApplication.style())
         self.update()

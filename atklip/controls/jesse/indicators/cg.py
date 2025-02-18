@@ -3,7 +3,7 @@ from typing import Union
 import numpy as np
 from numba import njit
 
-from  .helpers import get_candle_source, same_length, slice_candles
+from jesse.helpers import get_candle_source, same_length, slice_candles
 
 
 def cg(candles: np.ndarray, period: int = 10, source_type: str = "close", sequential: bool = False) -> Union[

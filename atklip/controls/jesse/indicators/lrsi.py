@@ -3,7 +3,7 @@ from typing import Union
 import numpy as np
 from numba import njit
 
-from  .helpers import slice_candles
+from jesse.helpers import slice_candles
 
 
 def lrsi(candles: np.ndarray, alpha: float = 0.2, sequential: bool = False) -> Union[float, np.ndarray]:

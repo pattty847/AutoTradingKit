@@ -3,7 +3,7 @@ from collections import namedtuple
 import numpy as np
 from scipy.signal import argrelextrema
 
-from  .helpers import np_ffill, slice_candles
+from jesse.helpers import np_ffill, slice_candles
 
 EXTREMA = namedtuple('EXTREMA', ['is_min', 'is_max', 'last_min', 'last_max'])
 

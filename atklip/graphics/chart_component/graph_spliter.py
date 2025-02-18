@@ -254,8 +254,7 @@ class GraphSplitter(ViewSplitter):
             signal=self.sig_show_hide_cross,
             slot=self.mouse_move,connect_type=Qt.ConnectionType.AutoConnection
         )
-        # self.mouse_proxy = SignalProxy(signal=self.sig_show_hide_cross, rateLimit=144,
-        #                             slot=self.mouse_move)
+
         self.addWidget(self.chart)  # add first chart to list
         self.listwidgets.append(self.chart)
         self.list_proxy = []

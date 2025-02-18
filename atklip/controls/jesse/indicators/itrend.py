@@ -3,7 +3,7 @@ from collections import namedtuple
 import numpy as np
 from numba import njit
 
-from  .helpers import get_candle_source, slice_candles
+from jesse.helpers import get_candle_source, slice_candles
 
 ITREND = namedtuple('ITREND', ['signal', 'it', 'trigger'])
 

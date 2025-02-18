@@ -3,7 +3,7 @@ from typing import Union
 import numpy as np
 from numba import njit
 
-from  .helpers import get_candle_source, slice_candles
+from jesse.helpers import get_candle_source, slice_candles
 
 
 def mcginley_dynamic(candles: np.ndarray, period: int = 10, k: float = 0.6, source_type: str = "close",

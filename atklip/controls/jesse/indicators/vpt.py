@@ -2,7 +2,7 @@ from typing import Union
 
 import numpy as np
 
-from  .helpers import get_candle_source, np_shift, slice_candles
+from jesse.helpers import get_candle_source, np_shift, slice_candles
 
 
 def vpt(candles: np.ndarray, source_type: str = "close", sequential: bool = False) -> Union[float, np.ndarray]:

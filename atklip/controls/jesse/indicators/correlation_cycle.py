@@ -3,7 +3,7 @@ from collections import namedtuple
 import numpy as np
 from numba import njit
 
-from  .helpers import get_candle_source, np_shift, slice_candles
+from jesse.helpers import get_candle_source, np_shift, slice_candles
 
 CC = namedtuple('CC', ['real', 'imag', 'angle', 'state'])
 

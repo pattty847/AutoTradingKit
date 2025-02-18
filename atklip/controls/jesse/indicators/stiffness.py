@@ -6,7 +6,7 @@ from .stddev import stddev
 
 import numpy as np
 
-from  .helpers import get_candle_source, slice_candles
+from jesse.helpers import get_candle_source, slice_candles
 
 
 def stiffness(candles: np.ndarray, ma_length: int = 100, stiff_length: int = 60, stiff_smooth: int = 3, source_type: str = "close") -> float:

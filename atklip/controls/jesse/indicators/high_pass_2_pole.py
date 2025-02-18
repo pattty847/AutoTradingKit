@@ -3,7 +3,7 @@ from typing import Union
 import numpy as np
 from numba import njit
 
-from  .helpers import get_candle_source, slice_candles
+from jesse.helpers import get_candle_source, slice_candles
 
 
 def high_pass_2_pole(candles: np.ndarray, period: int = 48, source_type: str = "close", sequential: bool = False) -> \

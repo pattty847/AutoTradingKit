@@ -3,7 +3,7 @@ from typing import Union
 import numpy as np
 from numba import guvectorize, njit
 
-from  .helpers import get_candle_source, slice_candles
+from jesse.helpers import get_candle_source, slice_candles
 
 
 def rma(candles: np.ndarray, length: int = 14, source_type="close", sequential=False) -> \

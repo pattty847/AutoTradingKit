@@ -7,7 +7,7 @@ try:
 except ImportError:
     njit = lambda a : a
 
-from  .helpers import get_candle_source, slice_candles
+from jesse.helpers import get_candle_source, slice_candles
 
 
 def supersmoother_3_pole(candles: np.ndarray, period: int = 14, source_type: str = "close", sequential: bool = False) -> \
