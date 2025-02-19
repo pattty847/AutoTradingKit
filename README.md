@@ -1,6 +1,6 @@
 # ATK - Auto Trading Kit
 
-"Save your time and provide you with accurate profits."
+This is a free software designed for traders. If you become wealthy thanks to it, that is our happiness.
 
 ## Description
 
@@ -10,39 +10,43 @@ A project for trader from trader. main features: draw tool, popular indicator li
 
 ## ATK - Features
 
-- Modern interface, very user-friendly, similar to TradingView.
-- Support multiple tab, timeframe, multiple indicators and live trading.
+|               **Features**               |                **All Plan**                |
+| :--------------------------------------------: | :----------------------------------------------: |
+|           **Number of Charts**           |   Unlimited (depends on user's PC performance)   |
+|         **Number of Indicators**         |                    Unlimited                    |
+|                **Alerts**                |                Under Development                |
+|           **Historical Data**           |                    Unlimited                    |
+|             **Data Export**             |                Under Development                |
+|           **Customer Support**           |                       24/7                       |
+|            **Real-time Data**            |                       Yes                       |
+|              **Auto Trade**              | Under Development (using API key and Secret key) |
+|             **Backtesting**             |                       Yes                       |
+|   **Basic and Advanced Drawing Tools**   |                       Yes                       |
+|         **Support multiple tab**         |                       Yes                       |
+|          **Support timeframe**          |                  Yes (1m to 3D)                  |
+| **buy/sell market, limit, trallingstop** |                Under Development                |
+|                **Crypto**                |                       Yes                       |
+|                **Forex**                |                Under Development                |
+|                **Stock**                |                Under Development                |
 
 ![1739977622209](image/README/1739977622209.png)
 
-- Support alot of exchanges and will be more in future
-
 ![1739977750678](image/README/1739977750678.png)
-
-- Support a lot of indicators, which are very popular and famous. And more will be updated in the future, including indicators from MT4, MT5, and TradingView.
 
 ![1739977775276](image/README/1739977775276.png)
 
-- Support Replay (back play), alot of drawing tool, and more will be updated in the future.
-
 ![1739977816909](image/README/1739977816909.png)
 
-- Soon will be update all type of order like buy/sell market, limit, trallingstop...
-- Soon will be update live trading on your favorite exchanges via your own API-key and Secret-key of the exchanges.
+![1740004081150](image/README/1740004081150.png)
 
-```
-cd existing_repo
-git remote add origin https://github.com/Khanhlinhdang/AutoTradingKit.git
-git branch -M main
-git push -uf origin main
-```
+![1740004113843](image/README/1740004113843.png)
 
 ## Connect with ATK team
 
-- Create an issue or request a new feature
+- Create an issue or request a new feature on this [Github repository](https://github.com/Khanhlinhdang/AutoTradingKit)
 - If you want to update some personal feature, please sent an email to khanhlinhdangthditrach@gmail.com
 
-## Many indicators, sourced from famous libraries such as pandas-ta, ta-lib, and even indicators converted from TradingView
+## Many indicators, sourced from famous libraries such as [pandas-ta](https://github.com/twopirllc/pandas-ta/tree/main), [ta-lib](), and even indicators converted from TradingView,MT4,MT5
 
  Currently provides below set of indicators. If your favourite indicator
  is missing, then create a ticket via GitHub Issues and there is a good
@@ -137,7 +141,7 @@ This software is open source, and its source code is publicly available for revi
 
 1. **Public Source Code** : The source code is openly available but restricted in usage.
 2. **Usage Requires Permission** : You **must** obtain written consent from the author before using this software.
-3. **Paid License or Sponsorship Required** : To use this software, you must either:
+3. **Paid License or Sponsorship**: If you get rich, please say thank to us by:
 
 * Purchase a license from the author, or
 * Provide sponsorship or financial support as agreed upon with the author.
@@ -145,7 +149,7 @@ This software is open source, and its source code is publicly available for revi
 1. **No Redistribution** : You are not allowed to share, resell, or distribute this code without explicit permission.
 2. **No Unauthorized Modifications** : Modifying or creating derivative works from this software without approval is prohibited.
 3. **No Warranty** : This software is provided "as is" without any warranties or guarantees.
-4. **For licensing inquiries**, please contact: **khanhlinhdangthditrach@gmail.com**
+4. **For any question**, please contact: **khanhlinhdangthditrach@gmail.com**
 
 ## Project status
 
@@ -211,6 +215,8 @@ Telegram: +79921849116 or username : @Chelinh0308
 
 Phone number: +84343845888 (VN) or +79921849116 (RU)
 
+Youtube Chanel: [AutoTradingKit](https://www.youtube.com/@AutoTradingKit)
+
 Facebook: [Pham Cong Che](https://www.facebook.com/che.linh.9096/)
 
-Facebook ATK Group: [Auto Trading Kit (ATK) - Facebook group](https://www.facebook.com/groups/748831980507126 "Facebook group of ATK")
+ATK Facebook Group: [Auto Trading Kit (ATK) - Facebook group](https://www.facebook.com/groups/748831980507126 "Facebook group of ATK")

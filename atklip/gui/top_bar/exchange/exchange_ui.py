@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (QHBoxLayout, QSizePolicy, QVBoxLayout)
 
 from atklip.gui.components.exchange_icon import ExchangeICon
 from atklip.gui import (StrongBodyLabel, SubtitleLabel)
-import resource
+
 class Ui_cr_exchange(object):
     def setupUi(self, cr_exchange):
         if not cr_exchange.objectName():
