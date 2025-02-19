@@ -12,4 +12,6 @@ lfx_crowdfunding: # Replace with a single LFX Crowdfunding project-name e.g., cl
 polar: # Replace with a single Polar username
 buy_me_a_coffee: # Replace with a single Buy Me a Coffee username
 thanks_dev: # Replace with a single thanks.dev username
-custom: ["https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=P-0F53588022198101GM63BMVA"]
+custom: ["https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=P-0F53588022198101GM63BMVA",
+"https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=P-06E5757414542143MM63BSGI",
+"https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=P-00V92834XG336831FM63BTEQ"]
