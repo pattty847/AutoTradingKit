@@ -110,7 +110,7 @@ run mainwindow.py to start app: python mainwindow.py
 ## Build exe
 
 - Use pyinstaller to build
-- Convert py to pyd using cython to improve speed
+- Convert py to pyd using cython
 
 ## Roadmap 2025
 
@@ -129,7 +129,7 @@ run mainwindow.py to start app: python mainwindow.py
 
 ## Restricted Open Source License
 
-Copyright (c) [Year] [Your Name]
+Copyright (c) 2025 @mr.BigD
 
 This software is open source, and its source code is publicly available for review and learning purposes  **only** . However, any form of usage, including commercial, personal, or academic purposes, requires explicit written permission from the author.
 
@@ -182,6 +182,8 @@ With gratitude,
 mr.BigD - Creator/Developer of ATK
 
 1. Bank account: MB Bank: 8699991689999 | Pham Cong Che | (Viet Nam Bank)
+
+       ![1740000980508](image/README/1740000980508.png)
 2. Paypal:
 
 - [Paypal sponsor](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=XTHUBP3TB5H7J) (khanhlinhdangthditrach@gmail.com) (any value)
