@@ -187,14 +187,9 @@ mr.BigD - Creator/Developer of ATK
 - [Paypal sponsor](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=XTHUBP3TB5H7J) (khanhlinhdangthditrach@gmail.com) (any value)
 - [Sponsor via paypal](https://www.paypal.com/ncp/payment/363TPLRF4NAF4)  20$
 - [Sponsor via Paypal ](https://www.paypal.com/ncp/payment/G9R3YNN89KR8Y)10$
-- Sponsor monthly via Subscribe paypal
-
-<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
-  <input type="hidden" name="cmd" value="_s-xclick" />
-  <input type="hidden" name="hosted_button_id" value="XTHUBP3TB5H7J" />
-  <input type="hidden" name="currency_code" value="USD" />
-  <input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_subscribe_LG.gif" border="0" name="submit" title="PayPal – Phương thức thanh toán trực tuyến an toàn và thuận tiện hơn!" alt="Đăng ký" />
-</form>
+- [Premium Sponsor monthly via Subscribe paypal](https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=P-0F53588022198101GM63BMVA)
+- [Vip 1 Sponsor monthly via Subscribe paypal](https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=P-06E5757414542143MM63BSGI)
+- [Vip 2 Sponsor monthly via Subscribe paypal](https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=P-00V92834XG336831FM63BTEQ)
 
 3. Binance pay:
 
