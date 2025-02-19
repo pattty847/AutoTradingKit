@@ -25,9 +25,7 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
     def __init__(self, parent=None):
         self._isMicaEnabled = False
         super().__init__(parent=parent)
-        "đảm bảo ProcessPoolExecutor được kích hoạt trước"
-        Heavy_ProcessPoolExecutor_global.submit(print,"start game")
-        # ThreadPoolExecutor_global.submit(print,"start game")
+        
         self.setTitleBar(TitleBar(self))
         self.tabBar = self.titleBar.tabBar
         
@@ -51,6 +49,9 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
         self.tabBar.tabCloseRequested.connect(self.onTabCloseRequested)
         qconfig.themeChangedFinished.connect(self._onThemeChangedFinished)
         FluentStyleSheet.FLUENT_WINDOW.apply(self)
+        
+        "đảm bảo ProcessPoolExecutor được kích hoạt trước"
+        Heavy_ProcessPoolExecutor_global.submit(print,"start game")
         
         self.onTabAddRequested()
         self.initWindow()

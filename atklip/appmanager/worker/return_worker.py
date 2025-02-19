@@ -12,7 +12,7 @@ class HeavyProcess():
         self.args = args
         self.kwargs = kwargs.copy()
         self.executor = Heavy_ProcessPoolExecutor_global
-        # self.thread = ThreadPoolExecutor_global
+    #     self.thread = ThreadPoolExecutor_global
 
     # def start(self):
     #     self.thread.submit(

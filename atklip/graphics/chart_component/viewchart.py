@@ -61,7 +61,7 @@ class Chart(ViewPlotWidget):
         self.sources: Dict[str:object] = {}
         
         self.is_load_historic = False
-        self.time_delay = 5
+        self.time_delay = 1
         self.replay_speed = 1
         self.replay_data:list = []
         self.replay_pos_i:int = 0
@@ -130,7 +130,7 @@ class Chart(ViewPlotWidget):
             self.time_delay = 1
         else:
             self.is_trading = True
-            self.time_delay = 0.3
+            self.time_delay = 0.1
             
     def set_replay_speed(self,text):
         if text == "0.5x ":
@@ -629,10 +629,8 @@ class Chart(ViewPlotWidget):
                         firt_run = True   
             else:
                 break
-            # try:
-            #     await asyncio.sleep(self.time_delay)
-            # except:
-            #     pass
+            await asyncio.sleep(self.time_delay)
+
         try:
             AppLogger.writer("INFO",f"{__name__} - {symbol}-{interval} have closed")
             print(f"turn-off {symbol}-{interval}")
