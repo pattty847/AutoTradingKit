@@ -1,13 +1,34 @@
 # ATK - Auto Trading Kit
 
-## Getting started
+"Save your time and provide you with accurate profits."
 
-![1716333263102](image/README/1716333263102.png)
+## Description
 
-## Add your files
+Auto Trading Kit: its mean, this project can be used to build your own strategy, backtest to test and improve strategy. and can live trading by using your strategy.
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+A project for trader from trader. main features: draw tool, popular indicator like Tradingview; connect with many popular exchanges like binance, mexc... via api and secret key to live trade; build custom indicator, and clone famous custom indicator on MT4, MT5 and Tradingview; Build and test strategies.
+
+## ATK - Features
+
+- Modern interface, very user-friendly, similar to TradingView.
+- Support multiple tab, timeframe, multiple indicators and live trading.
+
+![1739977622209](image/README/1739977622209.png)
+
+- Support alot of exchanges and will be more in future
+
+![1739977750678](image/README/1739977750678.png)
+
+- Support a lot of indicators, which are very popular and famous. And more will be updated in the future, including indicators from MT4, MT5, and TradingView.
+
+![1739977775276](image/README/1739977775276.png)
+
+- Support Replay (back play), alot of drawing tool, and more will be updated in the future.
+
+![1739977816909](image/README/1739977816909.png)
+
+- Soon will be update all type of order like buy/sell market, limit, trallingstop...
+- Soon will be update live trading on your favorite exchanges via your own API-key and Secret-key of the exchanges.
 
 ```
 cd existing_repo
@@ -16,57 +37,18 @@ git branch -M main
 git push -uf origin main
 ```
 
-## Integrate with your tools
+## Connect with ATK team
 
-- [ ] [Set up project integrations](https://gitlab.com/khanhlinhdangthditrach/att-algo-trading-tools/-/settings/integrations)
+- Create an issue or request a new feature
+- If you want to update some personal feature, please sent an email to khanhlinhdangthditrach@gmail.com
 
-## Collaborate with your team
-
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
-
-## Test and Deploy
-
-Use the built-in continuous integration in GitLab.
-
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
-
----
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-
-Auto Trading Kit: its mean, this project can be used to build your own strategy, backtest to test and improve strategy. and can live trading by using your strategy
-
-## Description
-
-A project for trader from trader. main features: draw tool, popular indicator like Tradingview; connect with popular exchange like binance, mexc via api and secret key to live trade; build custom indicator, and clone famous custom indicator on tradingview; build and test strategies.
-
-## Badges
-
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Indicators from talipp library
+## Many indicators, sourced from famous libraries such as pandas-ta, ta-lib, and even indicators converted from TradingView
 
  Currently provides below set of indicators. If your favourite indicator
  is missing, then create a ticket via GitHub Issues and there is a good
-chance that it will be included in the future version of the library.
+chance that it will be included in the future version of ATK.
 
-(https://github.com/nardew/talipp)
+In the future, we will update more indicators, which are populars and famous on tradingview, MT4, MT5
 
 * Accumulation/Distribution (ADL)
 * Aroon
@@ -111,6 +93,7 @@ chance that it will be included in the future version of the library.
 * Ultimate Oscillator (UO)
 * Vortex Indicator (VTX)
 * Volume Weighted Average Price (VWAP)
+* ......
 
 ## Installation
 
@@ -122,62 +105,16 @@ activate venv: venv/scripts/activate
 
 install libs: pip install -r requirements.txt
 
-pip install -U git+https://github.com/twopirllc/pandas-ta.git@development (cai ban pandas-ta development)
-
 run mainwindow.py to start app: python mainwindow.py
 
 ## Build exe
 
-- replace this function in atklip.gui.qfluentwidgets.common.icon để thay đổi đường dẫn đến folders lưu ảnh
-- ```
-  def change_svg_color(value:str, new_color):
-      path = f'_internal/atklip/gui/qfluentwidgets/_rc/images/icons/{value.lower()}_white.svg'
-      new_path = f'_internal/atklip/gui/qfluentwidgets/_rc/images/icons/{value.lower()}_tradingview.svg'
-      if os.path.exists(new_path):
-          return new_path
-      file = open(path,"r")
-      text = file.read()
-      file.close()
-      file = open(new_path,'w')
-      new_text = text.replace("rgb(255,255,255)",new_color).replace("rgb(0,0,0)",new_color).replace("white",new_color).replace("rgb(247,245,245)",new_color) 
-      file.write(new_text)
-      file.close()
-      return new_path
-  ```
-- convert all py file sang py extention bằng cython
-- xóa hết file .py gốc
-- Sử dụng autopytoexe để build
-- 
+- Use pyinstaller to build
+- Convert py to pyd using cython to improve speed
 
-```
+## Roadmap 2025
 
-```
-
-## USE LINK
-
-https://github.com/bfolkens/py-market-profile
-
-https://github.com/neurotrader888/VSAIndicator
-
-https://github.com/neurotrader888/RSI-PCA
-
-https://github.com/beinghorizontal/tpo_project
-
-https://github.com/letianzj/quanttrader/tree/master
-
-https://github.com/beinghorizontal/Support-Resistance
-
-## Support
-
-email: khanhlinhdangthditrach@gmail.com
-
-skype: khanhlinhdangthditrach@gmail.com
-
-facebook: [ATT (Auto Trading tools) | Facebook](https://www.facebook.com/groups/748831980507126)
-
-## Roadmap
-
-1) Update Sub-Indicator: Volume, RSI, MACD...
+1) Update more indicator from MT4, MT5, Tradingview
 2) Update Trading Strategies
 3) Update set API-Key and Secret-Key for pupular exchanges like Binance, Mexc,...
 4) Update Draw tool on left bar like Tradingview
@@ -190,22 +127,93 @@ facebook: [ATT (Auto Trading tools) | Facebook](https://www.facebook.com/groups/
 11) Build AI indicator
 12) Build AI Strategy
 
-## Contributing
+## Restricted Open Source License
 
-State if you are open to contributions and what your requirements are for accepting them.
+Copyright (c) [Year] [Your Name]
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+This software is open source, and its source code is publicly available for review and learning purposes  **only** . However, any form of usage, including commercial, personal, or academic purposes, requires explicit written permission from the author.
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+### License Terms:
 
-## Authors and acknowledgment
+1. **Public Source Code** : The source code is openly available but restricted in usage.
+2. **Usage Requires Permission** : You **must** obtain written consent from the author before using this software.
+3. **Paid License or Sponsorship Required** : To use this software, you must either:
 
-Pham Cong Che (nickname: BigD)- a trader, freelancer developer from Viet Nam
+* Purchase a license from the author, or
+* Provide sponsorship or financial support as agreed upon with the author.
 
-## License
-
-For open source projects, say how it is licensed.
+1. **No Redistribution** : You are not allowed to share, resell, or distribute this code without explicit permission.
+2. **No Unauthorized Modifications** : Modifying or creating derivative works from this software without approval is prohibited.
+3. **No Warranty** : This software is provided "as is" without any warranties or guarantees.
+4. **For licensing inquiries**, please contact: **khanhlinhdangthditrach@gmail.com**
 
 ## Project status
 
-On active update
+The ATK is in an active development phase.
+
+### **Support ATK Development and Help Us Grow!**
+
+Dear ATK Users and Supporters,
+
+ATK has been a valuable tool for many of you, helping to streamline workflows, solve problems, and improve productivity. However, maintaining and improving ATK requires significant resources, especially as we work to develop new features, fix bugs, and ensure the project remains sustainable for the long term.
+
+To continue delivering the best experience for our users, we need your support. Your sponsorship will directly fund:
+
+* **Development of new features** outlined in our Roadmap, ensuring ATK evolves to meet your needs.
+* **Bug fixes and optimizations** to keep ATK stable, reliable, and efficient.
+* **Support for our developers** , who work tirelessly to make ATK better every day.
+
+**Why Sponsor ATK?**
+
+* If ATK has helped you in your work or personal projects, your contribution ensures it can continue to do so for others.
+* Your support allows us to prioritize features and improvements that matter most to the community.
+* Sponsoring ATK is an investment in a tool you already rely on, ensuring its growth and sustainability.
+
+**How You Can Help:**
+
+* Click the link below to sponsor ATK via PayPal. Every contribution, no matter the size, makes a difference.
+* You can sent to me a gift via my bank account (Vietnamese Bank), it is shown below
+* Share this message with others who benefit from ATK. The more support we receive, the faster we can deliver new features and improvements.
+
+**Thank You for Your Support!**
+Your generosity and belief in ATK mean the world to us. Together, we can make ATK even better and ensure it remains a powerful tool for everyone who depends on it.
+
+With gratitude,
+mr.BigD - Creator/Developer of ATK
+
+1. Bank account: MB Bank: 8699991689999 | Pham Cong Che | (Viet Nam Bank)
+2. Paypal:
+
+- [Paypal sponsor](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=XTHUBP3TB5H7J) (khanhlinhdangthditrach@gmail.com) (any value)
+- [Sponsor via paypal](https://www.paypal.com/ncp/payment/363TPLRF4NAF4)  20$
+- [Sponsor via Paypal ](https://www.paypal.com/ncp/payment/G9R3YNN89KR8Y)10$
+- Sponsor monthly via Subscribe paypal
+
+<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
+  <input type="hidden" name="cmd" value="_s-xclick" />
+  <input type="hidden" name="hosted_button_id" value="XTHUBP3TB5H7J" />
+  <input type="hidden" name="currency_code" value="USD" />
+  <input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_subscribe_LG.gif" border="0" name="submit" title="PayPal – Phương thức thanh toán trực tuyến an toàn và thuận tiện hơn!" alt="Đăng ký" />
+</form>
+
+3. Binance pay:
+
+![1739980400330](image/README/1739980400330.png)
+
+## Authors and acknowledgment
+
+Pham Cong Che (nickname: BigD) - A trader, a freelancer and a developer from Viet Nam. The author of ATK.
+
+Email: khanhlinhdangthditrach@gmail.com
+
+Skype: khanhlinhdangthditrach@gmail.com
+
+Zalo: 0343845888
+
+Telegram: +79921849116 or username : @Chelinh0308
+
+Phone number: +84343845888 (VN) or +79921849116 (RU)
+
+Facebook: [Pham Cong Che](https://www.facebook.com/che.linh.9096/)
+
+Facebook ATK Group: [Auto Trading Kit (ATK) - Facebook group](https://www.facebook.com/groups/748831980507126 "Facebook group of ATK")
