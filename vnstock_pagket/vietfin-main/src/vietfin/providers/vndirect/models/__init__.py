@@ -1,1 +1,0 @@
-"""VNDIRECT Data Models Directory."""

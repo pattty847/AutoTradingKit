@@ -1,1 +1,0 @@
-"""CafeF Providers Directory."""

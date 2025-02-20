@@ -1,1 +1,0 @@
-"""Fmarket Providers Directory."""

@@ -14,11 +14,11 @@ backend_multiprocessing: True
 
 # Secrets for exchanges
 binance_futures:
-    key_id: "zhBF9X2mhD7rY6fpFU243biBtE4ySGpXTBPdYYOExyx27G5CrU6cCEditBhO7ek4"
-    key_secret: "6rIYDN1xBaxxGyuLslYGMxlHFtjgzhVh6nV4zO8IKaspdF1H3tC5MKXMgxA1rHDA"
+    key_id: ""
+    key_secret: ""
 binance_delivery:
-    key_id : "zhBF9X2mhD7rY6fpFU243biBtE4ySGpXTBPdYYOExyx27G5CrU6cCEditBhO7ek4"
-    key_secret: "6rIYDN1xBaxxGyuLslYGMxlHFtjgzhVh6nV4zO8IKaspdF1H3tC5MKXMgxA1rHDA"
+    key_id : ""
+    key_secret: ""
 bit.com:
     key_id: null
     key_secret: null

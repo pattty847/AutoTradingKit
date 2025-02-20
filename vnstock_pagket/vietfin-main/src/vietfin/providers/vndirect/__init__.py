@@ -1,1 +1,0 @@
-"""VNDIRECT Provider Directory."""
