@@ -186,8 +186,6 @@ With gratitude,
 mr.BigD - Creator/Developer of ATK
 
 1. Bank account: MB Bank: 8699991689999 | Pham Cong Che | (Viet Nam Bank)
-
-       ![1740000980508](image/README/1740000980508.png)
 2. Paypal:
 
 - [Paypal sponsor](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=XTHUBP3TB5H7J) (khanhlinhdangthditrach@gmail.com) (any value)

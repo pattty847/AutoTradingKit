@@ -8,29 +8,14 @@ from cx_Freeze import setup, Executable
 build_exe_options = {
     # "packages": ["os"],
     # "excludes": [],
-    "zip_include_packages": ["encodings",
-                             "json",
-                             "asyncio",
-                             "re",
-                             "logging",
-                             "os",
-                             "sys",
-                             "time",
-                             "datetime",
-                             "math",
-                              "random",
-                              "threading",
-                              "queue",
-                              "typing",
-                              "enum",
-                              "venv"],
+    "zip_include_packages": ["winloop", "atklip","encodings", "PySide6", "shiboken6"],
 }
 # base="Win32GUI" should be used only for Windows GUI app
 base = None
 if sys.platform == "win32":
     base = "Win32GUI"
 target = Executable(
-    script="mainWindow.py",
+    script="ATK.py",
     base = "Win32GUI",
     icon="atklip/image/appico.ico"
     )

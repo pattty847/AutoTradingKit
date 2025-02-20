@@ -51,7 +51,7 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
         FluentStyleSheet.FLUENT_WINDOW.apply(self)
         
         "đảm bảo ProcessPoolExecutor được kích hoạt trước"
-        # Heavy_ProcessPoolExecutor_global.submit(print,"start game")
+        Heavy_ProcessPoolExecutor_global.submit(print,"start game")
         
         self.onTabAddRequested()
         self.initWindow()
