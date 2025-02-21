@@ -16,7 +16,7 @@ class ReplaySpeed(ComboBox):
     def __init__(self,parent:QWidget=None):
         super(ReplaySpeed,self).__init__(parent)
         self._parent:QWidget = parent
-        self.set_values(["0.5x ","1x ","2x ","3x ","5x ","10x ","15x "])
+        self.set_values(["0.5x ","1x ","2x ","3x ","5x ","7x "])#,"10x ","15x "
         self.installEventFilter(ToolTipFilter(self, 3000, ToolTipPosition.TOP))
         self.setToolTip("Speed update candle")
         self.setCurrentIndex(1)

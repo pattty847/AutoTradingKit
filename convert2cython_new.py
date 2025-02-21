@@ -10,7 +10,7 @@ def convert_to_cython(py_file):
                 if os.path.exists(pyd_name):
                     print(pyd_name)
                     os.remove(pyd_name)
-                    return
+                    return None
             cy_file = os.path.splitext(py_file)[0] + ".pyx"
             with open(cy_file, 'w',encoding="utf-8") as f:
                 f.write(py_code)
@@ -18,7 +18,9 @@ def convert_to_cython(py_file):
 
 def convert_one(path_:str=r"atklip\graph_objects\chart_component\viewchart.py"):
     pyx_path = convert_to_cython(path_)
-    os.system(f'cythonize --build --inplace -3 --3str --cplus --force --keep-going --no-docstrings {pyx_path}')
+    if not pyx_path:
+        return
+    os.system(f'cythonize --build --inplace -3 --3str --force --keep-going --no-docstrings {pyx_path}')
     
     _c_path = f'{str(pyx_path).replace(".pyx",".c")}'
     if os.path.exists(_c_path):
@@ -29,7 +31,7 @@ def convert_one(path_:str=r"atklip\graph_objects\chart_component\viewchart.py"):
     if os.path.exists(pyx_path):
         os.remove(pyx_path)
     
-for root, _, files in os.walk("atklip"):
+for root, _, files in os.walk("atklip/graphics/chart_component"):
     for file in files:
         src_path = os.path.join(root, file)
         # Bỏ qua thư mục __pycache__

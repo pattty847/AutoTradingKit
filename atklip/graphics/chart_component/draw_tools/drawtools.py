@@ -309,7 +309,6 @@ class DrawTool(QObject):
         obj.on_click.connect(self.show_popup_menu)
         self.chart.sig_reset_drawbar_favorite_btn.emit(obj)
     
-
     def draw_text(self, ev: QEvent):
         pos_x, pos_y = self.get_position_mouse_on_chart(ev)
         obj = TextBoxROI(size=5,symbol="o",pen="green",brush = "green", drawtool=self)
@@ -328,6 +327,7 @@ class DrawTool(QObject):
     # def draw_text(self, ev: QEvent):
     #     pos_x, pos_y = self.get_position_mouse_on_chart(ev)
     #     obj = CenteredTextItem(text = 'text',
+    #                            chart = self.chart,
     #                             parent=self.chart.vb,
     #                             pen="green",brush = "green")
         

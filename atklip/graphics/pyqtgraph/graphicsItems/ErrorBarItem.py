@@ -49,7 +49,7 @@ class ErrorBarItem(GraphicsObject):
         self.setVisible(all(self.opts[ax] is not None for ax in ['x', 'y']))
         self.path = None
         self.update()
-        self.prepareGeometryChange()
+        
         self.informViewBoundsChanged()
         
     def setOpts(self, **opts):
@@ -138,7 +138,7 @@ class ErrorBarItem(GraphicsObject):
                     p.addPath(leftEnds)
                     
         self.path = p
-        self.prepareGeometryChange()
+        
         
         
     def paint(self, p, *args):

@@ -598,7 +598,11 @@ class TextBoxROI(UIGraphicsItem):
                     "delete":True,}
                     }
         
-        
+    def get_styles(self):
+        styles =  {"lock":self.has["styles"]["lock"],
+                    "delete":self.has["styles"]["delete"],
+                    "setting":self.has["styles"]["setting"],}
+        return styles
 
     def setPos(self, *args):
         """Method to set the position to ``(x, y)`` within the plot view

@@ -84,7 +84,6 @@ class PlotWidget(GraphicsView):
                 return m
         raise AttributeError(attr)
     
-    @QtCore.Slot(object, object)
     def viewRangeChanged(self, view, range):
         #self.emit(QtCore.SIGNAL('viewChanged'), *args)
         self.sigRangeChanged.emit(self, range)

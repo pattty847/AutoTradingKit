@@ -166,12 +166,12 @@ class BasicIndicator(BasicMenu):
                                 IndicatorType.RMA ,
                                 IndicatorType.SINWMA ,
                                 IndicatorType.SMA ,
-                                IndicatorType.SMMA ,
+                                # IndicatorType.SMMA ,
                                 IndicatorType.SWMA ,
                                 IndicatorType.T3 ,
                                 IndicatorType.TEMA ,
                                 IndicatorType.TRIMA ,
-                                IndicatorType.VIDYA ,
+                                # IndicatorType.VIDYA ,
                                 IndicatorType.WMA ,
                                 IndicatorType.SSF ,
                                 IndicatorType.ZLMA,
@@ -195,7 +195,7 @@ class SubIndicator(BasicMenu):
                                 IndicatorType.EMATrendMetter,
                                 IndicatorType.ROC,
                                 IndicatorType.SQEEZE,
-                                IndicatorType.TTM,
+                                # IndicatorType.TTM,
                                 IndicatorType.TSI, 
                                 IndicatorType.VOLUMEWITHMA,
                                 IndicatorType.VTX,
@@ -204,28 +204,28 @@ class SubIndicator(BasicMenu):
                                 IndicatorType.TRIX,
                                 IndicatorType.STC,
                                 IndicatorType.Stoch,
-                                IndicatorType.SOBV,
-                                IndicatorType.SFX,
-                                IndicatorType.IBS,
-                                IndicatorType.MassIndex,
-                                IndicatorType.OBV,
-                                IndicatorType.MeanDev,
-                                IndicatorType.KVO,
-                                IndicatorType.KST,
-                                IndicatorType.Ichimoku,
-                                IndicatorType.ForceIndex,
-                                IndicatorType.EMV,
-                                IndicatorType.DPO,
-                                IndicatorType.CoppockCurve,
-                                IndicatorType.CHOP,
-                                IndicatorType.ChaikinOsc,
+                                # IndicatorType.SOBV,
+                                # IndicatorType.SFX,
+                                # IndicatorType.IBS,
+                                # IndicatorType.MassIndex,
+                                # IndicatorType.OBV,
+                                # IndicatorType.MeanDev,
+                                # IndicatorType.KVO,
+                                # IndicatorType.KST,
+                                # IndicatorType.Ichimoku,
+                                # IndicatorType.ForceIndex,
+                                # IndicatorType.EMV,
+                                # IndicatorType.DPO,
+                                # IndicatorType.CoppockCurve,
+                                # IndicatorType.CHOP,
+                                # IndicatorType.ChaikinOsc,
                                 IndicatorType.CCI,
-                                IndicatorType.BOP,
-                                IndicatorType.ATR,
-                                IndicatorType.Aroon,
-                                IndicatorType.AO,
-                                IndicatorType.ADX,
-                                IndicatorType.AccuDist,
+                                # IndicatorType.BOP,
+                                # IndicatorType.ATR,
+                                # IndicatorType.Aroon,
+                                # IndicatorType.AO,
+                                # IndicatorType.ADX,
+                                # IndicatorType.AccuDist,
                                 ]
         self.load_indicators()
         #self.addSpacer("VERTICAL")
@@ -245,9 +245,11 @@ class ParttensIndicator(BasicMenu):
         super(ParttensIndicator,self).__init__(parent,sig_add_indicator_to_chart,sig_add_remove_favorite)
         self._type_indicator = "Parttens Indicator"
         self.setObjectName(self._type_indicator)
-        self.list_indicators = [IndicatorType.CANDLE_PATTERN,
+        self.list_indicators = [
+                                IndicatorType.CANDLE_PATTERN,
                                 IndicatorType.CUSTOM_CANDLE_PATTERN,
-                                IndicatorType.CHART_PATTERN]
+                                # IndicatorType.CHART_PATTERN
+                                ]
         self.load_indicators()
         #self.addSpacer("VERTICAL")
 
@@ -256,28 +258,29 @@ class AdvanceIndicator(BasicMenu):
         super(AdvanceIndicator,self).__init__(parent,sig_add_indicator_to_chart,sig_add_remove_favorite)
         self._type_indicator = "Advance Indicator"
         self.setObjectName(self._type_indicator)
-        self.list_indicators = [IndicatorType.ATKPRO,
+        self.list_indicators = [
+                                # IndicatorType.ATKPRO,
                                 IndicatorType.UTBOT,
-                                IndicatorType.UTBOT_WITH_BBAND,
+                                # IndicatorType.UTBOT_WITH_BBAND,
                                 IndicatorType.TRENDWITHSL,
                                 IndicatorType.SuperTrend,
                                 IndicatorType.ATRSuperTrend,
-                                IndicatorType.BUY_SELL_WITH_ETM_ST,
+                                # IndicatorType.BUY_SELL_WITH_ETM_ST,
                                 
                                 IndicatorType.ZIGZAG,
                                 IndicatorType.BB,
                                 IndicatorType.KeltnerChannels,
                                 IndicatorType.DonchianChannels,
                                 
-                                IndicatorType.StdDev,
-                                IndicatorType.ParabolicSAR,
-                                IndicatorType.PivotsHL,
-                                IndicatorType.McGinleyDynamic,
-                                IndicatorType.KAMA,
+                                # IndicatorType.StdDev,
+                                # IndicatorType.ParabolicSAR,
+                                # IndicatorType.PivotsHL,
+                                # IndicatorType.McGinleyDynamic,
+                                # IndicatorType.KAMA,
                                 
-                                IndicatorType.ChandeKrollStop,
-                                IndicatorType.VWAP,IndicatorType.VWMA,
-                                IndicatorType.T3,
+                                # IndicatorType.ChandeKrollStop,
+                                # IndicatorType.VWAP,IndicatorType.VWMA,
+                                # IndicatorType.T3,
                               ]
         self.load_indicators()
         #self.addSpacer("VERTICAL")
@@ -288,9 +291,13 @@ class CandleIndicator(BasicMenu):
         self._type_indicator = "Candle Indicator"
         self.setObjectName(self._type_indicator)
 
-        self.list_indicators = [IndicatorType.JAPAN_CANDLE, IndicatorType.HEIKINASHI_CANDLE
-                                , IndicatorType.SMOOTH_JAPAN_CANDLE, IndicatorType.SMOOTH_HEIKINASHI_CANDLE
-                                , IndicatorType.N_SMOOTH_HEIKIN, IndicatorType.N_SMOOTH_JP]
+        self.list_indicators = [
+                                IndicatorType.JAPAN_CANDLE, 
+                                IndicatorType.HEIKINASHI_CANDLE, 
+                                IndicatorType.SMOOTH_JAPAN_CANDLE, 
+                                IndicatorType.SMOOTH_HEIKINASHI_CANDLE, 
+                                IndicatorType.N_SMOOTH_HEIKIN, 
+                                IndicatorType.N_SMOOTH_JP]
         self.load_indicators()
         #self.addSpacer("VERTICAL")
         

@@ -61,7 +61,7 @@ class Chart(ViewPlotWidget):
         self.sources: Dict[str:object] = {}
         
         self.is_load_historic = False
-        self.time_delay = 1
+        self.time_delay = 0.5
         self.replay_speed = 1
         self.replay_data:list = []
         self.replay_pos_i:int = 0
@@ -127,10 +127,10 @@ class Chart(ViewPlotWidget):
         sender = self.sender()
         if self.is_trading:
             self.is_trading = False
-            self.time_delay = 1
+            self.time_delay = 0.5
         else:
             self.is_trading = True
-            self.time_delay = 0.1
+            self.time_delay = 0.01
             
     def set_replay_speed(self,text):
         if text == "0.5x ":
@@ -143,6 +143,8 @@ class Chart(ViewPlotWidget):
             self.replay_speed = 3
         elif text == "5x ":
             self.replay_speed = 5
+        elif text == "7x ":
+            self.replay_speed = 7
         elif text == "10x ":
             self.replay_speed = 10
         elif text == "15x ":
@@ -264,7 +266,6 @@ class Chart(ViewPlotWidget):
     
 
     def replay_forward_update(self):
-        
         if not self.replay_data:
             ohlcv = self.jp_candle.candles[-1]
             _cr_time = int(ohlcv.time)
@@ -514,9 +515,8 @@ class Chart(ViewPlotWidget):
         
         if self.indicators != []:
             "when replay mode was turn off"
-            self.auto_xrange()
             self.sig_show_process.emit(False)
-        
+        self.auto_xrange()
         await self.loop_watch_ohlcv(self.symbol,self.interval,self.exchange_name)
     
     def check_all_indicator_updated(self):

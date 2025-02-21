@@ -9,179 +9,28 @@ import re
 
 ## For centralizing and managing vertex/fragment shader programs.
 
-## See:
-##
-##  http://stackoverflow.com/questions/9609423/applying-part-of-a-texture-sprite-sheet-texture-map-to-a-point-sprite-in-ios
-##  http://stackoverflow.com/questions/3497068/textured-points-in-opengl-es-2-0
-##
-##
-POINT_SPRITE_VERT_SRC = """
-    uniform mat4 u_viewTransform;
-    uniform vec3 u_cameraPosition;
-    uniform float u_scale;
-
-    uniform mat4 u_mvp;
-    attribute vec4 a_position;
-    attribute vec4 a_color;
-    attribute float a_size;
-    varying vec4 v_color;
-
-    void main() {
-        gl_Position = u_mvp * a_position;
-        v_color = a_color;
-        gl_PointSize = a_size;
-
-        if (u_scale != 0.0) {
-            // pxMode=False
-            vec4 gpos = u_viewTransform * a_position;
-            float dist = distance(u_cameraPosition, gpos.xyz);
-            // equations:
-            //   xDist = dist * 2.0 * tan(0.5 * fov)
-            //   pxSize = xDist / view_width
-            // let:
-            //   u_scale = 2.0 * tan(0.5 * fov) / view_width
-            // then:
-            //   pxSize = dist * u_scale
-            float pxSize = dist * u_scale;
-            gl_PointSize /= pxSize;
-        }
-    }
-"""
-POINT_SPRITE_FRAG_SRC = """
-    #ifdef GL_ES
-    precision mediump float;
-    #endif
-
-    varying vec4 v_color;
-    void main()
-    {
-        vec2 xy = (gl_PointCoord - 0.5) * 2.0;
-        float mask = step(-1.0, -dot(xy, xy));
-        gl_FragColor = vec4(v_color.rgb, v_color.a * mask);
-    }
-"""
-
 def initShaders():
     global Shaders
     Shaders = [
-        ShaderProgram(None, [
-            VertexShader("""
-                uniform mat4 u_mvp;
-                attribute vec4 a_position;
-                attribute vec4 a_color;
-                varying vec4 v_color;
-                void main() {
-                    v_color = a_color;
-                    gl_Position = u_mvp * a_position;
-                }
-            """),
-            FragmentShader("""
-                #ifdef GL_ES
-                precision mediump float;
-                #endif
-                varying vec4 v_color;
-                void main() {
-                    gl_FragColor = v_color;
-                }
-            """)
-        ]),
-
-        ShaderProgram('texture2d', [
-            VertexShader("""
-                uniform mat4 u_mvp;
-                attribute vec4 a_position;
-                attribute vec2 a_texcoord;
-                varying vec2 v_texcoord;
-                void main() {
-                    gl_Position = u_mvp * a_position;
-                    v_texcoord = a_texcoord;
-                }
-            """),
-            FragmentShader("""
-                #ifdef GL_ES
-                precision mediump float;
-                #endif
-                uniform sampler2D u_texture;
-                varying vec2 v_texcoord;
-                void main()
-                {
-                    gl_FragColor = texture2D(u_texture, v_texcoord);
-                }
-            """)
-        ]),
-
-        ShaderProgram('texture3d', [
-            VertexShader("""
-                uniform mat4 u_mvp;
-                attribute vec4 a_position;
-                attribute vec3 a_texcoord;
-                varying vec3 v_texcoord;
-                void main() {
-                    gl_Position = u_mvp * a_position;
-                    v_texcoord = a_texcoord;
-                }
-            """),
-            FragmentShader("""
-                uniform sampler3D u_texture;
-                varying vec3 v_texcoord;
-                void main()
-                {
-                    gl_FragColor = texture3D(u_texture, v_texcoord);
-                }
-            """)
-        ]),
-
-        ShaderProgram('texture3d-es3', [
-            VertexShader("""
-                #version 300 es
-                uniform mat4 u_mvp;
-                in vec4 a_position;
-                in vec3 a_texcoord;
-                out vec3 v_texcoord;
-                void main() {
-                    gl_Position = u_mvp * a_position;
-                    v_texcoord = a_texcoord;
-                }
-            """),
-            FragmentShader("""
-                #version 300 es
-                precision mediump float;
-                uniform lowp sampler3D u_texture;
-                in vec3 v_texcoord;
-                out vec4 fragColor;
-                void main()
-                {
-                    fragColor = texture(u_texture, v_texcoord);
-                }
-            """)
-        ]),
-
+        ShaderProgram(None, []),
+        
         ## increases fragment alpha as the normal turns orthogonal to the view
         ## this is useful for viewing shells that enclose a volume (such as isosurfaces)
         ShaderProgram('balloon', [
             VertexShader("""
-                uniform mat4 u_mvp;
-                uniform mat3 u_normal;
-                attribute vec4 a_position;
-                attribute vec3 a_normal;
-                attribute vec4 a_color;
-                varying vec4 v_color;
                 varying vec3 normal;
                 void main() {
                     // compute here for use in fragment shader
-                    normal = normalize(u_normal * a_normal);
-                    v_color = a_color;
-                    gl_Position = u_mvp * a_position;
+                    normal = normalize(gl_NormalMatrix * gl_Normal);
+                    gl_FrontColor = gl_Color;
+                    gl_BackColor = gl_Color;
+                    gl_Position = ftransform();
                 }
             """),
             FragmentShader("""
-                #ifdef GL_ES
-                precision mediump float;
-                #endif
-                varying vec4 v_color;
                 varying vec3 normal;
                 void main() {
-                    vec4 color = v_color;
+                    vec4 color = gl_Color;
                     color.w = min(color.w + 2.0 * color.w * pow(normal.x*normal.x + normal.y*normal.y, 5.0), 1.0);
                     gl_FragColor = color;
                 }
@@ -192,28 +41,19 @@ def initShaders():
         ## This means that the colors will change depending on how the view is rotated
         ShaderProgram('viewNormalColor', [   
             VertexShader("""
-                uniform mat4 u_mvp;
-                uniform mat3 u_normal;
-                attribute vec4 a_position;
-                attribute vec3 a_normal;
-                attribute vec4 a_color;
-                varying vec4 v_color;
                 varying vec3 normal;
                 void main() {
                     // compute here for use in fragment shader
-                    normal = normalize(u_normal * a_normal);
-                    v_color = a_color;
-                    gl_Position = u_mvp * a_position;
+                    normal = normalize(gl_NormalMatrix * gl_Normal);
+                    gl_FrontColor = gl_Color;
+                    gl_BackColor = gl_Color;
+                    gl_Position = ftransform();
                 }
             """),
             FragmentShader("""
-                #ifdef GL_ES
-                precision mediump float;
-                #endif
-                varying vec4 v_color;
                 varying vec3 normal;
                 void main() {
-                    vec4 color = v_color;
+                    vec4 color = gl_Color;
                     color.x = (normal.x + 1.0) * 0.5;
                     color.y = (normal.y + 1.0) * 0.5;
                     color.z = (normal.z + 1.0) * 0.5;
@@ -225,27 +65,19 @@ def initShaders():
         ## colors fragments based on absolute face normals.
         ShaderProgram('normalColor', [   
             VertexShader("""
-                uniform mat4 u_mvp;
-                attribute vec4 a_position;
-                attribute vec3 a_normal;
-                attribute vec4 a_color;
-                varying vec4 v_color;
                 varying vec3 normal;
                 void main() {
                     // compute here for use in fragment shader
-                    normal = normalize(a_normal);
-                    v_color = a_color;
-                    gl_Position = u_mvp * a_position;
+                    normal = normalize(gl_Normal);
+                    gl_FrontColor = gl_Color;
+                    gl_BackColor = gl_Color;
+                    gl_Position = ftransform();
                 }
             """),
             FragmentShader("""
-                #ifdef GL_ES
-                precision mediump float;
-                #endif
-                varying vec4 v_color;
                 varying vec3 normal;
                 void main() {
-                    vec4 color = v_color;
+                    vec4 color = gl_Color;
                     color.x = (normal.x + 1.0) * 0.5;
                     color.y = (normal.y + 1.0) * 0.5;
                     color.z = (normal.z + 1.0) * 0.5;
@@ -258,30 +90,21 @@ def initShaders():
         ## The light source position is always relative to the camera.
         ShaderProgram('shaded', [   
             VertexShader("""
-                uniform mat4 u_mvp;
-                uniform mat3 u_normal;
-                attribute vec4 a_position;
-                attribute vec3 a_normal;
-                attribute vec4 a_color;
-                varying vec4 v_color;
                 varying vec3 normal;
                 void main() {
                     // compute here for use in fragment shader
-                    normal = normalize(u_normal * a_normal);
-                    v_color = a_color;
-                    gl_Position = u_mvp * a_position;
+                    normal = normalize(gl_NormalMatrix * gl_Normal);
+                    gl_FrontColor = gl_Color;
+                    gl_BackColor = gl_Color;
+                    gl_Position = ftransform();
                 }
             """),
             FragmentShader("""
-                #ifdef GL_ES
-                precision mediump float;
-                #endif
-                varying vec4 v_color;
                 varying vec3 normal;
                 void main() {
                     float p = dot(normal, normalize(vec3(1.0, -1.0, -1.0)));
                     p = p < 0. ? 0. : p * 0.8;
-                    vec4 color = v_color;
+                    vec4 color = gl_Color;
                     color.x = color.x * (0.2 + p);
                     color.y = color.y * (0.2 + p);
                     color.z = color.z * (0.2 + p);
@@ -293,28 +116,19 @@ def initShaders():
         ## colors get brighter near edges of object
         ShaderProgram('edgeHilight', [   
             VertexShader("""
-                uniform mat4 u_mvp;
-                uniform mat3 u_normal;
-                attribute vec4 a_position;
-                attribute vec3 a_normal;
-                attribute vec4 a_color;
-                varying vec4 v_color;
                 varying vec3 normal;
                 void main() {
                     // compute here for use in fragment shader
-                    normal = normalize(u_normal * a_normal);
-                    v_color = a_color;
-                    gl_Position = u_mvp * a_position;
+                    normal = normalize(gl_NormalMatrix * gl_Normal);
+                    gl_FrontColor = gl_Color;
+                    gl_BackColor = gl_Color;
+                    gl_Position = ftransform();
                 }
             """),
             FragmentShader("""
-                #ifdef GL_ES
-                precision mediump float;
-                #endif
-                varying vec4 v_color;
                 varying vec3 normal;
                 void main() {
-                    vec4 color = v_color;
+                    vec4 color = gl_Color;
                     float s = pow(normal.x*normal.x + normal.y*normal.y, 2.0);
                     color.x = color.x + s * (1.0-color.x);
                     color.y = color.y + s * (1.0-color.y);
@@ -333,51 +147,63 @@ def initShaders():
         ## (set the values like this: shader['uniformMap'] = array([...])
         ShaderProgram('heightColor', [
             VertexShader("""
-                uniform mat4 u_mvp;
-                attribute vec4 a_position;
-                varying float zpos;
+                varying vec4 pos;
                 void main() {
-                    zpos = a_position.z;
-                    gl_Position = u_mvp * a_position;
+                    gl_FrontColor = gl_Color;
+                    gl_BackColor = gl_Color;
+                    pos = gl_Vertex;
+                    gl_Position = ftransform();
                 }
             """),
             FragmentShader("""
-                #ifdef GL_ES
-                precision mediump float;
-                #endif
                 uniform float colorMap[9];
-                varying float zpos;
+                varying vec4 pos;
+                //out vec4 gl_FragColor;   // only needed for later glsl versions
+                //in vec4 gl_Color;
                 void main() {
-                    vec3 color;
-
-                    color.x = colorMap[0] * (zpos + colorMap[1]);
+                    vec4 color = gl_Color;
+                    color.x = colorMap[0] * (pos.z + colorMap[1]);
                     if (colorMap[2] != 1.0)
                         color.x = pow(color.x, colorMap[2]);
-                    color.x = clamp(color.x, 0.0, 1.0);
+                    color.x = color.x < 0. ? 0. : (color.x > 1. ? 1. : color.x);
                     
-                    color.y = colorMap[3] * (zpos + colorMap[4]);
+                    color.y = colorMap[3] * (pos.z + colorMap[4]);
                     if (colorMap[5] != 1.0)
                         color.y = pow(color.y, colorMap[5]);
-                    color.y = clamp(color.y, 0.0, 1.0);
+                    color.y = color.y < 0. ? 0. : (color.y > 1. ? 1. : color.y);
                     
-                    color.z = colorMap[6] * (zpos + colorMap[7]);
+                    color.z = colorMap[6] * (pos.z + colorMap[7]);
                     if (colorMap[8] != 1.0)
                         color.z = pow(color.z, colorMap[8]);
-                    color.z = clamp(color.z, 0.0, 1.0);
+                    color.z = color.z < 0. ? 0. : (color.z > 1. ? 1. : color.z);
                     
-                    gl_FragColor = vec4(color, 1.0);
+                    color.w = 1.0;
+                    gl_FragColor = color;
                 }
             """),
         ], uniforms={'colorMap': [1, 1, 1, 1, 0.5, 1, 1, 0, 1]}),
-
-        ShaderProgram('pointSprite', [   ## allows specifying point size using attribute "a_size"
-            VertexShader("\n".join(["#version 120", POINT_SPRITE_VERT_SRC])),
-            FragmentShader("\n".join(["#version 120", POINT_SPRITE_FRAG_SRC])),
-        ]),
-
-        ShaderProgram('pointSprite-es2', [
-            VertexShader(POINT_SPRITE_VERT_SRC),
-            FragmentShader(POINT_SPRITE_FRAG_SRC),
+        ShaderProgram('pointSprite', [   ## allows specifying point size using normal.x
+            ## See:
+            ##
+            ##  http://stackoverflow.com/questions/9609423/applying-part-of-a-texture-sprite-sheet-texture-map-to-a-point-sprite-in-ios
+            ##  http://stackoverflow.com/questions/3497068/textured-points-in-opengl-es-2-0
+            ##
+            ##
+            VertexShader("""
+                void main() {
+                    gl_FrontColor=gl_Color;
+                    gl_PointSize = gl_Normal.x;
+                    gl_Position = ftransform();
+                } 
+            """),
+            #FragmentShader("""
+                ##version 120
+                #uniform sampler2D texture;
+                #void main ( )
+                #{
+                    #gl_FragColor = texture2D(texture, gl_PointCoord) * gl_Color;
+                #}
+            #""")
         ]),
     ]
 
@@ -478,13 +304,6 @@ class ShaderProgram(object):
         self.setUniformData(item, None)
 
     def program(self):
-        # for reasons that may vary across drivers, having vertex attribute
-        # array generic location 0 enabled (glEnableVertexAttribArray(0)) is
-        # required for rendering to take place.
-        # this only becomes an issue if we are using glVertexAttrib{1,4}f
-        # because that's when we *don't* call glEnableVertexAttribArray.
-        # since we always need vertex coordinates to come from arrays, it is
-        # sufficient for us to bind "a_position" explicitly to 0.
         if self.prog is None:
             try:
                 compiled = [s.shader() for s in self.shaders]  ## compile all shaders
@@ -492,9 +311,6 @@ class ShaderProgram(object):
             except:
                 self.prog = -1
                 raise
-            # bind generic vertex attrib 0 to "a_position" and relink
-            glBindAttribLocation(self.prog, 0, "a_position")
-            glLinkProgram(self.prog)
         return self.prog
         
     def __enter__(self):
@@ -556,5 +372,32 @@ class ShaderProgram(object):
         #indices = []
         #for i in range(count):
             #indices.append(glGetActiveUniformBlockiv(self.program(), blockIndex, GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES))
-
+        
+class HeightColorShader(ShaderProgram):
+    def __enter__(self):
+        ## Program should have a uniform block declared:
+        ## 
+        ## layout (std140) uniform blockName {
+        ##     vec4 diffuse;
+        ##     vec4 ambient;
+        ## };
+        
+        ## pick any-old binding point. (there are a limited number of these per-program
+        bindPoint = 1
+        
+        ## get the block index for a uniform variable in the shader
+        blockIndex = glGetUniformBlockIndex(self.program(), "blockName")
+        
+        ## give the shader block a binding point
+        glUniformBlockBinding(self.program(), blockIndex, bindPoint)
+        
+        ## create a buffer
+        buf = glGenBuffers(1)
+        glBindBuffer(GL_UNIFORM_BUFFER, buf)
+        glBufferData(GL_UNIFORM_BUFFER, size, data, GL_DYNAMIC_DRAW)
+        ## also possible to use glBufferSubData to fill parts of the buffer
+        
+        ## bind buffer to the same binding point
+        glBindBufferBase(GL_UNIFORM_BUFFER, bindPoint, buf)
+        
 initShaders()

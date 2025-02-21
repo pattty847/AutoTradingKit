@@ -1,7 +1,7 @@
 import sys
 from collections import OrderedDict
 
-from ..Qt import QtCore, QtWidgets
+from ..Qt import QtWidgets
 
 __all__ = ['ComboBox']
 
@@ -110,13 +110,12 @@ class ComboBox(QtWidgets.QComboBox):
         self.addItems(items)
 
     def items(self):
-        return self._items.copy()
+        return self.items.copy()
         
     def updateList(self, items):
         # for backward compatibility
         return self.setItems(items)
 
-    @QtCore.Slot(int)
     def indexChanged(self, index):
         # current index has changed; need to remember new 'chosen text'
         if self._ignoreIndexChange:

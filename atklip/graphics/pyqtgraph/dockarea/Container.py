@@ -94,7 +94,6 @@ class Container(object):
                 pass
             self.updateStretch()
         
-    @QtCore.Slot()
     def childStretchChanged(self):
         #print "child", QtCore.QObject.sender(self), "changed shape, updating", self
         self.updateStretch()
@@ -258,7 +257,6 @@ class TContainer(Container, QtWidgets.QWidget):
         item.label.sigClicked.connect(self.tabClicked)
         self.tabClicked(item.label)
         
-    @QtCore.Slot(object, object)
     def tabClicked(self, tab, ev=None):
         if ev is None or ev.button() == QtCore.Qt.MouseButton.LeftButton:
             for i in range(self.count()):

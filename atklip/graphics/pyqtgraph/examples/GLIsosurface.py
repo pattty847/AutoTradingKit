@@ -38,11 +38,12 @@ data = np.abs(np.fromfunction(psi, (50,50,100)))
 print("Generating isosurface..")
 verts, faces = pg.isosurface(data, data.max()/4.)
 
-colors = np.ones((len(verts), 4), dtype=np.float32)
+md = gl.MeshData(vertexes=verts, faces=faces)
+
+colors = np.ones((md.faceCount(), 4), dtype=float)
 colors[:,3] = 0.2
 colors[:,2] = np.linspace(0, 1, colors.shape[0])
-md = gl.MeshData(vertexes=verts, faces=faces, vertexColors=colors)
-
+md.setFaceColors(colors)
 m1 = gl.GLMeshItem(meshdata=md, smooth=False, shader='balloon')
 m1.setGLOptions('additive')
 

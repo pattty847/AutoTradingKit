@@ -327,7 +327,7 @@ class SymbolAtlas(object):
         else:
             img = fn.ndarray_to_qimage(self._data,
                 QtGui.QImage.Format.Format_ARGB32_Premultiplied)
-            pm = QtGui.QPixmap.fromImage(img)
+            pm = QtGui.QPixmap(img)
         return pm
 
 
@@ -584,7 +584,7 @@ class ScatterPlotItem(GraphicsObject):
         if 'data' in kargs:
             self.setPointData(kargs['data'], dataSet=newData)
 
-        self.prepareGeometryChange()
+        
         self.informViewBoundsChanged()
         self.bounds = [None, None]
         self.invalidate()
@@ -864,7 +864,7 @@ class ScatterPlotItem(GraphicsObject):
         if frac >= 1.0 and orthoRange is None and self.bounds[ax] is not None:
             return self.bounds[ax]
 
-        #self.prepareGeometryChange()
+        #
         if self.data is None or len(self.data) == 0:
             return (None, None)
 
@@ -927,7 +927,7 @@ class ScatterPlotItem(GraphicsObject):
         return QtCore.QRectF(xmn-px, ymn-py, (2*px)+xmx-xmn, (2*py)+ymx-ymn)
 
     def viewTransformChanged(self):
-        self.prepareGeometryChange()
+        
         GraphicsObject.viewTransformChanged(self)
         self.bounds = [None, None]
 

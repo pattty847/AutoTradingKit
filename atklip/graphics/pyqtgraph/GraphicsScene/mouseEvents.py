@@ -159,10 +159,10 @@ class MouseClickEvent(object):
     
     """
     
-    def __init__(self, pressEvent, double=False):
+    def __init__(self, pressEvent, _double=False):
         self.accepted = False
         self.currentItem = None
-        self._double = double
+        self._double = _double
         self._scenePos = pressEvent.scenePos()
         self._screenPos = pressEvent.screenPos()
         self._button = pressEvent.button()

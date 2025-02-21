@@ -1,14 +1,17 @@
-from ..Qt import QtGui
-from ..Qt import OpenGLConstants as GLC
-from ..Qt import OpenGLHelpers
+import importlib
+
+from ..Qt import QT_LIB, QtGui
+
+GL_VENDOR = 7936
+GL_RENDERER = 7937
+GL_VERSION = 7938
 
 
 def print_version(funcs):
     glGetString = funcs.glGetString
-    print('VENDOR:', glGetString(GLC.GL_VENDOR))
-    print('RENDERER:', glGetString(GLC.GL_RENDERER))
-    print('VERSION:', glGetString(GLC.GL_VERSION))
-    print('GLSL_VERSION:', glGetString(GLC.GL_SHADING_LANGUAGE_VERSION))
+    print('VENDOR:', glGetString(GL_VENDOR))
+    print('RENDERER:', glGetString(GL_RENDERER))
+    print('VERSION:', glGetString(GL_VERSION))
 
 
 def print_extensions(ctx):
@@ -25,8 +28,19 @@ ctx = QtGui.QOpenGLContext()
 ctx.create()
 ctx.makeCurrent(surf)
 
-print("openGLModuleType:", QtGui.QOpenGLContext.openGLModuleType())
+if QT_LIB == 'PySide2':
+    funcs = ctx.functions()
+elif QT_LIB == 'PyQt5':
+    profile = QtGui.QOpenGLVersionProfile()
+    profile.setVersion(2, 0)
+    funcs = ctx.versionFunctions(profile)
+elif QT_LIB in ['PyQt6', 'PySide6']:
+    QtOpenGL = importlib.import_module(f'{QT_LIB}.QtOpenGL')
+    profile = QtOpenGL.QOpenGLVersionProfile()
+    profile.setVersion(2, 0)
+    funcs_factory = QtOpenGL.QOpenGLVersionFunctionsFactory()
+    funcs = funcs_factory.get(profile, ctx)
+
 print('isOpenGLES:', ctx.isOpenGLES())
-glfn = OpenGLHelpers.getFunctions(ctx)
-print_version(glfn)
+print_version(funcs)
 print_extensions(ctx)

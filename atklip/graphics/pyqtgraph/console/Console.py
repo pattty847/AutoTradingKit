@@ -1,12 +1,12 @@
 import os
+import sys
 import pickle
 import subprocess
-import sys
 
 from .. import getConfigOption
 from ..Qt import QtCore, QtWidgets
-from .exception_widget import ExceptionHandlerWidget
 from .repl_widget import ReplWidget
+from .exception_widget import ExceptionHandlerWidget
 
 
 class ConsoleWidget(QtWidgets.QWidget):
@@ -26,9 +26,8 @@ class ConsoleWidget(QtWidgets.QWidget):
       - some terminals (eg windows cmd.exe) have notoriously unfriendly interfaces
       - ability to add extra features like exception stack introspection
       - ability to have multiple interactive prompts, including for spawned sub-processes
-      - ability to execute in either the GUI thread or a separate thread
     """
-    def __init__(self, parent=None, namespace=None, historyFile=None, text=None, editor=None, allowNonGuiExecution=False):
+    def __init__(self, parent=None, namespace=None, historyFile=None, text=None, editor=None):
         """
         ==============  =============================================================================
         **Arguments:**
@@ -42,7 +41,6 @@ class ConsoleWidget(QtWidgets.QWidget):
         ==============  =============================================================================
         """
         QtWidgets.QWidget.__init__(self, parent)
-        self._allowNonGuiExecution = allowNonGuiExecution
 
         self._setupUi()
 
@@ -58,7 +56,7 @@ class ConsoleWidget(QtWidgets.QWidget):
         self.input.setFocus()
         
         if text is not None:
-            self.output.insertPlainText(text)
+            self.output.setPlainText(text)
 
         self.historyFile = historyFile
         
@@ -82,7 +80,7 @@ class ConsoleWidget(QtWidgets.QWidget):
         self.splitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Vertical, self)
         self.layout.addWidget(self.splitter, 0, 0)
 
-        self.repl = ReplWidget(self.globals, self.locals, self, allowNonGuiExecution=self._allowNonGuiExecution)
+        self.repl = ReplWidget(self.globals, self.locals, self)
         self.splitter.addWidget(self.repl)
 
         self.historyList = QtWidgets.QListWidget(self)

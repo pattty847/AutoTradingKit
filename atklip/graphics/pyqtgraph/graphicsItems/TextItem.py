@@ -206,7 +206,6 @@ class TextItem(GraphicsObject):
         if v:
             self.updateTransform()
     
-    @QtCore.Slot()
     def updateTransform(self, force=False):
         if not self.isVisible():
             return

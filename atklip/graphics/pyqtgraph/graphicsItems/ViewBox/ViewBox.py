@@ -116,7 +116,7 @@ class ViewBox(GraphicsWidget):
         *border*           (QPen) Do draw a border around the view, give any
                            single argument accepted by :func:`mkPen <pyqtgraph.mkPen>`
         *lockAspect*       (False or float) The aspect ratio to lock the view
-                           coorinates to. (or False to allow the ratio to change)
+                           coordinates to. (or False to allow the ratio to change)
         *enableMouse*      (bool) Whether mouse can be used to scale/pan the view
         *invertY*          (bool) See :func:`invertY <pyqtgraph.ViewBox.invertY>`
         *invertX*          (bool) See :func:`invertX <pyqtgraph.ViewBox.invertX>`
@@ -231,6 +231,9 @@ class ViewBox(GraphicsWidget):
 
         self._viewPixelSizeCache  = None
 
+        self._reachedMaxZoom = [False, False]
+        self._smallestZoom = [sys.float_info.min * 200, sys.float_info.min * 200]
+
     @property
     def rbScaleBox(self):
         if self._rbScaleBox is None:
@@ -314,7 +317,6 @@ class ViewBox(GraphicsWidget):
                 scene.sigPrepareForPaint.connect(self.prepareForPaint)
         return ret
 
-    @QtCore.Slot()
     def prepareForPaint(self):
         #autoRangeEnabled = (self.state['autoRange'][0] is not False) or (self.state['autoRange'][1] is not False)
         # don't check whether auto range is enabled here--only check when setting dirty flag.
@@ -511,11 +513,12 @@ class ViewBox(GraphicsWidget):
             print("make qrectf failed:", self.state['targetRange'])
             raise
 
-    def _resetTarget(self):
+    def _resetTarget(self, force: bool = False):
         # Reset target range to exactly match current view range.
         # This is used during mouse interaction to prevent unpredictable
         # behavior (because the user is unaware of targetRange).
-        self.state['targetRange'] = [self.state['viewRange'][0][:], self.state['viewRange'][1][:]]
+        if self.state['aspectLocked'] is False or force: # (interferes with aspect locking)
+            self.state['targetRange'] = [self.state['viewRange'][0][:], self.state['viewRange'][1][:]]
             
     def _effectiveLimits(self):
         # Determines restricted effective scaling range when in log mapping mode
@@ -584,7 +587,7 @@ class ViewBox(GraphicsWidget):
             yOff = False if setRequested[1] else None
             self.enableAutoRange(x=xOff, y=yOff)
             changed.append(True)
-            
+
         limits = self._effectiveLimits()
         # print('rng:limits ', limits) # diagnostic output should reflect additional limit in log mode
         # limits = (self.state['limits']['xLimits'], self.state['limits']['yLimits'])
@@ -693,6 +696,19 @@ class ViewBox(GraphicsWidget):
         The *padding* argument causes the range to be set larger by the fraction specified.
         (by default, this value is between the default padding and 0.1 depending on the size of the ViewBox)
         """
+
+        if 0 < max < self._smallestZoom[1]:
+            max = self._smallestZoom[1]
+
+        if 0 < min < self._smallestZoom[1]:
+            min = self._smallestZoom[1]
+
+        if -self._smallestZoom[1] < min < 0:
+            min = -self._smallestZoom[1]
+
+        if -self._smallestZoom[1] < max < 0:
+            max = -self._smallestZoom[1]
+
         self.setRange(yRange=[min, max], update=update, padding=padding)
 
     def setXRange(self, min, max, padding=None, update=True):
@@ -701,6 +717,18 @@ class ViewBox(GraphicsWidget):
         The *padding* argument causes the range to be set larger by the fraction specified.
         (by default, this value is between the default padding and 0.1 depending on the size of the ViewBox)
         """
+        if 0 < max < self._smallestZoom[0]:
+            max = self._smallestZoom[0]
+
+        if 0 < min < self._smallestZoom[0]:
+            min = self._smallestZoom[0]
+
+        if -self._smallestZoom[0] < min < 0:
+            min = -self._smallestZoom[0]
+
+        if -self._smallestZoom[0] < max < 0:
+            max = -self._smallestZoom[0]
+
         self.setRange(xRange=[min, max], update=update, padding=padding)
 
     def autoRange(self, padding=None, items=None, item=None):
@@ -804,10 +832,7 @@ class ViewBox(GraphicsWidget):
         scale = Point([1.0 if x is None else x, 1.0 if y is None else y])
 
         if self.state['aspectLocked'] is not False:
-            if x is None:
-                scale[0] = scale[1]
-            if y is None:
-                scale[1] = scale[0]
+            scale[0] = scale[1]
 
         vr = self.targetRect()
         if center is None:
@@ -974,6 +999,26 @@ class ViewBox(GraphicsWidget):
             # check for and ignore bad ranges
             for k in ['xRange', 'yRange']:
                 if k in args:
+                    max_zoom_index = 0
+                    if k == 'yRange':
+                        max_zoom_index = 1
+
+                    if 0 < args[k][0] < self._smallestZoom[0]:
+                        args[k][0] = self._smallestZoom[0]
+                        self._reachedMaxZoom[max_zoom_index] = True
+
+                    if 0 < args[k][1] < self._smallestZoom[1]:
+                        args[k][1] = self._smallestZoom[1]
+                        self._reachedMaxZoom[max_zoom_index] = True
+
+                    if -self._smallestZoom[0] < args[k][0] < 0:
+                        args[k][0] = -self._smallestZoom[0]
+                        self._reachedMaxZoom[max_zoom_index] = True
+
+                    if -self._smallestZoom[1] < args[k][1] < 0:
+                        args[k][1] = -self._smallestZoom[1]
+                        self._reachedMaxZoom[max_zoom_index] = True
+
                     if not math.isfinite(args[k][0]) or not math.isfinite(args[k][1]):
                         _ = args.pop(k)
                         #print("Warning: %s is invalid: %s" % (k, str(r))
@@ -1157,8 +1202,6 @@ class ViewBox(GraphicsWidget):
         else:
             self.sigXRangeChanged.emit(self, tuple(self.state['viewRange'][ax]))
 
-    @QtCore.Slot()
-    @QtCore.Slot(QtWidgets.QWidget)
     def invertY(self, b=True):
         """
         By default, the positive y-axis points upward on the screen. Use invertY(True) to reverse the y-axis.
@@ -1298,8 +1341,14 @@ class ViewBox(GraphicsWidget):
             return
 
         s = 1.02 ** (ev.delta() * self.state['wheelScaleFactor']) # actual scaling factor
+
+        if s < 1.02 and any(self._reachedMaxZoom):
+            print("Can't zoom further")
+            return
+
         s = [(None if m is False else s) for m in mask]
-        center = Point(fn.invertQTransform(self.childGroup.transform()).map(ev.pos()))
+        inv = fn.invertQTransform(self.childGroup.transform())
+        center = Point(inv.map(ev.pos()))
 
         self._resetTarget()
         self.scaleBy(s, center)
@@ -1355,7 +1404,7 @@ class ViewBox(GraphicsWidget):
             else:
                 tr = self.childGroup.transform()
                 tr = fn.invertQTransform(tr)
-                tr = tr.map(dif*mask) - tr.map(Point(0,0))
+                tr = tr.map(Point(*(dif*mask))) - tr.map(Point(0,0))
 
                 x = tr.x() if mask[0] == 1 else None
                 y = tr.y() if mask[1] == 1 else None
@@ -1373,6 +1422,14 @@ class ViewBox(GraphicsWidget):
             dif = np.array([dif.x(), dif.y()])
             dif[0] *= -1
             s = ((mask * 0.02) + 1) ** dif
+
+            if s[0] < 1.00 and self._reachedMaxZoom[0]:
+                print("Can't zoom further in X")
+                return
+
+            if s[1] < 1.00 and self._reachedMaxZoom[1]:
+                print("Can't zoom further in Y")
+                return
 
             tr = self.childGroup.transform()
             tr = fn.invertQTransform(tr)
@@ -1628,7 +1685,7 @@ class ViewBox(GraphicsWidget):
                         # tweak the target range down so we can still pan properly
                         viewRange[ax] = canidateRange[ax]
                         self.state['viewRange'][ax] = viewRange[ax]
-                        self._resetTarget()
+                        self._resetTarget(force=True)
                         ax = target  # Switch the "fixed" axes
 
             if ax == 0:
@@ -1702,7 +1759,20 @@ class ViewBox(GraphicsWidget):
         vr = self.viewRect()
         if vr.height() == 0 or vr.width() == 0:
             return
-        scale = Point(bounds.width()/vr.width(), bounds.height()/vr.height())
+
+        x_scale = fn.turnInfToSysMax(bounds.width() / vr.width())
+        y_scale = fn.turnInfToSysMax(bounds.height() / vr.height())
+
+        if abs(x_scale) > sys.float_info.max / 2:
+            self._reachedMaxZoom[0] = True
+        else:
+            self._reachedMaxZoom[0] = False
+        if abs(y_scale) > sys.float_info.max / 2:
+            self._reachedMaxZoom[1] = True
+        else:
+            self._reachedMaxZoom[1] = False
+
+        scale = Point(x_scale, y_scale)
         if not self.state['yInverted']:
             scale = scale * Point(1, -1)
         if self.state['xInverted']:

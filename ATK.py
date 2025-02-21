@@ -1,3 +1,4 @@
+import multiprocessing
 import sys
 import os
 from PySide6.QtCore import QCoreApplication,QSize
@@ -58,4 +59,5 @@ def main():
     sys.exit(app.exec())
 
 if __name__ == '__main__':
+    multiprocessing.freeze_support()
     main()

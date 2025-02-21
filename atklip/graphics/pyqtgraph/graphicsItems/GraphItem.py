@@ -77,7 +77,7 @@ class GraphItem(GraphicsObject):
 
     def _update(self):
         self.picture = None
-        self.prepareGeometryChange()
+        
         self.update()
 
     def setPen(self, *args, **kwargs):

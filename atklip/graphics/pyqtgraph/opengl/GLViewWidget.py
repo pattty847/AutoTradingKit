@@ -1,7 +1,6 @@
 from OpenGL.GL import *  # noqa
 import OpenGL.GL.framebufferobjects as glfbo  # noqa
 from math import cos, radians, sin, tan
-import warnings
 
 import numpy as np
 
@@ -45,9 +44,6 @@ class GLViewMixin:
         self.keysPressed = {}
         self.keyTimer = QtCore.QTimer()
         self.keyTimer.timeout.connect(self.evalKeyState)
-
-        self._modelViewStack = []
-        self._projectionStack = []
 
     def deviceWidth(self):
         dpr = self.devicePixelRatioF()
@@ -102,17 +98,10 @@ class GLViewMixin:
         """
         ctx = self.context()
         fmt = ctx.format()
-        if ctx.isOpenGLES():
-            warnings.warn(
-                f"pyqtgraph.opengl is primarily tested against OpenGL Desktop"
-                f" but OpenGL {fmt.version()} ES detected",
-                RuntimeWarning,
-                stacklevel=2
-            )
-        if fmt.version() < (2, 0):
+        if ctx.isOpenGLES() or fmt.version() < (2, 0):
             verString = glGetString(GL_VERSION)
             raise RuntimeError(
-                "pyqtgraph.opengl: Requires >= OpenGL 2.0; Found %s" % verString
+                "pyqtgraph.opengl: Requires >= OpenGL 2.0 (not ES); Found %s" % verString
             )
 
         for item in self.items:
@@ -136,8 +125,8 @@ class GLViewMixin:
         
     def setProjection(self, region=None):
         m = self.projectionMatrix(region)
-        self._projectionStack.clear()
-        self._projectionStack.append(m)
+        glMatrixMode(GL_PROJECTION)
+        glLoadMatrixf(np.array(m.data(), dtype=np.float32))
 
     def projectionMatrix(self, region=None):
         if region is None:
@@ -164,8 +153,8 @@ class GLViewMixin:
         
     def setModelview(self):
         m = self.viewMatrix()
-        self._modelViewStack.clear()
-        self._modelViewStack.append(m)
+        glMatrixMode(GL_MODELVIEW)
+        glLoadMatrixf(np.array(m.data(), dtype=np.float32))
         
     def viewMatrix(self):
         tr = QtGui.QMatrix4x4()
@@ -179,12 +168,6 @@ class GLViewMixin:
         center = self.opts['center']
         tr.translate(-center.x(), -center.y(), -center.z())
         return tr
-
-    def currentModelView(self):
-        return self._modelViewStack[-1]
-
-    def currentProjection(self):
-        return self._projectionStack[-1]
 
     def itemsAt(self, region=None):
         """
@@ -238,6 +221,7 @@ class GLViewMixin:
                 continue
             if i is item:
                 try:
+                    glPushAttrib(GL_ALL_ATTRIB_BITS)
                     if useItemNames:
                         glLoadName(i._id)
                         self._itemNames[i._id] = i
@@ -246,13 +230,20 @@ class GLViewMixin:
                     from .. import debug
                     debug.printExc()
                     print("Error while drawing item %s." % str(item))
+                    
+                finally:
+                    glPopAttrib()
             else:
-                self._modelViewStack.append(self.currentModelView() * i.transform())
+                glMatrixMode(GL_MODELVIEW)
+                glPushMatrix()
                 try:
+                    tr = i.transform()
+                    glMultMatrixf(np.array(tr.data(), dtype=np.float32))
                     self.drawItemTree(i, useItemNames=useItemNames)
                 finally:
-                    self._modelViewStack.pop()
-
+                    glMatrixMode(GL_MODELVIEW)
+                    glPopMatrix()
+            
     def setCameraPosition(self, pos=None, distance=None, elevation=None, azimuth=None, rotation=None):
         if rotation is not None:
             # Alternatively, we could define that rotation overrides elevation and azimuth

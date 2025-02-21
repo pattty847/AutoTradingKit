@@ -49,7 +49,7 @@ class Shortposition(BaseRect):
         }
         
         self.center_handle = self.addScaleHandle([1, 0], [0, 0], lockAspect=True)
-        self.addTranslateHandle([0, 0], [1, 0])
+        # self.addTranslateHandle([0, 0], [1, 0])
         self.up_handle = self.addScaleHandle([0, 1], [0, 0], lockAspect=True)
         
         self.under_part = BaseRect([0,-self.size().y()], size,is_short=True)
@@ -77,7 +77,7 @@ class Shortposition(BaseRect):
         
     def update_text(self):
         h0 = self.handles[0]['item'].pos()
-        h1 = self.handles[2]['item'].pos()
+        h1 = self.handles[1]['item'].pos()
         diff = h1 - h0
 
         h0_under_part = self.under_part.handles[0]['item'].pos()

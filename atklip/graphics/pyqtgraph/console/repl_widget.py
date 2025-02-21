@@ -1,10 +1,6 @@
-import code
-import queue
-import sys
-import traceback
-
+import code, sys, traceback
+from ..Qt import QtWidgets, QtGui, QtCore
 from ..functions import mkBrush
-from ..Qt import QtCore, QtGui, QtWidgets
 from .CmdInput import CmdInput
 
 
@@ -12,18 +8,16 @@ class ReplWidget(QtWidgets.QWidget):
     sigCommandEntered = QtCore.Signal(object, object)  # self, command
     sigCommandRaisedException = QtCore.Signal(object, object)  # self, exc
 
-    def __init__(self, globals, locals, parent=None, allowNonGuiExecution=False):
+    def __init__(self, globals, locals, parent=None):
+        self.globals = globals
+        self.locals = locals
         self._lastCommandRow = None
+        self._commandBuffer = []  # buffer to hold multiple lines of input
+        self.stdoutInterceptor = StdoutInterceptor(self.write)
+        self.ps1 = ">>> "
+        self.ps2 = "... "
 
         QtWidgets.QWidget.__init__(self, parent=parent)
-
-        self._allowNonGuiExecution = allowNonGuiExecution
-        self._thread = ReplThread(self, globals, locals, parent=self)
-        self._thread.sigCommandEntered.connect(self.sigCommandEntered)
-        self._thread.sigCommandRaisedException.connect(self.handleException)
-        self._thread.sigCommandExecuted.connect(self.handleCommandExecuted)
-        if allowNonGuiExecution:
-            self._thread.start()
 
         self._setupUi()
 
@@ -33,12 +27,10 @@ class ReplWidget(QtWidgets.QWidget):
         outputFirstLineBlockFormat = QtGui.QTextBlockFormat(outputBlockFormat)
         outputFirstLineBlockFormat.setTopMargin(5)
         outputCharFormat = QtGui.QTextCharFormat()
-        outputCharFormat.setFont(self.output.font())
         outputCharFormat.setFontWeight(QtGui.QFont.Weight.Normal)
         cmdBlockFormat = QtGui.QTextBlockFormat()
         cmdBlockFormat.setBackground(mkBrush("#335" if isDark else "#CCF"))
         cmdCharFormat = QtGui.QTextCharFormat()
-        cmdCharFormat.setFont(self.output.font())
         cmdCharFormat.setFontWeight(QtGui.QFont.Weight.Bold)
         self.textStyles = {
             'command': (cmdCharFormat, cmdBlockFormat),
@@ -46,8 +38,8 @@ class ReplWidget(QtWidgets.QWidget):
             'output_first_line': (outputCharFormat, outputFirstLineBlockFormat),
         }
 
-        self.input.ps1 = self._thread.ps1
-        self.input.ps2 = self._thread.ps2
+        self.input.ps1 = self.ps1
+        self.input.ps2 = self.ps2
 
     def _setupUi(self):
         self.layout = QtWidgets.QVBoxLayout(self)
@@ -56,7 +48,9 @@ class ReplWidget(QtWidgets.QWidget):
         self.setLayout(self.layout)
 
         self.output = QtWidgets.QTextEdit(self)
-        font = QtGui.QFont("monospace")
+        font = QtGui.QFont()
+        font.setFamily("Courier New")
+        font.setStyleStrategy(QtGui.QFont.StyleStrategy.PreferAntialias)
         self.output.setFont(font)
         self.output.setReadOnly(True)
         self.layout.addWidget(self.output)
@@ -69,36 +63,53 @@ class ReplWidget(QtWidgets.QWidget):
         self.inputLayout.setContentsMargins(0, 0, 0, 0)
 
         self.input = CmdInput(parent=self)
-        self.input.setFont(font)
         self.inputLayout.addWidget(self.input)
-        if self._allowNonGuiExecution:
-            self.guiCheckbox = QtWidgets.QCheckBox("Exec in GUI", self)
-            self.guiCheckbox.setChecked(True)
-            self.guiCheckbox.setToolTip(
-                "If your command is long-running and does not require GUI interaction,"
-                " uncheck this box to run it in a separate thread."
-            )
-            self.inputLayout.addWidget(self.guiCheckbox)
 
-        self.input.sigExecuteCmd.connect(self.handleCommand)
-        self._thread.sigInputGenerated.connect(self.write)
-        self._thread.sigMultilineChanged.connect(self._setMultiline)
+        self.input.sigExecuteCmd.connect(self.runCmd)
 
-    def handleCommand(self, cmd):
-        self.input.setEnabled(False)
-        if self._allowNonGuiExecution and not self.guiCheckbox.isChecked():
-            self._thread.queueCommand(cmd)
+    def runCmd(self, cmd):
+        if '\n' in cmd:
+            for line in cmd.split('\n'):
+                self.runCmd(line)
+            return
+
+        if len(self._commandBuffer) == 0:
+            self.write(f"{self.ps1}{cmd}\n", style='command')
         else:
-            self._thread.runCmd(cmd)
+            self.write(f"{self.ps2}{cmd}\n", style='command')
+        
+        self.sigCommandEntered.emit(self, cmd)
+        self._commandBuffer.append(cmd)
 
-    def handleCommandExecuted(self):
-        self.input.setEnabled(True)
-        self.input.setFocus()
+        fullcmd = '\n'.join(self._commandBuffer)
+        try:
+            cmdCode = code.compile_command(fullcmd)
+            self.input.setMultiline(False)
+        except Exception:
+            # cannot continue processing this command; reset and print exception
+            self._commandBuffer = []
+            self.displayException()
+            self.input.setMultiline(False)
+        else:
+            if cmdCode is None:
+                # incomplete input; wait for next line
+                self.input.setMultiline(True)
+                return
 
-    def handleException(self, exc):
-        self.input.setEnabled(True)
-        self.input.setFocus()
-        self.sigCommandRaisedException.emit(self, exc)
+            self._commandBuffer = []
+
+            # run command
+            try:
+                with self.stdoutInterceptor:
+                    exec(cmdCode, self.globals(), self.locals())
+            except Exception as exc:
+                self.displayException()
+                self.sigCommandRaisedException.emit(self, exc)
+
+            # Add a newline if the output did not
+            cursor = self.output.textCursor()
+            if cursor.columnNumber() > 0:
+                self.write('\n')
 
     def write(self, strn, style='output', scrollToBottom='auto'):
         """Write a string into the console.
@@ -113,6 +124,7 @@ class ReplWidget(QtWidgets.QWidget):
 
         cursor = self.output.textCursor()
         cursor.movePosition(QtGui.QTextCursor.MoveOperation.End)
+        self.output.setTextCursor(cursor)
 
         sb = self.output.verticalScrollBar()
         scroll = sb.value()
@@ -142,101 +154,23 @@ class ReplWidget(QtWidgets.QWidget):
         else:
             sb.setValue(scroll)
 
-    def _setMultiline(self, enable):
-        self.input.setMultiline(enable)
-        if enable:
-            self.input.setEnabled(True)
-            self.input.setFocus()
-
+    def displayException(self):
+        """
+        Display the current exception and stack.
+        """
+        tb = traceback.format_exc()
+        lines = []
+        indent = 4
+        prefix = '' 
+        for l in tb.split('\n'):
+            lines.append(" "*indent + prefix + l)
+        self.write('\n'.join(lines))
+        
     def _setTextStyle(self, style):
         charFormat, blockFormat = self.textStyles[style]
         cursor = self.output.textCursor()
         cursor.setBlockFormat(blockFormat)
         self.output.setCurrentCharFormat(charFormat)
-
-
-class ReplThread(QtCore.QThread):
-    sigCommandEntered = QtCore.Signal(object, object)  # repl, command
-    sigCommandRaisedException = QtCore.Signal(object)  # exception
-    sigCommandExecuted = QtCore.Signal()
-    sigInputGenerated = QtCore.Signal(str, str, str)  # input, style, scrollToBottom
-    sigMultilineChanged = QtCore.Signal(bool)
-
-    def __init__(self, repl, globals_, locals_, parent=None):
-        QtCore.QThread.__init__(self, parent=parent)
-        self._repl = repl
-        self._globals = globals_
-        self._locals = locals_
-        self.ps1 = ">>> "
-        self.ps2 = "... "
-        self._stdoutInterceptor = StdoutInterceptor(self.write)
-        self._commandBuffer = []  # buffer to hold multiple lines of a single command
-        self._commands = queue.Queue()
-
-    def queueCommand(self, cmd):
-        self._commands.put(cmd)
-
-    def run(self):
-        # todo handle external interruptions
-        while True:
-            cmd = self._commands.get()
-            self.runCmd(cmd)
-
-    def runCmd(self, cmd):
-        if '\n' in cmd:
-            for line in cmd.split('\n'):
-                self.runCmd(line)
-            return
-
-        if len(self._commandBuffer) == 0:
-            self.write(f"{self.ps1}{cmd}\n", 'command')
-        else:
-            self.write(f"{self.ps2}{cmd}\n", 'command')
-
-        self.sigCommandEntered.emit(self._repl, cmd)
-        self._commandBuffer.append(cmd)
-
-        fullcmd = '\n'.join(self._commandBuffer)
-        try:
-            cmdCode = code.compile_command(fullcmd)
-            self.sigMultilineChanged.emit(False)
-        except Exception as e:
-            # cannot continue processing this command; reset and print exception
-            self._commandBuffer = []
-            self.displayException()
-            self.sigMultilineChanged.emit(False)
-            self.sigCommandRaisedException.emit(e)
-        else:
-            if cmdCode is None:
-                # incomplete input; wait for next line
-                self.sigMultilineChanged.emit(True)
-                return
-
-            self._commandBuffer = []
-
-            # run command
-            try:
-                with self._stdoutInterceptor:
-                    exec(cmdCode, self._globals(), self._locals())
-                    self.sigCommandExecuted.emit()
-            except Exception as exc:
-                self.displayException()
-                self.sigCommandRaisedException.emit(exc)
-
-            # Add a newline if the output did not
-            cursor = self._repl.output.textCursor()
-            if cursor.columnNumber() > 0:
-                self.write('\n')
-
-    def write(self, strn, style='output', scrollToBottom='auto'):
-        self.sigInputGenerated.emit(strn, style, scrollToBottom)
-
-    def displayException(self):
-        """Display the current exception and stack."""
-        tb = traceback.format_exc()
-        indent = 4
-        lines = [f"{' ' * indent}{line}" for line in tb.split('\n')]
-        self.write('\n'.join(lines))
 
 
 class StdoutInterceptor:
@@ -282,3 +216,4 @@ class StdoutInterceptor:
         sys.stderr = self._orig_stderr
         self._orig_stdout = None
         self._orig_stderr = None
+
