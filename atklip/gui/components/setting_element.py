@@ -406,7 +406,7 @@ class WidthEdit(ComboboxEdit):
 "styles setting"
 class ColorEditDrawTool(Color_Picker_Button):
     def __init__(self,parent:QWidget=None,indicator=None, _input=None):
-        super(ColorEditDrawTool,self).__init__(parent,enableAlpha = True)
+        super(ColorEditDrawTool,self).__init__(parent=parent,enableAlpha = True)
         self.indicator = indicator
         self._input = _input
         self._parent = parent

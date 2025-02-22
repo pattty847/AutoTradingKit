@@ -5,6 +5,8 @@ from PySide6.QtCore import Qt
 from PySide6.QtWebEngineWidgets import QWebEngineView
 from PySide6.QtWidgets import  QApplication
 
+from atklip.gui.qfluentwidgets.common.icon import get_real_path
+
 
 
 class ReadmeViewer(QWidget):
@@ -23,9 +25,11 @@ class ReadmeViewer(QWidget):
         self.webView.settings().setAttribute(self.webView.settings().WebAttribute.PluginsEnabled, True)
         self.webView.settings().setAttribute(self.webView.settings().WebAttribute.PdfViewerEnabled, True)
         self.layout.addWidget(self.webView)
-        self.webView.setUrl(QUrl("file:///" + "atklip/appdata/readme.pdf".replace('\\', '/')))
+        readme_path:str = get_real_path("atklip/appdata/readme.pdf")
+        self.webView.setUrl(QUrl("file:///" + readme_path.replace('\\', '/')))
     def show(self):
-        self.webView.setUrl(QUrl("file:///" + "atklip/appdata/readme.pdf".replace('\\', '/')))
+        readme_path:str = get_real_path("atklip/appdata/readme.pdf")
+        self.webView.setUrl(QUrl("file:///" + readme_path.replace('\\', '/')))
         desktop = QApplication.screens()[0].availableGeometry()
         w, h = desktop.width(), desktop.height()
         self.resize(1000, 800)

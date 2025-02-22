@@ -394,7 +394,7 @@ class ICON_TEXT_BUTTON_SYMBOL(CardWidget,CIRCLE_ICON_WITH_TEXT_WG):
 class Color_Picker_Button(PrimaryToolButton):
     """ Color picker button """
     colorChanged = Signal(str)
-    def __init__(self, color:str="#123232", title: str="", parent=None, enableAlpha=True):
+    def __init__(self, parent=None,color:str="#123232", title: str="", enableAlpha=True):
         super().__init__(parent)
         self.title = title
         self.enableAlpha = enableAlpha
