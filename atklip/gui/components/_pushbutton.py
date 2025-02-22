@@ -126,11 +126,13 @@ class IconTextChangeButton(QPushButton):
         # self.setIcon(icon)
         # color = self.get_color()
         # self.set_stylesheet(color)
+        self.issponsor = False
         self.set_icon_color()
         self.clicked.connect(self.set_icon_color)
         self.setFixedHeight(35)
         self.setMinimumWidth(100)
         self.setMaximumWidth(130)
+        
         # self.setContentsMargins(0,0,0,0)
     
     def setIcon(self,icon: FluentIcon|str|QIcon):
@@ -156,10 +158,15 @@ class IconTextChangeButton(QPushButton):
                         }}""")
     
     def set_icon_color(self):
+        if self.issponsor:
+            co_lor = "#f359c9"
+            self.set_stylesheet(co_lor)
+            return
+        else:
+            co_lor = "#0055ff"
         if self._icon:
             if self.isChecked():
-                _icon = change_svg_color(self._icon.value,"#0055ff")
-                print(_icon)
+                _icon = change_svg_color(self._icon.value,co_lor)
                 self.setIcon(QIcon(_icon))
             else:
                 if isDarkTheme():
@@ -169,8 +176,16 @@ class IconTextChangeButton(QPushButton):
         # if self.text():
         color = self.get_color()
         self.set_stylesheet(color)
-            
+    
+    def set_sponsor(self):
+        self.issponsor = True
+        # _icon = change_svg_color(self._icon.value,"#f359c9")
+        # self.setIcon(QIcon(_icon))
+        self.set_stylesheet("#f359c9")
+      
     def get_color(self):
+        if self.issponsor:
+            return "#f359c9"
         if self.isChecked():
             color = "#0055ff"
         else:

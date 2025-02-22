@@ -669,7 +669,9 @@ class Chart(ViewPlotWidget):
             indicator = BasicMA(self,indicator_type=_indicator_type,length=30,_type="close",pen="#ffaa00")
 
         elif _group_indicator == "Candle Indicator":
-            candle:CandleStick = self.get_candle(_indicator_type)
+            _type = _indicator_type.value
+            print(_type)
+            candle:CandleStick = self.get_candle(_type)
             panel = IndicatorPanel(self.mainwindow,self, candle)
             # self.container_indicator_wg.sig_add_panel.emit(panel)
             self.container_indicator_wg.add_indicator_panel(panel)

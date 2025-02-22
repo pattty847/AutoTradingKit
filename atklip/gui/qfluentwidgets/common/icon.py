@@ -690,6 +690,7 @@ class FluentIcon(FluentIconBase, Enum):
     HOT_LIST = "hot_list"
     WATCHLIST = "watchlist"
     FAVORITE = "favorite"
+    SPONSOR = "sponsor"
     PERSONAL = "personal"
     TECHNICAL = "technical"
     EYE_OPEN = "eye_drawing"

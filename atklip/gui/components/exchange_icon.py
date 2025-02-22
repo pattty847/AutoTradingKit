@@ -7,7 +7,7 @@ from atklip.gui.qfluentwidgets.common import isDarkTheme, Theme
 class ExchangeICon(QPushButton):
     def __init__(self, parent=None,icon_path="test.svg", size=30): #u":/qfluentwidgets/images/profiles/profile2.png"
         super().__init__(parent)
-        self.setMouseTracking(False)
+        self.setMouseTracking(True)
 
         # self.setFixedSize(QSize(size, size))
         # self.setIcon(QIcon(icon_path))

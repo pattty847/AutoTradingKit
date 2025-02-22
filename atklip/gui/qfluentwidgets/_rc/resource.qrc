@@ -1,5 +1,9 @@
 <RCC>
   <qresource prefix="qfluentwidgets">
+    <file>images/icons/sponsor_white.svg</file>
+    <file>images/icons/sponsor_black.svg</file>
+    <file>images/icons/sponsor.svg</file>
+    <file>images/icons/sponsor_tradingview.svg</file>
     <file>images/icons/maximum_white.svg</file>
     <file>images/icons/maximum_black.svg</file>
     <file>images/icons/mindown_black.svg</file>

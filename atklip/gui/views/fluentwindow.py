@@ -3,7 +3,7 @@ import sys,asyncio
 from typing import Union, TYPE_CHECKING
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon, QColor, QPainter
-from PySide6.QtWidgets import QHBoxLayout, QApplication, QApplication, QStackedWidget
+from PySide6.QtWidgets import QHBoxLayout, QApplication, QStackedWidget
 
 from atklip.gui.qfluentwidgets import StackedWidget
 from atklip.gui.qfluentwidgets.common import CryptoIcon as CI

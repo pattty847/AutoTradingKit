@@ -27,6 +27,7 @@ class MainWidget(QWidget,Ui_MainWidget):
         
         self.chartbox_splitter.setup_chart(self,current_ex,current_symbol,curent_interval)
         
+        self.rightbar.hide()
         
         self.rightbar.object.splitToolButton.clicked.connect(lambda :self.extend_right_menu(self.rightview))
 

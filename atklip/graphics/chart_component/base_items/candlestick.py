@@ -35,7 +35,7 @@ class CandleStick(GraphicsObject):
         self.precision = self.chart._precision
         self.symbol = self.chart.symbol
         self.interval = self.chart.interval
-        self._type:IndicatorType = _type
+        self._type:str = _type
         
         self.source, mamode, period, n = self.get_source(self._type)
         
@@ -202,33 +202,33 @@ class CandleStick(GraphicsObject):
     
     def get_source(self,_type:IndicatorType,mamode:PD_MAType=PD_MAType.EMA, period:int=3,n:int=3):
         candle = None
-        if _type.value == "japan" or _type.value == "Sub_Chart":
+        if _type == "japan" or _type == "Sub_Chart":
             candle = self.chart.jp_candle
             return self.chart.jp_candle, None,None, n
 
-        elif _type.value == "smooth_jp":
+        elif _type == "smooth_jp":
             candle = SMOOTH_CANDLE(self.chart,self.chart.jp_candle,mamode,period)
             candle._source_name = f"sm_jp {self.chart.symbol} {self.chart.interval}"
             self.chart.update_sources(candle)
             return candle, mamode,period, n
         
-        elif _type.value == "n_smooth_jp":
+        elif _type == "n_smooth_jp":
             candle = N_SMOOTH_CANDLE(self.chart,self.chart.jp_candle,n,mamode,period)
             candle._source_name = f"n_smooth_jp {self.chart.symbol} {self.chart.interval}"
             self.chart.update_sources(candle)
             return candle, mamode, period,n
         
-        elif _type.value == "heikin":
+        elif _type == "heikin":
             candle = self.chart.heikinashi
             return self.chart.heikinashi, None,None, n
             
-        elif _type.value == "smooth_heikin":
+        elif _type == "smooth_heikin":
             candle = SMOOTH_CANDLE(self.chart,self.chart.heikinashi,mamode,period)
             candle._source_name = f"sm_heikin {self.chart.symbol} {self.chart.interval}"
             self.chart.update_sources(candle)
             return candle, mamode,period, n
             
-        elif _type.value == "n_smooth_heikin":
+        elif _type == "n_smooth_heikin":
             candle = N_SMOOTH_CANDLE(self.chart,self.chart.heikinashi,n,mamode,period)
             candle._source_name = f"n_smooth_heikin {self.chart.symbol} {self.chart.interval}"
             self.chart.update_sources(candle)

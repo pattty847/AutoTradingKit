@@ -217,4 +217,6 @@ Youtube Chanel: [AutoTradingKit](https://www.youtube.com/@AutoTradingKit)
 
 Facebook: [Pham Cong Che](https://www.facebook.com/che.linh.9096/)
 
+Discord: [AutoTradingKit](https://discord.gg/UNDh5MyR)
+
 ATK Facebook Group: [Auto Trading Kit (ATK) - Facebook group](https://www.facebook.com/groups/748831980507126 "Facebook group of ATK")

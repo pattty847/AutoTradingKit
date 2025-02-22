@@ -1,82 +1,40 @@
-from PySide6.QtCore import QSize, QCoreApplication, Qt, QRect, QPoint, QEvent
-from PySide6.QtGui import QIcon, QPainter, QImage, QColor, QPixmap, QMouseEvent
-from PySide6.QtWidgets import (QVBoxLayout, QPushButton, QFrame, QHBoxLayout, QSpacerItem, QSizePolicy, QLabel, QMenu, QFileDialog,
-                        )
 
-from PySide6.QtCore import Signal, Qt, QSize, QPoint,QRect
-from PySide6.QtGui import QIcon, QPainter, QColor,QImage,QPixmap
-from PySide6.QtWidgets import QPushButton, QWidget
-from atklip.gui.qfluentwidgets.common.icon import FluentIcon as FIF, EchangeIcon as EI
-from atklip.gui.qfluentwidgets.common import isDarkTheme, Theme
+import os
+from typing import Union
+from PySide6.QtWidgets import QWidget,QVBoxLayout
+from PySide6.QtGui import QIcon
+from atklip.gui.components.exchange_icon import ExchangeICon
+from atklip.gui.components.readme import ReadmeViewer
+from atklip.gui.qfluentwidgets.common.icon import get_real_path
+from atklip.gui.qfluentwidgets.components.widgets.tool_tip import ToolTipFilter, ToolTipPosition
 
-class AvatarButton(QPushButton):
-    def __init__(self, parent=None,icon_path=u":/qfluentwidgets/images/profiles/profile2.png", size=45): #u":/qfluentwidgets/images/profiles/profile2.png"
+class AvatarButton(QWidget):
+    def __init__(self, parent=None,icon_path=u":/qfluentwidgets/images/profiles/profile2.png"): #u":/qfluentwidgets/images/profiles/profile2.png"
         super().__init__(parent)
-        self.setMouseTracking(False)
-
-        # self.setFixedSize(QSize(size, size))
-        # self.setIcon(QIcon(icon_path))
-        # self.setIconSize(QSize(size - 10, size - 10))
-        #self.setFixedHeight(30)
-        # self.setContentsMargins(0,0,10,0)
-        self.setStyleSheet("""
-            QPushButton {
-                border: 0px solid;
-                border-color: transparent;
-                border-radius: %dpx;
-                background-color:transparent;
-            }
-            QPushButton:pressed {
-                background-color: #5A5A5A;
-            }
-        """ % (size // 2))
-        
-        self.set_pixmap_icon(icon_path)
-
-    def set_pixmap_icon(self, icon_path,size=45):
-        if isinstance(icon_path,EI):
-            icon_path = icon_path.path()
-        elif isinstance(icon_path,FIF):
-            icon_path = icon_path.path(Theme.DARK) if isDarkTheme else icon_path.path(Theme.LIGHT)
-        pixmap = self.crop_and_resize_to_circle(icon_path, size)
-        self.setIcon(QIcon(pixmap))
-        self.setIconSize(QSize(size - 10, size - 10))
+        self.setStyleSheet("background-color:transparent;")
+        self.installEventFilter(ToolTipFilter(self, 3000, ToolTipPosition.TOP_RIGHT))
+        self.setToolTip("About ATK")
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0,0,0,0)
+        self.setLayout(layout)
+        self.setMouseTracking(True)
+        self.btn = ExchangeICon(self)
+        layout.addWidget(self.btn)
+        self.btn.set_pixmap_icon(icon_path)
+        self.Readme = ReadmeViewer()
+        ICON_PATH = os.path.join("atklip", "appdata", "appico.ico")
+        icon = QIcon(get_real_path(ICON_PATH))
+        self.Readme.setWindowIcon(icon)
+        self.btn.clicked.connect(self.on_clicked)
     
-    def crop_and_resize_to_circle(self,image_path, size):
-        image = QImage(image_path)
-        # Calculate the crop rectangle
-        crop_size = min(image.width(), image.height())
-        crop_rect = QRect(
-            (image.width() - crop_size) // 2,
-            (image.height() - crop_size) // 2,
-            crop_size,
-            crop_size
-        )
+    def set_text(self, text:Union[None,str])->None:
+        self.btn.setText(text)
+    
+    def on_clicked(self)->None:
+        if self.Readme.isVisible():
+            self.Readme.hide()
+            return
+        self.Readme.show()
 
-        # Crop and resize the image
-        cropped_image = image.copy(crop_rect)
-        resized_image = cropped_image.scaled(size, size)
 
-        # Create a mask and draw a circle
-        mask = QImage(size, size, QImage.Format_Alpha8)
-        mask.fill(Qt.transparent)
-
-        painter = QPainter(mask)
-        painter.setRenderHint(QPainter.Antialiasing)
-        painter.setBrush(QColor(255, 255, 255))
-        painter.setPen(Qt.NoPen)
-        painter.drawEllipse(QPoint(size // 2, size // 2), size // 2, size // 2)
-        painter.end()
-
-        # Apply the mask to the resized image
-        masked_image = QPixmap(size, size)
-        masked_image.fill(Qt.transparent)
-        painter.begin(masked_image)
-        painter.setRenderHint(QPainter.Antialiasing)
-        painter.drawImage(0, 0, resized_image)
-        painter.setCompositionMode(QPainter.CompositionMode_DestinationIn)
-        painter.drawImage(0, 0, mask)
-        painter.end()
-
-        return masked_image   
-
+ 
