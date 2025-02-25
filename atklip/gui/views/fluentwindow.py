@@ -15,7 +15,7 @@ from .titlebar import TitleBar
 from .mainlayout import MainWidget
 from atklip.app_utils import *
 from atklip.appmanager.setting import AppConfig
-from atklip.appmanager.worker.threadpool import ThreadPoolExecutor_global,Heavy_ProcessPoolExecutor_global
+from atklip.appmanager.worker.threadpool import ThreadPoolExecutor_global,Heavy_ProcessPoolExecutor_global,num_threads
 if TYPE_CHECKING:
     from atklip.gui.qfluentwidgets.components import TabBar
 "thiếu quản lý tab khi xóa 1 tab bất kỳ, switch to tab khác và xóa tab muốn xóa, thử lưu router key vào 1 dict"
@@ -55,8 +55,9 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
         FluentStyleSheet.FLUENT_WINDOW.apply(self)
         
         "đảm bảo ProcessPoolExecutor được kích hoạt trước"
-        Heavy_ProcessPoolExecutor_global.submit(print,"start game")
-        
+        for i in range(num_threads):
+            Heavy_ProcessPoolExecutor_global.submit(print,f"start game {i}")
+
         self.onTabAddRequested()
         self.initWindow()
     

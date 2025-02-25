@@ -3,8 +3,8 @@ from numpy import nan
 from pandas import DataFrame, Series
 from atklip.controls.pandas_ta._typing import DictLike, Int, IntFloat
 from atklip.controls.pandas_ta.ma import ma
-from atklip.controls.pandas_ta.momentum import mom
-from atklip.controls.pandas_ta.trend import decreasing, increasing
+from atklip.controls.momentum import mom
+from atklip.controls.trend import decreasing, increasing
 from atklip.controls.pandas_ta.utils import (
     simplify_columns,
     unsigned_differences,
@@ -15,7 +15,7 @@ from atklip.controls.pandas_ta.utils import (
     v_scalar,
     v_series
 )
-from atklip.controls.pandas_ta.volatility import bbands, kc
+from atklip.controls.volatility import bbands, kc
 
 
 

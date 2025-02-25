@@ -3,7 +3,7 @@ from pandas import Series
 from atklip.controls.pandas_ta._typing import DictLike, Int
 from atklip.controls.pandas_ta.overlap import ema, sma
 from atklip.controls.pandas_ta.utils import v_offset, v_pos_default, v_series
-from atklip.controls.pandas_ta.volatility import atr
+from atklip.controls.volatility import atr
 
 
 

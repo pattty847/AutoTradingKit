@@ -2,7 +2,7 @@ from concurrent.futures import Future
 import pandas as pd
 import numpy as np
 from atklip.appmanager.worker.return_worker import HeavyProcess
-import atklip.controls.pandas_ta as ta
+import atklip.controls as ta
 
 def candle_pattern(df:pd.DataFrame,C_Len: int= 14,C_ShadowPercent:float = 5.0):
     """_summary_

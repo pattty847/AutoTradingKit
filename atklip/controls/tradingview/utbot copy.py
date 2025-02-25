@@ -3,9 +3,9 @@ import numpy as np
 import pandas as pd
 from atklip.app_utils.helpers import crossover
 from atklip.appmanager.worker.return_worker import HeavyProcess
-import atklip.controls.talib.abstract as ta
+
 from atklip.controls import atr
-from atklip.controls.ma import ema, ma
+from atklip.controls.ma_overload import ema, ma
 
 import numpy as np
 import pandas as pd

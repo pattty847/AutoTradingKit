@@ -2,7 +2,6 @@ import asyncio
 from typing import Any, Dict
 from ccxt import RequestTimeout
 from .models import *
-from .ta_indicators import *
 from .ta_indicators import CryptoExchange,CryptoExchange_WS
 from qasync import asyncSlot
 from atklip.app_utils.syncer import sync

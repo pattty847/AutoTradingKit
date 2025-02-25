@@ -20,7 +20,7 @@ from atklip.controls.pandas_ta.utils import (
 
 def rsi(
     close: Series, length: Int = None, scalar: IntFloat = None,
-    mamode: str = None, talib: bool = False,
+    mamode: str = None, talib: bool = True,
     drift: Int = None, offset: Int = None,
     **kwargs: DictLike
 ) -> Series:

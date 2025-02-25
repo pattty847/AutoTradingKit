@@ -1,34 +1,14 @@
 from concurrent.futures import Future
-from functools import lru_cache
-import numpy as np
-import time
 import pandas as pd
 from typing import Any, Dict, List,Tuple
-from dataclasses import dataclass
-
-from atklip.controls.ma import ma
+from atklip.controls.pandas_ta.ma import ma
 from atklip.controls.ma_type import  PD_MAType
 from atklip.controls.ohlcv import   OHLCV
-
 from .candle import JAPAN_CANDLE
 from .heikinashi import HEIKINASHI
 from atklip.appmanager import ThreadPoolExecutor_global as ApiThreadPool, HeavyProcess
-
-
-from functools import lru_cache
-import numpy as np
-import time
-import pandas as pd
-from typing import Any, Dict, List,Tuple
-from dataclasses import dataclass
 from PySide6.QtCore import Qt, Signal,QObject,QCoreApplication
 
-from atklip.controls import pandas_ta as ta
-from atklip.controls.ma_type import  PD_MAType
-from atklip.controls.ohlcv import   OHLCV
-
-from .candle import JAPAN_CANDLE
-from .heikinashi import HEIKINASHI
 
 
 class N_SMOOTH_CANDLE(QObject):

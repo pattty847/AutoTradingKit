@@ -4,7 +4,7 @@ from atklip.controls.pandas_ta._typing import DictLike, Int
 from atklip.controls.pandas_ta.maps import Imports
 from atklip.controls.pandas_ta.overlap import ema
 from atklip.controls.pandas_ta.utils import v_offset, v_pos_default, v_series, v_talib
-from atklip.controls.pandas_ta.volume import ad
+from atklip.controls.volume import ad
 
 
 

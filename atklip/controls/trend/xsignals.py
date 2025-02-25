@@ -2,7 +2,7 @@
 from numpy import nan
 from pandas import DataFrame, Series
 from atklip.controls.pandas_ta._typing import DictLike, Int, IntFloat, Union
-from atklip.controls.pandas_ta.trend import tsignals
+from atklip.controls.trend import tsignals
 from atklip.controls.pandas_ta.utils import cross_value, v_offset, v_series
 
 

@@ -5,7 +5,7 @@ from pandas import DataFrame, Series
 from atklip.appmanager.worker.return_worker import HeavyProcess
 from atklip.controls.pandas_ta._typing import DictLike, Int, IntFloat
 from atklip.controls.pandas_ta.overlap import ema, linreg, sma
-from atklip.controls.pandas_ta.trend import decreasing, increasing
+from atklip.controls.trend import decreasing, increasing
 from atklip.controls.pandas_ta.utils import (
     simplify_columns,
     unsigned_differences,
@@ -15,7 +15,7 @@ from atklip.controls.pandas_ta.utils import (
     v_pos_default,
     v_series
 )
-from atklip.controls.pandas_ta.volatility import bbands, kc
+from atklip.controls.volatility import bbands, kc
 from .mom import mom
 
 

@@ -16,6 +16,7 @@ from atklip.graphics.chart_component.indicators import *
 from .plotitem import ViewPlotItem
 from .proxy_signal import Signal_Proxy
 from atklip.controls import *
+from atklip.controls.candle import *
 
 from atklip.graphics.chart_component.indicator_panel import SubIndicatorContainer
 from atklip.graphics.chart_component.indicator_panel import IndicatorPanel

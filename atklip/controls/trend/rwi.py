@@ -2,7 +2,7 @@
 from numpy import isnan
 from pandas import DataFrame, Series
 from atklip.controls.pandas_ta._typing import DictLike, Int
-from atklip.controls.pandas_ta.volatility import atr
+from atklip.controls.volatility import atr
 from atklip.controls.pandas_ta.utils import (
     v_drift,
     v_mamode,

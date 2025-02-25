@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from pandas import DataFrame, Series
 from atklip.controls.pandas_ta._typing import DictLike, Int
-from atklip.controls.pandas_ta.statistics import zscore
+from atklip.controls.statistics import zscore
 from atklip.controls.pandas_ta.utils import v_bool, v_offset, v_pos_default, v_series
 
 

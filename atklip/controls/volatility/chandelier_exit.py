@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from numpy import isnan, nan
 from pandas import Series, DataFrame
-from atklip.controls.pandas_ta.volatility import atr
+from atklip.controls.volatility import atr
 from atklip.controls.pandas_ta._typing import Int, IntFloat, DictLike
 from atklip.controls.pandas_ta.utils import (
     v_bool,

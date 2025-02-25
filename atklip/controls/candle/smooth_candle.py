@@ -3,25 +3,15 @@ import numpy as np
 import pandas as pd
 from typing import Dict, List
 from atklip.appmanager.worker.return_worker import HeavyProcess
-from atklip.controls import pandas_ta as ta
+from atklip.controls.pandas_ta.ma import ma
 from atklip.controls.ma_type import  PD_MAType
 from atklip.controls.ohlcv import   OHLCV
 from .candle import JAPAN_CANDLE
 from .heikinashi import HEIKINASHI
 from atklip.appmanager import ThreadPoolExecutor_global as ApiThreadPool
-
-import numpy as np
-import time
-import pandas as pd
-from typing import Dict, List
 from PySide6.QtCore import Signal,QObject
 
-from atklip.controls import pandas_ta as ta
-from atklip.controls.ma_type import  PD_MAType
-from atklip.controls.ohlcv import   OHLCV
 
-from .candle import JAPAN_CANDLE
-from .heikinashi import HEIKINASHI
 
 class SMOOTH_CANDLE(QObject):
     """
@@ -430,13 +420,13 @@ class SMOOTH_CANDLE(QObject):
     
     @staticmethod
     def pro_gen_data(df:pd.DataFrame,mamode,ma_leng,precision):
-        highs = ta.ma(mamode, df["high"],length=ma_leng).dropna().round(precision)
-        lows = ta.ma(mamode, df["low"],length=ma_leng).dropna().round(precision)
-        closes = ta.ma(mamode, df["close"],length=ma_leng).dropna().round(precision)
-        opens = ta.ma(mamode, df["open"],length=ma_leng).dropna().round(precision)
-        hl2s = ta.ma(mamode, df["hl2"],length=ma_leng).dropna().round(precision)
-        hlc3s = ta.ma(mamode, df["hlc3"],length=ma_leng).dropna().round(precision)
-        ohlc4s = ta.ma(mamode, df["ohlc4"],length=ma_leng).dropna().round(precision)
+        highs = ma(mamode, df["high"],length=ma_leng).dropna().round(precision)
+        lows = ma(mamode, df["low"],length=ma_leng).dropna().round(precision)
+        closes = ma(mamode, df["close"],length=ma_leng).dropna().round(precision)
+        opens = ma(mamode, df["open"],length=ma_leng).dropna().round(precision)
+        hl2s = ma(mamode, df["hl2"],length=ma_leng).dropna().round(precision)
+        hlc3s = ma(mamode, df["hlc3"],length=ma_leng).dropna().round(precision)
+        ohlc4s = ma(mamode, df["ohlc4"],length=ma_leng).dropna().round(precision)
         _len = len(ohlc4s)
         
         return pd.DataFrame({  "open": opens,

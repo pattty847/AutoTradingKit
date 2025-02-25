@@ -2,7 +2,7 @@
 from pandas import Series
 from atklip.controls.pandas_ta._typing import DictLike, Int, IntFloat
 from atklip.controls.pandas_ta.overlap import sma
-from atklip.controls.pandas_ta.statistics import stdev
+from atklip.controls.statistics import stdev
 from atklip.controls.pandas_ta.utils import v_lowerbound, v_offset, v_series
 
 

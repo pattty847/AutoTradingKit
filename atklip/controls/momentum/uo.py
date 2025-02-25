@@ -18,7 +18,7 @@ def uo(
     high: Series, low: Series, close: Series,
     fast: Int = None, medium: Int = None, slow: Int = None,
     fast_w: IntFloat = None, medium_w: IntFloat = None, slow_w: IntFloat = None,
-    talib: bool = False, drift: Int = None,
+    talib: bool = True, drift: Int = None,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """Ultimate Oscillator (UO)

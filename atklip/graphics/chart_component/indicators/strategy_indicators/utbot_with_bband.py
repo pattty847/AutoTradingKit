@@ -16,8 +16,8 @@ from atklip.graphics.chart_component.draw_tools.entry import Entry
 
 from atklip.appmanager import FastWorker
 from atklip.app_utils import *
-from atklip.controls.candle.n_time_smooth_candle_old import N_SMOOTH_CANDLE
-from atklip.controls.ma import ma
+from atklip.controls.candle.n_time_smooth_candle import N_SMOOTH_CANDLE
+from atklip.controls.pandas_ta.ma import ma
 from atklip.controls.trend.zigzag import ZIGZAG
 from atklip.controls.momentum.macd import MACD
 from atklip.controls.momentum.rsi import RSI

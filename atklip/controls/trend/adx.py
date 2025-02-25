@@ -15,7 +15,7 @@ from atklip.controls.pandas_ta.utils import (
     v_talib,
     zero
 )
-from atklip.controls.pandas_ta.volatility import atr
+from atklip.controls.volatility import atr
 
 
 

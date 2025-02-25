@@ -12,7 +12,7 @@ from atklip.controls.pandas_ta.utils import (
     v_scalar,
     v_series
 )
-from atklip.controls.pandas_ta.volatility import rvi
+from atklip.controls.volatility import rvi
 
 
 

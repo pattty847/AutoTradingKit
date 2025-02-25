@@ -124,9 +124,9 @@ def utbot_with_bb(data,key_value = 1,atr_utbot_length=10, mult = 1, wicks=False,
 
 import numpy as np
 import pandas as pd
-import atklip.controls.talib.abstract as ta
+
 from atklip.controls import atr
-from atklip.controls.ma import ema, ma
+from atklip.controls.ma_overload import ema, ma
 
 import numpy as np
 import pandas as pd

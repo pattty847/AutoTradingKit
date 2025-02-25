@@ -2,7 +2,7 @@ from concurrent.futures import Future
 import numpy as np
 import pandas as pd
 from atklip.appmanager.worker.return_worker import HeavyProcess
-from atklip.controls.ma import ema
+from atklip.controls.ma_overload import ema, ma
 
 def ema_trend_metter(df: pd.DataFrame, base_ema_length: int=13, ema_length_1: int=21, ema_length_2: int=34, ema_length_3: int=55) -> pd.DataFrame:
     df = df.copy()

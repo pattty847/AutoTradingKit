@@ -84,7 +84,6 @@ class FastWorker(QObject):
         self.signals = WorkerSignals() 
         self.kwargs['setdata'] = self.signals.setdata
         self.threadpool = ThreadPoolExecutor_global
-        # self.threadpool = QThreadPool_global
         
     def start(self):
         try:

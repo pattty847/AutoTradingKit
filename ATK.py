@@ -66,4 +66,13 @@ def main():
 
 if __name__ == '__main__':
     multiprocessing.freeze_support()
+    method = ""
+    if sys.platform == "darwin":
+        method = "spawn"
+    elif sys.platform == "linux":
+        method = "spawn"
+    else:
+        method = ""
+    if method:
+        multiprocessing.set_start_method('spawn')
     main()

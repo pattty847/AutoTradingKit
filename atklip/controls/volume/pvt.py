@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from pandas import Series
 from atklip.controls.pandas_ta._typing import DictLike, Int
-from atklip.controls.pandas_ta.momentum import roc
+from atklip.controls.momentum import roc
 from atklip.controls.pandas_ta.utils import v_drift, v_offset, v_series
 
 

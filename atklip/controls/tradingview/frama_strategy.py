@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-import atklip.controls.pandas_ta as ta
+import atklip.controls as ta
 
 # Giả sử bạn đã có dữ liệu đóng mở, cao thấp dưới dạng DataFrame `df`
 # Để dễ dàng hơn, bạn cần chuẩn bị một DataFrame có các cột: 'open', 'high', 'low', 'close', 'volume'

@@ -12,7 +12,7 @@ from numpy.lib.stride_tricks import sliding_window_view
 from pandas import Series
 from atklip.controls.pandas_ta._typing import Array, DictLike, Int, IntFloat
 from atklip.controls.pandas_ta.maps import Imports
-from atklip.controls.pandas_ta.momentum.rsi import rsi
+from atklip.controls.momentum.rsi import rsi
 from atklip.controls.pandas_ta.utils import (
     v_drift,
     v_offset,

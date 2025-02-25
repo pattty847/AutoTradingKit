@@ -5,7 +5,7 @@ from atklip.appmanager.worker.return_worker import HeavyProcess
 from atklip.controls.pandas_ta._typing import DictLike, Int, IntFloat
 from atklip.controls.pandas_ta.ma import ma
 from atklip.controls.pandas_ta.maps import Imports
-from atklip.controls.pandas_ta.statistics import stdev
+from atklip.controls.statistics import stdev
 from atklip.controls.pandas_ta.utils import (
     non_zero_range,
     tal_ma,

@@ -6,7 +6,7 @@ from atklip.appmanager.worker.return_worker import HeavyProcess
 from atklip.controls.pandas_ta._typing import DictLike, Int, IntFloat
 from atklip.controls.pandas_ta.overlap import hl2
 from atklip.controls.pandas_ta.utils import v_mamode, v_offset, v_pos_default, v_series
-from atklip.controls.pandas_ta.volatility import atr
+from atklip.controls.volatility import atr
 
 
 

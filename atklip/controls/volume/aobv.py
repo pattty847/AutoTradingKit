@@ -2,8 +2,8 @@
 from pandas import DataFrame, Series
 from atklip.controls.pandas_ta._typing import DictLike, Int
 from atklip.controls.pandas_ta.ma import ma
-from atklip.controls.pandas_ta.trend.long_run import long_run
-from atklip.controls.pandas_ta.trend.short_run import short_run
+from atklip.controls.trend.long_run import long_run
+from atklip.controls.trend.short_run import short_run
 from atklip.controls.pandas_ta.utils import v_mamode, v_offset, v_pos_default, v_series
 from .obv import obv
 

@@ -9,7 +9,7 @@ from atklip.controls.pandas_ta.utils import (
     v_series,
     v_tradingview
 )
-from atklip.controls.pandas_ta.volatility import atr
+from atklip.controls.volatility import atr
 
 
 

@@ -3,7 +3,7 @@ from numpy import isnan
 from pandas import Series
 from atklip.controls.pandas_ta._typing import DictLike, Int, IntFloat
 from atklip.controls.pandas_ta.ma import ma
-from atklip.controls.pandas_ta.statistics import stdev
+from atklip.controls.statistics import stdev
 from atklip.controls.pandas_ta.utils import (
     unsigned_differences,
     v_bool,

@@ -9,8 +9,7 @@ from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import QGraphicsView,QWidget
 from atklip.graphics.pyqtgraph import mkPen, PlotWidget,setConfigOption
 
-
-from atklip.controls.candle import JAPAN_CANDLE
+from atklip.controls.candle import *
 
 from .globarvar import global_signal
 from .proxy_signal import Signal_Proxy

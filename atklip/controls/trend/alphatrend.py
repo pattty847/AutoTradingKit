@@ -3,9 +3,9 @@ from numpy import isnan, nan, zeros_like
 from numba import njit
 from pandas import DataFrame, Series
 from atklip.controls.pandas_ta._typing import Array, DictLike, Int, IntFloat
-from atklip.controls.pandas_ta.momentum import rsi
-from atklip.controls.pandas_ta.volatility import atr
-from atklip.controls.pandas_ta.volume.mfi import mfi
+from atklip.controls.momentum import rsi
+from atklip.controls.volatility import atr
+from atklip.controls.volume.mfi import mfi
 from atklip.controls.pandas_ta.utils import (
     v_mamode,
     v_offset,

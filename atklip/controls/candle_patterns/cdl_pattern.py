@@ -3,7 +3,7 @@ from pandas import Series, DataFrame
 from atklip.controls.pandas_ta._typing import DictLike, Int, IntFloat, List, Union
 from atklip.controls.pandas_ta.maps import Imports
 from atklip.controls.pandas_ta.utils import v_offset, v_scalar, v_series
-from atklip.controls.pandas_ta.candles import cdl_doji, cdl_inside
+from atklip.controls.candle_patterns import cdl_doji, cdl_inside
 
 
 

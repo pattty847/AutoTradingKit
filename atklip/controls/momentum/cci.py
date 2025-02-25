@@ -5,7 +5,7 @@ from atklip.appmanager.worker.return_worker import HeavyProcess
 from atklip.controls.pandas_ta._typing import DictLike, Int, IntFloat
 from atklip.controls.pandas_ta.maps import Imports
 from atklip.controls.pandas_ta.overlap import hlc3, sma
-from atklip.controls.pandas_ta.statistics import mad
+from atklip.controls.statistics import mad
 from atklip.controls.pandas_ta.utils import v_offset, v_pos_default, v_series, v_talib,verify_series,get_offset
 
 def cci(high, low, close, length=None, c=None, talib=None, offset=None, **kwargs):

@@ -4,7 +4,7 @@ from pandas import DataFrame, Series
 from atklip.appmanager.worker.return_worker import HeavyProcess
 from atklip.controls.pandas_ta._typing import DictLike, Int
 from atklip.controls.pandas_ta.ma import ma
-from atklip.controls.pandas_ta.momentum import rsi
+from atklip.controls.momentum import rsi
 from atklip.controls.pandas_ta.utils import (
     non_zero_range,
     v_mamode,
