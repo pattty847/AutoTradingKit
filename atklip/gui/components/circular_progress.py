@@ -96,6 +96,13 @@ class LoadingProgress(IndeterminateProgressRing):
         self.bg_color = 0x44475a
         self.set_shadow()
 
+    def update_pos(self):
+        _x = self._parent.width()
+        _y = self._parent.height()
+        x = (_x-self.width())/2
+        y = (_y-self.height())/2
+        self.move(QPoint(x, y))
+ 
     def run_process(self,is_show):
         if is_show:
             _x = self._parent.width()

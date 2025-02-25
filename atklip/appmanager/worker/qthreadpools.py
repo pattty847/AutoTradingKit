@@ -36,7 +36,6 @@ class QProcessWorker(QObject):
         except RuntimeError:
             pass
     
-    @Slot()
     def run(self):
         try:
             self.fn(*self.args, **self.kwargs)
@@ -94,7 +93,6 @@ class FastWorker(QObject):
             pass
         # self.threadpool.start(self)
     
-    # @Slot()
     def run(self):
         try:
             self.fn(*self.args, **self.kwargs)
@@ -123,7 +121,6 @@ class SimpleWorker(QObject):
         except RuntimeError:
             pass
     
-    # @Slot()
     def run(self):
         try:
             self.fn(*self.args, **self.kwargs)
@@ -150,7 +147,6 @@ class CandleWorker(QObject):
         except RuntimeError:
             pass
 
-    # @Slot()
     def run(self):
         try:
             self.fn(*self.args, **self.kwargs)
@@ -173,10 +169,6 @@ class ThreadingAsyncWorker(QObject):
         self.kwargs = kwargs
         self.signals = FastStartSignal(self) 
         self.qtheadpool = ThreadPoolExecutor_global
-        
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
-        
         self.signals.finished.connect(self.stop_thread)
         self.signals.error.connect(self.stop_thread)
 
@@ -185,21 +177,13 @@ class ThreadingAsyncWorker(QObject):
     
     def stop_thread(self):
         try:
-            self.signals.deleteLater()
-        except Exception as e:
-            pass
-        asyncio.set_event_loop(None)
-        self.loop.call_soon_threadsafe(self.loop.stop)
-        try:
             self.deleteLater()
         except Exception as e:
             pass
         
-    # @Slot()
     def run(self):
         try:
-            self.loop.run_until_complete(self.fn(*self.args, **self.kwargs))
-            # asyncio.run(self.fn(*self.args, **self.kwargs))
+            asyncio.run(self.fn(*self.args, **self.kwargs))
         except Exception as e:
             self.signals.error.emit()
         finally:
@@ -227,7 +211,6 @@ class RequestAsyncWorker(QObject):
     def stop_thread(self):
         self.signals.deleteLater()
         self.deleteLater()
-    # @Slot()
     def run(self):
         try:
             asyncio.run(self.fn(*self.args, **self.kwargs))

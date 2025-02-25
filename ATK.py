@@ -10,7 +10,13 @@ from atklip.gui.qfluentwidgets.common.icon import *
 from atklip.gui.qfluentwidgets.components.dialog_box import MessageBox
 from atklip.gui.views.fluentwindow import WindowBase
 from atklip.appmanager.setting.config import cfg
-
+import asyncio
+import winloop
+if hasattr(asyncio, 'WindowsSelectorEventLoopPolicy'):
+    try:
+        winloop.install()
+    except:
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 class MainWindow(WindowBase):
     def __init__(self):

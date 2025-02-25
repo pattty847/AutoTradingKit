@@ -231,7 +231,8 @@ To continue delivering the best experience for our users, we need your support. 
         
         label = SubtitleLabel(self.tr('3. You also sent some gift to me via binace transfer 👇️'), self)
         # label.setStyleSheet("color:#f359c9;")
-        self.imageLabel = ImageLabel('image/README/1739980400330.png')
+        image_path:str = get_real_path("atklip/appdata/1739980400330.png")
+        self.imageLabel = ImageLabel(image_path)
         self.imageLabel.scaledToWidth(1000)
         self.imageLabel.scaledToHeight(400)
         self.imageLabel.setBorderRadius(2, 2, 2, 2)

@@ -6,21 +6,15 @@ from numba import jit,njit
 from typing import List
 from typing import Union
 import numpy as np
+from decimal import Decimal
 
-@lru_cache(maxsize=2000) 
+
 def round_(v):
     return np.floor(v+0.5)
-@lru_cache(maxsize=128) 
+
 def convert_precision(number):
-    if isinstance(number,str):
-        if "1e" in number:
-            return int(number[-2:])
-        number = float(number)
-    if number >= 1:
-        return int(number)
-    number = f"{number}"
-    decimal_part = number.split('.')[1]  
-    return len(decimal_part)
+    decimal_part = Decimal(str(number)).normalize()  # Chuẩn hóa số
+    return abs(decimal_part.as_tuple().exponent)  # Lấy số chữ số thập phân
 
 def getspecialvalues(_type,last_candle:List):
     if _type == "close":

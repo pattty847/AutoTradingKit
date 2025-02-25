@@ -20,7 +20,7 @@ class AvatarButton(QWidget):
         self.setMouseTracking(True)
         self.btn = ExchangeICon(self)
         layout.addWidget(self.btn)
-        self.btn.set_pixmap_icon(icon_path)
+        self.btn.set_pixmap_icon(icon_path,35)
         self.Readme = ReadmeViewer()
         ICON_PATH = os.path.join("atklip", "appdata", "appico.ico")
         icon = QIcon(get_real_path(ICON_PATH))

@@ -33,3 +33,4 @@ httptools
 psygnal
 # slowapi
 winloop
+click

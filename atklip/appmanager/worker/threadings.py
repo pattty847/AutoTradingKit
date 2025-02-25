@@ -19,7 +19,7 @@ class FastStartThread(QObject):
         
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop)
-                
+                        
     def start_thread(self):
         try:
             funture = self.threadpool.submit(self.run)

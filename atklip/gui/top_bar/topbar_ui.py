@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'topbar.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.8.1
+## Created by: Qt User Interface Compiler version 6.8.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -15,8 +15,8 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QFrame, QHBoxLayout, QSizePolicy,
-    QSpacerItem, QWidget)
+from PySide6.QtWidgets import (QApplication, QFrame, QHBoxLayout, QLayout,
+    QSizePolicy, QSpacerItem, QWidget)
 
 class Ui_Frame(object):
     def setupUi(self, Frame):
@@ -28,11 +28,13 @@ class Ui_Frame(object):
         self.horizontalLayout = QHBoxLayout(Frame)
         self.horizontalLayout.setSpacing(5)
         self.horizontalLayout.setObjectName(u"horizontalLayout")
+        self.horizontalLayout.setSizeConstraint(QLayout.SetMaximumSize)
         self.horizontalLayout.setContentsMargins(5, 1, 10, 1)
         self.left_layout = QHBoxLayout()
-        self.left_layout.setSpacing(10)
+        self.left_layout.setSpacing(5)
         self.left_layout.setObjectName(u"left_layout")
-        self.left_layout.setContentsMargins(5, 0, 0, 0)
+        self.left_layout.setSizeConstraint(QLayout.SetMaximumSize)
+        self.left_layout.setContentsMargins(0, 0, 0, 0)
 
         self.horizontalLayout.addLayout(self.left_layout)
 
@@ -43,7 +45,7 @@ class Ui_Frame(object):
         self.right_layout = QHBoxLayout()
         self.right_layout.setSpacing(5)
         self.right_layout.setObjectName(u"right_layout")
-        self.right_layout.setContentsMargins(0, 0, 10, 0)
+        self.right_layout.setContentsMargins(0, 0, 0, 0)
 
         self.horizontalLayout.addLayout(self.right_layout)
 

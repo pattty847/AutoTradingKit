@@ -30,7 +30,7 @@ https://github.com/twopirllc/pandas-ta/pull/661/files#diff-45fcc49d657dcb2c76394
 
 build Ta_lib
 https://github.com/cgohlke/talib-build/
-d:/AutoTradingKit/venv/Scripts/python.exe -3.12 -m pip install TA_Lib-0.4.32-cp312-cp312-win_amd64.whl
+d:/AutoTradingKit/venv/Scripts/python.exe -m pip install TA_Lib-0.4.32-cp312-cp312-win_amd64.whl
 
 pip install --upgrade "PySide6-Fluent-Widgets[full]" -i https://pypi.org/simple/
 

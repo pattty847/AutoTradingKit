@@ -66,7 +66,7 @@ class Chart(ViewPlotWidget):
         self.replay_data:list = []
         self.replay_pos_i:int = 0
                 
-        self._init_async_winloop()
+        # self._init_async_winloop()
         self.crypto_ex = None
         self.crypto_ex_ws = None
         self.set_up_exchange()
@@ -112,9 +112,9 @@ class Chart(ViewPlotWidget):
     
     def _init_async_winloop(self) -> asyncio.AbstractEventLoop: # type: ignore
         winloop.install()
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        return loop
+        # loop = asyncio.new_event_loop()
+        # asyncio.set_event_loop(loop)
+        # return loop
 
     @property
     def time_delay(self):
@@ -402,7 +402,7 @@ class Chart(ViewPlotWidget):
     def check_signal_load_old_data(self):
         if self.jp_candle.candles != []:
             _cr_time = self.jp_candle.candles[0].time
-            data = self.crypto_ex.fetch_ohlcv(self.symbol,self.interval,limit=1500, params={"until":_cr_time*1000})
+            data = self.crypto_ex.fetch_ohlcv(self.symbol,self.interval, params={"until":_cr_time*1000})
             self.jp_candle.load_historic_data(data,self._precision)
             self.heikinashi.load_historic_data(len(data))
         self.is_load_historic = False
@@ -501,7 +501,13 @@ class Chart(ViewPlotWidget):
 
     async def reset_exchange(self):
         data = [] 
-        data = self.crypto_ex.fetch_ohlcv(self.symbol,self.interval,limit=1500) 
+        if not self.worker_reload:
+            await self.reload_market()
+        elif isinstance(self.worker_reload,asyncio.Task):
+            self.worker_reload.cancel()
+            await self.reload_market()
+        # print("-------------reset_exchange------------",self.crypto_ex,self.symbol,self.interval)
+        data = self.crypto_ex.fetch_ohlcv(self.symbol,self.interval) 
         if len(data) == 0:
             raise BadSymbol(f"{self.exchange_name} data not received")
         self.set_market_by_symbol(self.crypto_ex)
@@ -513,9 +519,10 @@ class Chart(ViewPlotWidget):
         self.update_sources(self.heikinashi)
         self.heikinashi.fisrt_gen_data(self._precision)
         
-        if self.indicators != []:
-            "when replay mode was turn off"
-            self.sig_show_process.emit(False)
+        print("===========reset_exchange============ OK",self.crypto_ex,self.symbol,self.interval)
+        # if self.indicators != []:
+        #     "when replay mode was turn off"
+        self.sig_show_process.emit(True)
         self.auto_xrange()
         await self.loop_watch_ohlcv(self.symbol,self.interval,self.exchange_name)
     
@@ -531,11 +538,11 @@ class Chart(ViewPlotWidget):
     async def loop_watch_ohlcv(self,symbol,interval,exchange_name):
         self.trading_mode = True
         self.sig_show_process.emit(False)
-        if not self.worker_reload:
-            await self.reload_market()
-        elif isinstance(self.worker_reload,asyncio.Task):
-            self.worker_reload.cancel()
-            await self.reload_market()
+        # if not self.worker_reload:
+        #     await self.reload_market()
+        # elif isinstance(self.worker_reload,asyncio.Task):
+        #     self.worker_reload.cancel()
+        #     await self.reload_market()
         
         firt_run = False
         _ohlcv = []
@@ -649,11 +656,10 @@ class Chart(ViewPlotWidget):
 
     def set_market_by_symbol(self,exchange):
         market = exchange.market(self.symbol)
-        # print(market)
         _precision = convert_precision(market['precision']['price'])
         quanty_precision = convert_precision(market['precision']['amount'])
         self.set_precision(_precision,quanty_precision)
-        #print("self._precision", self._precision)
+        # print("self._precision", self._precision)
 
     def get_candle(self,_type:str="japan"):
         candle = CandleStick(self,_type)

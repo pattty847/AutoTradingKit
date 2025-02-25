@@ -4,12 +4,15 @@ from PySide6.QtCore import Qt, QSize, QUrl, QPoint
 from PySide6.QtGui import QIcon, QDesktopServices, QColor
 from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget, QFrame, QStackedWidget,QApplication
 
-from atklip.gui import (qrouter, MessageBox, MSFluentTitleBar, MSFluentWindow,
-                            TabBar, SubtitleLabel, setFont, TabCloseButtonDisplayMode, IconWidget, FluentStyleSheet,
+from atklip.gui.qfluentwidgets import (qrouter, MessageBox, MSFluentTitleBar, MSFluentWindow, SubtitleLabel, setFont, TabCloseButtonDisplayMode, IconWidget, FluentStyleSheet,
                             TransparentDropDownToolButton, TransparentToolButton, setTheme, Theme, isDarkTheme)
 from atklip.gui import FluentIcon as FIF
 
 from typing import TYPE_CHECKING
+
+from atklip.gui.qfluentwidgets.components.widgets.tab_view import TabBar
+from atklip.gui.top_bar.layouts_saving.btn_layout_saving import DonateBtn
+from atklip.gui.top_bar.profile.btn_profile import AvatarButton
 
 if TYPE_CHECKING:
     from .fluentwindow import WindowBase
@@ -55,7 +58,7 @@ class TitleBar(MSFluentTitleBar):
         self._parent:WindowBase = self.parent()
         self.toolButtonLayout = QHBoxLayout()
         color = QColor(206, 206, 206) if isDarkTheme() else QColor(96, 96, 96)
-
+        
         # self.forwardButton = TransparentToolButton(FIF.RIGHT_ARROW.icon(color=color), self)
         # self.backButton = TransparentToolButton(FIF.LEFT_ARROW.icon(color=color), self)
 
@@ -80,9 +83,13 @@ class TitleBar(MSFluentTitleBar):
 
         self.hBoxLayout.insertWidget(5, self.tabBar, 1)
         self.hBoxLayout.setStretch(6, 0)
+        
+        self.Donate_Btn = DonateBtn("Sponsor",self._parent)
+        self.profile = AvatarButton(self._parent)
+        self.hBoxLayout.insertWidget(6,self.Donate_Btn, 0, Qt.AlignRight)
+        self.hBoxLayout.insertWidget(7,self.profile, 0, Qt.AlignRight)
+        
         FluentStyleSheet.TITLEBAR.apply(self)
-
-
 
     def canDrag(self, pos: QPoint):
         if not super().canDrag(pos):
@@ -90,7 +97,6 @@ class TitleBar(MSFluentTitleBar):
         pos.setX(pos.x() - self.tabBar.x())
         return not self.tabBar.tabRegion().contains(pos)
     
-
     def mousePressEvent(self, event):
         self.setCursor(Qt.CursorShape.ClosedHandCursor)
         return super().mousePressEvent(event)

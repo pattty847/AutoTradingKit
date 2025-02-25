@@ -189,6 +189,7 @@ class BaseMenu(ScrollInterface):
         #self.sig_show_process.emit(False)
 
     def get_all_symbols_by_exchange(self,exchange_id):
+        print(exchange_id)
         if not self.isAdded:
             self.is_get_symbol = True
             self.sig_show_process.emit(True)
@@ -213,10 +214,10 @@ class BaseMenu(ScrollInterface):
         self.removeWidget(widget)
 
     async def update_symbols(self,exchange_id):
-        crypto_ex = CryptoExchange(None)
+        crypto_ex = CryptoExchange()
         exchange = crypto_ex.setupEchange(exchange_name=exchange_id)
         try:
-            await exchange.load_markets()
+            exchange.load_markets()
             markets = []
             for market in list(exchange.markets.keys()):
                 if exchange.markets[market]['active'] == True:
@@ -257,12 +258,11 @@ class BaseMenu(ScrollInterface):
 
     async def get_symbol(self,exchange_id,update_signal):
         self._list_symbols = AppConfig.get_config_value(f"topbar.symbol.{exchange_id}",[])
-
         if self._list_symbols == []:
-            crypto_ex = CryptoExchange(self)
+            crypto_ex = CryptoExchange()
             exchange = crypto_ex.setupEchange(exchange_name=exchange_id)
             try:
-                await exchange.load_markets()
+                exchange.load_markets()
                 markets = []
                 for market in list(exchange.markets.keys()):
                     if exchange.markets[market]['active'] == True:
@@ -282,6 +282,7 @@ class BaseMenu(ScrollInterface):
                             else:
                                 "đây là chỗ tìm coin chưa có icon để bổ sung"
                                 pass
+                    "save to config"
                     AppConfig.sig_set_single_data.emit((f"topbar.symbol.{exchange_id}",self._list_symbols))
                     
                     update_signal.emit([self._list_symbols,exchange_id])
@@ -292,6 +293,34 @@ class BaseMenu(ScrollInterface):
             crypto_ex.deleteLater()
         else:
             update_signal.emit([self._list_symbols,exchange_id])
+            crypto_ex = CryptoExchange()
+            exchange = crypto_ex.setupEchange(exchange_name=exchange_id)
+            try:
+                exchange.load_markets()
+                markets = []
+                for market in list(exchange.markets.keys()):
+                    if exchange.markets[market]['active'] == True:
+                        markets.append(exchange.markets[market]['symbol'])
+                # markets = exchange.symbols
+                if markets != []:
+                    symbols = [re.findall(r'(.*?):', market)[0] for market in markets if re.findall(r'(.*?):', market) != []]
+                    if symbols == []:
+                        symbols = [market for market in markets if re.findall(r'(.*?):', market) == []]
+
+                    for symbol in  symbols:
+                        if "/" in symbol:
+                            first_symbol = re.findall(r'(.*?)/', symbol)
+                            if check_icon_exist(first_symbol[0]):
+                                if symbol not in self._list_symbols:
+                                    self._list_symbols.append(symbol)
+                            else:
+                                "đây là chỗ tìm coin chưa có icon để bổ sung"
+                                pass
+                    "save to config"
+                    AppConfig.sig_set_single_data.emit((f"topbar.symbol.{exchange_id}",self._list_symbols))
+                    #QCoreApplication.processEvents()
+            except Exception as e:
+                traceback.print_exception(e)
             #QCoreApplication.processEvents()
           
     def add_symbol(self, data):
@@ -313,7 +342,7 @@ class BaseMenu(ScrollInterface):
             self.sig_add_item.emit(item)
             QCoreApplication.processEvents()
         self.isAdded = True
-        self.sig_update_symbols.emit(exchange)
+        # self.sig_update_symbols.emit(exchange)
         self.sig_show_process.emit(False)
     def update_symbol(self,n):
         self.dict_favorites = AppConfig.get_config_value(f"topbar.symbol.favorite")

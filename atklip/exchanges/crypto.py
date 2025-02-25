@@ -2,12 +2,14 @@ import asyncio
 from ccxt.base.types import *
 import ccxt.pro as Exchange_ws
 import ccxt as Exchange
+from PySide6.QtCore import QObject
 
 # These exchanges will be used for testing the performance of the exchange connector.
-class CryptoExchange():
+class CryptoExchange(QObject):
     def __init__(self):
-        self.exchange = None
-        self.name = ""
+        super().__init__()
+        self.exchange:str = None
+        self.name:str = ""
     def setupEchange(self,apikey:str="", secretkey:str="",exchange_name:str="binanceusdm"):
         self.apikey = apikey
         self.secretkey = secretkey
@@ -100,18 +102,21 @@ class CryptoExchange():
         elif self.name == "mexc":
             self.exchange = Exchange.mexc({
                 'apiKey': self.apikey,
-           'secret': self.secretkey})
+                'secret': self.secretkey})
         elif self.name == "okx":
             self.exchange = Exchange.okx({
                 'apiKey': self.apikey,
            'secret': self.secretkey})
         else:
-            print(f"_____________Exchange {self.name} not found___________")
             self.exchange = None
-            return None
+        print(f"Change Ex----- {self.exchange}",self.apikey,self.secretkey)
         return self.exchange
-    
+    def load_markets(self, reload=False, params={}):
+        return self.exchange.load_markets(reload=reload, params=params)
 
+    def fetch_ohlcv(self, symbol: str, timeframe='1m', since: Int = None, limit: Int = None, params={}):
+        return self.exchange.fetch_ohlcv(symbol, timeframe, since,limit,params)
+    
 class  CryptoExchange_WS():
     def __init__(self):
         self.exchange = None

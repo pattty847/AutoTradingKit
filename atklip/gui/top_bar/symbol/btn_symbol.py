@@ -2,7 +2,8 @@
 from typing import TYPE_CHECKING
 from PySide6.QtCore import Signal, Qt, QSize, QPoint
 from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import QPushButton
+from PySide6.QtWidgets import (QPushButton,QHBoxLayout, QSizePolicy, QVBoxLayout)
+
 from atklip.gui.qfluentwidgets.common import *
 from atklip.gui.qfluentwidgets.common.icon import CryptoIcon as CI
 from atklip.appmanager.setting import AppConfig
@@ -20,14 +21,21 @@ class _PushButton(QPushButton):
     """
     def __init__(self, icon, text, parent):
         super().__init__(icon=icon, text=text, parent=parent)
+        
+        sizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        self.setSizePolicy(sizePolicy)
+        
         if self.isChecked():
             color = "#0055ff"
         else:
             color = "#d1d4dc" if isDarkTheme() else  "#161616"
         self.set_stylesheet(color)
         self.setFixedHeight(35)
-        self.setMinimumWidth(100)
-        self.setMaximumWidth(130)
+        # self.setMinimumWidth(100)
+        # self.setMaximumWidth(130)
+        
         self.setContentsMargins(5,2,5,2)
     
     def set_text(self,text,color):

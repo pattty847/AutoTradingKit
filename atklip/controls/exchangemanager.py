@@ -16,6 +16,7 @@ class ExchangeManager:
         self.is_stop = False
         client = self.set_client_exchange(id_exchange,chart_id,symbol,interval,apikey,secretkey)
         ws = self.set_ws_exchange(id_exchange,chart_id,symbol,interval,apikey,secretkey)
+        print("setupexchange", client, ws)
         return client,ws
     
     def set_ws_exchange(self,id_exchange,chart_id,symbol,interval,apikey,secretkey):

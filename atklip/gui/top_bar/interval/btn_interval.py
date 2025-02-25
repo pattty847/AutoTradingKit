@@ -1,7 +1,6 @@
 from typing import List
 from PySide6.QtCore import Signal, Qt, QSize, QPoint
-from PySide6.QtWidgets import QWidget,QPushButton
-
+from PySide6.QtWidgets import (QWidget,QPushButton,QHBoxLayout, QSizePolicy, QVBoxLayout)
 from atklip.appmanager.setting.config import AppConfig
 
 from atklip.gui.qfluentwidgets.components.widgets import SplitWidgetBase,PushButton,RoundMenu
@@ -115,6 +114,8 @@ class IntervalButton(SplitWidgetBase):
         self._postInit()
         
         self.sig_change_inteval = sig_change_inteval
+        
+        self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
         
         self.interval_menu = INTERVALS(parent,self)
 

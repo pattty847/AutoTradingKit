@@ -54,13 +54,15 @@ class MainWidget(QWidget,Ui_MainWidget):
         self.topbar.replay.clicked.connect(self.chartbox_splitter.chart.set_replay_mode)
         self.topbar.replay.clicked.connect(self.chartbox_splitter.show_hide_playbar)
         
+        w,h = self._parent.width(),self._parent.height()
+        self.resize(w,h)
         
         self.progress = LoadingProgress(self,size=50)
         self.chartbox_splitter.chart.sig_show_process.connect(self.progress.run_process,Qt.ConnectionType.AutoConnection)
         
-        if self.progress.isVisible():
-                self.progress.run_process(True)
-                
+        self.progress.update_pos()
+        self.progress.run_process(True)
+        
         self.topbar.mode.clicked.connect(self.chartbox_splitter.chart.change_mode)
         
         "khởi tạo indicator menu, symbol menu trước. đang test"

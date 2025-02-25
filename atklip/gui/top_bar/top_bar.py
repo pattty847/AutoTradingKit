@@ -32,7 +32,7 @@ class TopBar(QFrame,TopFrame):
         self._parent:MainWidget = parent.parent()
         self.setupUi(self)
         self.setFixedHeight(40)
-        self.profile = AvatarButton(self._parent)
+        # self.profile = AvatarButton(self._parent)
         self.gotodate = GotoButton(self._parent)
         self.exchange = CR_EXCHANGE(self.sig_change_symbol,self._parent)
         self.symbol = SymbolButton(self.sig_change_symbol,CI.BTC,"BTCUSDT",self._parent)
@@ -48,11 +48,11 @@ class TopBar(QFrame,TopFrame):
         self.gotonow.setIconSize(QSize(27,27))
         
         # self.LayoutButton = LayoutButton(self._parent)
-        self.LayoutButton = DonateBtn("Sponsor",self._parent)
+        # self.LayoutButton = DonateBtn("Sponsor",self._parent)
         
         # self.left_layout.setSpacing(1)
-        self.left_layout.addWidget(self.profile)
-        self.left_layout.addWidget(VerticalSeparator(self))
+        # self.left_layout.addWidget(self.profile)
+        # self.left_layout.addWidget(VerticalSeparator(self))
         self.left_layout.addWidget(self.exchange)
         self.left_layout.addWidget(VerticalSeparator(self))
         self.left_layout.addWidget(self.symbol)
@@ -67,7 +67,7 @@ class TopBar(QFrame,TopFrame):
         self.left_layout.addWidget(self.replay)
         self.left_layout.addWidget(self.gotonow)
         self.left_layout.addWidget(self.mode)
-        self.right_layout.addWidget(self.LayoutButton)
+        # self.right_layout.addWidget(self.LayoutButton)
         
         # self.left_layout.setSpacing(10)
         
