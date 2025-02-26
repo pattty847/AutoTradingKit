@@ -19,7 +19,7 @@ def chandelier_exit(
     high: Series, low: Series, close: Series,
     high_length: Int = None, low_length: Int = None,
     atr_length: Int = None, multiplier: IntFloat = None,
-    mamode: str = None, talib: bool = None, use_close: bool = None,
+    mamode: str = None, talib: bool = False, use_close: bool = None,
     drift: Int = None, offset: Int = None, **kwargs: DictLike
 ):
     """Chandelier Exit (CHDLREXT)

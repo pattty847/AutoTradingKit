@@ -19,7 +19,7 @@ def smc(
     open_: Series, high: Series, low: Series, close: Series,
     abr_length: Int = None, close_length: Int = None, vol_length: Int = None,
     percent: Int = None, vol_ratio: IntFloat = None, asint: bool = None,
-    mamode: str = None, talib: bool = None,
+    mamode: str = None, talib: bool = False,
     offset: Int = None, **kwargs: DictLike
 ) -> DictLike:
     """Smart Money Comcept (SMC)

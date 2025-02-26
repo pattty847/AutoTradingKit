@@ -10,7 +10,7 @@ from .variance import variance
 
 def stdev(
     close: Series, length: Int = None,
-    ddof: Int = None, talib: bool = True,
+    ddof: Int = None, talib: bool = False,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """Rolling Standard Deviation

@@ -22,7 +22,7 @@ from atklip.controls.volatility import atr
 def adx(
     high: Series, low: Series, close: Series, length: Int = None,
     lensig: Int = None, adxr_length: Int = None, scalar: IntFloat = None,
-    talib: bool = True, tvmode: bool = None, mamode: str = None,
+    talib: bool = False, tvmode: bool = None, mamode: str = None,
     drift: Int = None, offset: Int = None, **kwargs: DictLike
 ) -> DataFrame:
     """Average Directional Movement (ADX)

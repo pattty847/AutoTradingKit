@@ -51,7 +51,7 @@ def nb_atrts(x, ma, atr_, length, ma_length):
 def atrts(
     high: Series, low: Series, close: Series, length: Int = None,
     ma_length: Int = None, multiplier: IntFloat = None,
-    mamode: str = None, talib: bool = True, drift: Int = None,
+    mamode: str = None, talib: bool = False, drift: Int = None,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """ATR Trailing Stop (ATRTS)

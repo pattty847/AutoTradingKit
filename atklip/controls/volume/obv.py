@@ -7,7 +7,7 @@ from atklip.controls.pandas_ta.utils import signed_series, v_offset, v_series, v
 
 
 def obv(
-    close: Series, volume: Series, talib: bool = True,
+    close: Series, volume: Series, talib: bool = False,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """On Balance Volume (OBV)

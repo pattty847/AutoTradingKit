@@ -9,7 +9,7 @@ from .ema import ema
 
 
 def t3(
-    close: Series, length: Int = None, a: IntFloat = None, talib: bool = True,
+    close: Series, length: Int = None, a: IntFloat = None, talib: bool = False,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """Tim Tillson's T3 Moving Average (T3)

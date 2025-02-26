@@ -16,7 +16,7 @@ from atklip.controls.pandas_ta.utils import (
 
 def true_range(
     high: Series, low: Series, close: Series,
-    talib: bool = True, prenan: bool = None, drift: Int = None,
+    talib: bool = False, prenan: bool = None, drift: Int = None,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """True Range

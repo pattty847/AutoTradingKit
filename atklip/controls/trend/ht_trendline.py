@@ -84,7 +84,7 @@ def nb_ht_trendline(x):
 
 
 def ht_trendline(
-    close: Series = None, talib: bool = True,
+    close: Series = None, talib: bool = False,
     prenan: Int = None, offset: Int = None,
     **kwargs: DictLike
 ) -> Series:

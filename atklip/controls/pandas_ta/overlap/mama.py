@@ -95,7 +95,7 @@ def nb_mama(x, fastlimit, slowlimit, prenan):
 
 def mama(
     close: Series, fastlimit: IntFloat = None, slowlimit: IntFloat = None,
-    prenan: Int = None, talib: bool = True,
+    prenan: Int = None, talib: bool = False,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """Ehler's MESA Adaptive Moving Average (MAMA)

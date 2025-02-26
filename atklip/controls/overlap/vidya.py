@@ -16,7 +16,7 @@ from atklip.controls.pandas_ta.utils import (
 def vidya(
     close: Series, length: Int = None,
     drift: Int = None, offset: Int = None,
-    talib: bool = True, **kwargs: DictLike
+    talib: bool = False, **kwargs: DictLike
 ) -> Series:
     """Variable Index Dynamic Average (VIDYA)
 

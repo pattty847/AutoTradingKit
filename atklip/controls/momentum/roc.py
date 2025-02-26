@@ -24,7 +24,7 @@ def nb_roc(x, n, k):
 
 def roc(
     close: Series, length: Int = None,
-    scalar: IntFloat = None, talib: bool = True,
+    scalar: IntFloat = None, talib: bool = False,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """Rate of Change (ROC)

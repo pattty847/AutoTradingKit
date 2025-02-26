@@ -7,7 +7,7 @@ from atklip.controls.pandas_ta.utils import v_offset, v_pos_default, v_series, v
 
 
 def midprice(
-    high: Series, low: Series, length: Int = None, talib: bool = True,
+    high: Series, low: Series, length: Int = None, talib: bool = False,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """Midprice

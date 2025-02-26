@@ -8,7 +8,7 @@ from atklip.controls.pandas_ta.utils import non_zero_range, v_offset, v_series, 
 
 def ad(
     high: Series, low: Series, close: Series, volume: Series,
-    open_: Series = None, talib: bool = True,
+    open_: Series = None, talib: bool = False,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """Accumulation/Distribution (AD)

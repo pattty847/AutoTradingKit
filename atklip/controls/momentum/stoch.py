@@ -20,7 +20,7 @@ from atklip.controls.pandas_ta.utils import (
 def stoch(
     high: Series, low: Series, close: Series,
     k: Int = None, d: Int = None, smooth_k: Int = None,
-    mamode: str = None, talib: bool = True,
+    mamode: str = None, talib: bool = False,
     offset: Int = None, **kwargs: DictLike
 ) -> DataFrame:
     """Stochastic (STOCH)

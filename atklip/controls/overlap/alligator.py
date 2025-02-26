@@ -8,7 +8,7 @@ from .smma import smma
 
 def alligator(
     close: Series, jaw: Int = None, teeth: Int = None, lips: Int = None,
-    talib: bool = None, offset: Int = None, **kwargs: DictLike
+    talib: bool = False, offset: Int = None, **kwargs: DictLike
 ) -> DataFrame:
     """Bill Williams Alligator (ALLIGATOR)
 

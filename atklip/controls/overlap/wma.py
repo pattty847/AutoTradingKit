@@ -35,7 +35,7 @@ def nb_wma(x, n, asc, prenan):
 
 def wma(
     close: Series, length: Int = None,
-    asc: bool = None, talib: bool = True,
+    asc: bool = None, talib: bool = False,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """Weighted Moving Average (WMA)

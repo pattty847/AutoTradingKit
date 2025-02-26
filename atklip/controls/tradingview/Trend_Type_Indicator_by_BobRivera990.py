@@ -126,16 +126,16 @@ def trend_type_indicator(df,
     :return: DataFrame with calculated trend type and smoothed trend type.
     """
     # Calculate ATR and its moving average
-    df['atr'] = ta.atr(high=df['high'], low=df['low'], close=df['close'], length=atr_length,talib=True)
+    df['atr'] = ta.atr(high=df['high'], low=df['low'], close=df['close'], length=atr_length,talib= False)
     if atr_ma_type == "EMA":
-        df['atr_ma'] = ta.ema(df['atr'], atr_ma_len,talib=True)
+        df['atr_ma'] = ta.ema(df['atr'], atr_ma_len,talib= False)
     elif atr_ma_type == "SMA":
-        df['atr_ma'] = ta.sma(df['atr'], atr_ma_len,talib=True)
+        df['atr_ma'] = ta.sma(df['atr'], atr_ma_len,talib= False)
     else:
         raise ValueError("Unsupported ATR MA Type")
 
     # Calculate ADX and DI
-    adx_df = ta.adx(high=df['high'], low=df['low'], close=df['close'], length=adx_len,talib=True)
+    adx_df = ta.adx(high=df['high'], low=df['low'], close=df['close'], length=adx_len,talib= False)
     df['plus_di'] = adx_df['DMP_14']  # +DI
     df['minus_di'] = adx_df['DMN_14']  # -DI
     df['adx'] = adx_df['ADX_14']  # ADX

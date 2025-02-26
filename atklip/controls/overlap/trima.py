@@ -8,7 +8,7 @@ from .sma import sma
 
 
 def trima(
-    close: Series, length: Int = None, talib: bool = True,
+    close: Series, length: Int = None, talib: bool = False,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """Triangular Moving Average (TRIMA)

@@ -43,7 +43,7 @@ def alphatrend(
     volume: Series = None, src: str = None,
     length: int = None, multiplier: IntFloat = None,
     threshold: IntFloat = None, lag: Int = None,
-    mamode: str = None, talib: bool = None,
+    mamode: str = None, talib: bool = False,
     offset: Int = None, **kwargs: DictLike
 ):
     """ Alpha Trend (alphatrend)

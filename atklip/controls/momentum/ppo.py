@@ -18,7 +18,7 @@ from atklip.controls.pandas_ta.utils import (
 
 def ppo(
     close: Series, fast: Int = None, slow: Int = None, signal: Int = None,
-    scalar: IntFloat = None, mamode: str = None, talib: bool = True,
+    scalar: IntFloat = None, mamode: str = None, talib: bool = False,
     offset: Int = None, **kwargs: DictLike
 ) -> DataFrame:
     """Percentage Price Oscillator (PPO)

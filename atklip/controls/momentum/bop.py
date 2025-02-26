@@ -14,7 +14,7 @@ from atklip.controls.pandas_ta.utils import (
 
 def bop(
     open_: Series, high: Series, low: Series, close: Series,
-    scalar: IntFloat = None, talib: bool = True,
+    scalar: IntFloat = None, talib: bool = False,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """Balance of Power (BOP)

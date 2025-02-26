@@ -21,7 +21,7 @@ def nb_mom(x, n):
 
 
 def mom(
-    close: Series, length: Int = None, talib: bool = True,
+    close: Series, length: Int = None, talib: bool = False,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """Momentum (MOM)

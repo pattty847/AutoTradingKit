@@ -19,7 +19,7 @@ from .true_range import true_range
 
 def atr(
     high: Series, low: Series, close: Series, length: Int = None,
-    mamode: str = None, talib: bool = True,
+    mamode: str = None, talib: bool = False,
     prenan: bool = None, drift: Int = None,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:

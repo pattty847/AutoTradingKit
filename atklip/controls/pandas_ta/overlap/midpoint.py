@@ -7,7 +7,7 @@ from atklip.controls.pandas_ta.utils import v_offset, v_pos_default, v_series, v
 
 
 def midpoint(
-    close: Series, length: Int = None, talib: bool = True,
+    close: Series, length: Int = None, talib: bool = False,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """Midpoint

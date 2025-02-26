@@ -16,7 +16,7 @@ from atklip.controls.pandas_ta.utils import (
 
 def rwi(
     high: Series, low: Series, close: Series,
-    length: Int = None, mamode: str = None, talib: bool = None,
+    length: Int = None, mamode: str = None, talib: bool = False,
     drift: Int = None, offset: Int = None, **kwargs: DictLike
 ) -> DataFrame:
     """Random Walk Index (RWI)

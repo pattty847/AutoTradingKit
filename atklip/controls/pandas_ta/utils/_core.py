@@ -174,7 +174,7 @@ def ms2secs(ms, p: Int) -> IntFloat:
 
 
 def _speed_group(
-        df: DataFrame, group: ListStr = [], talib: bool = True,
+        df: DataFrame, group: ListStr = [], talib: bool = False,
         index_name: str = "Indicator", p: Int = 4
     ) -> ListStr:
     result = []
@@ -190,7 +190,7 @@ def _speed_group(
 
 def speed_test(df: DataFrame,
         only: ListStr = None, excluded: ListStr = None,
-        top: Int = None, talib: bool = True,
+        top: Int = None, talib: bool = False,
         ascending: bool = False, sortby: str = "secs",
         gradient: bool = False, places: Int = 5, stats: bool = False,
         verbose: bool = False, silent: bool = False

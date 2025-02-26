@@ -7,7 +7,7 @@ from atklip.controls.pandas_ta.utils import v_offset, v_series, v_talib
 
 
 def hlc3(
-    high: Series, low: Series, close: Series, talib: bool = True,
+    high: Series, low: Series, close: Series, talib: bool = False,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """HLC3

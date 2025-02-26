@@ -16,7 +16,7 @@ from atklip.controls.pandas_ta.utils import (
 
 def ema(
     close: Series, length: Int = None,
-    talib: bool = True, presma: bool = None,
+    talib: bool = False, presma: bool = None,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """Exponential Moving Average (EMA)

@@ -8,7 +8,7 @@ from atklip.controls.pandas_ta.utils import v_lowerbound, v_offset, v_series, v_
 
 def variance(
     close: Series, length: Int = None,
-    ddof: Int = None, talib: bool = True,
+    ddof: Int = None, talib: bool = False,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """Rolling Variance

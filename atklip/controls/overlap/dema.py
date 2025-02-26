@@ -9,7 +9,7 @@ from .ema import ema
 
 
 def dema(
-    close: Series, length: Int = None, talib: bool = True,
+    close: Series, length: Int = None, talib: bool = False,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """Double Exponential Moving Average (DEMA)

@@ -8,7 +8,7 @@ from atklip.controls.pandas_ta.utils import v_offset, v_pos_default, v_series, v
 
 def willr(
     high: Series, low: Series, close: Series,
-    length: Int = None, talib: bool = True,
+    length: Int = None, talib: bool = False,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """William's Percent R (WILLR)

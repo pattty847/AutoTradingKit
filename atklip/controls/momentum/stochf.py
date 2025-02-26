@@ -18,7 +18,7 @@ from atklip.controls.pandas_ta.utils import (
 def stochf(
     high: Series, low: Series, close: Series,
     k: Int = None, d: Int = None,
-    mamode: str = None, talib: bool = True,
+    mamode: str = None, talib: bool = False,
     offset: Int = None, **kwargs: DictLike
 ) -> DataFrame:
     """Fast Stochastic (STOCHF)

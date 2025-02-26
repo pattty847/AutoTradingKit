@@ -19,7 +19,7 @@ from atklip.controls.pandas_ta.utils import (
 def stochrsi(
     close: Series, length: Int = None, rsi_length: Int = None,
     k: Int = None, d: Int = None, mamode: str = None,
-    talib: bool = True, offset: Int = None, **kwargs: DictLike
+    talib: bool = False, offset: Int = None, **kwargs: DictLike
 ) -> DataFrame:
     """Stochastic (STOCHRSI)
 

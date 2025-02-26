@@ -16,7 +16,7 @@ from atklip.controls.pandas_ta.utils import (
 
 def cmo(
     close: Series, length: Int = None, scalar: IntFloat = None,
-    talib: bool = True, drift: Int = None,
+    talib: bool = False, drift: Int = None,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """Chande Momentum Oscillator (CMO)

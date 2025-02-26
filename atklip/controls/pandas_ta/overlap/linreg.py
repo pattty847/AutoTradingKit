@@ -17,7 +17,7 @@ from atklip.controls.pandas_ta.utils import (
 
 
 def linreg(
-    close: Series, length: Int = None, talib: bool = True,
+    close: Series, length: Int = None, talib: bool = False,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """Linear Regression Moving Average (linreg)

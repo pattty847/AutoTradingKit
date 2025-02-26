@@ -51,7 +51,7 @@ def calculate_macd(df: pd.DataFrame=None,source="close",fast_period=12,slow_peri
                     slow=slow_period,
                     signal = signal_period,
                     mamode=macd_mamode,
-                    talib=True)
+                    talib= False)
     return paire_data(INDICATOR)
 
 def trend_with_stoploss(data:pd.DataFrame, macd_fast=12, macd_slow=26, macd_signal=9,macd_mamode="ema",

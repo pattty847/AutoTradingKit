@@ -17,7 +17,7 @@ from atklip.controls.pandas_ta.utils import (
 
 def macd(
     close: Series, fast: Int = None, slow: Int = None,
-    signal: Int = None,  mamode="ema", talib: bool = True,
+    signal: Int = None,  mamode="ema", talib: bool = False,
     offset: Int = None, **kwargs: DictLike
 ) -> DataFrame:
     """Moving Average Convergence Divergence (MACD)

@@ -98,7 +98,7 @@ def percent_rank(x: Series, lookback: Int) -> Series:
 
 def crsi(
     close: Series, length_rsi: Int = None, length_streak: Int = None,
-    length_rank: Int = None, scalar: IntFloat = None, talib: bool = True,
+    length_rank: Int = None, scalar: IntFloat = None, talib: bool = False,
     drift: Int = None, offset: Int = None, **kwargs: DictLike,
 ) -> Series:
     """Connors Relative Strength Index (RSI)

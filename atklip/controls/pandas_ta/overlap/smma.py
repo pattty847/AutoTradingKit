@@ -15,7 +15,7 @@ from atklip.controls.pandas_ta.utils import (
 
 def smma(
     close: Series, length: Int = None,
-    mamode: str = None, talib: bool = None,
+    mamode: str = None, talib: bool = False,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """SMoothed Moving Average (SMMA)

@@ -11,7 +11,7 @@ from atklip.controls.volume import ad
 def adosc(
     high: Series, low: Series, close: Series, volume: Series,
     open_: Series = None, fast: Int = None, slow: Int = None,
-    talib: bool = True,
+    talib: bool = False,
     offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """Accumulation/Distribution Oscillator or Chaikin Oscillator
