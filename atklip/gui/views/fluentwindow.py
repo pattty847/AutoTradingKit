@@ -67,8 +67,9 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
         # self.resize(800, 600)
         self.setMinimumWidth(w//2)
         self.setMinimumHeight(h//2)
-        self.move(w//2 - self.width()//2, h//2 - self.height()//2)
-        self.resize(w//2 + self.width()//4, h//2 + self.height()//4)
+        self.resize(w//2, h//2)
+        self.move(w//2 - w//3, h//8)
+        self.resize(2*(w//3) , 3*(h//4) )
         self.show()    
 
     def load_pre_config(self):
@@ -146,7 +147,6 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
         TabInterface.progress.update_pos()
         self.stackedWidget.addWidget(TabInterface)
         self.switchTo(TabInterface)
-        self.resize(1260, 800)
 
     def setTabIcon(self, index: int, icon: Union[QIcon, FluentIconBase, str]):
         """ set tab icon """

@@ -4,7 +4,7 @@ import sys
 from typing import List, Union
 
 from PySide6.QtCore import Qt, QMargins, QModelIndex, QItemSelectionModel, Property, QRectF,Qt, \
-    QAbstractTableModel, QTimer, QModelIndex,QPointF,QPoint
+    QAbstractTableModel, QTimer, QModelIndex,QPointF,QPoint,Signal
 from PySide6.QtGui import QPainter, QColor, QKeyEvent, QPalette, QBrush, QStandardItemModel,QMouseEvent
 from PySide6.QtWidgets import (QStyledItemDelegate, QApplication, QStyleOptionViewItem,QHeaderView,
                              QTableView, QTableWidget, QWidget, QTableWidgetItem, QStyle,QVBoxLayout,
@@ -25,6 +25,7 @@ class PositionItemDelegate(QStyledItemDelegate):
 
     def __init__(self, parent: QTableView):
         super().__init__(parent)
+        self.favorite_signal = parent.favorite_signal
         self.margin = 2
         self.hoverRow = -1
         self.pressedRow = -1
@@ -269,6 +270,7 @@ class PositionModel(QAbstractTableModel):
 
 
 class PositionTable(TableView):
+    favorite_signal = Signal()
     def __init__(self, parent=None):
         super().__init__(parent)
         
@@ -349,7 +351,7 @@ class PositionTable(TableView):
     
     def item_changed(self, item):
         "click on cell, item là PySide6.QtCore.QModelIndex(19,3,0x0,PositionModel(0x1d787459870)) tại cell đó"
-        print(item)
+        print("click on cell",item)
         # Kiểm tra trạng thái của checkbox khi nó thay đổi
         # if item.checkState() == Qt.Checked:
         #     print(f"{item.text()} is Checked")

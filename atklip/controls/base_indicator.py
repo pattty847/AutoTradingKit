@@ -3,8 +3,7 @@ import pandas as pd
 from typing import List,TYPE_CHECKING
 from atklip.controls.ohlcv import OHLCV
 from atklip.appmanager import ThreadPoolExecutor_global as ApiThreadPool
-from PySide6.QtCore import QObject
-from psygnal import Signal
+from PySide6.QtCore import QObject,Signal
 if TYPE_CHECKING:
     from atklip.controls.candle import JAPAN_CANDLE,HEIKINASHI,SMOOTH_CANDLE,N_SMOOTH_CANDLE
 

@@ -66,7 +66,7 @@ class Chart(ViewPlotWidget):
         self.replay_data:list = []
         self.replay_pos_i:int = 0
                 
-        # self._init_async_winloop()
+        # self.f()
         self.crypto_ex = None
         self.crypto_ex_ws = None
         self.set_up_exchange()

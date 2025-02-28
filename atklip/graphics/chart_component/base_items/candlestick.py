@@ -1,7 +1,7 @@
 from typing import Dict, Tuple, List,TYPE_CHECKING
 import numpy as np
 
-from PySide6.QtCore import Signal, QRect, QRectF, QPointF,QThreadPool,Qt,QLineF,QCoreApplication
+from PySide6.QtCore import Signal, Slot, QRectF, QPointF,QThreadPool,Qt,QLineF,QCoreApplication
 from PySide6.QtGui import QPainter, QPicture,QPainterPath
 from PySide6.QtWidgets import QGraphicsItem,QStyleOptionGraphicsItem,QWidget
 from atklip.graphics.pyqtgraph import mkPen, GraphicsObject, mkBrush
@@ -260,7 +260,7 @@ class CandleStick(GraphicsObject):
         elif _input == "brush_lowcolor":
             self.has["styles"]["brush_lowcolor"] = mkBrush(_style,width=0.7)
         self.threadpool_asyncworker(True)
-        
+    @Slot() 
     def set_price_line(self):
         lastcandle = self.source.last_data()
         self.price_line.update_data(lastcandle)
@@ -378,7 +378,7 @@ class CandleStick(GraphicsObject):
             # p.fillRect(rect,brush)
         p.end()
         self._bar_picutures[t] = candle_picture
-
+    @Slot()
     def setData(self, data) -> None:
         """y_data must be in format [[open, close, min, max], ...]"""
         self._to_update = False
@@ -397,7 +397,7 @@ class CandleStick(GraphicsObject):
         # self.prepareGeometryChange()
         # self.informViewBoundsChanged()
         # self.update(self.boundingRect())
-    
+    @Slot()
     def updateData(self, data) -> None:
         """y_data must be in format [[open, close, min, max], ...]"""
         self._to_update = False

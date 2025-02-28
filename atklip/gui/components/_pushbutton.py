@@ -544,12 +544,13 @@ class CircleICon(QPushButton):
             }
         """ % (size // 2))
         
-        circle_pixmap = self.crop_and_resize_to_circle(icon_path, self.width())
-        self.set_pixmap_icon(circle_pixmap)
+        if icon_path.endswith("png"):
+            icon_path = self.crop_and_resize_to_circle(icon_path, size)
+        self.set_pixmap_icon(icon_path)
 
  
-    def set_pixmap_icon(self, pixmap):
-        self.setIcon(QIcon(pixmap))
+    def set_pixmap_icon(self, icon_path):
+        self.setIcon(QIcon(icon_path))
         self.setIconSize(QSize(self.width() - 10, self.height() - 10))
     
     def crop_and_resize_to_circle(self,image_path, size):

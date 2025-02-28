@@ -1,6 +1,6 @@
 import json
 import threading
-from PySide6.QtCore import QCoreApplication,Signal,QObject,Qt
+from PySide6.QtCore import QCoreApplication,Signal,QObject,Qt,Slot
 from atklip.gui.qfluentwidgets.common.icon import *
 # Gets or creates a logger
 
@@ -22,7 +22,7 @@ class ConfigManager(QObject):
         with open(filepath, 'w') as f:
             json.dump(self.config, f)
             f.close()
-
+    @Slot()
     def set_config_value(self, args):
         key, value = args[0], args[1]
         keys = key.split('.')

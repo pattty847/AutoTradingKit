@@ -1,7 +1,6 @@
 from math import hypot
 from atklip.app_utils import functions as fn
-from PySide6.QtCore import Qt,QPointF
-from psygnal import Signal
+from PySide6.QtCore import Qt,QPointF,Signal
 from PySide6.QtGui import QTransform,QPainter
 from PySide6.QtWidgets import QGraphicsPathItem
 

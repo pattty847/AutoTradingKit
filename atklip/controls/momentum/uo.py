@@ -111,11 +111,9 @@ def uo(
 import numpy as np
 import pandas as pd
 from typing import List
-from psygnal import Signal
 from atklip.controls.ohlcv import   OHLCV
 from atklip.controls.candle import JAPAN_CANDLE,HEIKINASHI,SMOOTH_CANDLE,N_SMOOTH_CANDLE
 from atklip.appmanager import ThreadPoolExecutor_global as ApiThreadPool
-
 from PySide6.QtCore import Signal,QObject
 
 class UO(QObject):

@@ -1,27 +1,12 @@
-from PySide6.QtWidgets import QApplication, QWidget
-from PySide6.QtGui import QPainter, QPolygonF, QColor, QBrush
-from PySide6.QtCore import QPoint, Qt
-import math
-from math import hypot
+from PySide6.QtGui import QPainter, QPolygonF, QColor, QBrush,QPicture,QTransform
 from atklip.app_utils import functions as fn
-from PySide6.QtCore import Qt,QPointF
-from psygnal import Signal
-from PySide6.QtGui import QTransform,QPainter
-from PySide6.QtWidgets import QGraphicsPathItem
-from typing import Dict, Tuple, List,TYPE_CHECKING
-import numpy as np
-
-from PySide6.QtCore import Signal, QRect, QRectF, QPointF,QThreadPool,Qt,QLineF,QCoreApplication
-from PySide6.QtGui import QPainter, QPicture,QPainterPath
-from PySide6.QtWidgets import QGraphicsItem,QStyleOptionGraphicsItem,QWidget,QGraphicsObject
+from typing import Dict, Tuple, TYPE_CHECKING
+from PySide6.QtCore import Signal, QRectF, QPointF,Qt
+from PySide6.QtWidgets import QStyleOptionGraphicsItem,QWidget,QGraphicsObject
 from atklip.graphics.pyqtgraph import mkPen, GraphicsObject, mkBrush
-
 from atklip.controls.candle import JAPAN_CANDLE,HEIKINASHI,SMOOTH_CANDLE,N_SMOOTH_CANDLE
-
-from atklip.appmanager import FastWorker,CandleWorker
-
+from atklip.appmanager import FastWorker
 from atklip.controls.ma_type import  PD_MAType,IndicatorType
-from atklip.controls.ohlcv import OHLCV
 
 if TYPE_CHECKING:
     from atklip.graphics.chart_component.viewchart import Chart

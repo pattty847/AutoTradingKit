@@ -1,13 +1,4 @@
-import numpy as np
-import pandas as pd
-from typing import List,Dict
-from atklip.controls.ohlcv import OHLCV
-from .candle import JAPAN_CANDLE
-from psygnal import Signal
 from atklip.appmanager import ThreadPoolExecutor_global as ApiThreadPool
-
-
-import numpy as np
 import pandas as pd
 from typing import List,Dict
 from PySide6.QtCore import QObject,Signal

@@ -32,8 +32,9 @@ class ExchangeICon(QPushButton):
             icon_path = icon_path.path()
         elif isinstance(icon_path,FIF):
             icon_path = icon_path.path(Theme.DARK) if isDarkTheme else icon_path.path(Theme.LIGHT)
-        pixmap = self.crop_and_resize_to_circle(icon_path, size)
-        self.setIcon(QIcon(pixmap))
+        if icon_path.endswith("png"):
+            icon_path = self.crop_and_resize_to_circle(icon_path, size)
+        self.setIcon(QIcon(icon_path))
         self.setIconSize(QSize(size - 10, size - 10))
     
     def crop_and_resize_to_circle(self,image_path, size):

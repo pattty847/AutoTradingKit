@@ -35,7 +35,6 @@ class MainWindow(WindowBase):
             event.ignore()
 
 def main():
-    # Constants for application information
     APP_VERSION = "1.0.0"
     APP_NAME = "Auto Trading Kit"
     APP_DISPLAY_NAME = f"ATK (v{APP_VERSION})"
@@ -43,7 +42,6 @@ def main():
     ORGANIZATION_DOMAIN = "ATK.COM"
     ICON_PATH = os.path.join("atklip", "appdata", "appico.ico")
 
-    # Enable DPI scale if not set to "Auto"
     dpi_scale = cfg.get(cfg.dpiScale)
     if dpi_scale != "Auto":
         os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "0"
