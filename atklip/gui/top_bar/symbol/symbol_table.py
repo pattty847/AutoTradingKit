@@ -22,14 +22,15 @@ from atklip.gui.qfluentwidgets.common import get_symbol_icon
 class PositionItemDelegate(QStyledItemDelegate):
     def __init__(self, parent: QTableView):
         super().__init__(parent)
+        self._parent = parent
         self.margin = 2
         self.hoverRow = -1
         self.pressedRow = -1
         self.mouse_pos:QPointF|QPoint = None
         self.selectedRows = set()
         self.on_favorite_btn = False
-        self._data = parent._data
-        
+        # self._data = self._parent.table_model._data
+    
     def setHoverRow(self, row: int):
         self.hoverRow = row
 
@@ -80,7 +81,7 @@ class PositionItemDelegate(QStyledItemDelegate):
         option.palette.setColor(QPalette.HighlightedText, textColor)
 
     def paint(self, painter, option, index):
-        if self._data:
+        if self._parent.table_model._data:
             painter.save()
             painter.setPen(Qt.NoPen)
             painter.setRenderHint(QPainter.Antialiasing)
@@ -200,7 +201,7 @@ class PositionItemDelegate(QStyledItemDelegate):
         # Vẽ icon SVG bằng painter
         # symbol_icon = get_symbol_icon(symbol) #symbol = "BTC/USDT"
         # symbol_icon = "btc"
-        symbol_icon = self._data[index.row()][6]
+        symbol_icon = self._parent.table_model._data[index.row()][6]
         CI.render(painter,rect, symbol_icon)
         
  
@@ -224,7 +225,7 @@ class PositionItemDelegate(QStyledItemDelegate):
         # Tạo QRectF với tâm trùng với tâm của option.rect
         rect = QRectF(x, y, icon_size, icon_size)
         
-        exchange_icon = self._data[index.row()][8]
+        exchange_icon = self._parent.table_model._data[index.row()][8]
 
         EI.render(painter, rect, exchange_icon)
         
@@ -236,6 +237,12 @@ class PositionModel(QAbstractTableModel):
         self._original_data = self._data.copy()
         self._check_states:dict = {}
 
+    @property
+    def _original_data(self):
+        return self.original_data
+    @_original_data.setter
+    def _original_data(self,_original_data):
+        self.original_data=_original_data
 
     def rowCount(self, parent=QModelIndex()):
         return len(self._data)
@@ -365,7 +372,7 @@ class BaseMenu(TableView):
         self.horizontalHeader().hide()
         
         self.setBorderRadius(8)
-        self.setBorderVisible(True)
+        # self.setBorderVisible(True)
         
         self.verticalHeader().setDefaultSectionSize(45)
         
@@ -375,8 +382,8 @@ class BaseMenu(TableView):
         
         self._data = []
         self.dict_favorites = {}
-        self.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.setSortingEnabled(True)
+        # self.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        # self.setSortingEnabled(True)
         
         dict_data, self.dict_favorites = self.get_symbols(self.exchange_id)
         echange_icon_path,exchange_name,_mode = get_exchange_icon(self.exchange_id)
@@ -415,10 +422,12 @@ class BaseMenu(TableView):
         self.table_model = None
         
         if self._data:
-            self.delegate = PositionItemDelegate(self)
-            self.setItemDelegate(self.delegate)
+            
             self.table_model = PositionModel(self._data)
             self.setModel(self.table_model)
+            
+            self.delegate = PositionItemDelegate(self)
+            self.setItemDelegate(self.delegate)
 
             hor_header = self.horizontalHeader()
             ver_header = self.verticalHeader()
@@ -492,15 +501,21 @@ class BaseMenu(TableView):
     
     def item_changed(self, index):
         "click on cell, item là PySide6.QtCore.QModelIndex(19,3,0x0,PositionModel(0x1d787459870)) tại cell đó"
-        self.symbol_infor = ("change_symbol",self.data[index.row()][2],self.data[index.row()][5],self.data[index.row()][3],self.data[index.row()][6],self.data[index.row()][8],self.data[index.row()][9])
+        self.symbol_infor = ("change_symbol",
+                             self.table_model._data[index.row()][2],
+                             self.table_model._data[index.row()][5],
+                             self.table_model._data[index.row()][3],
+                             self.table_model._data[index.row()][6],
+                             self.table_model._data[index.row()][8],
+                             self.table_model._data[index.row()][9])
         
         if index.column() == 0:
             checkState = Qt.CheckState(index.data(Qt.ItemDataRole.CheckStateRole))
             if checkState==Qt.CheckState.Checked:
-                new_state = self.data[index.row()][7] = Qt.CheckState.Unchecked
+                new_state = self.table_model._data[index.row()][7] = Qt.CheckState.Unchecked
             else:
-                new_state = self.data[index.row()][7] = Qt.CheckState.Checked
-            new_data = self.data[index.row()]
+                new_state = self.table_model._data[index.row()][7] = Qt.CheckState.Checked
+            new_data = self.table_model._data[index.row()]
             if new_state == Qt.CheckState.Unchecked:
                 if self.exchange_id == "favorite":
                     # del self.data[index.row()]
@@ -549,10 +564,12 @@ class BaseMenu(TableView):
                     if self._data == []:
                         self._data = [new_data]
                         if not self.delegate or not self.table_model:
-                            self.delegate = PositionItemDelegate(self)
-                            self.setItemDelegate(self.delegate)
+                            
                             self.table_model = PositionModel(self._data)
                             self.setModel(self.table_model)
+                            
+                            self.delegate = PositionItemDelegate(self)
+                            self.setItemDelegate(self.delegate)
 
                             hor_header = self.horizontalHeader()
                             ver_header = self.verticalHeader()
