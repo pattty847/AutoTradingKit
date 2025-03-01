@@ -10,6 +10,8 @@ from PySide6.QtWidgets import (QStyledItemDelegate, QApplication, QStyleOptionVi
                              QTableView, QTableWidget, QWidget, QTableWidgetItem, QStyle,QVBoxLayout,
                              QStyleOptionButton)
 
+from atklip.appmanager.setting.config import AppConfig
+from atklip.gui.qfluentwidgets.common.icon import get_exchange_icon
 from atklip.gui.qfluentwidgets.components import TableWidget, isDarkTheme, setTheme, Theme, TableView,\
     TableItemDelegate, setCustomStyleSheet,SmoothScrollDelegate\
     ,getFont,themeColor, FluentIcon as FI,ThemeColor, CryptoIcon as CI, EchangeIcon as EI
@@ -34,6 +36,7 @@ class PositionItemDelegate(QStyledItemDelegate):
         self.mouse_pos:QPointF|QPoint = None
         self.selectedRows = set()
         self.on_favorite_btn = False
+        self.data = parent.data
         
 
     def setHoverRow(self, row: int):
@@ -210,8 +213,8 @@ class PositionItemDelegate(QStyledItemDelegate):
 
         # Vẽ icon SVG bằng painter
         # symbol_icon = get_symbol_icon(symbol) #symbol = "BTC/USDT"
-        symbol_icon = "btc"
-        
+        # symbol_icon = "btc"
+        symbol_icon = self.data[index.row()][6]
         CI.render(painter,rect, symbol_icon)
         
  
@@ -234,8 +237,10 @@ class PositionItemDelegate(QStyledItemDelegate):
 
         # Tạo QRectF với tâm trùng với tâm của option.rect
         rect = QRectF(x, y, icon_size, icon_size)
+        
+        exchange_icon = self.data[index.row()][5]
 
-        EI.KUCOIN.render(painter, rect, theme)
+        EI.render(painter, rect, exchange_icon)
         
 
 class PositionModel(QAbstractTableModel):
@@ -244,30 +249,32 @@ class PositionModel(QAbstractTableModel):
         self._data = data
         self._check_states:dict = {}
 
-    
     def rowCount(self, index):
         "giới hạn số lượng hàng"
         return len(self._data)
 
     def columnCount(self, index):
-        return len(self._data[0]) if self._data else 0
+        return 5
 
     def data(self, index: QModelIndex, role):
         "để thêm các vai trò cho cell, column, row theo dựa vào index, quy định nội dung và cách thức hiện thị cho bảng"
         if role == Qt.CheckStateRole:
-            state = self._check_states.get(f"{index.row()}_{index.column()}", Qt.CheckState.Unchecked)
+            state = self._data[index.row()][7] 
             return Qt.CheckState.Checked if (state == Qt.CheckState.Checked) else Qt.CheckState.Unchecked
             
         elif role == Qt.DisplayRole:
-            return self._data[index.row()][index.column()]
+            if index.column() == 2:
+                return self._data[index.row()][2]
+            elif index.column() == 3:
+                return self._data[index.row()][3]
+            # return self._data[index.row()][index.column()]
         elif role == Qt.TextAlignmentRole:
             "Thiết lập căn chỉnh lề cho từng cột"
+            if index.column() == 2:
+                return Qt.AlignVCenter|Qt.AlignLeft
             if index.column() == 3:
                 return Qt.AlignVCenter|Qt.AlignRight
-            elif index.column() == 2:
-                return Qt.AlignVCenter|Qt.AlignLeft
         
-
     def update_row(self,row,column, value):
         index = self.index(row, column)
         self.setData(index, value, Qt.EditRole)
@@ -313,7 +320,7 @@ class PositionModel(QAbstractTableModel):
                 self.dataChanged.emit(index, index,Qt.CheckStateRole)  # Thông báo thay đổi
                 return True
         elif role == Qt.EditRole:
-            self._data[index.row()][index.column()] = value
+            # self._data[index.row()][index.column()] = value
             self.dataChanged.emit(index, index,Qt.EditRole)
             return True
         return False
@@ -324,7 +331,7 @@ class PositionModel(QAbstractTableModel):
 
 
 class PositionTable(TableView):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None,exchange_id="binance",sig_change_symbol=None):
         super().__init__(parent)
         
         self.verticalHeader().hide()
@@ -337,7 +344,23 @@ class PositionTable(TableView):
         hor_header = self.horizontalHeader()
         ver_header = self.verticalHeader()
 
-
+        self.exchange_id = exchange_id
+        self.sig_change_symbol = sig_change_symbol
+        
+        dict_data, dict_favorites = self.get_symbols(self.exchange_id)
+        
+        echange_icon_path,exchange_name,_mode = get_exchange_icon(self.exchange_id)
+        
+        self.data = {}
+        for index,symbol in enumerate(dict_data):
+            symbol_icon = get_symbol_icon(symbol)
+            if symbol in dict_favorites:
+                state = Qt.CheckState.Checked
+            else:
+                state = Qt.CheckState.Unchecked
+            self.data[index] = ['', '', symbol, exchange_name, '',self.exchange_id,symbol_icon, state,echange_icon_path,_mode]
+        
+        print(len(self.data))
         self.delegate = PositionItemDelegate(self)
         self.setItemDelegate(self.delegate)
         
@@ -346,17 +369,7 @@ class PositionTable(TableView):
         self.setSortingEnabled(True)
         
         
-                
-        data = [
-            ['', '', 'かばん', '2004ỷtyrtyrytyr', ''],
-            ['', '', '爱你', '2004u54756756756767uytu', ''],
-            ['', '', '星のない世界/横顔', '20076546546hhtyrtuytuytu', ''],
-           
-        ]
-        for i in range(5):
-            data += data
-        
-        self.pos_model = PositionModel(data)
+        self.pos_model = PositionModel(self.data)
 
         self.setModel(self.pos_model)
         
@@ -371,36 +384,45 @@ class PositionTable(TableView):
         hor_header.resizeSection(1, 45)  # Đặt chiều rộng là 100 pixel
         ver_header.resizeSection(1, 45)  # Đặt chiều rộng là 100 pixel
 
-
         hor_header.setSectionResizeMode(4, QHeaderView.Fixed)  # Cố định kích thước
         ver_header.setSectionResizeMode(4, QHeaderView.Fixed)  # Cố định kích thước
         hor_header.resizeSection(4, 45)  # Đặt chiều rộng là 100 pixel
         ver_header.resizeSection(4, 45)  # Đặt chiều rộng là 100 pixel
         
-        
-        for col in range(1, self.pos_model.columnCount(None)):
-            if col in [0,1,4]:
-                continue
-            hor_header.setSectionResizeMode(col, QHeaderView.Stretch)  # Hoặc QHeaderView.ResizeToContents
-        
+        hor_header.setSectionResizeMode(2, QHeaderView.Stretch)  # Hoặc QHeaderView.ResizeToContents
+        hor_header.setSectionResizeMode(3, QHeaderView.Stretch)  # Hoặc QHeaderView.ResizeToContents
         
         max_rows = 10  # Giới hạn số hàng hiển thị
         row_height = self.rowHeight(0)
         self.setFixedHeight(max_rows * row_height + self.horizontalHeader().height())
         # self.pos_model.dataChanged.connect(self.item_changed)
         self.clicked.connect(self.item_changed)
+        
+    def get_symbols(self,exchange_id="binance"):
+        dict_data = AppConfig.get_config_value(f"topbar.symbol.{exchange_id}")
+        dict_favorites = AppConfig.get_config_value(f"topbar.symbol.favorite.{exchange_id}")
+        print(dict_favorites)
+        print(dict_data)
+        return dict_data, dict_favorites
     
     def item_changed(self, index):
         "click on cell, item là PySide6.QtCore.QModelIndex(19,3,0x0,PositionModel(0x1d787459870)) tại cell đó"
         if index.column() == 0:
             checkState = Qt.CheckState(index.data(Qt.ItemDataRole.CheckStateRole))
             if checkState==Qt.CheckState.Checked:
-                new_state = self.pos_model._check_states[f"{index.row()}_{index.column()}"] = Qt.CheckState.Unchecked
+                new_state = self.data[index.row()][7] = Qt.CheckState.Unchecked
             else:
-                new_state = self.pos_model._check_states[f"{index.row()}_{index.column()}"] = Qt.CheckState.Checked
+                new_state = self.data[index.row()][7] = Qt.CheckState.Checked
             self.pos_model.setData(index,new_state,Qt.CheckStateRole)
             self.update(index)
-    
+            return
+        
+        # self.data[index] = ['', '', symbol, exchange_name, '',self.exchange_id,symbol_icon, state,echange_icon_path,_mode]
+        # ("change_symbol",symbol,self.exchange_id,exchange_name,symbol_icon_path,echange_icon_path,_mode)
+        self.symbol_infor = ("change_symbol",self.data[index.row()][2],self.exchange_id,self.data[index.row()][3],self.data[index.row()][6],self.data[index.row()][8],self.data[index.row()][9])
+        print(self.data[index.row()])
+        print(self.symbol_infor)
+        # self.sig_change_symbol.emit(self.symbol_infor)
     def leaveEvent(self,ev):
         # print("leaveEvent")
         super().leaveEvent(ev)
@@ -422,10 +444,8 @@ class PositionTable(TableView):
         super().mousePressEvent(ev)
             
     
-        
-
 class RealTimeTable(QWidget):
-    def __init__(self):
+    def __init__(self,exchange_id="binance"):
         super().__init__()
         self.setWindowTitle("Real-Time Update Table Example")
         self.setStyleSheet("""
@@ -436,13 +456,14 @@ class RealTimeTable(QWidget):
                             }""")
         # Layout chính
         layout = QVBoxLayout()
-        self.table_view = PositionTable(self)
+        
+        
+        self.table_view = PositionTable(self,exchange_id)
         layout.addWidget(self.table_view)
         self.setLayout(layout)
 
-        # Tạo QTimer để cập nhật dữ liệu theo thời gian thực
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.update_table)
+        # self.timer = QTimer()
+        # self.timer.timeout.connect(self.update_table)
         # self.timer.start(1000)  # Cập nhật mỗi 1 giây
 
     def update_table(self):
@@ -450,6 +471,60 @@ class RealTimeTable(QWidget):
         # Ví dụ chỉ cập nhật các hàng 2, 4 và 6
         rows_to_update = [2, 4, 6]
         self.table_view.model().updateRows(rows_to_update)
+
+
+import os
+import sys
+# -----------------------------------------------------------------------------
+import asyncio
+import winloop
+if hasattr(asyncio, 'WindowsSelectorEventLoopPolicy'):
+    try:
+        # asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+        winloop.install()
+    except:
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+# -----------------------------------------------------------------------------
+
+import ccxt  # noqa: E402
+# -----------------------------------------------------------------------------
+binance = ccxt.binanceusdm({
+    'apiKey': '',
+    'secret': '',
+})
+symbol = 'BTC/USDT'
+timeframe = '1m'
+
+# each ohlcv candle is a list of [ timestamp, open, high, low, close, volume ]
+index = 4  # use close price from each ohlcv candle
+
+height = 15
+length = 80
+import polars as pl
+import pandas as pd
+from atklip.controls.pandas_ta.overlap.ema import ema as pandas_ema
+
+
+import time
+
+# Bắt đầu đo thời gian
+def print_chart(exchange, symbol, timeframe):
+    # get a list of ohlcv candles
+    ohlcv = exchange.fetch_ohlcv(symbol, timeframe,limit=1500)
+    
+    df_pandas = pd.DataFrame(ohlcv,columns=["datetime", "open", "high", "low", "close", "volume"]
+        )
+
+    # Lấy cột close
+    pandas_close_column = df_pandas["close"]
+            
+
+    pandas_ema_data = pandas_ema(pandas_close_column, 200,talib=True)
+    
+    return df_pandas
+    
+
+    
 
 if __name__ == "__main__":
     setTheme(Theme.DARK,True,True)

@@ -1,4 +1,3 @@
-from psygnal import evented
 from dataclasses import dataclass
 
 

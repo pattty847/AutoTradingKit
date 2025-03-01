@@ -68,12 +68,12 @@ class exchanges:
 
     # HITBTC = "hitbtc"
 
-    DERIBIT = "deribit"
+    # DERIBIT = "deribit"
 
-    COINEX = "coinex"   
+    # COINEX = "coinex"   
 
     KRAKEN_SPOT = "kraken"  
-    KRAKEN_FUTURES = "krakenfutures"  
+    # KRAKEN_FUTURES = "krakenfutures"  
 
     KUCOIN_SPOT = 'kucoin'
     KUCOIN_FUTURES = 'kucoinfutures'   
@@ -81,13 +81,13 @@ class exchanges:
     MEXC = "mexc"
 
     BINANCE_SPOT = 'binance'
-    BINANCE_US_SPOT = 'binanceus'
+    # BINANCE_US_SPOT = 'binanceus'
     BINANCE_PERPETUAL_FUTURES = 'binanceusdm' 
-    BINANCE_COIN_FUTURES = 'binancecoinm'
+    # BINANCE_COIN_FUTURES = 'binancecoinm'
 
     BYBIT = 'bybit'  
 
-    BITVAVO = "bitvavo"
+    # BITVAVO = "bitvavo"
 
     #BITTREX = "bittrex"
 
@@ -97,8 +97,30 @@ class exchanges:
 
     BITGET = "bitget"  
 
-    BITFINEX2 = "bitfinex2"
+    # BITFINEX2 = "bitfinex2"
 
-    BINGX = "bingx"
+    # BINGX = "bingx"
 
 
+_exchanges = {'COINBASE_EXCHANGE': 'coinbaseexchange', 
+              'FAVORITE': 'favorite', 
+                'COINBASE': 'coinbase', 
+                'OKEX': 'okx', 
+                'HUOBI': 'huobi', 
+                # 'COINEX': 'coinex', 
+                'KRAKEN_SPOT': 'kraken', 
+                # 'KRAKEN_FUTURES': 'krakenfutures', 
+                'KUCOIN_SPOT': 'kucoin', 
+                'KUCOIN_FUTURES': 'kucoinfutures', 
+                'MEXC': 'mexc', 
+                'BINANCE_SPOT': 'binance', 
+                # 'BINANCE_US_SPOT': 'binanceus', 
+                'BINANCE_PERPETUAL_FUTURES': 'binanceusdm', 
+                # 'BINANCE_COIN_FUTURES': 'binancecoinm', 
+                'BYBIT': 'bybit', 
+                # 'BITVAVO': 'bitvavo', 
+                'BITMEX': 'bitmex', 
+                'BITMART': 'bitmart', 
+                'BITGET': 'bitget', 
+                # 'BINGX': 'bingx'
+                }

@@ -33,6 +33,11 @@ class CryptoExchange(QObject):
                 'apiKey': self.apikey,
             'secret': self.secretkey,
             })
+        elif self.name == "binanceus":
+            self.exchange = Exchange.binanceus({
+                'apiKey': self.apikey,
+            'secret': self.secretkey,
+            })  
         elif self.name == "bitmex":
             self.exchange = Exchange.bitmex({
                 'apiKey': self.apikey,

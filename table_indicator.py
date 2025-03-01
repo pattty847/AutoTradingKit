@@ -161,7 +161,6 @@ class PositionItemDelegate(QStyledItemDelegate):
     def _drawFavorite(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex):
          # Lấy trạng thái check (nếu cần)
         checkState = Qt.CheckState(index.data(Qt.ItemDataRole.CheckStateRole))
-        
         # Xác định theme (Dark hoặc Light)
         theme = Theme.DARK if isDarkTheme() else Theme.LIGHT
         # Kích thước của hình chữ nhật (rect) để vẽ SVG
@@ -190,27 +189,18 @@ class PositionItemDelegate(QStyledItemDelegate):
     def _drawHelpBtn(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex):
          # Lấy trạng thái check (nếu cần)
         checkState = Qt.CheckState(index.data(Qt.ItemDataRole.CheckStateRole))
-
         # Xác định theme (Dark hoặc Light)
         theme = Theme.DARK if isDarkTheme() else Theme.LIGHT
-
         # Kích thước của hình chữ nhật (rect) để vẽ SVG
         icon_size = 15  # Kích thước của icon (25x25)
-
         # Tính tâm của option.rect
         center = option.rect.center()
-
         # Tính vị trí góc trên bên trái của rect sao cho tâm của rect trùng với tâm của option.rect
         x = center.x() - icon_size / 2
         y = center.y() - icon_size / 2
-
         # Tạo QRectF với tâm trùng với tâm của option.rect
         rect = QRectF(x, y, icon_size, icon_size)
 
-        # Vẽ icon SVG bằng painter
-        # symbol_icon = get_symbol_icon(symbol) #symbol = "BTC/USDT"
-        symbol_icon = "btc"
-        
         FI.HELP.render(painter, rect, theme)
         
         
