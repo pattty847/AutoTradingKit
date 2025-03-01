@@ -1,13 +1,14 @@
 import sys
 import random
-from PySide6.QtCore import Qt, QAbstractTableModel, QModelIndex
-from PySide6.QtWidgets import QApplication, QTableView, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtCore import Qt, QAbstractTableModel, QModelIndex, Signal
+from PySide6.QtWidgets import QApplication, QTableView, QPushButton, QVBoxLayout, QWidget, QLineEdit, QLabel
 
 
 class PositionModel(QAbstractTableModel):
     def __init__(self, data=None):
         super().__init__()
         self._data = data if data is not None else []
+        self._original_data = self._data.copy()  # Lưu trữ dữ liệu gốc để lọc
 
     def rowCount(self, parent=QModelIndex()):
         return len(self._data)
@@ -25,27 +26,28 @@ class PositionModel(QAbstractTableModel):
             return ["ID", "Name", "Age", "Status", "Score"][section]  # Tên các cột
         return None
 
-    def addRow(self, row_data, parent=QModelIndex()):
-        # Thêm hàng mới vào cuối danh sách
-        row_position = self.rowCount()
-        self.beginInsertRows(parent, row_position, row_position)
-        self._data.append(row_data)
-        self.endInsertRows()
+    def setData(self, new_data):
+        # Xóa toàn bộ dữ liệu cũ và thay thế bằng dữ liệu mới
+        self.beginResetModel()
+        self._data = new_data
+        self._original_data = new_data.copy()  # Cập nhật dữ liệu gốc
+        self.endResetModel()
 
-    def updateRow(self, row, new_data, parent=QModelIndex()):
-        if row < 0 or row >= self.rowCount():
-            return False
-        self._data[row] = new_data
-        top_left = self.index(row, 0)
-        bottom_right = self.index(row, self.columnCount() - 1)
-        self.dataChanged.emit(top_left, bottom_right)
-        return True
+    def filterData(self, keyword):
+        # Lọc dữ liệu dựa trên từ khóa (cột Name)
+        filtered_data = [
+            row for row in self._original_data
+            if keyword.lower() in row[1].lower()  # Lọc theo cột Name (index 1)
+        ]
+        self.beginResetModel()
+        self._data = filtered_data
+        self.endResetModel()
 
 
 class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("QTableView with Random Data")
+        self.setWindowTitle("QTableView with Search Box")
         self.resize(600, 400)
 
         # Tạo model với dữ liệu ban đầu là rỗng
@@ -55,27 +57,40 @@ class MainWindow(QWidget):
         self.table_view = QTableView()
         self.table_view.setModel(self.model)
 
-        # Tạo nút để thêm dữ liệu ngẫu nhiên
-        self.button = QPushButton("Add Random Data")
-        self.button.clicked.connect(self.add_random_data)
+        # Tạo search box (QLineEdit)
+        self.search_box = QLineEdit()
+        self.search_box.setPlaceholderText("Search by Name...")
+        self.search_box.textChanged.connect(self.filter_table)
+
+        # Tạo nút để thay thế toàn bộ dữ liệu bằng dữ liệu ngẫu nhiên
+        self.button = QPushButton("Replace with Random Data")
+        self.button.clicked.connect(self.replace_with_random_data)
 
         # Sắp xếp layout
         layout = QVBoxLayout()
+        layout.addWidget(self.search_box)
         layout.addWidget(self.table_view)
         layout.addWidget(self.button)
         self.setLayout(layout)
 
-    def add_random_data(self):
-        # Tạo dữ liệu ngẫu nhiên
-        random_id = random.randint(1, 100)
-        random_name = f"User{random_id}"
-        random_age = random.randint(18, 60)
-        random_status = random.choice(["Active", "Inactive"])
-        random_score = random.randint(0, 100)
+    def replace_with_random_data(self):
+        # Tạo danh sách dữ liệu ngẫu nhiên
+        new_data = []
+        for _ in range(10):  # Tạo 10 hàng dữ liệu ngẫu nhiên
+            random_id = random.randint(1, 100)
+            random_name = f"User{random_id}"
+            random_age = random.randint(18, 60)
+            random_status = random.choice(["Active", "Inactive"])
+            random_score = random.randint(0, 100)
+            new_data.append([random_id, random_name, random_age, random_status, random_score])
 
-        # Thêm dữ liệu vào model
-        new_row = [random_id, random_name, random_age, random_status, random_score]
-        self.model.addRow(new_row)
+        # Thay thế toàn bộ dữ liệu cũ bằng dữ liệu mới
+        self.model.setData(new_data)
+
+    def filter_table(self):
+        # Lấy từ khóa từ search box và lọc dữ liệu
+        keyword = self.search_box.text()
+        self.model.filterData(keyword)
 
 
 if __name__ == "__main__":

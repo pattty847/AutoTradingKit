@@ -5,7 +5,7 @@ import traceback
 from typing import List
 
 from PySide6.QtCore import Qt, QMargins, QModelIndex, QRectF,Qt, \
-    QAbstractTableModel, QModelIndex,QPointF,QPoint,Signal,Slot
+    QAbstractTableModel, QModelIndex,QPointF,QPoint,Signal
 from PySide6.QtGui import QPainter, QColor, QPalette, QBrush, QMouseEvent
 from PySide6.QtWidgets import (QStyledItemDelegate, QApplication, QStyleOptionViewItem,QHeaderView,
                              QTableView, QWidget)
@@ -20,7 +20,6 @@ from atklip.gui.qfluentwidgets.components.widgets.label import TitleLabel
 from atklip.gui.qfluentwidgets.common import get_symbol_icon
 
 class PositionItemDelegate(QStyledItemDelegate):
-
     def __init__(self, parent: QTableView):
         super().__init__(parent)
         self.margin = 2
@@ -29,7 +28,7 @@ class PositionItemDelegate(QStyledItemDelegate):
         self.mouse_pos:QPointF|QPoint = None
         self.selectedRows = set()
         self.on_favorite_btn = False
-        self._data = parent.data
+        self._data = parent._data
         
     def setHoverRow(self, row: int):
         self.hoverRow = row
@@ -52,6 +51,7 @@ class PositionItemDelegate(QStyledItemDelegate):
 
     def createEditor(self, parent: QWidget, option: QStyleOptionViewItem, index: QModelIndex) -> QWidget:
         lineEdit = TitleLabel(parent)
+        # lineEdit = LineEdit(parent)
         lineEdit.setProperty("transparent", False)
         lineEdit.setStyle(QApplication.style())
         lineEdit.setText(option.text)
@@ -63,15 +63,19 @@ class PositionItemDelegate(QStyledItemDelegate):
         x, w = max(8, rect.x()), rect.width()
         if index.column() == 0:
             w -= 8
+
         editor.setGeometry(x, y, w, rect.height())
 
     def initStyleOption(self, option: QStyleOptionViewItem, index: QModelIndex):
         super().initStyleOption(option, index)
+        # font
         option.font = index.data(Qt.FontRole) or getFont(13)
+        # text color
         textColor = Qt.white if isDarkTheme() else Qt.black
         textBrush = index.data(Qt.ForegroundRole)   # type: QBrush
         if textBrush is not None:
             textColor = textBrush.color()
+
         option.palette.setColor(QPalette.Text, textColor)
         option.palette.setColor(QPalette.HighlightedText, textColor)
 
@@ -81,17 +85,20 @@ class PositionItemDelegate(QStyledItemDelegate):
             painter.setPen(Qt.NoPen)
             painter.setRenderHint(QPainter.Antialiasing)
 
+            # set clipping rect of painter to avoid painting outside the borders
             painter.setClipping(True)
             painter.setClipRect(option.rect)
 
+            # call original paint method where option.rect is adjusted to account for border
             option.rect.adjust(0, self.margin, 0, -self.margin)
 
+            # draw highlight background
             isHover = self.hoverRow == index.row()
             isPressed = self.pressedRow == index.row()
             
             isAlternate = index.row() % 2 == 0 and self.parent().alternatingRowColors()
             isDark = isDarkTheme()
-            
+
             c = 255 if isDark else 0
             alpha = 0
 
@@ -116,10 +123,12 @@ class PositionItemDelegate(QStyledItemDelegate):
                 painter.setBrush(QColor(c, c, c, alpha))
 
             self._drawBackground(painter, option, index)
-
-            if index.column() == 0:
-                self._drawHelpBtn(painter, option, index)
-            elif index.column() == 2:
+            
+            if index.column() == 1:
+                self._drawTokenIcon(painter, option, index)
+            elif index.column() == 4:
+                    self._drawExchangeIcon(painter, option, index)
+            elif index.column() == 0:
                 self._drawFavorite(painter, option, index)
             
             painter.restore()
@@ -141,13 +150,21 @@ class PositionItemDelegate(QStyledItemDelegate):
             painter.drawRect(rect)
     
     def _drawFavorite(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex):
+         # Lấy trạng thái check (nếu cần)
         checkState = Qt.CheckState(index.data(Qt.ItemDataRole.CheckStateRole))
+        
+        # Xác định theme (Dark hoặc Light)
         theme = Theme.DARK if isDarkTheme() else Theme.LIGHT
+        # Kích thước của hình chữ nhật (rect) để vẽ SVG
         icon_size = 15  # Kích thước của icon (25x25)
+        # Tính tâm của option.rect
         center = option.rect.center()
+        # Tính vị trí góc trên bên trái của rect sao cho tâm của rect trùng với tâm của option.rect
         x = center.x() - icon_size / 2
         y = center.y() - icon_size / 2
+        # Tạo QRectF với tâm trùng với tâm của option.rect
         rect = QRectF(x, y, icon_size, icon_size)
+        # favotite_rect = QRectF(option.rect.x(), option.rect.y(), 25, 45)
         self.on_favorite_btn = False
         mouse_pos = self.mouse_pos
         if checkState == Qt.CheckState.Checked:
@@ -160,14 +177,56 @@ class PositionItemDelegate(QStyledItemDelegate):
                         self.on_favorite_btn = True
                         FI.FAVORITE.render(painter, rect, Theme)
         
-    def _drawHelpBtn(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex):
+    def _drawTokenIcon(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex):
+         # Lấy trạng thái check (nếu cần)
+        # checkState = Qt.CheckState(index.data(Qt.ItemDataRole.CheckStateRole))
+
+        # Xác định theme (Dark hoặc Light)
         theme = Theme.DARK if isDarkTheme() else Theme.LIGHT
-        icon_size = 15  
+
+        # Kích thước của hình chữ nhật (rect) để vẽ SVG
+        icon_size = 25  # Kích thước của icon (25x25)
+
+        # Tính tâm của option.rect
         center = option.rect.center()
+
+        # Tính vị trí góc trên bên trái của rect sao cho tâm của rect trùng với tâm của option.rect
         x = center.x() - icon_size / 2
         y = center.y() - icon_size / 2
+
+        # Tạo QRectF với tâm trùng với tâm của option.rect
         rect = QRectF(x, y, icon_size, icon_size)
-        FI.HELP.render(painter, rect, theme)
+
+        # Vẽ icon SVG bằng painter
+        # symbol_icon = get_symbol_icon(symbol) #symbol = "BTC/USDT"
+        # symbol_icon = "btc"
+        symbol_icon = self._data[index.row()][6]
+        CI.render(painter,rect, symbol_icon)
+        
+ 
+    def _drawExchangeIcon(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex):
+         # Lấy trạng thái check (nếu cần)
+        # checkState = Qt.CheckState(index.data(Qt.ItemDataRole.CheckStateRole))
+
+        # Xác định theme (Dark hoặc Light)
+        theme = Theme.DARK if isDarkTheme() else Theme.LIGHT
+
+        # Kích thước của hình chữ nhật (rect) để vẽ SVG
+        icon_size = 25  # Kích thước của icon (25x25)
+
+        # Tính tâm của option.rect
+        center = option.rect.center()
+
+        # Tính vị trí góc trên bên trái của rect sao cho tâm của rect trùng với tâm của option.rect
+        x = center.x() - icon_size / 2
+        y = center.y() - icon_size / 2
+
+        # Tạo QRectF với tâm trùng với tâm của option.rect
+        rect = QRectF(x, y, icon_size, icon_size)
+        
+        exchange_icon = self._data[index.row()][8]
+
+        EI.render(painter, rect, exchange_icon)
         
 
 class PositionModel(QAbstractTableModel):
@@ -176,11 +235,12 @@ class PositionModel(QAbstractTableModel):
         self._data:list = data
         self._check_states:dict = {}
 
+
     def rowCount(self, parent=QModelIndex()):
         return len(self._data)
 
     def columnCount(self, parent=QModelIndex()):
-        return 3
+        return 5
     
     def removeRow(self, row, parent=QModelIndex()):
         if row < 0 or row >= self.rowCount():
@@ -232,18 +292,20 @@ class PositionModel(QAbstractTableModel):
         "để thêm các vai trò cho cell, column, row theo dựa vào index, quy định nội dung và cách thức hiện thị cho bảng"
         if self._data:
             if role == Qt.CheckStateRole:
-                state = self._data[index.row()][3] 
+                state = self._data[index.row()][7] 
                 return Qt.CheckState.Checked if (state == Qt.CheckState.Checked) else Qt.CheckState.Unchecked
                 
             elif role == Qt.DisplayRole:
-                if index.column() == 1:
-                    return self._data[index.row()][1]
+                if index.column() == 2:
+                    return self._data[index.row()][2]
+                elif index.column() == 3:
+                    return self._data[index.row()][3]
             elif role == Qt.TextAlignmentRole:
                 "Thiết lập căn chỉnh lề cho từng cột"
-                if index.column() == 1:
+                if index.column() == 2:
                     return Qt.AlignVCenter|Qt.AlignLeft
-                # if index.column() == 3:
-                #     return Qt.AlignVCenter|Qt.AlignRight
+                elif index.column() == 3:
+                    return Qt.AlignVCenter|Qt.AlignRight
         
     def update_row(self,row,column, value):
         index = self.index(row, column)
@@ -273,8 +335,7 @@ class PositionModel(QAbstractTableModel):
     def flags(self, index):
         # Cho phép cell có thể được check/uncheck
         return Qt.ItemIsEnabled | super().flags(index) | Qt.ItemIsUserCheckable
-
-from atklip.appmanager.worker.return_worker import ReturnProcess
+    
 class BaseMenu(TableView):
     sig_show_process = Signal(bool)
     sig_update_symbol = Signal(int)
@@ -300,43 +361,8 @@ class BaseMenu(TableView):
         self._data = []
         self.dict_favorites = {}
         self.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.setSortingEnabled(True)
         
-        self.delegate = PositionItemDelegate(self)
-        self.setItemDelegate(self.delegate)
-        self.pos_model = PositionModel(self.data)
-        self.setModel(self.pos_model)
-            
-        self.setFixedHeight(410)
-        self.clicked.connect(self.item_changed)
-        
-    def switch_page(self):
-        process = ReturnProcess(self.generate_data)
-        process.update_signal.connect(self.update_data)
-        process.finished_signal.connect(process.deleteLater)
-        process.start()
-    
-    @Slot()
-    def update_data(self,data):
-        self.data = data
-        # self.pos_model.resetData(self.data)
-        self.pos_model = PositionModel(self.data)
-        self.setModel(self.pos_model)
-        hor_header = self.horizontalHeader()
-        ver_header = self.verticalHeader()
-        # Đặt chế độ resize cho cột đầu tiên (cột 0)
-        hor_header.setSectionResizeMode(0, QHeaderView.Fixed)  # Cố định kích thước
-        ver_header.setSectionResizeMode(0, QHeaderView.Fixed)  # Cố định kích thước
-        hor_header.resizeSection(0, 45)  # Đặt chiều rộng là 100 pixel
-        ver_header.resizeSection(0, 45)  # Đặt chiều rộng là 100 pixel
-
-        hor_header.setSectionResizeMode(2, QHeaderView.Fixed)  # Cố định kích thước
-        ver_header.setSectionResizeMode(2, QHeaderView.Fixed)  # Cố định kích thước
-        hor_header.resizeSection(2, 45)  # Đặt chiều rộng là 100 pixel
-        ver_header.resizeSection(2, 45)  # Đặt chiều rộng là 100 pixel
-        
-        hor_header.setSectionResizeMode(1, QHeaderView.Stretch)  # Hoặc QHeaderView.ResizeToContents
-        
-    def generate_data(self):
         dict_data, self.dict_favorites = self.get_symbols(self.exchange_id)
         echange_icon_path,exchange_name,_mode = get_exchange_icon(self.exchange_id)
         
@@ -369,8 +395,39 @@ class BaseMenu(TableView):
                             symbol_icon_path = CI.crypto_url(symbol_icon)
                             state = Qt.CheckState.Checked
                             self.data.append(['', '', symbol, exchange_name, '',exchange_id,symbol_icon_path, state,echange_icon_path,_mode])
-        return self.data
         
+        self.delegate = None
+        self.pos_model = None
+        
+        if self._data:
+            self.delegate = PositionItemDelegate(self)
+            self.setItemDelegate(self.delegate)
+            self.pos_model = PositionModel(self._data)
+            self.setModel(self.pos_model)
+
+            hor_header = self.horizontalHeader()
+            ver_header = self.verticalHeader()
+            # Đặt chế độ resize cho cột đầu tiên (cột 0)
+            hor_header.setSectionResizeMode(0, QHeaderView.Fixed)  # Cố định kích thước
+            ver_header.setSectionResizeMode(0, QHeaderView.Fixed)  # Cố định kích thước
+            hor_header.resizeSection(0, 45)  # Đặt chiều rộng là 100 pixel
+            ver_header.resizeSection(0, 45)  # Đặt chiều rộng là 100 pixel
+
+            hor_header.setSectionResizeMode(1, QHeaderView.Fixed)  # Cố định kích thước
+            ver_header.setSectionResizeMode(1, QHeaderView.Fixed)  # Cố định kích thước
+            hor_header.resizeSection(1, 45)  # Đặt chiều rộng là 100 pixel
+            ver_header.resizeSection(1, 45)  # Đặt chiều rộng là 100 pixel
+
+            hor_header.setSectionResizeMode(4, QHeaderView.Fixed)  # Cố định kích thước
+            ver_header.setSectionResizeMode(4, QHeaderView.Fixed)  # Cố định kích thước
+            hor_header.resizeSection(4, 45)  # Đặt chiều rộng là 100 pixel
+            ver_header.resizeSection(4, 45)  # Đặt chiều rộng là 100 pixel
+            
+            hor_header.setSectionResizeMode(2, QHeaderView.Stretch)  # Hoặc QHeaderView.ResizeToContents
+            hor_header.setSectionResizeMode(3, QHeaderView.Stretch)  # Hoặc QHeaderView.ResizeToContents
+            
+        self.setFixedHeight(600)
+        self.clicked.connect(self.item_changed)
     @property
     def _data(self)-> list:
         return self.data 
@@ -445,34 +502,102 @@ class BaseMenu(TableView):
         symbol = new_data[2]
         new_state = new_data[7]
         from_exchange_id = new_data[5]
-        if exchange_id == "favorite" and self.exchange_id != "favorite":
-            for index,row in enumerate(self.data):
-                if row[2] == symbol:
-                    self.data[index][7] = new_data[7]
-                    self.pos_model.updateRow(index, self.data[index])
-                    break
+        if exchange_id == "favorite":
+            if self.exchange_id != "favorite":
+                for index,row in enumerate(self.data):
+                    if row[2] == symbol:
+                        self.data[index][7] = new_state
+                        self.pos_model.updateRow(index, self.data[index])
+                        
+                        self.dict_favorites = AppConfig.get_config_value(f"topbar.symbol.favorite")
+                        if new_state == Qt.CheckState.Unchecked:
+                            if self.exchange_id not in list(self.dict_favorites.keys()):
+                                self.dict_favorites[self.exchange_id] = []
+                            else:
+                                if symbol in self.dict_favorites[self.exchange_id]:
+                                    self.dict_favorites[self.exchange_id].remove(symbol)
+                        else:
+                            if self.exchange_id not in list(self.dict_favorites.keys()):
+                                self.dict_favorites[self.exchange_id] = [symbol]
+                            else:
+                                if symbol not in self.dict_favorites[self.exchange_id]:
+                                    self.dict_favorites[self.exchange_id].append(symbol)
+                        AppConfig.sig_set_single_data.emit((f"topbar.symbol.favorite.{self.exchange_id}",self.dict_favorites[self.exchange_id]))
+                        self.dict_favorites = AppConfig.get_config_value(f"topbar.symbol.favorite")
+                        break
         else:
             if self.exchange_id == "favorite":
                 if new_state == Qt.CheckState.Checked:
-                    self.pos_model.addRow(new_data)
+                    if self._data == []:
+                        self._data = [new_data]
+                        if not self.delegate or not self.pos_model:
+                            self.delegate = PositionItemDelegate(self)
+                            self.setItemDelegate(self.delegate)
+                            self.pos_model = PositionModel(self._data)
+                            self.setModel(self.pos_model)
+
+                            hor_header = self.horizontalHeader()
+                            ver_header = self.verticalHeader()
+                            # Đặt chế độ resize cho cột đầu tiên (cột 0)
+                            hor_header.setSectionResizeMode(0, QHeaderView.Fixed)  # Cố định kích thước
+                            ver_header.setSectionResizeMode(0, QHeaderView.Fixed)  # Cố định kích thước
+                            hor_header.resizeSection(0, 45)  # Đặt chiều rộng là 100 pixel
+                            ver_header.resizeSection(0, 45)  # Đặt chiều rộng là 100 pixel
+
+                            hor_header.setSectionResizeMode(1, QHeaderView.Fixed)  # Cố định kích thước
+                            ver_header.setSectionResizeMode(1, QHeaderView.Fixed)  # Cố định kích thước
+                            hor_header.resizeSection(1, 45)  # Đặt chiều rộng là 100 pixel
+                            ver_header.resizeSection(1, 45)  # Đặt chiều rộng là 100 pixel
+
+                            hor_header.setSectionResizeMode(4, QHeaderView.Fixed)  # Cố định kích thước
+                            ver_header.setSectionResizeMode(4, QHeaderView.Fixed)  # Cố định kích thước
+                            hor_header.resizeSection(4, 45)  # Đặt chiều rộng là 100 pixel
+                            ver_header.resizeSection(4, 45)  # Đặt chiều rộng là 100 pixel
+                            
+                            hor_header.setSectionResizeMode(2, QHeaderView.Stretch)  # Hoặc QHeaderView.ResizeToContents
+                            hor_header.setSectionResizeMode(3, QHeaderView.Stretch)  # Hoặc QHeaderView.ResizeToContents
+                        else:
+                            self.pos_model.insertRow(0,new_data)
+                    else: 
+                        self.pos_model.insertRow(0,new_data)
+                    if exchange_id != "favorite":
+                        self.dict_favorites = AppConfig.get_config_value(f"topbar.symbol.favorite")
+                        if new_state == Qt.CheckState.Unchecked:
+                            if exchange_id not in list(self.dict_favorites.keys()):
+                                self.dict_favorites[exchange_id] = []
+                            else:
+                                if symbol in self.dict_favorites[exchange_id]:
+                                    self.dict_favorites[exchange_id].remove(symbol)
+                        else:
+                            if exchange_id not in list(self.dict_favorites.keys()):
+                                self.dict_favorites[exchange_id] = [symbol]
+                            else:
+                                if symbol not in self.dict_favorites[exchange_id]:
+                                    self.dict_favorites[exchange_id].append(symbol)
+                        AppConfig.sig_set_single_data.emit((f"topbar.symbol.favorite.{exchange_id}",self.dict_favorites[exchange_id]))
+                        self.dict_favorites = AppConfig.get_config_value(f"topbar.symbol.favorite")    
+                    
                 else:
                     for index,row in enumerate(self.data):
                         if row[2] == symbol and row[5] == from_exchange_id:
-                            # del self.data[index]
                             self.pos_model.removeRow(index)
+                            if exchange_id != "favorite":
+                                self.dict_favorites = AppConfig.get_config_value(f"topbar.symbol.favorite")
+                                if new_state == Qt.CheckState.Unchecked:
+                                    if exchange_id not in list(self.dict_favorites.keys()):
+                                        self.dict_favorites[exchange_id] = []
+                                    else:
+                                        if symbol in self.dict_favorites[exchange_id]:
+                                            self.dict_favorites[exchange_id].remove(symbol)
+                                else:
+                                    if exchange_id not in list(self.dict_favorites.keys()):
+                                        self.dict_favorites[exchange_id] = [symbol]
+                                    else:
+                                        if symbol not in self.dict_favorites[exchange_id]:
+                                            self.dict_favorites[exchange_id].append(symbol)
+                                AppConfig.sig_set_single_data.emit((f"topbar.symbol.favorite.{exchange_id}",self.dict_favorites[exchange_id]))
+                                self.dict_favorites = AppConfig.get_config_value(f"topbar.symbol.favorite")  
                             break
-            
-    def update_favorite_config(self,symbol,exchange_id):
-        if exchange_id not in list(self.dict_favorites.keys()):
-            self.dict_favorites[exchange_id] = [symbol]
-        else:
-            if symbol not in self.dict_favorites[exchange_id]:
-                self.dict_favorites[exchange_id].append(symbol)
-            else:
-                return
-        self.dict_favorites[exchange_id].remove(symbol)
-        AppConfig.sig_set_single_data.emit((f"topbar.symbol.favorite.{exchange_id}",self.dict_favorites[exchange_id]))
-        self.dict_favorites = AppConfig.get_config_value(f"topbar.symbol.favorite")
                 
     def leaveEvent(self,ev):
         super().leaveEvent(ev)
@@ -484,9 +609,11 @@ class BaseMenu(TableView):
         pos = ev.pos()
         index = self.indexAt(pos)
         self.row_hover = index.row()
-        self.delegate.setHoverRow(index.row())
-        self.delegate.mouse_pos = pos        
-        self.pos_model.dataChanged.emit(index, index)
+        if self.delegate:
+            self.delegate.setHoverRow(index.row())
+            self.delegate.mouse_pos = pos     
+        if self.pos_model:   
+            self.pos_model.dataChanged.emit(index, index)
         super().mouseMoveEvent(ev)
 
     def mousePressEvent(self,ev:QMouseEvent):

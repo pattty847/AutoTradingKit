@@ -55,11 +55,9 @@ class MainWidget(QWidget,Ui_MainWidget):
         self.topbar.replay.clicked.connect(self.chartbox_splitter.show_hide_playbar)
         
 
-        self.progress = LoadingProgress(self,size=50)
+        self.progress = LoadingProgress(self,size=40)
         self.chartbox_splitter.chart.sig_show_process.connect(self.progress.run_process,Qt.ConnectionType.AutoConnection)
-        
-        self.progress.update_pos()
-        self.progress.run_process(True)
+        self.progress.run_process(False)
         
         self.topbar.mode.clicked.connect(self.chartbox_splitter.chart.change_mode)
         

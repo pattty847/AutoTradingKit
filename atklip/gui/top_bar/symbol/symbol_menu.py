@@ -106,7 +106,7 @@ class ListSymbolMenuByExchange(QStackedWidget):
         new_data = item_data[1]
         favorite_menu =  self.get_exchange_menu("favorite")
         exchange_menu =  self.get_exchange_menu(target_exchange_id)
-        print(favorite_menu, exchange_menu)
+        # print(favorite_menu, exchange_menu)
         exchange_menu.add_remove_favorite_item(exchange_id,new_data)
         favorite_menu.add_remove_favorite_item(exchange_id,new_data)
 
@@ -124,6 +124,13 @@ class ListSymbolMenuByExchange(QStackedWidget):
             self.setCurrentWidget(_wg)
             # _wg.switch_page()
 
+    def filter_table(self,keyword:str=""):
+        # print(self.sender(), keyword)
+        _wg:BaseMenu = self.currentWidget()
+        if isinstance(_wg,BaseMenu):
+            _wg.filter_table(keyword)
+    
+    
             
 class MainMenu(HWIDGET):
     def __init__(self,sig_change_symbol,parent:QWidget=None):
@@ -153,6 +160,9 @@ class SymbolSearchMenu(MovingWidget):
         self.search_box.setFixedHeight(35)
         self.addWidget(self.search_box)
         self.main_menu = MainMenu(sig_change_symbol,self)
+        
+        self.search_box.textChanged.connect(self.main_menu.ListSymbols.filter_table)
+        
         self.addWidget(self.main_menu)
         sig_change_symbol.connect(self.remove_menu)
         FluentStyleSheet.INDICATORMENU.apply(self)

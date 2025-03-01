@@ -232,7 +232,8 @@ class PositionItemDelegate(QStyledItemDelegate):
 class PositionModel(QAbstractTableModel):
     def __init__(self, data):
         super().__init__()
-        self._data:list = data
+        self._data = data if data is not None else []
+        self._original_data = self._data.copy()
         self._check_states:dict = {}
 
 
@@ -248,6 +249,7 @@ class PositionModel(QAbstractTableModel):
         # Thông báo cho view biết hàng sắp bị xóa
         self.beginRemoveRows(parent, row, row)
         del self._data[row]  # Xóa hàng khỏi dữ liệu nội bộ
+        self._original_data = self._data.copy()
         self.endRemoveRows()  # Kết thúc xóa hàng
         return True
     
@@ -257,6 +259,7 @@ class PositionModel(QAbstractTableModel):
         # Thông báo cho view biết hàng mới sắp được thêm
         self.beginInsertRows(parent, row_position, row_position)
         self._data.append(row_data)  # Thêm dữ liệu mới vào danh sách
+        self._original_data = self._data.copy()
         self.endInsertRows()  # Kết thúc thêm hàng
         return True
     
@@ -279,6 +282,7 @@ class PositionModel(QAbstractTableModel):
         # Thông báo cho view biết hàng mới sắp được chèn
         self.beginInsertRows(parent, row, row)
         self._data.insert(row, row_data)  # Chèn dữ liệu mới vào danh sách
+        self._original_data = self._data.copy()
         self.endInsertRows()  # Kết thúc chèn hàng
         return True
     
@@ -286,7 +290,18 @@ class PositionModel(QAbstractTableModel):
         # Xóa toàn bộ dữ liệu cũ và thay thế bằng dữ liệu mới
         self.beginResetModel()  # Thông báo cho view biết dữ liệu sắp thay đổi
         self._data = new_data
+        self._original_data = self._data.copy()
         self.endResetModel()  # Kết thúc thay đổi dữ liệu
+    
+    def filterData(self, keyword:str=""):
+        # Lọc dữ liệu dựa trên từ khóa (cột Name)
+        filtered_data = [
+            row for row in self._original_data
+            if str(row[2].lower()).startswith(keyword.lower())   # Lọc theo cột Name (index 1)
+        ]
+        self.beginResetModel()
+        self._data = filtered_data
+        self.endResetModel()
     
     def data(self, index: QModelIndex, role):
         "để thêm các vai trò cho cell, column, row theo dựa vào index, quy định nội dung và cách thức hiện thị cho bảng"
@@ -307,30 +322,30 @@ class PositionModel(QAbstractTableModel):
                 elif index.column() == 3:
                     return Qt.AlignVCenter|Qt.AlignRight
         
-    def update_row(self,row,column, value):
-        index = self.index(row, column)
-        self.setData(index, value, Qt.EditRole)
+    # def update_row(self,row,column, value):
+    #     index = self.index(row, column)
+    #     self.setData(index, value, Qt.EditRole)
     
-    def updateRows(self, rows_to_update):
-        """Cập nhật dữ liệu của các hàng cụ thể."""
-        for row in rows_to_update:
-            if 0 <= row < self.rowCount(None):  # Kiểm tra nếu hàng nằm trong phạm vi hợp lệ
-                # Cập nhật dữ liệu cho từng cột trong hàng
-                for column in range(self.columnCount(None)):
-                    new_value = random.randint(0, 100)  # Giá trị mới ngẫu nhiên
-                    index = self.index(row, column)
-                    self.setData(index, new_value, Qt.EditRole)
+    # def updateRows(self, rows_to_update):
+    #     """Cập nhật dữ liệu của các hàng cụ thể."""
+    #     for row in rows_to_update:
+    #         if 0 <= row < self.rowCount(None):  # Kiểm tra nếu hàng nằm trong phạm vi hợp lệ
+    #             # Cập nhật dữ liệu cho từng cột trong hàng
+    #             for column in range(self.columnCount(None)):
+    #                 new_value = random.randint(0, 100)  # Giá trị mới ngẫu nhiên
+    #                 index = self.index(row, column)
+    #                 self.setData(index, new_value, Qt.EditRole)
     
-    def setData(self, index, value, role):
-        if role == Qt.CheckStateRole:
-            # Lưu trạng thái checkbox mới
-            if index.column() == 0:
-                self.dataChanged.emit(index, index,Qt.CheckStateRole)  # Thông báo thay đổi
-                return True
-        elif role == Qt.EditRole:
-            self.dataChanged.emit(index, index,Qt.EditRole)
-            return True
-        return False
+    # def setData(self, index, value, role):
+    #     if role == Qt.CheckStateRole:
+    #         # Lưu trạng thái checkbox mới
+    #         if index.column() == 0:
+    #             self.dataChanged.emit(index, index,Qt.CheckStateRole)  # Thông báo thay đổi
+    #             return True
+    #     elif role == Qt.EditRole:
+    #         self.dataChanged.emit(index, index,Qt.EditRole)
+    #         return True
+    #     return False
 
     def flags(self, index):
         # Cho phép cell có thể được check/uncheck
@@ -397,13 +412,13 @@ class BaseMenu(TableView):
                             self.data.append(['', '', symbol, exchange_name, '',exchange_id,symbol_icon_path, state,echange_icon_path,_mode])
         
         self.delegate = None
-        self.pos_model = None
+        self.table_model = None
         
         if self._data:
             self.delegate = PositionItemDelegate(self)
             self.setItemDelegate(self.delegate)
-            self.pos_model = PositionModel(self._data)
-            self.setModel(self.pos_model)
+            self.table_model = PositionModel(self._data)
+            self.setModel(self.table_model)
 
             hor_header = self.horizontalHeader()
             ver_header = self.verticalHeader()
@@ -435,6 +450,9 @@ class BaseMenu(TableView):
     @_data.setter
     def _data(self, data):
         self.data = data 
+    
+    def filter_table(self,keyword:str=""):
+        self.table_model.filterData(keyword)
     
     def get_symbols(self,exchange_id="binance"):
         dict_data:list = AppConfig.get_config_value(f"topbar.symbol.{exchange_id}",[])
@@ -486,13 +504,13 @@ class BaseMenu(TableView):
             if new_state == Qt.CheckState.Unchecked:
                 if self.exchange_id == "favorite":
                     # del self.data[index.row()]
-                    self.pos_model.removeRow(index.row())
+                    self.table_model.removeRow(index.row())
                 else:
                     "update data"
-                    self.pos_model.dataChanged.emit(index, index,Qt.CheckStateRole)
+                    self.table_model.dataChanged.emit(index, index,Qt.CheckStateRole)
             else:
                 if self.exchange_id != "favorite":
-                    self.pos_model.dataChanged.emit(index, index,Qt.CheckStateRole)
+                    self.table_model.dataChanged.emit(index, index,Qt.CheckStateRole)
                 
             self.sig_add_remove_favorite.emit((self.exchange_id,new_data))
             return
@@ -507,7 +525,7 @@ class BaseMenu(TableView):
                 for index,row in enumerate(self.data):
                     if row[2] == symbol:
                         self.data[index][7] = new_state
-                        self.pos_model.updateRow(index, self.data[index])
+                        self.table_model.updateRow(index, self.data[index])
                         
                         self.dict_favorites = AppConfig.get_config_value(f"topbar.symbol.favorite")
                         if new_state == Qt.CheckState.Unchecked:
@@ -530,11 +548,11 @@ class BaseMenu(TableView):
                 if new_state == Qt.CheckState.Checked:
                     if self._data == []:
                         self._data = [new_data]
-                        if not self.delegate or not self.pos_model:
+                        if not self.delegate or not self.table_model:
                             self.delegate = PositionItemDelegate(self)
                             self.setItemDelegate(self.delegate)
-                            self.pos_model = PositionModel(self._data)
-                            self.setModel(self.pos_model)
+                            self.table_model = PositionModel(self._data)
+                            self.setModel(self.table_model)
 
                             hor_header = self.horizontalHeader()
                             ver_header = self.verticalHeader()
@@ -557,9 +575,9 @@ class BaseMenu(TableView):
                             hor_header.setSectionResizeMode(2, QHeaderView.Stretch)  # Hoặc QHeaderView.ResizeToContents
                             hor_header.setSectionResizeMode(3, QHeaderView.Stretch)  # Hoặc QHeaderView.ResizeToContents
                         else:
-                            self.pos_model.insertRow(0,new_data)
+                            self.table_model.insertRow(0,new_data)
                     else: 
-                        self.pos_model.insertRow(0,new_data)
+                        self.table_model.insertRow(0,new_data)
                     if exchange_id != "favorite":
                         self.dict_favorites = AppConfig.get_config_value(f"topbar.symbol.favorite")
                         if new_state == Qt.CheckState.Unchecked:
@@ -580,7 +598,7 @@ class BaseMenu(TableView):
                 else:
                     for index,row in enumerate(self.data):
                         if row[2] == symbol and row[5] == from_exchange_id:
-                            self.pos_model.removeRow(index)
+                            self.table_model.removeRow(index)
                             if exchange_id != "favorite":
                                 self.dict_favorites = AppConfig.get_config_value(f"topbar.symbol.favorite")
                                 if new_state == Qt.CheckState.Unchecked:
@@ -612,8 +630,8 @@ class BaseMenu(TableView):
         if self.delegate:
             self.delegate.setHoverRow(index.row())
             self.delegate.mouse_pos = pos     
-        if self.pos_model:   
-            self.pos_model.dataChanged.emit(index, index)
+        if self.table_model:   
+            self.table_model.dataChanged.emit(index, index)
         super().mouseMoveEvent(ev)
 
     def mousePressEvent(self,ev:QMouseEvent):

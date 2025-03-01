@@ -518,11 +518,7 @@ class Chart(ViewPlotWidget):
         self.heikinashi.source_name = f"heikin {self.symbol} {self.interval}"
         self.update_sources(self.heikinashi)
         self.heikinashi.fisrt_gen_data(self._precision)
-        
         print("===========reset_exchange============ OK",self.crypto_ex,self.symbol,self.interval)
-        # if self.indicators != []:
-        #     "when replay mode was turn off"
-        self.sig_show_process.emit(True)
         self.auto_xrange()
         await self.loop_watch_ohlcv(self.symbol,self.interval,self.exchange_name)
     
@@ -538,12 +534,6 @@ class Chart(ViewPlotWidget):
     async def loop_watch_ohlcv(self,symbol,interval,exchange_name):
         self.trading_mode = True
         self.sig_show_process.emit(False)
-        # if not self.worker_reload:
-        #     await self.reload_market()
-        # elif isinstance(self.worker_reload,asyncio.Task):
-        #     self.worker_reload.cancel()
-        #     await self.reload_market()
-        
         firt_run = False
         _ohlcv = []
         n = 0

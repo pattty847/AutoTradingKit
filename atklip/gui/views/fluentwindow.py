@@ -58,8 +58,9 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
         for i in range(num_threads):
             Heavy_ProcessPoolExecutor_global.submit(print,f"start game {i}")
 
-        self.onTabAddRequested()
         self.initWindow()
+        self.onTabAddRequested()
+        self.show()
     
     def initWindow(self):
         desktop = QApplication.screens()[0].availableGeometry()
@@ -70,7 +71,7 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
         self.resize(w//2, h//2)
         self.move(w//2 - w//3, h//8)
         self.resize(2*(w//3) , 3*(h//4) )
-        self.show()    
+            
 
     def load_pre_config(self):
         curent_tab = AppConfig.get_config_value("profiles.current_tab")
@@ -123,6 +124,7 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
         TabInterface.resize(old_interface.width(),old_interface.height())
         self.switchTo(TabInterface)
         
+        
     def onTabAddRequested(self):
         current_ex,current_symbol,curent_interval = self.load_pre_config()
         _is_icon_exist = check_icon_exist(current_symbol)
@@ -143,10 +145,10 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
             old_interface.hide()
             TabInterface.resize(old_interface.width(),old_interface.height())
         else:
-            TabInterface.resize(self.stackedWidget.width(), self.stackedWidget.height())
-        TabInterface.progress.update_pos()
+            TabInterface.resize(self.width(), self.height())
         self.stackedWidget.addWidget(TabInterface)
         self.switchTo(TabInterface)
+        TabInterface.progress.run_process(True)
 
     def setTabIcon(self, index: int, icon: Union[QIcon, FluentIconBase, str]):
         """ set tab icon """
@@ -158,10 +160,9 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
     def switchTo(self, interface: MainWidget):
         if not interface.isVisible():
             interface.show()
-        
         self.stackedWidget.setCurrentWidget(interface)
         
-
+        
     def _updateStackedBackground(self):
         isTransparent = self.stackedWidget.currentWidget().property("isStackedTransparent")
         if bool(self.stackedWidget.property("isTransparent")) == isTransparent:
