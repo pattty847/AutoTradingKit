@@ -1,22 +1,18 @@
 import multiprocessing
 import sys
 import os
-from PySide6.QtCore import QCoreApplication,QSize
+from PySide6.QtCore import QCoreApplication
 from PySide6.QtGui import QCloseEvent,QIcon
 from PySide6.QtWidgets import QApplication
 
-from atklip.gui.qfluentwidgets.common import screen, setTheme,Theme
+from atklip.gui.qfluentwidgets.common import setTheme,Theme
 from atklip.gui.qfluentwidgets.common.icon import *
 from atklip.gui.qfluentwidgets.components.dialog_box import MessageBox
 from atklip.gui.views.fluentwindow import WindowBase
 from atklip.appmanager.setting.config import cfg
 import asyncio
 import winloop
-if hasattr(asyncio, 'WindowsSelectorEventLoopPolicy'):
-    try:
-        winloop.install()
-    except:
-        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
 
 class MainWindow(WindowBase):
     def __init__(self):
@@ -71,7 +67,12 @@ if __name__ == '__main__':
     elif sys.platform == "linux":
         method = "spawn"
     else:
-        method = ""
+        try:
+            winloop.install()
+        except:
+            asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     if method:
         multiprocessing.set_start_method('spawn')
     main()
+    
+    

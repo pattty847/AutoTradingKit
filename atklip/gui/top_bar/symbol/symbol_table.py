@@ -328,43 +328,18 @@ class PositionModel(QAbstractTableModel):
                     return Qt.AlignVCenter|Qt.AlignLeft
                 elif index.column() == 3:
                     return Qt.AlignVCenter|Qt.AlignRight
-        
-    # def update_row(self,row,column, value):
-    #     index = self.index(row, column)
-    #     self.setData(index, value, Qt.EditRole)
-    
-    # def updateRows(self, rows_to_update):
-    #     """Cập nhật dữ liệu của các hàng cụ thể."""
-    #     for row in rows_to_update:
-    #         if 0 <= row < self.rowCount(None):  # Kiểm tra nếu hàng nằm trong phạm vi hợp lệ
-    #             # Cập nhật dữ liệu cho từng cột trong hàng
-    #             for column in range(self.columnCount(None)):
-    #                 new_value = random.randint(0, 100)  # Giá trị mới ngẫu nhiên
-    #                 index = self.index(row, column)
-    #                 self.setData(index, new_value, Qt.EditRole)
-    
-    # def setData(self, index, value, role):
-    #     if role == Qt.CheckStateRole:
-    #         # Lưu trạng thái checkbox mới
-    #         if index.column() == 0:
-    #             self.dataChanged.emit(index, index,Qt.CheckStateRole)  # Thông báo thay đổi
-    #             return True
-    #     elif role == Qt.EditRole:
-    #         self.dataChanged.emit(index, index,Qt.EditRole)
-    #         return True
-    #     return False
 
     def flags(self, index):
         # Cho phép cell có thể được check/uncheck
         return Qt.ItemIsEnabled | super().flags(index) | Qt.ItemIsUserCheckable
     
 class BaseMenu(TableView):
-    sig_show_process = Signal(bool)
-    sig_update_symbol = Signal(int)
-    sig_add_item = Signal(object)
-    sig_remove_item = Signal(object)
-    sig_add_to_favorite = Signal(tuple)
-    sig_update_symbols = Signal(str)
+    # sig_show_process = Signal(bool)
+    # sig_update_symbol = Signal(int)
+    # sig_add_item = Signal(object)
+    # sig_remove_item = Signal(object)
+    # sig_add_to_favorite = Signal(tuple)
+    # sig_update_symbols = Signal(str)
     def __init__(self,sig_add_remove_favorite,sig_change_symbol,parent:QWidget=None,exchange_id:str=""):
         super(BaseMenu,self).__init__(parent)
         self.setObjectName(f"{exchange_id}")
@@ -382,7 +357,7 @@ class BaseMenu(TableView):
         
         self._data = []
         self.dict_favorites = {}
-        # self.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         # self.setSortingEnabled(True)
         
         dict_data, self.dict_favorites = self.get_symbols(self.exchange_id)

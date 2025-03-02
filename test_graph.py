@@ -1,100 +1,91 @@
-import sys
+# coding: utf-8
 import random
-from PySide6.QtCore import Qt, QAbstractTableModel, QModelIndex, Signal
-from PySide6.QtWidgets import QApplication, QTableView, QPushButton, QVBoxLayout, QWidget, QLineEdit, QLabel
+import sys
+from typing import List, Union
+
+from PySide6.QtCore import Qt, QMargins, QModelIndex, QItemSelectionModel, Property, QRectF,Qt, \
+    QAbstractTableModel, QTimer, QModelIndex,QPointF,QPoint,Signal
+from PySide6.QtGui import QPainter, QColor, QKeyEvent, QPalette, QBrush, QStandardItemModel,QMouseEvent
+from PySide6.QtWidgets import (QStyledItemDelegate, QApplication, QStyleOptionViewItem,QHeaderView,
+                             QTableView, QTableWidget, QWidget, QTableWidgetItem, QStyle,QVBoxLayout,
+                             QStyleOptionButton)
+
+from atklip.controls.ma_type import IndicatorType
+from atklip.gui.qfluentwidgets.components import TableWidget, isDarkTheme, setTheme, Theme, TableView,\
+    TableItemDelegate, setCustomStyleSheet,SmoothScrollDelegate\
+    ,getFont,themeColor, FluentIcon as FI,ThemeColor, CryptoIcon as CI, EchangeIcon as EI
+from atklip.gui.qfluentwidgets.components.widgets.check_box import CheckBoxIcon
+from atklip.gui.qfluentwidgets.components.widgets.line_edit import LineEdit
+from atklip.gui.qfluentwidgets.components.widgets.label import TitleLabel
+from atklip.gui.qfluentwidgets.components.widgets.button import ToolButton
 
 
-class PositionModel(QAbstractTableModel):
-    def __init__(self, data=None):
-        super().__init__()
-        self._data = data if data is not None else []
-        self._original_data = self._data.copy()  # Lưu trữ dữ liệu gốc để lọc
+from atklip.gui.qfluentwidgets.common import get_symbol_icon
 
-    def rowCount(self, parent=QModelIndex()):
-        return len(self._data)
+from atklip.controls.position import Position
+from atklip.gui.top_bar.indicator.indicator_table import BasicMenu
+     
 
-    def columnCount(self, parent=QModelIndex()):
-        return 5  # Số cột trong bảng
-
-    def data(self, index: QModelIndex, role=Qt.DisplayRole):
-        if role == Qt.DisplayRole:
-            return self._data[index.row()][index.column()]
-        return None
-
-    def headerData(self, section, orientation, role=Qt.DisplayRole):
-        if role == Qt.DisplayRole and orientation == Qt.Horizontal:
-            return ["ID", "Name", "Age", "Status", "Score"][section]  # Tên các cột
-        return None
-
-    def setData(self, new_data):
-        # Xóa toàn bộ dữ liệu cũ và thay thế bằng dữ liệu mới
-        self.beginResetModel()
-        self._data = new_data
-        self._original_data = new_data.copy()  # Cập nhật dữ liệu gốc
-        self.endResetModel()
-
-    def filterData(self, keyword):
-        # Lọc dữ liệu dựa trên từ khóa (cột Name)
-        filtered_data = [
-            row for row in self._original_data
-            if keyword.lower() in row[1].lower()  # Lọc theo cột Name (index 1)
-        ]
-        self.beginResetModel()
-        self._data = filtered_data
-        self.endResetModel()
-
-
-class MainWindow(QWidget):
+class RealTimeTable(QWidget):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("QTableView with Search Box")
-        self.resize(600, 400)
-
-        # Tạo model với dữ liệu ban đầu là rỗng
-        self.model = PositionModel()
-
-        # Tạo QTableView và gán model vào
-        self.table_view = QTableView()
-        self.table_view.setModel(self.model)
-
-        # Tạo search box (QLineEdit)
-        self.search_box = QLineEdit()
-        self.search_box.setPlaceholderText("Search by Name...")
-        self.search_box.textChanged.connect(self.filter_table)
-
-        # Tạo nút để thay thế toàn bộ dữ liệu bằng dữ liệu ngẫu nhiên
-        self.button = QPushButton("Replace with Random Data")
-        self.button.clicked.connect(self.replace_with_random_data)
-
-        # Sắp xếp layout
+        self.setWindowTitle("Real-Time Update Table Example")
+        self.setStyleSheet("""
+                           QWidget {
+                                border: 1px solid rgba(255, 255, 255, 13);
+                                border-radius: 5px;
+                                background-color: transparent;
+                            }""")
+        # Layout chính
         layout = QVBoxLayout()
-        layout.addWidget(self.search_box)
+        
+        list_indicators = [IndicatorType.FWMA ,
+                                # IndicatorType.ALMA ,
+                                IndicatorType.DEMA ,
+                                IndicatorType.EMA ,
+                                IndicatorType.HMA ,
+                                IndicatorType.LINREG ,
+                                IndicatorType.MIDPOINT,
+                                IndicatorType.PWMA,
+                                IndicatorType.RMA ,
+                                IndicatorType.SINWMA ,
+                                IndicatorType.SMA ,
+                                # IndicatorType.SMMA ,
+                                IndicatorType.SWMA ,
+                                IndicatorType.T3 ,
+                                IndicatorType.TEMA ,
+                                IndicatorType.TRIMA ,
+                                # IndicatorType.VIDYA ,
+                                IndicatorType.WMA ,
+                                IndicatorType.SSF ,
+                                IndicatorType.ZLMA,
+                                ]
+        
+        self.table_view = BasicMenu(self,
+                                    sig_add_indicator_to_chart = None,
+                                    sig_add_remove_favorite= None,
+                                    list_indicators=list_indicators,
+                                    _type_indicator="Basic Indicator")
         layout.addWidget(self.table_view)
-        layout.addWidget(self.button)
         self.setLayout(layout)
 
-    def replace_with_random_data(self):
-        # Tạo danh sách dữ liệu ngẫu nhiên
-        new_data = []
-        for _ in range(10):  # Tạo 10 hàng dữ liệu ngẫu nhiên
-            random_id = random.randint(1, 100)
-            random_name = f"User{random_id}"
-            random_age = random.randint(18, 60)
-            random_status = random.choice(["Active", "Inactive"])
-            random_score = random.randint(0, 100)
-            new_data.append([random_id, random_name, random_age, random_status, random_score])
+        # Tạo QTimer để cập nhật dữ liệu theo thời gian thực
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.update_table)
+        # self.timer.start(1000)  # Cập nhật mỗi 1 giây
 
-        # Thay thế toàn bộ dữ liệu cũ bằng dữ liệu mới
-        self.model.setData(new_data)
-
-    def filter_table(self):
-        # Lấy từ khóa từ search box và lọc dữ liệu
-        keyword = self.search_box.text()
-        self.model.filterData(keyword)
-
+    def update_table(self):
+        """Cập nhật dữ liệu của các hàng cụ thể trong bảng."""
+        # Ví dụ chỉ cập nhật các hàng 2, 4 và 6
+        rows_to_update = [2, 4, 6]
+        self.table_view.model().updateRows(rows_to_update)
 
 if __name__ == "__main__":
+    setTheme(Theme.DARK,True,True)
     app = QApplication(sys.argv)
-    window = MainWindow()
+    
+    window = RealTimeTable()
+    window.resize(600, 400)
     window.show()
     sys.exit(app.exec())
+

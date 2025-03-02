@@ -135,11 +135,9 @@ class ListSymbolMenuByExchange(QStackedWidget):
 class MainMenu(HWIDGET):
     def __init__(self,sig_change_symbol,parent:QWidget=None):
         super(MainMenu,self).__init__(parent)
-        #self.setSpacing(0)
-        #self.setContentsMargins(0,0,0,0)
         self.ListSymbols = ListSymbolMenuByExchange(sig_change_symbol,self)
         self.rightmenu = RightMenu(self.ListSymbols)
-        self.rightmenu.setMinimumWidth(300)
+        self.rightmenu.setFixedWidth(250)
         self.addWidget(self.rightmenu)
         self.addSeparator(_type = "VERTICAL",w=2,h=self.parent().height())
         self.addWidget(self.ListSymbols)
@@ -152,7 +150,7 @@ class SymbolSearchMenu(MovingWidget):
     def __init__(self,sig_remove_menu,sig_change_symbol,parent:QWidget=None):
         super(SymbolSearchMenu, self).__init__(parent,"Search Symbol")
         self.title.btn_close.clicked.connect(sig_remove_menu,Qt.ConnectionType.AutoConnection)
-        self.setFixedSize(700,700)
+        self.setFixedSize(600,600)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         #self.setFixedWidth(700)
         #self.setSpacing(2)
