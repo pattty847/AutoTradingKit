@@ -241,6 +241,7 @@ class PositionModel(QAbstractTableModel):
         # Cập nhật dữ liệu của hàng
         self._data[row] = new_data
         # Thông báo cho view biết dữ liệu đã thay đổi
+        self._original_data = self._data.copy()
         top_left = self.index(row, 0)
         bottom_right = self.index(row, self.columnCount() - 1)
         self.dataChanged.emit(top_left, bottom_right)
@@ -299,7 +300,7 @@ class PositionModel(QAbstractTableModel):
 class BasicMenu(TableView):
     sig_add_indicator = Signal(tuple)
     sig_remove_indicator = Signal(object)
-    def __init__(self,parent:QWidget=None,sig_add_indicator_to_chart=None,sig_add_remove_favorite=None,list_indicators=[],_type_indicator=""):
+    def __init__(self,parent:QWidget=None,sig_add_indicator_to_chart=None,sig_add_remove_favorite=None,list_indicators:IndicatorType=[],_type_indicator=""):
         super(BasicMenu,self).__init__(parent)
         
         self._type_indicator = _type_indicator
@@ -317,14 +318,11 @@ class BasicMenu(TableView):
         self.sig_add_indicator_to_chart = sig_add_indicator_to_chart
         self.sig_add_remove_favorite=sig_add_remove_favorite
         self._data = []
-        self._favorites = self._load_favorites()
+        self._favorites, self.dict_favorites = self._load_favorites()
         
-        # print(self._favorites)
-        
-        if self._type_indicator != "Favorites Indicator":
+        if self._type_indicator != "Favorites":
             if list_indicators != []:
                 for indicator in list_indicators:
-                    print(indicator, type(indicator))
                     if self._favorites !=[]:
                         if indicator.name in self._favorites:
                             state = Qt.CheckState.Checked
@@ -332,15 +330,25 @@ class BasicMenu(TableView):
                             state = Qt.CheckState.Unchecked
                     else:
                         state = Qt.CheckState.Unchecked
-                    self._data.append(['', indicator.value,state]) 
+                    self._data.append(['', indicator.value,state,indicator,self._type_indicator]) 
         else:
-            pass
+            if self.dict_favorites:
+                for _type_indicator,list_indicator in self.dict_favorites.items():
+                    if list_indicator:
+                        for indicator in list_indicator:
+                            _indicator = None
+                            try:
+                                _indicator =  IndicatorType.__getitem__(indicator)
+                            except KeyError:
+                                pass
+                            if _indicator:
+                                state = Qt.CheckState.Checked
+                                self._data.append(['', _indicator.value,state,_indicator,_type_indicator]) 
         
-        # print(self._data)
         self.delegate = None
         self.table_model = None
         
-        if self._data:
+        if self._data!=[]:
             self.table_model = PositionModel(self._data)
             self.setModel(self.table_model)
             
@@ -360,7 +368,7 @@ class BasicMenu(TableView):
             hor_header.resizeSection(2, 45) 
             ver_header.resizeSection(2, 45)  
             
-            hor_header.setSectionResizeMode(1, QHeaderView.Stretch)  # Hoặc QHeaderView.ResizeToContents
+            hor_header.setSectionResizeMode(1, QHeaderView.Stretch)  
             
         self.setFixedHeight(410)
         self.clicked.connect(self.item_changed)
@@ -375,13 +383,9 @@ class BasicMenu(TableView):
     def filter_table(self,keyword:str=""):
         self.table_model.filterData(keyword)
     
-    def _load_favorites(self):
-        if self._type_indicator == "Favorites Indicator":
-            # self.add_to_favorite_from_load()
-            return []
-        self.dict_favorites = AppConfig.get_config_value(f"topbar.indicator.favorite")
-
-        if self.dict_favorites == None:
+    def _load_favorites(self): #->"IndicatorType"
+        self.dict_favorites = AppConfig.get_config_value(f"topbar.indicator.favorite",{})
+        if self.dict_favorites == {}:
             AppConfig.sig_set_single_data.emit((f"topbar.indicator.favorite",{}))
             self.dict_favorites = AppConfig.get_config_value(f"topbar.indicator.favorite")
         
@@ -392,69 +396,68 @@ class BasicMenu(TableView):
             AppConfig.sig_set_single_data.emit((f"topbar.indicator.favorite.{self._type_indicator}",[]))
             _list_pre_favorites = AppConfig.get_config_value(f"topbar.indicator.favorite.{self._type_indicator}")
 
-        return _list_pre_favorites
+        return _list_pre_favorites, self.dict_favorites
     
     def item_changed(self, index):
         "click on cell, item là PySide6.QtCore.QModelIndex(19,3,0x0,PositionModel(0x1d787459870)) tại cell đó"
-        # self.symbol_infor = ("change_symbol",
-        #                      self.table_model._data[index.row()][2],
-        #                      self.table_model._data[index.row()][5],
-        #                      self.table_model._data[index.row()][3],
-        #                      self.table_model._data[index.row()][6],
-        #                      self.table_model._data[index.row()][8],
-        #                      self.table_model._data[index.row()][9])
-        
-        if index.column() == 0:
+        indicator = self.table_model._data[index.row()][3]
+        if index.column() == 2:
             checkState = Qt.CheckState(index.data(Qt.ItemDataRole.CheckStateRole))
             if checkState==Qt.CheckState.Checked:
                 new_state = self.table_model._data[index.row()][2] = Qt.CheckState.Unchecked
+                _bool = False
             else:
                 new_state = self.table_model._data[index.row()][2] = Qt.CheckState.Checked
+                _bool = True
             new_data = self.table_model._data[index.row()]
             if new_state == Qt.CheckState.Unchecked:
-                if self._type_indicator == "favorite":
+                if self._type_indicator == "Favorites":
                     # del self.data[index.row()]
                     self.table_model.removeRow(index.row())
                 else:
                     "update data"
                     self.table_model.dataChanged.emit(index, index,Qt.CheckStateRole)
             else:
-                if self._type_indicator != "favorite":
+                if self._type_indicator != "Favorites":
                     self.table_model.dataChanged.emit(index, index,Qt.CheckStateRole)
-                
+            
             self.sig_add_remove_favorite.emit((self._type_indicator,new_data))
             return
-        # self.sig_change_symbol.emit(self.symbol_infor)
+        self.sig_add_indicator_to_chart.emit((self._type_indicator,indicator))
 
-    def add_remove_favorite_item(self,_type_indicator,new_data):
-        symbol = new_data[2]
+    def add_remove_favorite_item(self,_type_indicator,new_data):        
+        indicator = new_data[1]
         new_state = new_data[2]
-        from_exchange_id = new_data[5]
-        if _type_indicator == "favorite":
-            if self._type_indicator != "favorite":
+        save_indicator:IndicatorType = new_data[3]
+        
+        indicator_name = save_indicator.name
+        
+        from_indicator_wg = new_data[4]
+        if _type_indicator == "Favorites":
+            if self._type_indicator != "Favorites":
                 for index,row in enumerate(self.data):
-                    if row[2] == symbol:
+                    if row[1] == indicator:
                         self.data[index][2] = new_state
                         self.table_model.updateRow(index, self.data[index])
                         
-                        self.dict_favorites = AppConfig.get_config_value(f"topbar.symbol.favorite")
+                        self.dict_favorites = AppConfig.get_config_value(f"topbar.indicator.favorite")
                         if new_state == Qt.CheckState.Unchecked:
                             if self._type_indicator not in list(self.dict_favorites.keys()):
                                 self.dict_favorites[self._type_indicator] = []
                             else:
-                                if symbol in self.dict_favorites[self._type_indicator]:
-                                    self.dict_favorites[self._type_indicator].remove(symbol)
+                                if indicator_name in self.dict_favorites[self._type_indicator]:
+                                    self.dict_favorites[self._type_indicator].remove(indicator_name)
                         else:
                             if self._type_indicator not in list(self.dict_favorites.keys()):
-                                self.dict_favorites[self._type_indicator] = [symbol]
+                                self.dict_favorites[self._type_indicator] = [indicator_name]
                             else:
-                                if symbol not in self.dict_favorites[self._type_indicator]:
-                                    self.dict_favorites[self._type_indicator].append(symbol)
-                        AppConfig.sig_set_single_data.emit((f"topbar.symbol.favorite.{self._type_indicator}",self.dict_favorites[self._type_indicator]))
-                        self.dict_favorites = AppConfig.get_config_value(f"topbar.symbol.favorite")
+                                if indicator_name not in self.dict_favorites[self._type_indicator]:
+                                    self.dict_favorites[self._type_indicator].append(indicator_name)
+                        AppConfig.sig_set_single_data.emit((f"topbar.indicator.favorite.{self._type_indicator}",self.dict_favorites[self._type_indicator]))
+                        self.dict_favorites = AppConfig.get_config_value(f"topbar.indicator.favorite")
                         break
         else:
-            if self._type_indicator == "favorite":
+            if self._type_indicator == "Favorites":
                 if new_state == Qt.CheckState.Checked:
                     if self._data == []:
                         self._data = [new_data]
@@ -469,14 +472,14 @@ class BasicMenu(TableView):
                             hor_header = self.horizontalHeader()
                             ver_header = self.verticalHeader()
 
-                            hor_header.setSectionResizeMode(0, QHeaderView.Fixed)
+                            hor_header.setSectionResizeMode(0, QHeaderView.Fixed)  
                             ver_header.setSectionResizeMode(0, QHeaderView.Fixed)  
                             hor_header.resizeSection(0, 45)  
-                            ver_header.resizeSection(0, 45)  
+                            ver_header.resizeSection(0, 45) 
 
-                            hor_header.setSectionResizeMode(2, QHeaderView.Fixed)  
+                            hor_header.setSectionResizeMode(2, QHeaderView.Fixed) 
                             ver_header.setSectionResizeMode(2, QHeaderView.Fixed)  
-                            hor_header.resizeSection(2, 45)  
+                            hor_header.resizeSection(2, 45) 
                             ver_header.resizeSection(2, 45)  
                             
                             hor_header.setSectionResizeMode(1, QHeaderView.Stretch)  
@@ -484,43 +487,44 @@ class BasicMenu(TableView):
                             self.table_model.insertRow(0,new_data)
                     else: 
                         self.table_model.insertRow(0,new_data)
-                    if _type_indicator != "favorite":
-                        self.dict_favorites = AppConfig.get_config_value(f"topbar.symbol.favorite")
+                    
+                    if _type_indicator != "Favorites":
+                        self.dict_favorites = AppConfig.get_config_value(f"topbar.indicator.favorite")
                         if new_state == Qt.CheckState.Unchecked:
                             if _type_indicator not in list(self.dict_favorites.keys()):
                                 self.dict_favorites[_type_indicator] = []
                             else:
-                                if symbol in self.dict_favorites[_type_indicator]:
-                                    self.dict_favorites[_type_indicator].remove(symbol)
+                                if indicator_name in self.dict_favorites[_type_indicator]:
+                                    self.dict_favorites[_type_indicator].remove(indicator_name)
                         else:
                             if _type_indicator not in list(self.dict_favorites.keys()):
-                                self.dict_favorites[_type_indicator] = [symbol]
+                                self.dict_favorites[_type_indicator] = [indicator_name]
                             else:
-                                if symbol not in self.dict_favorites[_type_indicator]:
-                                    self.dict_favorites[_type_indicator].append(symbol)
-                        AppConfig.sig_set_single_data.emit((f"topbar.symbol.favorite.{_type_indicator}",self.dict_favorites[_type_indicator]))
-                        self.dict_favorites = AppConfig.get_config_value(f"topbar.symbol.favorite")    
+                                if indicator_name not in self.dict_favorites[_type_indicator]:
+                                    self.dict_favorites[_type_indicator].append(indicator_name)
+                        AppConfig.sig_set_single_data.emit((f"topbar.indicator.favorite.{_type_indicator}",self.dict_favorites[_type_indicator]))
+                        self.dict_favorites = AppConfig.get_config_value(f"topbar.indicator.favorite")    
                     
                 else:
                     for index,row in enumerate(self.data):
-                        if row[2] == symbol and row[5] == from_exchange_id:
+                        if row[1] == indicator and row[4] == from_indicator_wg:
                             self.table_model.removeRow(index)
-                            if _type_indicator != "favorite":
-                                self.dict_favorites = AppConfig.get_config_value(f"topbar.symbol.favorite")
+                            if _type_indicator != "Favorites":
+                                self.dict_favorites = AppConfig.get_config_value(f"topbar.indicator.favorite")
                                 if new_state == Qt.CheckState.Unchecked:
                                     if _type_indicator not in list(self.dict_favorites.keys()):
                                         self.dict_favorites[_type_indicator] = []
                                     else:
-                                        if symbol in self.dict_favorites[_type_indicator]:
-                                            self.dict_favorites[_type_indicator].remove(symbol)
+                                        if indicator_name in self.dict_favorites[_type_indicator]:
+                                            self.dict_favorites[_type_indicator].remove(indicator_name)
                                 else:
                                     if _type_indicator not in list(self.dict_favorites.keys()):
-                                        self.dict_favorites[_type_indicator] = [symbol]
+                                        self.dict_favorites[_type_indicator] = [indicator_name]
                                     else:
-                                        if symbol not in self.dict_favorites[_type_indicator]:
-                                            self.dict_favorites[_type_indicator].append(symbol)
-                                AppConfig.sig_set_single_data.emit((f"topbar.symbol.favorite.{_type_indicator}",self.dict_favorites[_type_indicator]))
-                                self.dict_favorites = AppConfig.get_config_value(f"topbar.symbol.favorite")  
+                                        if indicator_name not in self.dict_favorites[_type_indicator]:
+                                            self.dict_favorites[_type_indicator].append(indicator_name)
+                                AppConfig.sig_set_single_data.emit((f"topbar.indicator.favorite.{_type_indicator}",self.dict_favorites[_type_indicator]))
+                                self.dict_favorites = AppConfig.get_config_value(f"topbar.indicator.favorite")  
                             break
                 
     def leaveEvent(self,ev):

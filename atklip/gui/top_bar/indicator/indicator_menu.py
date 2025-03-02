@@ -147,9 +147,7 @@ dict_indicators = {
     "Sub View Idicators": [IndicatorType.SUB_CHART],
     "Strategies": [IndicatorType.ATKBOT_SUPERTREND_SSCANDLE, 
                    IndicatorType.ATKBOT_SUPERTREND, 
-                   IndicatorType.ATKBOT_CCI],
-    
-    
+                   IndicatorType.ATKBOT_CCI],  
 }
 
 class ListIndicatorMenu(QStackedWidget):
@@ -173,26 +171,25 @@ class ListIndicatorMenu(QStackedWidget):
         self.sig_add_remove_favorite.connect(self.add_remove_favorite_item,Qt.ConnectionType.AutoConnection)
 
     
-    def add_remove_favorite_item(self,args):
-        _is_add,__type_indicator,indicator = args[0],args[1],args[2]
-        if _is_add:
-            self.add_to_favorite(indicator,__type_indicator)
-        else:
-            self.remove_from_favorite(indicator,__type_indicator)
-
+    def add_remove_favorite_item(self,item_data):
+        target_wg = item_data[1][4]
+        sender_wg = item_data[0]
+        new_data = item_data[1]
+        favorite_menu =  self.get_exchange_menu("Favorites")
+        indicator_menu =  self.get_exchange_menu(target_wg)
+        indicator_menu.add_remove_favorite_item(sender_wg,new_data)
+        favorite_menu.add_remove_favorite_item(sender_wg,new_data)
+    
+    
     def add_to_favorite(self,indicator,_type_indicator):
         "overwrite for favorite menu only"
         self.dict_favorites = AppConfig.get_config_value(f"topbar.indicator.favorite")
         if _type_indicator not in list(self.dict_favorites.keys()):
             self.dict_favorites[_type_indicator] = [indicator.name]
-            # item = Indicator_Item(self.sig_add_remove_favorite,self.sig_add_indicator_to_chart,_type_indicator,indicator,self)
-            # item.btn_fovarite.added_to_favorite()
             self.FavoritesMenu.sig_add_indicator.emit((_type_indicator,indicator))
         else:
             if indicator.name not in self.dict_favorites[_type_indicator]:
                 self.dict_favorites[_type_indicator].append(indicator.name)
-                # item = Indicator_Item(self.sig_add_remove_favorite,self.sig_add_indicator_to_chart,_type_indicator,indicator,self)
-                # item.btn_fovarite.added_to_favorite()
                 self.FavoritesMenu.sig_add_indicator.emit((_type_indicator,indicator))
         AppConfig.sig_set_single_data.emit((f"topbar.indicator.favorite.{_type_indicator}",self.dict_favorites[_type_indicator]))
         
@@ -207,8 +204,6 @@ class ListIndicatorMenu(QStackedWidget):
         
         self.dict_favorites[_type_indicator].remove(indicator.name)
         menu = self.findChild(BasicMenu,_type_indicator)
-
-        # print(menu)
 
         if isinstance(menu,BasicMenu):
             _item = menu.find_item(indicator.name)
@@ -232,7 +227,6 @@ class ListIndicatorMenu(QStackedWidget):
         if isinstance(_wg,BasicMenu):
             self.setCurrentWidget(_wg)
     def filter_table(self,keyword:str=""):
-        # print(self.sender(), keyword)
         _wg:BasicMenu = self.currentWidget()
         if isinstance(_wg,BasicMenu):
             _wg.filter_table(keyword)

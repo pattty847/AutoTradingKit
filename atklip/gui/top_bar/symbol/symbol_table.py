@@ -276,6 +276,7 @@ class PositionModel(QAbstractTableModel):
             return False
         # Cập nhật dữ liệu của hàng
         self._data[row] = new_data
+        self._original_data = self._data.copy()
         # Thông báo cho view biết dữ liệu đã thay đổi
         top_left = self.index(row, 0)
         bottom_right = self.index(row, self.columnCount() - 1)

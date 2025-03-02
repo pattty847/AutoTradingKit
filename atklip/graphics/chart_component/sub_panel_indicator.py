@@ -150,7 +150,6 @@ class ViewSubPanel(PlotWidget):
             self.indicator = BasicRVGI(self.get_last_pos_worker,self.Chart,self)
         elif _indicator_type == IndicatorType.EMATrendMetter:
             self.indicator = EMATrendMetter(self.get_last_pos_worker,self.Chart,self)
-        
         elif _indicator_type == IndicatorType.CCI:
             self.indicator = BasicCCI(self.get_last_pos_worker,self.Chart,self)
         elif _indicator_type == IndicatorType.VOLUME:
@@ -172,11 +171,8 @@ class ViewSubPanel(PlotWidget):
         elif _indicator_type == IndicatorType.Stoch:
             self.indicator = BasicSTOCH(self.get_last_pos_worker,self.Chart,self)
         elif _indicator_type == IndicatorType.SQEEZE:
-            
             self.indicator = BaSicSqeeze(self.get_last_pos_worker,self.Chart,self)
-        
         elif _indicator_type == IndicatorType.VOLUMEWITHMA:
-            
             self.indicator = VolumeWithMA(self.get_last_pos_worker,self.Chart,self)
         
         

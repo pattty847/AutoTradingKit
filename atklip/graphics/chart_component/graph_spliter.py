@@ -130,7 +130,7 @@ class CustomDockLabel(DockLabel):
     
 
 class ViewSplitter(QFrame,Ui_Form):
-    sig_add_indicator_to_chart = Signal(tuple)
+    # sig_add_indicator_to_chart = Signal(tuple)
     sig_add_sub_panel = Signal(object)
     sig_show_hide_cross = Signal(tuple)
     def __init__(self, parent: QWidget | None = ...) -> None:
@@ -156,6 +156,8 @@ class ViewSplitter(QFrame,Ui_Form):
         self.DockArea = CustomDockArea(self)
         self.splitter.addWidget(self.DockArea)
 
+    def create_indicator(self,data):...
+    
     def addWidget(self,widget:QWidget|Chart|SubChart|ViewSubPanel):
         _dock = CustomDock(parent=self,name="",closable = False,hideTitle=True,label=CustomDockLabel(""))
         if isinstance(widget,ViewSubPanel) or isinstance(widget,SubChart):
@@ -181,31 +183,33 @@ class GraphSplitter(ViewSplitter):
                                                                          "Candle Indicator":IndicatorType.N_SMOOTH_JP},
                                 IndicatorType.ATKBOT_SUPERTREND:[],
                                 IndicatorType.ATKBOT_CCI:[]}
-        self.sig_add_indicator_to_chart.connect(self.create_indicator,Qt.ConnectionType.AutoConnection)
+        # self.sig_add_indicator_to_chart.connect(self.create_indicator,Qt.ConnectionType.AutoConnection)
         self.sig_add_sub_panel.connect(self.add_sub_panel,Qt.ConnectionType.AutoConnection)
 
     def reload_pre_indicator(self):
         "load pre saved indicator"
-        self.create_indicator(("Candle Indicator",IndicatorType.JAPAN_CANDLE))
+        self.create_indicator(("Candle Idicators",IndicatorType.JAPAN_CANDLE))
 
     def create_indicator(self,data):
         "Tạo Indicator panel và setup cho Chart hoặc Sub-Indicator"
-        """('Basic Indicator', 'SMA-Simple Moving Average')"""
+        """('Basic Indicator', 'SMA-Simple Moving Average')"""  
         indicator_type = data[0]
         name = data[1]
-        if indicator_type =="Sub Indicator":
+        if indicator_type =="Sub Indicators":
             self.create_sub_indicator(data)
-        elif indicator_type =="Basic Indicator":
+        elif indicator_type =="Basic Indicators":
             self.create_basic_indicator(data)
-        elif indicator_type =="Candle Indicator":
+        elif indicator_type =="Candle Idicators":
             self.create_candle_indicator(data)
-        elif indicator_type =="Advance Indicator":
+        elif indicator_type =="Advand Idicators":
             self.create_advand_indicator(data)
-        elif indicator_type =="Sub Candle Indicator":
+        elif indicator_type =="Sub View Idicators":
             self.create_sub_chart(data)
         elif indicator_type =="Strategies":
             self.create_strategy(data)
-        elif indicator_type =="Parttens Indicator":
+        elif indicator_type =="Paterns":
+            self.create_advand_indicator(data)  
+        elif indicator_type =="Profiles":
             self.create_advand_indicator(data)  
         else:
             print("Unknown Indicator Type")

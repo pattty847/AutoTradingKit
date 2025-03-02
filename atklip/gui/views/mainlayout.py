@@ -48,7 +48,7 @@ class MainWidget(QWidget,Ui_MainWidget):
         self.topbar.sig_change_inteval.connect(self.chartbox_splitter.chart.on_change_inteval,Qt.ConnectionType.AutoConnection)
         self.topbar.sig_goto_date.connect(self.chartbox_splitter.chart.sig_goto_date,Qt.ConnectionType.AutoConnection)
         self.topbar.gotonow.clicked.connect(self.chartbox_splitter.chart.roll_till_now)
-        self.topbar.sig_add_indicator_to_chart.connect(self.chartbox_splitter.sig_add_indicator_to_chart,Qt.ConnectionType.AutoConnection)
+        self.topbar.sig_add_indicator_to_chart.connect(self.chartbox_splitter.create_indicator,Qt.ConnectionType.AutoConnection)
         "signal from TopBar-------end"
         
         self.topbar.replay.clicked.connect(self.chartbox_splitter.chart.set_replay_mode)

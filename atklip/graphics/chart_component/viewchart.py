@@ -402,7 +402,7 @@ class Chart(ViewPlotWidget):
     def check_signal_load_old_data(self):
         if self.jp_candle.candles != []:
             _cr_time = self.jp_candle.candles[0].time
-            data = self.crypto_ex.fetch_ohlcv(self.symbol,self.interval, params={"until":_cr_time*1000})
+            data = self.crypto_ex.fetch_ohlcv(self.symbol,self.interval, params={"until":_cr_time*1000},limit=1500)
             self.jp_candle.load_historic_data(data,self._precision)
             self.heikinashi.load_historic_data(len(data))
         self.is_load_historic = False
@@ -507,7 +507,7 @@ class Chart(ViewPlotWidget):
             self.worker_reload.cancel()
             await self.reload_market()
         # print("-------------reset_exchange------------",self.crypto_ex,self.symbol,self.interval)
-        data = self.crypto_ex.fetch_ohlcv(self.symbol,self.interval) 
+        data = self.crypto_ex.fetch_ohlcv(self.symbol,self.interval,limit=1500) 
         if len(data) == 0:
             raise BadSymbol(f"{self.exchange_name} data not received")
         self.set_market_by_symbol(self.crypto_ex)
@@ -656,17 +656,17 @@ class Chart(ViewPlotWidget):
         return candle
     
     def setup_indicator(self,indicator_data):
+        
         _group_indicator = indicator_data[0][0]
         _indicator_type = indicator_data[0][1]
         self.mainwindow = indicator_data[1]
         indicator = None
         # print("view chart", _group_indicator,_indicator_type)
-        if _group_indicator == "Basic Indicator":
+        if _group_indicator == "Basic Indicators":
             indicator = BasicMA(self,indicator_type=_indicator_type,length=30,_type="close",pen="#ffaa00")
 
-        elif _group_indicator == "Candle Indicator":
+        elif _group_indicator == "Candle Idicators":
             _type = _indicator_type.value
-            print(_type)
             candle:CandleStick = self.get_candle(_type)
             panel = IndicatorPanel(self.mainwindow,self, candle)
             # self.container_indicator_wg.sig_add_panel.emit(panel)
@@ -686,7 +686,7 @@ class Chart(ViewPlotWidget):
             else:
                 self.candle_object = candle
 
-        elif _group_indicator == "Advance Indicator":
+        elif _group_indicator == "Advand Idicators":
             #________BASIC INDICATORS__________
             if _indicator_type==IndicatorType.BB:
                 indicator = BasicBB(self)
@@ -726,7 +726,7 @@ class Chart(ViewPlotWidget):
             elif _indicator_type==IndicatorType.ATRSuperTrend:
                 indicator = ATRSuperTrend(self)
         #________Candle Pattern________
-        elif _group_indicator == "Parttens Indicator":
+        elif _group_indicator == "Paterns":
             if _indicator_type==IndicatorType.CANDLE_PATTERN:
                 indicator = CandlePattern(self)
             elif _indicator_type==IndicatorType.CUSTOM_CANDLE_PATTERN:
