@@ -401,6 +401,7 @@ class BasicMenu(TableView):
     def item_changed(self, index):
         "click on cell, item là PySide6.QtCore.QModelIndex(19,3,0x0,PositionModel(0x1d787459870)) tại cell đó"
         indicator = self.table_model._data[index.row()][3]
+        target_type_indicator = self.table_model._data[index.row()][4]
         if index.column() == 2:
             checkState = Qt.CheckState(index.data(Qt.ItemDataRole.CheckStateRole))
             if checkState==Qt.CheckState.Checked:
@@ -423,7 +424,7 @@ class BasicMenu(TableView):
             
             self.sig_add_remove_favorite.emit((self._type_indicator,new_data))
             return
-        self.sig_add_indicator_to_chart.emit((self._type_indicator,indicator))
+        self.sig_add_indicator_to_chart.emit((target_type_indicator,indicator))
 
     def add_remove_favorite_item(self,_type_indicator,new_data):        
         indicator = new_data[1]
