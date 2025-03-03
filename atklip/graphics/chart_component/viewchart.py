@@ -1,5 +1,4 @@
 import traceback,asyncio,time
-import winloop
 from typing import Dict
 from PySide6 import QtCore
 from PySide6.QtCore import Qt, QEvent, QCoreApplication, QKeyCombination, QThreadPool,QObject
@@ -110,12 +109,6 @@ class Chart(ViewPlotWidget):
     def id(self,_chart_id):
         self.chart_id = _chart_id
     
-    def _init_async_winloop(self) -> asyncio.AbstractEventLoop: # type: ignore
-        winloop.install()
-        # loop = asyncio.new_event_loop()
-        # asyncio.set_event_loop(loop)
-        # return loop
-
     @property
     def time_delay(self):
         return self._time_delay

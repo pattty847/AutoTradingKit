@@ -50,7 +50,7 @@ def main():
     app.setApplicationName(APP_NAME)
     app.setApplicationDisplayName(APP_DISPLAY_NAME)
     app.setOrganizationName(ORGANIZATION_NAME)
-    app.setOrganizationDomain(ORGANIZATION_DOMAIN)
+    app.setOrganizationDomain(ORGANIZATION_DOMAIN) 
     w = MainWindow()
     w.setWindowTitle(f"ATK - {APP_NAME}")
     icon = QIcon(get_real_path(ICON_PATH))
@@ -64,11 +64,13 @@ if __name__ == '__main__':
         asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
         multiprocessing.set_start_method('spawn')
     else:
-        import winloop 
         try:
+            import winloop 
             winloop.install()
         except:
             asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+    event = asyncio.get_event_loop_policy()
+    print(event)
     main()
     
     
