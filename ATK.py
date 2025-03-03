@@ -11,8 +11,6 @@ from atklip.gui.qfluentwidgets.components.dialog_box import MessageBox
 from atklip.gui.views.fluentwindow import WindowBase
 from atklip.appmanager.setting.config import cfg
 import asyncio
-import winloop
-
 
 class MainWindow(WindowBase):
     def __init__(self):
@@ -61,18 +59,16 @@ def main():
 
 if __name__ == '__main__':
     multiprocessing.freeze_support()
-    method = ""
-    if sys.platform == "darwin":
-        method = "spawn"
-    elif sys.platform == "linux":
-        method = "spawn"
+    if sys.platform == "darwin" or sys.platform == "linux":
+        import uvloop 
+        asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+        multiprocessing.set_start_method('spawn')
     else:
+        import winloop 
         try:
             winloop.install()
         except:
             asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-    if method:
-        multiprocessing.set_start_method('spawn')
     main()
     
     
