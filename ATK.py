@@ -60,9 +60,12 @@ def main():
 if __name__ == '__main__':
     multiprocessing.freeze_support()
     if sys.platform == "darwin" or sys.platform == "linux":
-        import uvloop 
-        asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-        multiprocessing.set_start_method('spawn')
+        try:
+            import uvloop 
+            asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+            # multiprocessing.set_start_method('spawn')
+        except:
+            pass
     else:
         try:
             import winloop 
