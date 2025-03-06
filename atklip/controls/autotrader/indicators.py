@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from finta import TA
+from atklip.controls.autotrader.finta import TA
 from typing import Union
 
 

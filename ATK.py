@@ -57,16 +57,22 @@ def main():
     w.setWindowIcon(icon)
     sys.exit(app.exec())
 
+try: 
+    from ctypes import windll # Only exists on Windows.
+    myappid = "atkteam.atk.subproduct.version" 
+    windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+except ImportError:
+    pass
+
 if __name__ == '__main__':
-    multiprocessing.freeze_support()
     if sys.platform == "darwin" or sys.platform == "linux":
         try:
             import uvloop 
             asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-            # multiprocessing.set_start_method('spawn')
         except:
             pass
     else:
+        multiprocessing.freeze_support()
         try:
             import winloop 
             winloop.install()
