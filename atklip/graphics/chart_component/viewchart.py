@@ -718,6 +718,9 @@ class Chart(ViewPlotWidget):
             
             elif _indicator_type==IndicatorType.ATRSuperTrend:
                 indicator = ATRSuperTrend(self)
+            
+            elif _indicator_type==IndicatorType.SMC:
+                indicator = SMC(self)
         #________Candle Pattern________
         elif _group_indicator == "Paterns":
             if _indicator_type==IndicatorType.CANDLE_PATTERN:

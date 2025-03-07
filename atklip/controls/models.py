@@ -121,6 +121,14 @@ class UTBOTModel(IndicatorBase):
     ema_long_period:int
     atr_short_period:float
     ema_short_period:int
+
+@dataclass         
+class SMCModel(IndicatorBase):
+    window:int
+    swing_length:int
+    time_frame:str
+    session:str
+
     
 @dataclass 
 class UTBOTWITHBBModel(IndicatorBase):

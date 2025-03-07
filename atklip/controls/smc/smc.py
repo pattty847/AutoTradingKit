@@ -1,8 +1,10 @@
+from concurrent.futures import Future
 from functools import wraps
 import pandas as pd
 import numpy as np
 from pandas import DataFrame, Series
 from datetime import datetime
+from atklip.appmanager.worker.return_worker import HeavyProcess
 
 def inputvalidator(input_="ohlc"):
     def dfcheck(func):
@@ -50,10 +52,10 @@ def apply(decorator):
 
 @apply(inputvalidator(input_="ohlc"))
 class smc:
-    __version__ = "0.0.21"
+    __version__ = "0.0.26"
 
     @classmethod
-    def fvg(cls, ohlc: DataFrame, join_consecutive=False) -> Series:
+    def fvg(cls, ohlc: DataFrame, join_consecutive=False) -> DataFrame:
         """
         FVG - Fair Value Gap
         A fair value gap is when the previous high is lower than the next low if the current candle is bullish.
@@ -114,9 +116,9 @@ class smc:
         for i in np.where(~np.isnan(fvg))[0]:
             mask = np.zeros(len(ohlc), dtype=np.bool_)
             if fvg[i] == 1:
-                mask = ohlc["low"][i + 2 :] <= top[i]
+                mask = ohlc["low"].iloc[i + 2 :] <= top[i]
             elif fvg[i] == -1:
-                mask = ohlc["high"][i + 2 :] >= bottom[i]
+                mask = ohlc["high"].iloc[i + 2 :] >= bottom[i]
             if np.any(mask):
                 j = np.argmax(mask) + i + 2
                 mitigated_index[i] = j
@@ -134,7 +136,7 @@ class smc:
         )
 
     @classmethod
-    def swing_highs_lows(cls, ohlc: DataFrame, swing_length: int = 50) -> Series:
+    def swing_highs_lows(cls, ohlc: DataFrame, swing_length: int = 50) -> DataFrame:
         """
         Swing Highs and Lows
         A swing high is when the current high is the highest high out of the swing_length amount of candles before and after.
@@ -221,7 +223,7 @@ class smc:
     @classmethod
     def bos_choch(
         cls, ohlc: DataFrame, swing_highs_lows: DataFrame, close_break: bool = True
-    ) -> Series:
+    ) -> DataFrame:
         """
         BOS - Break of Structure
         CHoCH - Change of Character
@@ -337,10 +339,10 @@ class smc:
             mask = np.zeros(len(ohlc), dtype=np.bool_)
             # if the bos is 1 then check if the candles high has gone above the level
             if bos[i] == 1 or choch[i] == 1:
-                mask = ohlc["close" if close_break else "high"][i + 2 :] > level[i]
+                mask = ohlc["close" if close_break else "high"].iloc[i + 2 :] > level[i]
             # if the bos is -1 then check if the candles low has gone below the level
             elif bos[i] == -1 or choch[i] == -1:
-                mask = ohlc["close" if close_break else "low"][i + 2 :] < level[i]
+                mask = ohlc["close" if close_break else "low"].iloc[i + 2 :] < level[i]
             if np.any(mask):
                 j = np.argmax(mask) + i + 2
                 broken[i] = j
@@ -392,189 +394,161 @@ class smc:
         Top = top of the order block
         Bottom = bottom of the order block
         OBVolume = volume + 2 last volumes amounts
-        Percentage = strength of order block (min(highVolume, lowVolume)/max(highVolume,lowVolume))
+        Percentage = strength of order block (min(highVolume, lowVolume)/max(highVolume, lowVolume))
         """
-        swing_highs_lows = swing_highs_lows.copy()
-        ohlc_len = len(ohlc)
 
+        ohlc_len = len(ohlc)
         _open = ohlc["open"].values
         _high = ohlc["high"].values
         _low = ohlc["low"].values
         _close = ohlc["close"].values
         _volume = ohlc["volume"].values
-        _swing_high_low = swing_highs_lows["HighLow"].values
+        swing_hl = swing_highs_lows["HighLow"].values
 
-        crossed = np.full(len(ohlc), False, dtype=bool)
-        ob = np.zeros(len(ohlc), dtype=np.int32)
-        top = np.zeros(len(ohlc), dtype=np.float32)
-        bottom = np.zeros(len(ohlc), dtype=np.float32)
-        obVolume = np.zeros(len(ohlc), dtype=np.float32)
-        lowVolume = np.zeros(len(ohlc), dtype=np.float32)
-        highVolume = np.zeros(len(ohlc), dtype=np.float32)
-        percentage = np.zeros(len(ohlc), dtype=np.int32)
-        mitigated_index = np.zeros(len(ohlc), dtype=np.int32)
-        breaker = np.full(len(ohlc), False, dtype=bool)
+        # Pre-allocate arrays
+        crossed = np.full(ohlc_len, False, dtype=bool)
+        ob = np.zeros(ohlc_len, dtype=np.int32)
+        top_arr = np.zeros(ohlc_len, dtype=np.float32)
+        bottom_arr = np.zeros(ohlc_len, dtype=np.float32)
+        obVolume = np.zeros(ohlc_len, dtype=np.float32)
+        lowVolume = np.zeros(ohlc_len, dtype=np.float32)
+        highVolume = np.zeros(ohlc_len, dtype=np.float32)
+        percentage = np.zeros(ohlc_len, dtype=np.float32)
+        mitigated_index = np.zeros(ohlc_len, dtype=np.int32)
+        breaker = np.full(ohlc_len, False, dtype=bool)
 
+        # Precompute swing indices (assumed sorted)
+        swing_high_indices = np.flatnonzero(swing_hl == 1)
+        swing_low_indices = np.flatnonzero(swing_hl == -1)
+
+        # List to track active bullish order blocks
+        active_bullish = []
         for i in range(ohlc_len):
             close_index = i
+            # Update existing bullish OB
+            for idx in active_bullish.copy():
+                if breaker[idx]:
+                    if _high[close_index] > top_arr[idx]:
+                        # Reset this OB
+                        ob[idx] = 0
+                        top_arr[idx] = 0.0
+                        bottom_arr[idx] = 0.0
+                        obVolume[idx] = 0.0
+                        lowVolume[idx] = 0.0
+                        highVolume[idx] = 0.0
+                        mitigated_index[idx] = 0
+                        percentage[idx] = 0.0
+                        active_bullish.remove(idx)
+                else:
+                    if ((not close_mitigation and _low[close_index] < bottom_arr[idx])
+                        or (close_mitigation and min(_open[close_index], _close[close_index]) < bottom_arr[idx])):
+                        breaker[idx] = True
+                        mitigated_index[idx] = close_index - 1
 
-            # Bullish Order Block
-            if len(ob[ob == 1]) > 0:
-                for j in range(len(ob) - 1, -1, -1):
-                    if ob[j] == 1:
-                        currentOB = j
-                        if breaker[currentOB]:
-                            if _high[close_index] > top[currentOB]:
-                                ob[j] = top[j] = bottom[j] = obVolume[j] = lowVolume[j] = (
-                                    highVolume[j]
-                                ) = mitigated_index[j] = percentage[j] = 0.0
-
-                        elif (
-                            not close_mitigation and _low[close_index] < bottom[currentOB]
-                        ) or (
-                            close_mitigation
-                            and min(
-                                _open[close_index],
-                                _close[close_index],
-                            )
-                            < bottom[currentOB]
-                        ):
-                            breaker[currentOB] = True
-                            mitigated_index[currentOB] = close_index - 1
-
-            last_top_indices = np.where(
-                (_swing_high_low == 1)
-                & (np.arange(len(swing_highs_lows["HighLow"])) < close_index)
-            )[0]
-
-            if last_top_indices.size > 0:
-                last_top_index = np.max(last_top_indices)
-            else:
-                last_top_index = None
+            # Find last swing high index less than current candle (using binary search)
+            pos = np.searchsorted(swing_high_indices, close_index)
+            last_top_index = swing_high_indices[pos - 1] if pos > 0 else None
 
             if last_top_index is not None:
-
-                swing_top_price = _high[last_top_index]
-                if _close[close_index] > swing_top_price and not crossed[last_top_index]:
+                if _close[close_index] > _high[last_top_index] and not crossed[last_top_index]:
                     crossed[last_top_index] = True
-                    obBtm = _high[close_index - 1]
-                    obTop = _low[close_index - 1]
-                    obIndex = close_index - 1
-                    for j in range(1, close_index - last_top_index):
-                        obBtm = min(
-                            _low[last_top_index + j],
-                            obBtm,
-                        )
-                        if obBtm == _low[last_top_index + j]:
-                            obTop = _high[last_top_index + j]
-                        obIndex = (
-                            last_top_index + j
-                            if obBtm == _low[last_top_index + j]
-                            else obIndex
-                        )
-
+                    # Initialise with default values from previous candle
+                    default_index = close_index - 1
+                    obBtm = _high[default_index]
+                    obTop = _low[default_index]
+                    obIndex = default_index
+                    # Look for a lower low between last_top_index and current candle
+                    if close_index - last_top_index > 1:
+                        start = last_top_index + 1
+                        end = close_index  # up to but not including close_index
+                        if end > start:
+                            segment = _low[start:end]
+                            min_val = segment.min()
+                            # In case of ties, take the last occurrence
+                            candidates = np.nonzero(segment == min_val)[0]
+                            if candidates.size:
+                                candidate_index = start + candidates[-1]
+                                obBtm = _low[candidate_index]
+                                obTop = _high[candidate_index]
+                                obIndex = candidate_index
+                    # Set bullish OB values
                     ob[obIndex] = 1
-                    top[obIndex] = obTop
-                    bottom[obIndex] = obBtm
-                    obVolume[obIndex] = (
-                        _volume[close_index]
-                        + _volume[close_index - 1]
-                        + _volume[close_index - 2]
-                    )
+                    top_arr[obIndex] = obTop
+                    bottom_arr[obIndex] = obBtm
+                    obVolume[obIndex] = _volume[close_index] + _volume[close_index - 1] + _volume[close_index - 2]
                     lowVolume[obIndex] = _volume[close_index - 2]
                     highVolume[obIndex] = _volume[close_index] + _volume[close_index - 1]
-                    percentage[obIndex] = (
-                        np.min([highVolume[obIndex], lowVolume[obIndex]], axis=0)
-                        / np.max([highVolume[obIndex], lowVolume[obIndex]], axis=0)
-                        if np.max([highVolume[obIndex], lowVolume[obIndex]], axis=0) != 0
-                        else 1
-                    ) * 100.0
+                    max_vol = max(highVolume[obIndex], lowVolume[obIndex])
+                    percentage[obIndex] = (min(highVolume[obIndex], lowVolume[obIndex]) / max_vol * 100.0) if max_vol != 0 else 100.0
+                    active_bullish.append(obIndex)
 
-        for i in range(len(ohlc)):
+        # List to track active bearish order blocks
+        active_bearish = []
+        for i in range(ohlc_len):
             close_index = i
-            close_price = _close[close_index]
+            # Update existing bearish OB
+            for idx in active_bearish.copy():
+                if breaker[idx]:
+                    if _low[close_index] < bottom_arr[idx]:
+                        ob[idx] = 0
+                        top_arr[idx] = 0.0
+                        bottom_arr[idx] = 0.0
+                        obVolume[idx] = 0.0
+                        lowVolume[idx] = 0.0
+                        highVolume[idx] = 0.0
+                        mitigated_index[idx] = 0
+                        percentage[idx] = 0.0
+                        active_bearish.remove(idx)
+                else:
+                    if ((not close_mitigation and _high[close_index] > top_arr[idx])
+                        or (close_mitigation and max(_open[close_index], _close[close_index]) > top_arr[idx])):
+                        breaker[idx] = True
+                        mitigated_index[idx] = close_index
 
-            # Bearish Order Block
-            if len(ob[ob == -1]) > 0:
-                for j in range(len(ob) - 1, -1, -1):
-                    if ob[j] == -1:
-                        currentOB = j
-                        if breaker[currentOB]:
-                            if _low[close_index] < bottom[currentOB]:
-
-                                ob[j] = top[j] = bottom[j] = obVolume[j] = lowVolume[j] = (
-                                    highVolume[j]
-                                ) = mitigated_index[j] = percentage[j] = 0.0
-
-                        elif (
-                            not close_mitigation and _high[close_index] > top[currentOB]
-                        ) or (
-                            close_mitigation
-                            and max(
-                                _open[close_index],
-                                _close[close_index],
-                            )
-                            > top[currentOB]
-                        ):
-                            breaker[currentOB] = True
-                            mitigated_index[currentOB] = close_index
-
-            last_btm_indices = np.where(
-                (swing_highs_lows["HighLow"] == -1)
-                & (np.arange(len(swing_highs_lows["HighLow"])) < close_index)
-            )[0]
-            if last_btm_indices.size > 0:
-                last_btm_index = np.max(last_btm_indices)
-            else:
-                last_btm_index = None
+            # Find last swing low index less than current candle
+            pos = np.searchsorted(swing_low_indices, close_index)
+            last_btm_index = swing_low_indices[pos - 1] if pos > 0 else None
 
             if last_btm_index is not None:
-                swing_btm_price = _low[last_btm_index]
-                if close_price < swing_btm_price and not crossed[last_btm_index]:
+                if _close[close_index] < _low[last_btm_index] and not crossed[last_btm_index]:
                     crossed[last_btm_index] = True
-                    obBtm = _low[close_index - 1]
-                    obTop = _high[close_index - 1]
-                    obIndex = close_index - 1
-                    for j in range(1, close_index - last_btm_index):
-                        obTop = max(_high[last_btm_index + j], obTop)
-                        obBtm = (
-                            _low[last_btm_index + j]
-                            if obTop == _high[last_btm_index + j]
-                            else obBtm
-                        )
-                        obIndex = (
-                            last_btm_index + j
-                            if obTop == _high[last_btm_index + j]
-                            else obIndex
-                        )
-
+                    default_index = close_index - 1
+                    obTop = _high[default_index]
+                    obBtm = _low[default_index]
+                    obIndex = default_index
+                    if close_index - last_btm_index > 1:
+                        start = last_btm_index + 1
+                        end = close_index
+                        if end > start:
+                            segment = _high[start:end]
+                            max_val = segment.max()
+                            candidates = np.nonzero(segment == max_val)[0]
+                            if candidates.size:
+                                candidate_index = start + candidates[-1]
+                                obTop = _high[candidate_index]
+                                obBtm = _low[candidate_index]
+                                obIndex = candidate_index
                     ob[obIndex] = -1
-                    top[obIndex] = obTop
-                    bottom[obIndex] = obBtm
-                    obVolume[obIndex] = (
-                        _volume[close_index]
-                        + _volume[close_index - 1]
-                        + _volume[close_index - 2]
-                    )
+                    top_arr[obIndex] = obTop
+                    bottom_arr[obIndex] = obBtm
+                    obVolume[obIndex] = _volume[close_index] + _volume[close_index - 1] + _volume[close_index - 2]
                     lowVolume[obIndex] = _volume[close_index] + _volume[close_index - 1]
                     highVolume[obIndex] = _volume[close_index - 2]
-                    percentage[obIndex] = (
-                        np.min([highVolume[obIndex], lowVolume[obIndex]], axis=0)
-                        / np.max([highVolume[obIndex], lowVolume[obIndex]], axis=0)
-                        if np.max([highVolume[obIndex], lowVolume[obIndex]], axis=0) != 0
-                        else 1
-                    ) * 100.0
+                    max_vol = max(highVolume[obIndex], lowVolume[obIndex])
+                    percentage[obIndex] = (min(highVolume[obIndex], lowVolume[obIndex]) / max_vol * 100.0) if max_vol != 0 else 100.0
+                    active_bearish.append(obIndex)
 
+        # Convert zeros to NaN where OB was not set
         ob = np.where(ob != 0, ob, np.nan)
-        top = np.where(~np.isnan(ob), top, np.nan)
-        bottom = np.where(~np.isnan(ob), bottom, np.nan)
+        top_arr = np.where(~np.isnan(ob), top_arr, np.nan)
+        bottom_arr = np.where(~np.isnan(ob), bottom_arr, np.nan)
         obVolume = np.where(~np.isnan(ob), obVolume, np.nan)
         mitigated_index = np.where(~np.isnan(ob), mitigated_index, np.nan)
         percentage = np.where(~np.isnan(ob), percentage, np.nan)
 
         ob_series = pd.Series(ob, name="OB")
-        top_series = pd.Series(top, name="Top")
-        bottom_series = pd.Series(bottom, name="Bottom")
+        top_series = pd.Series(top_arr, name="Top")
+        bottom_series = pd.Series(bottom_arr, name="Bottom")
         obVolume_series = pd.Series(obVolume, name="OBVolume")
         mitigated_index_series = pd.Series(mitigated_index, name="MitigatedIndex")
         percentage_series = pd.Series(percentage, name="Percentage")
@@ -592,13 +566,11 @@ class smc:
         )
 
     @classmethod
-    def liquidity(
-        cls, ohlc: DataFrame, swing_highs_lows: DataFrame, range_percent: float = 0.01
-    ) -> Series:
+    def liquidity(cls, ohlc: DataFrame, swing_highs_lows: DataFrame, range_percent: float = 0.01) -> DataFrame:
         """
         Liquidity
-        Liquidity is when there are multiply highs within a small range of each other.
-        or multiply lows within a small range of each other.
+        Liquidity is when there are multiple highs within a small range of each other,
+        or multiple lows within a small range of each other.
 
         parameters:
         swing_highs_lows: DataFrame - provide the dataframe from the swing_highs_lows function
@@ -611,86 +583,118 @@ class smc:
         Swept = the index of the candle that swept the liquidity
         """
 
-        swing_highs_lows = swing_highs_lows.copy()
+        # Work on a copy so the original is not modified.
+        shl = swing_highs_lows.copy()
+        n = len(ohlc)
+        
+        # Calculate the pip range based on the overall high-low range.
+        pip_range = (ohlc["high"].max() - ohlc["low"].min()) * range_percent
 
-        # subtract the highest high from the lowest low
-        pip_range = (max(ohlc["high"]) - min(ohlc["low"])) * range_percent
+        # Preconvert required columns to numpy arrays.
+        ohlc_high = ohlc["high"].values
+        ohlc_low = ohlc["low"].values
+        # Make a copy to allow in-place marking of used candidates.
+        shl_HL = shl["HighLow"].values.copy()
+        shl_Level = shl["Level"].values.copy()
 
-        # go through all of the high level and if there are more than 1 within the pip range, then it is liquidity
-        liquidity = np.zeros(len(ohlc), dtype=np.int32)
-        liquidity_level = np.zeros(len(ohlc), dtype=np.float32)
-        liquidity_end = np.zeros(len(ohlc), dtype=np.int32)
-        liquidity_swept = np.zeros(len(ohlc), dtype=np.int32)
+        # Initialise output arrays with NaN (to match later replacement of zeros).
+        liquidity = np.full(n, np.nan, dtype=np.float32)
+        liquidity_level = np.full(n, np.nan, dtype=np.float32)
+        liquidity_end = np.full(n, np.nan, dtype=np.float32)
+        liquidity_swept = np.full(n, np.nan, dtype=np.float32)
 
-        for i in range(len(ohlc)):
-            if swing_highs_lows["HighLow"][i] == 1:
-                high_level = swing_highs_lows["Level"][i]
-                range_low = high_level - pip_range
-                range_high = high_level + pip_range
-                temp_liquidity_level = [high_level]
-                start = i
-                end = i
+        # Process bullish liquidity (HighLow == 1)
+        bull_indices = np.nonzero(shl_HL == 1)[0]
+        for i in bull_indices:
+            # Skip if this candidate has already been used.
+            if shl_HL[i] != 1:
+                continue
+            high_level = shl_Level[i]
+            range_low = high_level - pip_range
+            range_high = high_level + pip_range
+            group_levels = [high_level]
+            group_end = i
+
+            # Determine the swept index:
+            # Find the first candle after i where the high reaches or exceeds range_high.
+            c_start = i + 1
+            if c_start < n:
+                cond = ohlc_high[c_start:] >= range_high
+                if np.any(cond):
+                    swept = c_start + int(np.argmax(cond))
+                else:
+                    swept = 0
+            else:
                 swept = 0
-                for c in range(i + 1, len(ohlc)):
-                    if (
-                        swing_highs_lows["HighLow"][c] == 1
-                        and range_low <= swing_highs_lows["Level"][c] <= range_high
-                    ):
-                        end = c
-                        temp_liquidity_level.append(swing_highs_lows["Level"][c])
-                        swing_highs_lows.loc[c, "HighLow"] = 0
-                    if ohlc["high"].iloc[c] >= range_high:
-                        swept = c
-                        break
-                if len(temp_liquidity_level) > 1:
-                    average_high = sum(temp_liquidity_level) / len(temp_liquidity_level)
-                    liquidity[i] = 1
-                    liquidity_level[i] = average_high
-                    liquidity_end[i] = end
-                    liquidity_swept[i] = swept
 
-        # now do the same for the lows
-        for i in range(len(ohlc)):
-            if swing_highs_lows["HighLow"][i] == -1:
-                low_level = swing_highs_lows["Level"][i]
-                range_low = low_level - pip_range
-                range_high = low_level + pip_range
-                temp_liquidity_level = [low_level]
-                start = i
-                end = i
+            # Iterate only over candidate indices greater than i.
+            for j in bull_indices:
+                if j <= i:
+                    continue
+                # Emulate the inner loop break: if we've reached or passed the swept index, stop.
+                if swept and j >= swept:
+                    break
+                # If candidate j is within the liquidity range, add it and mark it as used.
+                if shl_HL[j] == 1 and (range_low <= shl_Level[j] <= range_high):
+                    group_levels.append(shl_Level[j])
+                    group_end = j
+                    shl_HL[j] = 0  # mark candidate as used
+            # Only record liquidity if more than one candidate is grouped.
+            if len(group_levels) > 1:
+                avg_level = sum(group_levels) / len(group_levels)
+                liquidity[i] = 1
+                liquidity_level[i] = avg_level
+                liquidity_end[i] = group_end
+                liquidity_swept[i] = swept
+
+        # Process bearish liquidity (HighLow == -1)
+        bear_indices = np.nonzero(shl_HL == -1)[0]
+        for i in bear_indices:
+            if shl_HL[i] != -1:
+                continue
+            low_level = shl_Level[i]
+            range_low = low_level - pip_range
+            range_high = low_level + pip_range
+            group_levels = [low_level]
+            group_end = i
+
+            # Find the first candle after i where the low reaches or goes below range_low.
+            c_start = i + 1
+            if c_start < n:
+                cond = ohlc_low[c_start:] <= range_low
+                if np.any(cond):
+                    swept = c_start + int(np.argmax(cond))
+                else:
+                    swept = 0
+            else:
                 swept = 0
-                for c in range(i + 1, len(ohlc)):
-                    if (
-                        swing_highs_lows["HighLow"][c] == -1
-                        and range_low <= swing_highs_lows["Level"][c] <= range_high
-                    ):
-                        end = c
-                        temp_liquidity_level.append(swing_highs_lows["Level"][c])
-                        swing_highs_lows.loc[c, "HighLow"] = 0
-                    if ohlc["low"].iloc[c] <= range_low:
-                        swept = c
-                        break
-                if len(temp_liquidity_level) > 1:
-                    average_low = sum(temp_liquidity_level) / len(temp_liquidity_level)
-                    liquidity[i] = -1
-                    liquidity_level[i] = average_low
-                    liquidity_end[i] = end
-                    liquidity_swept[i] = swept
 
-        liquidity = np.where(liquidity != 0, liquidity, np.nan)
-        liquidity_level = np.where(~np.isnan(liquidity), liquidity_level, np.nan)
-        liquidity_end = np.where(~np.isnan(liquidity), liquidity_end, np.nan)
-        liquidity_swept = np.where(~np.isnan(liquidity), liquidity_swept, np.nan)
+            for j in bear_indices:
+                if j <= i:
+                    continue
+                if swept and j >= swept:
+                    break
+                if shl_HL[j] == -1 and (range_low <= shl_Level[j] <= range_high):
+                    group_levels.append(shl_Level[j])
+                    group_end = j
+                    shl_HL[j] = 0
+            if len(group_levels) > 1:
+                avg_level = sum(group_levels) / len(group_levels)
+                liquidity[i] = -1
+                liquidity_level[i] = avg_level
+                liquidity_end[i] = group_end
+                liquidity_swept[i] = swept
 
-        liquidity = pd.Series(liquidity, name="Liquidity")
-        level = pd.Series(liquidity_level, name="Level")
-        liquidity_end = pd.Series(liquidity_end, name="End")
-        liquidity_swept = pd.Series(liquidity_swept, name="Swept")
+        # Convert arrays to Series with the proper names.
+        liq_series = pd.Series(liquidity, name="Liquidity")
+        level_series = pd.Series(liquidity_level, name="Level")
+        end_series = pd.Series(liquidity_end, name="End")
+        swept_series = pd.Series(liquidity_swept, name="Swept")
 
-        return pd.concat([liquidity, level, liquidity_end, liquidity_swept], axis=1)
+        return pd.concat([liq_series, level_series, end_series, swept_series], axis=1)
 
     @classmethod
-    def previous_high_low(cls, ohlc: DataFrame, time_frame: str = "1D") -> Series:
+    def previous_high_low(cls, ohlc: DataFrame, time_frame: str = "1D") -> DataFrame:
         """
         Previous High Low
         This method returns the previous high and low of the given time frame.
@@ -760,7 +764,7 @@ class smc:
         start_time: str = "",
         end_time: str = "",
         time_zone: str = "UTC",
-    ) -> Series:
+    ) -> DataFrame:
         """
         Sessions
         This method returns wwhich candles are within the session specified
@@ -861,7 +865,7 @@ class smc:
         return pd.concat([active, high, low], axis=1)
 
     @classmethod
-    def retracements(cls, ohlc: DataFrame, swing_highs_lows: DataFrame) -> Series:
+    def retracements(cls, ohlc: DataFrame, swing_highs_lows: DataFrame) -> DataFrame:
         """
         Retracement
         This method returns the percentage of a retracement from the swing high or low
@@ -946,3 +950,352 @@ class smc:
         deepest_retracement = pd.Series(deepest_retracement, name="DeepestRetracement%")
 
         return pd.concat([direction, current_retracement, deepest_retracement], axis=1)
+
+import numpy as np
+import pandas as pd
+from typing import List
+from atklip.controls.ohlcv import   OHLCV
+from atklip.controls.candle import JAPAN_CANDLE,HEIKINASHI,SMOOTH_CANDLE,N_SMOOTH_CANDLE
+from atklip.appmanager import ThreadPoolExecutor_global as ApiThreadPool
+
+from PySide6.QtCore import Signal,QObject
+
+class SMC(QObject):
+    sig_update_candle = Signal()
+    sig_add_candle = Signal()
+    sig_reset_all = Signal()
+    signal_delete = Signal()  
+    sig_add_historic = Signal(int)   
+    def __init__(self,_candles,dict_ta_params:dict={}) -> None:   
+        super().__init__(parent=None)
+        self._candles: JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE =_candles
+        
+        self.window:int = dict_ta_params.get("window",100)
+        self.swing_length:int = dict_ta_params.get("swing_length",5)
+        self.time_frame:int = dict_ta_params.get("time_frame","4h")
+        self.session:int = dict_ta_params.get("session","London")
+        
+        #self.signal_delete.connect(self.deleteLater)
+
+        self.first_gen = False
+        self.is_genering = True
+        self.is_current_update = True
+        self.is_histocric_load = False
+        self._name = f"SMC {self.window}"
+
+        self.df:pd.DataFrame = pd.DataFrame([])
+        self.worker = ApiThreadPool
+
+
+        self.fvg_data:pd.DataFrame = pd.DataFrame([])
+        self.swing_highs_lows_data:pd.DataFrame = pd.DataFrame([])
+        self.bos_choch_data:pd.DataFrame = pd.DataFrame([])
+        self.ob_data:pd.DataFrame = pd.DataFrame([])
+        self.liquidity_data:pd.DataFrame = pd.DataFrame([])
+        self.previous_high_low_data:pd.DataFrame = pd.DataFrame([])
+        self.sessions:pd.DataFrame = pd.DataFrame([])
+        self.retracements:pd.DataFrame = pd.DataFrame([])
+
+        
+        self.connect_signals()
+    @property
+    def is_current_update(self)-> bool:
+        return self._is_current_update
+    @is_current_update.setter
+    def is_current_update(self,_is_current_update):
+        self._is_current_update = _is_current_update
+    
+    @property
+    def source_name(self)-> str:
+        return self._source_name
+    @source_name.setter
+    def source_name(self,source_name):
+        self._source_name = source_name
+    
+    def change_input(self,candles=None,dict_ta_params: dict={}):
+        if candles != None:
+            self.disconnect_signals()
+            self._candles : JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE= candles
+            self.connect_signals()
+        
+        if dict_ta_params != {}:    
+            self.window:int = dict_ta_params.get("window",14)
+
+            ta_name:str=dict_ta_params.get("ta_name")
+            obj_id:str=dict_ta_params.get("obj_id") 
+            
+            ta_param = f"{obj_id}-{ta_name}-{self.window}"
+
+            self._name = ta_param
+        
+        self.first_gen = False
+        self.is_genering = True
+        #self.is_current_update = False
+        
+        self.fisrt_gen_data()
+    
+    def disconnect_signals(self):
+        try:
+            self._candles.sig_reset_all.disconnect(self.started_worker)
+            self._candles.sig_update_candle.disconnect(self.update_worker)
+            self._candles.sig_add_candle.disconnect(self.add_worker)
+            self._candles.signal_delete.disconnect(self.signal_delete)
+            self._candles.sig_add_historic.disconnect(self.add_historic_worker)
+        except RuntimeError:
+                    pass
+    
+    def connect_signals(self):
+        self._candles.sig_reset_all.connect(self.started_worker)
+        self._candles.sig_update_candle.connect(self.update_worker)
+        self._candles.sig_add_candle.connect(self.add_worker)
+        self._candles.signal_delete.connect(self.signal_delete)
+        self._candles.sig_add_historic.connect(self.add_historic_worker)
+    
+    
+    def change_source(self,_candles:JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE):
+        self.disconnect_signals()
+        self._candles =_candles
+        self.connect_signals()
+        self.started_worker()
+    
+    
+    @property
+    def name(self):
+        return self._name
+    @name.setter
+    def name(self,_name):
+        self._name = _name
+    
+    def get_df(self,n:int=None):
+        if not n:
+            return self.df
+        return self.df.tail(n)
+    
+    def get_data(self,start:int=0,stop:int=0):
+        if len(self.df) == 0:
+            return self.df
+        if start == 0 and stop == 0:
+            return self.df
+        elif start == 0 and stop != 0:
+            return self.df.iloc[:stop]
+        elif start != 0 and stop == 0:
+            return self.df.iloc[start:]
+        else:
+            return self.df.iloc[start:stop]
+    
+    
+    def get_last_row_df(self):
+        return self.df.iloc[-1] 
+
+    
+    def update_worker(self,candle):
+        self.worker.submit(self.update,candle)
+
+    def add_worker(self,candle):
+        self.worker.submit(self.add,candle)
+    
+    def add_historic_worker(self,n):
+        self.worker.submit(self.add_historic,n)
+
+    def started_worker(self):
+        self.worker.submit(self.fisrt_gen_data)
+    
+    def paire_data(self,INDICATOR:pd.DataFrame|pd.Series):
+        if isinstance(INDICATOR,pd.Series):
+            y_data = INDICATOR
+        else:
+            column_names = INDICATOR.columns.tolist()
+            roc_name = ''
+            for name in column_names:
+                if name.__contains__("CCI_"):
+                    roc_name = name
+            y_data = INDICATOR[roc_name]
+        return y_data
+    
+    
+    @staticmethod
+    def calculate(df: pd.DataFrame,swing_length=5, time_frame="4h",session="London"):
+        df = df.copy()
+        window_df = df.set_index("time")
+        # window_df = df.reset_index(drop=True)
+        fvg_data = smc.fvg(window_df, join_consecutive=True)
+        swing_highs_lows_data = smc.swing_highs_lows(window_df, swing_length=swing_length)
+        bos_choch_data = smc.bos_choch(window_df, swing_highs_lows_data)
+        ob_data = smc.ob(window_df, swing_highs_lows_data)
+        liquidity_data = smc.liquidity(window_df, swing_highs_lows_data)
+        previous_high_low_data = smc.previous_high_low(window_df, time_frame=time_frame)
+        # sessions = smc.sessions(window_df, session=session)
+        retracements = smc.retracements(window_df, swing_highs_lows_data)
+
+        # _index = df["index"] #.tail(_len)
+
+        _index_df = df[["index"]]
+
+        # _df = pd.concat([_index_df, fvg_data,swing_highs_lows_data, bos_choch_data,ob_data,
+        #            liquidity_data,previous_high_low_data,retracements], axis=1, 
+        #            keys=['index', 'fvg', 'swing_highs_lows', 'bos_choch','ob','liquidity','previous_high_low','retracements'])
+
+        # _df = pd.DataFrame({
+        #                     'index':_index.to_list(),
+        #                     'fvg_data':fvg_data["FVG"].to_list(),
+        #                     "swing_highs_lows_data":swing_highs_lows_data.to_list(),
+        #                     "bos_choch_data":bos_choch_data.to_list(),
+        #                     "ob_data":ob_data.to_list(),
+        #                     "liquidity_data":liquidity_data.to_list(),
+        #                     "previous_high_low_data":previous_high_low_data.to_list(),
+        #                     "retracements":retracements.to_list(),
+        #                     # "sessions":sessions,
+        #                     })
+        # print(_df)
+        return (fvg_data,swing_highs_lows_data, bos_choch_data,ob_data,
+                   liquidity_data,previous_high_low_data,retracements)
+        
+    def fisrt_gen_data(self):
+        #self.is_current_update = False
+        self.is_genering = True
+        self.df = pd.DataFrame([])
+        df:pd.DataFrame = self._candles.get_df()
+        process = HeavyProcess(self.calculate,
+                               self.callback_first_gen,
+                               df,
+                               self.swing_length, 
+                               self.time_frame,
+                               self.session)
+        process.start()
+        
+    
+    def add_historic(self,n:int):
+        self.is_genering = True
+        self.is_histocric_load = False
+        _pre_len = len(self.df)
+        candle_df = self._candles.get_df()
+        df:pd.DataFrame = candle_df.head(-_pre_len)
+        
+        process = HeavyProcess(self.calculate,
+                               self.callback_gen_historic_data,
+                               df,
+                               self.swing_length, 
+                               self.time_frame,
+                               self.session)
+        process.start()
+       
+    def add(self,new_candles:List[OHLCV]):
+        new_candle:OHLCV = new_candles[-1]
+        #self.is_current_update = False
+        if (self.first_gen == True) and (self.is_genering == False):
+            df:pd.DataFrame = self._candles.get_df(self.window*2)
+            process = HeavyProcess(self.calculate,
+                               self.callback_add,
+                               df,
+                               self.swing_length, 
+                               self.time_frame,
+                               self.session)
+            process.start()
+        else:
+            pass
+            #self.is_current_update = True
+            
+    def update(self, new_candles:List[OHLCV]):
+        new_candle:OHLCV = new_candles[-1]
+        #self.is_current_update = False
+        if (self.first_gen == True) and (self.is_genering == False):
+            df:pd.DataFrame = self._candles.get_df(self.window*2)
+            process = HeavyProcess(self.calculate,
+                               self.callback_update,
+                               df,
+                               self.swing_length, 
+                               self.time_frame,
+                               self.session)
+            process.start() 
+        else:
+            pass
+            #self.is_current_update = True
+    
+    def callback_first_gen(self, future: Future):
+        (self.fvg_data,self.swing_highs_lows_data, self.bos_choch_data,self.ob_data,
+                   self.liquidity_data,self.previous_high_low_data,self.retracements) = future.result()
+
+        print("fvg_data",self.fvg_data)
+        print("swing_highs_lows_data",self.swing_highs_lows_data)
+        print("bos_choch_data",self.bos_choch_data)
+        print("ob_data",self.ob_data)
+        print("liquidity_data",self.liquidity_data)
+        print("previous_high_low_data",self.previous_high_low_data)
+        print("retracements",self.retracements)
+        return
+
+        self.is_genering = False
+        if self.first_gen == False:
+            self.first_gen = True
+            self.is_genering = False
+        #self.is_current_update = True
+        self.sig_reset_all.emit()
+        
+    
+    def callback_gen_historic_data(self, future: Future):
+        (fvg_data,swing_highs_lows_data, bos_choch_data,ob_data,
+                   liquidity_data,previous_high_low_data,retracements) = future.result()
+
+        print("fvg_data",fvg_data)
+        print("swing_highs_lows_data",swing_highs_lows_data)
+        print("bos_choch_data",bos_choch_data)
+        print("ob_data",ob_data)
+        print("liquidity_data",liquidity_data)
+        print("previous_high_low_data",previous_high_low_data)
+        print("retracements",retracements)
+        return
+        return
+        _df = future.result()
+        _len = len(_df)
+        self.df = pd.concat([_df,self.df],ignore_index=True)
+        self.is_genering = False
+        if self.first_gen == False:
+            self.first_gen = True
+            self.is_genering = False
+        self.is_histocric_load = True
+        self.sig_add_historic.emit(_len)
+        
+        
+    def callback_add(self,future: Future):
+        print("callback_add",future.result())
+        return
+
+        df = future.result()
+
+        last_index = df["index"].iloc[-1]
+        fvg_data = df["fvg_data"].iloc[-1]
+        swing_highs_lows_data = df["swing_highs_lows_data"].iloc[-1]
+        bos_choch_data = df["bos_choch_data"].iloc[-1]
+        liquidity_data = df["liquidity_data"].iloc[-1]
+        previous_high_low_data = df["previous_high_low_data"].iloc[-1]
+        retracements = df["retracements"].iloc[-1]
+        new_frame = pd.DataFrame({
+                                    'index':[last_index],
+                                    'fvg_data':[fvg_data],
+                                    "swing_highs_lows_data":[swing_highs_lows_data],
+                                    "bos_choch_data":[bos_choch_data],
+                                    "liquidity_data":[liquidity_data],
+                                    "previous_high_low_data":[previous_high_low_data],
+                                    "retracements":[retracements]
+                                    })
+            
+        self.df = pd.concat([self.df,new_frame],ignore_index=True)           
+        self.sig_add_candle.emit()
+        #self.is_current_update = True
+        
+    def callback_update(self,future: Future):
+        # print("callback_update",future.result())
+        return
+
+        df = future.result()
+        last_index = df["fvg"]["index"].iloc[-1]
+        fvg_data = df["fvg"]["fvg_data"].iloc[-1]
+        swing_highs_lows_data = df["fvg"]["swing_highs_lows_data"].iloc[-1]
+        bos_choch_data = df["bos_choch_data"].iloc[-1]
+        liquidity_data = df["liquidity_data"].iloc[-1]
+        previous_high_low_data = df["previous_high_low_data"].iloc[-1]
+        retracements = df["retracements"].iloc[-1]
+        self.df.iloc[-1] = [last_index,fvg_data,swing_highs_lows_data,bos_choch_data,liquidity_data,previous_high_low_data,retracements]
+        self.sig_update_candle.emit()
+        #self.is_current_update = True
+        

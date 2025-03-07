@@ -68,6 +68,7 @@ dict_indicators = {
     "Advand Idicators": [
                         # IndicatorType.ATKPRO,
                         IndicatorType.UTBOT,
+                        IndicatorType.SMC,
                         # IndicatorType.UTBOT_WITH_BBAND,
                         IndicatorType.TRENDWITHSL,
                         IndicatorType.SuperTrend,
@@ -106,6 +107,7 @@ dict_indicators = {
                     IndicatorType.TRIX,
                     IndicatorType.STC,
                     IndicatorType.Stoch,
+                    
                     # IndicatorType.SOBV,
                     # IndicatorType.SFX,
                     # IndicatorType.IBS,

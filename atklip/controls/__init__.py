@@ -12,3 +12,4 @@ from atklip.controls.trend import *
 from atklip.controls.statistics import *
 from atklip.controls.tradingview import *
 from atklip.controls.overlap import *
+from atklip.controls.smc import *

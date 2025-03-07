@@ -1,110 +1,176 @@
-import numpy as np
 import pandas as pd
 import pandas_ta as ta
-from talib import ATR
+import numpy as np
 
-class SmartMoneyConcepts:
-    def __init__(self, df, 
-                 swings_length=50,
-                 internal_length=5,
-                 equal_highs_lows_length=3,
-                 equal_highs_lows_threshold=0.1,
-                 order_block_filter='Atr',
-                 order_block_mitigation='High/Low',
-                 show_internal_structure=True,
-                 show_swing_structure=True):
-        
-        self.df = df.copy()
-        self.swing_length = swings_length
-        self.internal_length = internal_length
-        self.equal_length = equal_highs_lows_length
-        self.equal_threshold = equal_highs_lows_threshold
-        self.order_block_filter = order_block_filter
-        self.order_block_mitigation = order_block_mitigation
-        self.show_internal = show_internal_structure
-        self.show_swing = show_swing_structure
-        
-        # Initialize indicators
-        self._calculate_indicators()
-        self._detect_swings()
-        self._detect_internal_structure()
-        self._detect_order_blocks()
-        self._detect_fvg()
-        self._detect_equal_highs_lows()
+# Constants
+BULLISH_LEG = 1
+BEARISH_LEG = 0
 
-    def _calculate_indicators(self):
-        # Calculate ATR and volatility measure
-        self.df['atr'] = ATR(self.df.high, self.df.low, self.df.close, timeperiod=200)
-        self.df['cumulative_range'] = (self.df.high - self.df.low).cumsum() / (self.df.index + 1)
-        
-        # Determine high volatility bars
-        if self.order_block_filter == 'Atr':
-            self.df['high_vol'] = (self.df.high - self.df.low) >= 2 * self.df['atr']
+BULLISH = 1
+BEARISH = -1
+
+# Data Structures
+class Alerts:
+    def __init__(self):
+        self.internalBullishBOS = False
+        self.internalBearishBOS = False
+        self.internalBullishCHoCH = False
+        self.internalBearishCHoCH = False
+        self.swingBullishBOS = False
+        self.swingBearishBOS = False
+        self.swingBullishCHoCH = False
+        self.swingBearishCHoCH = False
+        self.internalBullishOrderBlock = False
+        self.internalBearishOrderBlock = False
+        self.swingBullishOrderBlock = False
+        self.swingBearishOrderBlock = False
+        self.equalHighs = False
+        self.equalLows = False
+        self.bullishFairValueGap = False
+        self.bearishFairValueGap = False
+
+class TrailingExtremes:
+    def __init__(self):
+        self.top = np.nan
+        self.bottom = np.nan
+        self.barTime = 0
+        self.barIndex = 0
+        self.lastTopTime = 0
+        self.lastBottomTime = 0
+
+class FairValueGap:
+    def __init__(self, top, bottom, bias):
+        self.top = top
+        self.bottom = bottom
+        self.bias = bias
+
+class Trend:
+    def __init__(self, bias):
+        self.bias = bias
+
+class Pivot:
+    def __init__(self, currentLevel, lastLevel, crossed, barTime, barIndex):
+        self.currentLevel = currentLevel
+        self.lastLevel = lastLevel
+        self.crossed = crossed
+        self.barTime = barTime
+        self.barIndex = barIndex
+
+class OrderBlock:
+    def __init__(self, barHigh, barLow, barTime, bias):
+        self.barHigh = barHigh
+        self.barLow = barLow
+        self.barTime = barTime
+        self.bias = bias
+
+# Variables
+swingHigh = Pivot(np.nan, np.nan, False, 0, 0)
+swingLow = Pivot(np.nan, np.nan, False, 0, 0)
+internalHigh = Pivot(np.nan, np.nan, False, 0, 0)
+internalLow = Pivot(np.nan, np.nan, False, 0, 0)
+equalHigh = Pivot(np.nan, np.nan, False, 0, 0)
+equalLow = Pivot(np.nan, np.nan, False, 0, 0)
+swingTrend = Trend(0)
+internalTrend = Trend(0)
+fairValueGaps = []
+parsedHighs = []
+parsedLows = []
+highs = []
+lows = []
+times = []
+trailing = TrailingExtremes()
+swingOrderBlocks = []
+internalOrderBlocks = []
+currentAlerts = Alerts()
+
+# Functions
+def leg(size, high, low):
+    leg_value = 0
+    newLegHigh = high[size] > high.rolling(size).max()
+    newLegLow = low[size] < low.rolling(size).min()
+    
+    if newLegHigh:
+        leg_value = BEARISH_LEG
+    elif newLegLow:
+        leg_value = BULLISH_LEG
+    return leg_value
+
+def startOfNewLeg(leg):
+    return leg.diff() != 0
+
+def startOfBearishLeg(leg):
+    return leg.diff() == -1
+
+def startOfBullishLeg(leg):
+    return leg.diff() == 1
+
+def getCurrentStructure(size, equalHighLow=False, internal=False, high=None, low=None, time=None, bar_index=None):
+    currentLeg = leg(size, high, low)
+    newPivot = startOfNewLeg(currentLeg)
+    pivotLow = startOfBullishLeg(currentLeg)
+    pivotHigh = startOfBearishLeg(currentLeg)
+
+    if newPivot:
+        if pivotLow:
+            pivot = equalLow if equalHighLow else (internalLow if internal else swingLow)
+            pivot.lastLevel = pivot.currentLevel
+            pivot.currentLevel = low[size]
+            pivot.crossed = False
+            pivot.barTime = time[size]
+            pivot.barIndex = bar_index[size]
+
+            if not equalHighLow and not internal:
+                trailing.bottom = pivot.currentLevel
+                trailing.barTime = pivot.barTime
+                trailing.barIndex = pivot.barIndex
+                trailing.lastBottomTime = pivot.barTime
         else:
-            self.df['high_vol'] = (self.df.high - self.df.low) >= 2 * self.df['cumulative_range']
-        
-        # Parsed high/low for order blocks
-        self.df['parsed_high'] = np.where(self.df['high_vol'], self.df.low, self.df.high)
-        self.df['parsed_low'] = np.where(self.df['high_vol'], self.df.high, self.df.low)
+            pivot = equalHigh if equalHighLow else (internalHigh if internal else swingHigh)
+            pivot.lastLevel = pivot.currentLevel
+            pivot.currentLevel = high[size]
+            pivot.crossed = False
+            pivot.barTime = time[size]
+            pivot.barIndex = bar_index[size]
 
-    def _detect_swings(self, col_prefix='swing'):
-        # Swing high/low detection using rolling windows
-        self.df[f'{col_prefix}_high'] = self.df.high.rolling(self.swing_length, center=True).max()
-        self.df[f'{col_prefix}_low'] = self.df.low.rolling(self.swing_length, center=True).min()
-        
-        # Crossovers for structure breaks
-        self.df[f'{col_prefix}_high_break'] = (self.df.close > self.df[f'{col_prefix}_high']).astype(int)
-        self.df[f'{col_prefix}_low_break'] = (self.df.close < self.df[f'{col_prefix}_low']).astype(int)
+            if not equalHighLow and not internal:
+                trailing.top = pivot.currentLevel
+                trailing.barTime = pivot.barTime
+                trailing.barIndex = pivot.barIndex
+                trailing.lastTopTime = pivot.barTime
 
-    def _detect_internal_structure(self):
-        if self.show_internal:
-            self._detect_swings(col_prefix='internal')
+def displayStructure(internal=False, close=None, high=None, low=None, time=None, bar_index=None):
+    pivot = internalHigh if internal else swingHigh
+    trend = internalTrend if internal else swingTrend
 
-    def _detect_order_blocks(self):
-        # Bullish order blocks (swing low with high volatility)
-        bullish_ob = self.df[(self.df['high_vol']) & 
-                           (self.df.low == self.df.parsed_low.rolling(self.swing_length).min())]
-        self.bullish_ob = bullish_ob[['high', 'low', 'open_time']].copy()
-        self.bullish_ob['type'] = 'bullish'
-        
-        # Bearish order blocks (swing high with high volatility)
-        bearish_ob = self.df[(self.df['high_vol']) & 
-                           (self.df.high == self.df.parsed_high.rolling(self.swing_length).max())]
-        self.bearish_ob = bearish_ob[['high', 'low', 'open_time']].copy()
-        self.bearish_ob['type'] = 'bearish'
-        
-        # Combine order blocks
-        self.order_blocks = pd.concat([self.bullish_ob, self.bearish_ob]).sort_index()
+    if close[-1] > pivot.currentLevel and not pivot.crossed:
+        tag = 'BOS' if trend.bias == BEARISH else 'CHOCH'
+        pivot.crossed = True
+        trend.bias = BULLISH
 
-    def _detect_fvg(self):
-        # Detect Fair Value Gaps using shift operations
-        self.df['prev_high'] = self.df.high.shift(2)
-        self.df['prev_low'] = self.df.low.shift(2)
-        
-        self.df['bullish_fvg'] = (self.df.low > self.df.prev_high) & (self.df.close > self.df.prev_high)
-        self.df['bearish_fvg'] = (self.df.high < self.df.prev_low) & (self.df.close < self.df.prev_low)
+    pivot = internalLow if internal else swingLow
+    if close[-1] < pivot.currentLevel and not pivot.crossed:
+        tag = 'BOS' if trend.bias == BULLISH else 'CHOCH'
+        pivot.crossed = True
+        trend.bias = BEARISH
 
-    def _detect_equal_highs_lows(self):
-        # Equal highs detection
-        self.df['equal_high'] = self.df.high.rolling(self.equal_length).apply(
-            lambda x: np.all(np.abs(x - x[-1]) < self.equal_threshold * self.df['atr'].iloc[-1]))
-        
-        # Equal lows detection
-        self.df['equal_low'] = self.df.low.rolling(self.equal_length).apply(
-            lambda x: np.all(np.abs(x - x[-1]) < self.equal_threshold * self.df['atr'].iloc[-1]))
+def updateTrailingExtremes(high, low, time):
+    trailing.top = max(high, trailing.top)
+    trailing.lastTopTime = time if trailing.top == high else trailing.lastTopTime
+    trailing.bottom = min(low, trailing.bottom)
+    trailing.lastBottomTime = time if trailing.bottom == low else trailing.lastBottomTime
 
-    def get_signals(self):
-        signals = self.df[['swing_high_break', 'swing_low_break', 
-                          'bullish_fvg', 'bearish_fvg',
-                          'equal_high', 'equal_low']].copy()
-        
-        # Add order block mitigation signals
-        signals['bullish_ob_mitigation'] = self.df.close > self.order_blocks.high.shift(1)
-        signals['bearish_ob_mitigation'] = self.df.close < self.order_blocks.low.shift(1)
-        
-        return signals
+# Example usage with pandas DataFrame
+def process_data(df):
+    df['leg'] = df.apply(lambda row: leg(5, df['high'], df['low']), axis=1)
+    df['newPivot'] = startOfNewLeg(df['leg'])
+    df['pivotLow'] = startOfBullishLeg(df['leg'])
+    df['pivotHigh'] = startOfBearishLeg(df['leg'])
 
-# Usage example:
-# Load your OHLC data into a DataFrame df
-# smc = SmartMoneyConcepts(df)
-# signals = smc.get_signals()
+    for i in range(len(df)):
+        getCurrentStructure(5, False, False, df['high'], df['low'], df['time'], df.index)
+        displayStructure(False, df['close'], df['high'], df['low'], df['time'], df.index)
+        updateTrailingExtremes(df['high'][i], df['low'][i], df['time'][i])
+
+# Load your data into a pandas DataFrame
+# df = pd.read_csv('your_data.csv')
+# process_data(df)

@@ -5,6 +5,7 @@ from .vwma import BASE_VWMA
 
 from .zigzag import BasicZIGZAG
 from .utbot import UTBOT
+from .smc import SMC
 
 
 from .trend_with_stoploss import TrendStopLoss

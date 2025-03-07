@@ -11,7 +11,7 @@ from io import BytesIO
 from PIL import Image
 
 sys.path.append(os.path.abspath("../"))
-from smartmoneyconcepts.smc import smc
+from atklip.controls.smc.smc import smc
 
 def add_FVG(fig, df, fvg_data):
     for i in range(len(fvg_data["FVG"])):
@@ -132,17 +132,17 @@ def add_bos_choch(fig, df, bos_choch_data):
 
 
 def add_OB(fig, df, ob_data):
-    def format_volume(volume):
-        if volume >= 1e12:
-            return f"{volume / 1e12:.3f}T"
-        elif volume >= 1e9:
-            return f"{volume / 1e9:.3f}B"
-        elif volume >= 1e6:
-            return f"{volume / 1e6:.3f}M"
-        elif volume >= 1e3:
-            return f"{volume / 1e3:.3f}k"
+    def format_volume(Volume):
+        if Volume >= 1e12:
+            return f"{Volume / 1e12:.3f}T"
+        elif Volume >= 1e9:
+            return f"{Volume / 1e9:.3f}B"
+        elif Volume >= 1e6:
+            return f"{Volume / 1e6:.3f}M"
+        elif Volume >= 1e3:
+            return f"{Volume / 1e3:.3f}k"
         else:
-            return f"{volume:.2f}"
+            return f"{Volume:.2f}"
 
     for i in range(len(ob_data["OB"])):
         if ob_data["OB"][i] == 1:
@@ -266,9 +266,9 @@ def add_liquidity(fig, df, liquidity_data):
                     y=[
                         liquidity_data["Level"][i],
                         (
-                            df["high"].iloc[int(liquidity_data["Swept"][i])]
+                            df["High"].iloc[int(liquidity_data["Swept"][i])]
                             if liquidity_data["Liquidity"][i] == 1
-                            else df["low"].iloc[int(liquidity_data["Swept"][i])]
+                            else df["Low"].iloc[int(liquidity_data["Swept"][i])]
                         ),
                     ],
                     mode="lines",
@@ -281,9 +281,9 @@ def add_liquidity(fig, df, liquidity_data):
             mid_y = (
                 liquidity_data["Level"][i]
                 + (
-                    df["high"].iloc[int(liquidity_data["Swept"][i])]
+                    df["High"].iloc[int(liquidity_data["Swept"][i])]
                     if liquidity_data["Liquidity"][i] == 1
-                    else df["low"].iloc[int(liquidity_data["Swept"][i])]
+                    else df["Low"].iloc[int(liquidity_data["Swept"][i])]
                 )
             ) / 2
             fig.add_trace(
@@ -300,22 +300,22 @@ def add_liquidity(fig, df, liquidity_data):
 
 
 def add_previous_high_low(fig, df, previous_high_low_data):
-    high = previous_high_low_data["PreviousHigh"]
-    low = previous_high_low_data["PreviousLow"]
+    High = previous_high_low_data["PreviousHigh"]
+    Low = previous_high_low_data["PreviousLow"]
 
-    # create a list of all the different high levels and their indexes
+    # create a list of all the different High levels and their indexes
     high_levels = []
     high_indexes = []
-    for i in range(len(high)):
-        if not np.isnan(high[i]) and high[i] != (high_levels[-1] if len(high_levels) > 0 else None):
-            high_levels.append(high[i])
+    for i in range(len(High)):
+        if not np.isnan(High[i]) and High[i] != (high_levels[-1] if len(high_levels) > 0 else None):
+            high_levels.append(High[i])
             high_indexes.append(i)
 
     low_levels = [] 
     low_indexes = []
-    for i in range(len(low)):
-        if not np.isnan(low[i]) and low[i] != (low_levels[-1] if len(low_levels) > 0 else None):
-            low_levels.append(low[i])
+    for i in range(len(Low)):
+        if not np.isnan(Low[i]) and Low[i] != (low_levels[-1] if len(low_levels) > 0 else None):
+            low_levels.append(Low[i])
             low_indexes.append(i)
 
     # plot these lines on a graph
@@ -407,9 +407,9 @@ def add_retracements(fig, df, retracements):
             fig.add_annotation(
                 x=df.index[i],
                 y=(
-                    df["high"].iloc[i]
+                    df["High"].iloc[i]
                     if retracements["Direction"].iloc[i] == -1
-                    else df["low"].iloc[i]
+                    else df["Low"].iloc[i]
                 ),
                 xref="x",
                 yref="y",
@@ -418,7 +418,6 @@ def add_retracements(fig, df, retracements):
                 showarrow=False,
             )
     return fig
-
 
 # get the data
 def import_data(symbol, start_str, timeframe):
@@ -431,21 +430,19 @@ def import_data(symbol, start_str, timeframe):
         )
     ).astype(float)
     df = df.iloc[:, :6]
-    df.columns = ["timestamp", "open", "high", "low", "close", "volume"]
+    df.columns = ["timestamp", "Open", "High", "Low", "Close", "Volume"]
     df = df.set_index("timestamp")
     df.index = pd.to_datetime(df.index, unit="ms").strftime("%Y-%m-%d %H:%M:%S")
     return df
 
-
 df = import_data("BTCUSDT", "2024-04-01", "15m")
-df = df.iloc[-500:]
+# df = df.iloc[-500:]
 
 def fig_to_buffer(fig):
     fig_bytes = fig.to_image(format="png")
     fig_buffer = BytesIO(fig_bytes)
-    fig_image = Image.open(fig_buffer)
+    fig_image = Image.Open(fig_buffer)
     return np.array(fig_image)
-
 
 gif = []
 
@@ -457,10 +454,10 @@ for pos in range(window, len(df)):
         data=[
             go.Candlestick(
                 x=window_df.index,
-                open=window_df["open"],
-                high=window_df["high"],
-                low=window_df["low"],
-                close=window_df["close"],
+                Open=window_df["Open"],
+                High=window_df["High"],
+                Low=window_df["Low"],
+                Close=window_df["Close"],
                 increasing_line_color="#77dd76",
                 decreasing_line_color="#ff6962",
             )
@@ -475,6 +472,9 @@ for pos in range(window, len(df)):
     previous_high_low_data = smc.previous_high_low(window_df, time_frame="4h")
     sessions = smc.sessions(window_df, session="London")
     retracements = smc.retracements(window_df, swing_highs_lows_data)
+
+
+
     fig = add_FVG(fig, window_df, fvg_data)
     fig = add_swing_highs_lows(fig, window_df, swing_highs_lows_data)
     fig = add_bos_choch(fig, window_df, bos_choch_data)
