@@ -474,12 +474,13 @@ class SMC(GraphicsObject):
             _liquidity = liquidity["liquidity"]
             _mid_x = liquidity["mid_x"]
             _mid_y = liquidity["mid_y"]
-            if _liquidity < 0:
-                p.setPen(mkPen(color="red",width=2))
-                # p.setBrush(mkBrush("red"))
-            else:
-                p.setPen(mkPen(color="green",width=2))
-                # p.setBrush(mkBrush("green"))
+            # if _liquidity < 0:
+            #     p.setPen(mkPen(color="red",width=2))
+            #     # p.setBrush(mkBrush("red"))
+            # else:
+            #     p.setPen(mkPen(color="green",width=2))
+            #     # p.setBrush(mkBrush("green"))
+            p.setPen(mkPen(color="red",width=2))
             p.setOpacity(0.6)
             line = QLineF(QPointF(_x, _mid_y), QPointF(_x1, _mid_y))
             p.drawLine(line)
