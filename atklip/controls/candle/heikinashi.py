@@ -86,6 +86,8 @@ class HEIKINASHI(QObject):
     def get_df(self,n:int=None):
         if not n:
             return self.df
+        if n > len(self.df):
+            return self.df
         return self.df.tail(n)
     
     def get_last_row_df(self):

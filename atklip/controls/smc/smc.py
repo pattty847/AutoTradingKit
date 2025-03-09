@@ -970,7 +970,7 @@ class SMC(QObject):
         super().__init__(parent=None)
         self._candles: JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE =_candles
         
-        self.window:int = dict_ta_params.get("window",100)
+        self.window:int = dict_ta_params.get("window",500)
         self.swing_length:int = dict_ta_params.get("swing_length",5)
         self.time_frame:int = dict_ta_params.get("time_frame","4h")
         self.session:int = dict_ta_params.get("session","London")
@@ -979,24 +979,25 @@ class SMC(QObject):
 
         self.first_gen = False
         self.is_genering = True
-        self.is_current_update = True
+        self.is_current_update = False
         self.is_histocric_load = False
         self._name = f"SMC {self.window}"
 
         self.df:pd.DataFrame = pd.DataFrame([])
         self.worker = ApiThreadPool
 
+        self.data = {
+            "FVG": {},
+            "BOS": {},
+            "CHOCH": {},
+            "OB": {},
+            "Liquidity": {},
+            "SwingHighsLows": {},
+            "PreviousHighLow": {},
+            "Sessions": {},
+            "Retracements": {},
+        }
 
-        self.fvg_data:pd.DataFrame = pd.DataFrame([])
-        self.swing_highs_lows_data:pd.DataFrame = pd.DataFrame([])
-        self.bos_choch_data:pd.DataFrame = pd.DataFrame([])
-        self.ob_data:pd.DataFrame = pd.DataFrame([])
-        self.liquidity_data:pd.DataFrame = pd.DataFrame([])
-        self.previous_high_low_data:pd.DataFrame = pd.DataFrame([])
-        self.sessions:pd.DataFrame = pd.DataFrame([])
-        self.retracements:pd.DataFrame = pd.DataFrame([])
-
-        
         self.connect_signals()
     @property
     def is_current_update(self)-> bool:
@@ -1019,7 +1020,7 @@ class SMC(QObject):
             self.connect_signals()
         
         if dict_ta_params != {}:    
-            self.window:int = dict_ta_params.get("window",14)
+            self.window:int = dict_ta_params.get("window",500)
 
             ta_name:str=dict_ta_params.get("ta_name")
             obj_id:str=dict_ta_params.get("obj_id") 
@@ -1072,16 +1073,7 @@ class SMC(QObject):
         return self.df.tail(n)
     
     def get_data(self,start:int=0,stop:int=0):
-        if len(self.df) == 0:
-            return self.df
-        if start == 0 and stop == 0:
-            return self.df
-        elif start == 0 and stop != 0:
-            return self.df.iloc[:stop]
-        elif start != 0 and stop == 0:
-            return self.df.iloc[start:]
-        else:
-            return self.df.iloc[start:stop]
+        return self.data
     
     
     def get_last_row_df(self):
@@ -1115,46 +1107,169 @@ class SMC(QObject):
     
     @staticmethod
     def calculate(df: pd.DataFrame,swing_length=5, time_frame="4h",session="London"):
-        df = df.copy()
-        window_df = df.set_index("time")
+        window_df = df.copy()
+        # window_df = df.set_index("time")
+        # window_df.index = pd.to_datetime(window_df.index, unit="ms").strftime("%Y-%m-%d %H:%M:%S")
         # window_df = df.reset_index(drop=True)
         fvg_data = smc.fvg(window_df, join_consecutive=True)
         swing_highs_lows_data = smc.swing_highs_lows(window_df, swing_length=swing_length)
         bos_choch_data = smc.bos_choch(window_df, swing_highs_lows_data)
         ob_data = smc.ob(window_df, swing_highs_lows_data)
         liquidity_data = smc.liquidity(window_df, swing_highs_lows_data)
-        previous_high_low_data = smc.previous_high_low(window_df, time_frame=time_frame)
+        # previous_high_low_data = smc.previous_high_low(window_df, time_frame=time_frame)
         # sessions = smc.sessions(window_df, session=session)
         retracements = smc.retracements(window_df, swing_highs_lows_data)
 
         # _index = df["index"] #.tail(_len)
 
-        _index_df = df[["index"]]
+        _index_df = window_df[["index"]]
+        _index_df.reset_index(drop=True, inplace=True)
+        # print(_index_df)
+        # print(fvg_data)
 
-        # _df = pd.concat([_index_df, fvg_data,swing_highs_lows_data, bos_choch_data,ob_data,
-        #            liquidity_data,previous_high_low_data,retracements], axis=1, 
-        #            keys=['index', 'fvg', 'swing_highs_lows', 'bos_choch','ob','liquidity','previous_high_low','retracements'])
+        fvg_data = pd.concat([_index_df,fvg_data],axis=1, ignore_index=False)  
+        swing_highs_lows_data = pd.concat([_index_df,swing_highs_lows_data],axis=1, ignore_index=False)
+        bos_choch_data = pd.concat([_index_df,bos_choch_data],axis=1, ignore_index=False)
+        ob_data = pd.concat([_index_df,ob_data],axis=1, ignore_index=False)
+        liquidity_data = pd.concat([_index_df,liquidity_data],axis=1, ignore_index=False)
+        # previous_high_low_data = pd.concat([_index_df,previous_high_low_data],axis=1, ignore_index=False)
+        retracements = pd.concat([_index_df,retracements],axis=1, ignore_index=False)
 
-        # _df = pd.DataFrame({
-        #                     'index':_index.to_list(),
-        #                     'fvg_data':fvg_data["FVG"].to_list(),
-        #                     "swing_highs_lows_data":swing_highs_lows_data.to_list(),
-        #                     "bos_choch_data":bos_choch_data.to_list(),
-        #                     "ob_data":ob_data.to_list(),
-        #                     "liquidity_data":liquidity_data.to_list(),
-        #                     "previous_high_low_data":previous_high_low_data.to_list(),
-        #                     "retracements":retracements.to_list(),
-        #                     # "sessions":sessions,
-        #                     })
-        # print(_df)
-        return (fvg_data,swing_highs_lows_data, bos_choch_data,ob_data,
-                   liquidity_data,previous_high_low_data,retracements)
+
+        data = {
+            "FVG": {},
+            "BOS": {},
+            "CHOCH": {},
+            "OB": {},
+            "Liquidity": {},
+            # "SwingHighsLows": {},
+            # "PreviousHighLow": previous_high_low_data,
+            # "Sessions": sessions,
+            # "Retracements": {},
+        }
+        "FVG"
+        for i in range(len(fvg_data["FVG"])):
+            if not np.isnan(fvg_data["FVG"][i]):
+                x = int(fvg_data["index"][i])
+                _leng = int(
+                    fvg_data["MitigatedIndex"][i]
+                    if fvg_data["MitigatedIndex"][i] != 0
+                    else len(fvg_data) - 1
+                )
+                x1 = fvg_data["index"].iloc[_leng]
+                top = fvg_data["Top"][i]
+                fvg = fvg_data["FVG"][i]
+                bottom = fvg_data["Bottom"][i]
+                mid_x =round((x + x1) / 2)
+                mid_y = (fvg_data["Top"][i] + fvg_data["Bottom"][i]) / 2
+                data["FVG"][x] = {
+                    "x": x,
+                    "x1": x1,
+                    "fvg": fvg,
+                    "top": top,
+                    "bottom": bottom,
+                    "mid_x": mid_x,
+                    "mid_y": mid_y,
+                }
+        "BOSCHOCH"
+        for i in range(len(bos_choch_data["BOS"])):
+            if not np.isnan(bos_choch_data["BOS"][i]):
+                x = int(bos_choch_data["index"][i])
+                _leng = int(
+                    bos_choch_data["BrokenIndex"][i]
+                    if bos_choch_data["BrokenIndex"][i] != 0
+                    else len(bos_choch_data) - 1
+                )
+                x1 = bos_choch_data["index"][_leng]
+                bos = bos_choch_data["BOS"][i]
+                mid_x = round((x + x1) / 2)
+                mid_y = bos_choch_data["Level"][i]
+                data["BOS"][x] = {
+                    "x": x,
+                    "x1": x1,
+                    "bos": bos,
+                    "mid_x": mid_x,
+                    "mid_y": mid_y,
+                }
+            if not np.isnan(bos_choch_data["CHOCH"][i]):
+                x = int(bos_choch_data["index"][i])
+                _leng = int(
+                    bos_choch_data["BrokenIndex"][i]
+                    if bos_choch_data["BrokenIndex"][i] != 0
+                    else len(bos_choch_data) - 1
+                )
+                x1 = bos_choch_data["index"][_leng]
+                choch = bos_choch_data["CHOCH"][i]
+                mid_x = round((x + x1) / 2)
+                mid_y = bos_choch_data["Level"][i]
+                data["CHOCH"][x] = {
+                    "x": x,
+                    "x1": x1,
+                    "choch": choch,
+                    "mid_x": mid_x,
+                    "mid_y": mid_y,
+                }
+            
+        "OB"
+        for i in range(len(ob_data["OB"])):
+            if not np.isnan(ob_data["OB"][i]):
+                x = int(ob_data["index"][i])
+                _leng = int(
+                    ob_data["MitigatedIndex"][i]
+                    if ob_data["MitigatedIndex"][i] != 0
+                    else len(ob_data) - 1
+                )
+                x1 = ob_data["index"][_leng]
+                ob = ob_data["OB"][i]
+                bottom = ob_data["Bottom"][i]
+                top = ob_data["Top"][i]
+                mid_x = round((x + x1) / 2)
+                mid_y = ob_data["Top"][i]
+                data["OB"][x] = {
+                    "x": x,
+                    "x1": x1,
+                    "ob": ob,
+                    "bottom": bottom,
+                    "top": top,
+                    "mid_x": mid_x,
+                    "mid_y": mid_y,
+                }
+        "Liquidity"
+        for i in range(len(liquidity_data["Liquidity"])):
+            if not np.isnan(liquidity_data["Liquidity"][i]):
+                x = int(liquidity_data["index"][i])
+                _leng = int(
+                    liquidity_data["End"][i]
+                    if liquidity_data["End"][i] != 0
+                    else len(liquidity_data) - 1
+                )
+                x1 = liquidity_data["index"][_leng]
+                liquidity = liquidity_data["Liquidity"][i]
+                mid_x = round((x + x1) / 2)
+                mid_y = liquidity_data["Level"][i]
+                data["Liquidity"][x] = {
+                    "x": x,
+                    "x1": x1,
+                    "liquidity": liquidity,
+                    "mid_x": mid_x,
+                    "mid_y": mid_y,
+                }
+        # print("FVG")
+        # print(data["FVG"])
+        # print("BOSCHOCH")
+        # print(data["BOSCHOCH"])
+        # print("OB")
+        # print(data["OB"])
+        # print("Liquidity")
+        # print(data["Liquidity"])
         
+        return data
+
     def fisrt_gen_data(self):
         #self.is_current_update = False
         self.is_genering = True
         self.df = pd.DataFrame([])
-        df:pd.DataFrame = self._candles.get_df()
+        df:pd.DataFrame = self._candles.get_df(self.window*2)
         process = HeavyProcess(self.calculate,
                                self.callback_first_gen,
                                df,
@@ -1168,8 +1283,8 @@ class SMC(QObject):
         self.is_genering = True
         self.is_histocric_load = False
         _pre_len = len(self.df)
-        candle_df = self._candles.get_df()
-        df:pd.DataFrame = candle_df.head(-_pre_len)
+        df = self._candles.get_df(self.window*2)
+        # df:pd.DataFrame = candle_df.head(-_pre_len)
         
         process = HeavyProcess(self.calculate,
                                self.callback_gen_historic_data,
@@ -1212,18 +1327,7 @@ class SMC(QObject):
             #self.is_current_update = True
     
     def callback_first_gen(self, future: Future):
-        (self.fvg_data,self.swing_highs_lows_data, self.bos_choch_data,self.ob_data,
-                   self.liquidity_data,self.previous_high_low_data,self.retracements) = future.result()
-
-        print("fvg_data",self.fvg_data)
-        print("swing_highs_lows_data",self.swing_highs_lows_data)
-        print("bos_choch_data",self.bos_choch_data)
-        print("ob_data",self.ob_data)
-        print("liquidity_data",self.liquidity_data)
-        print("previous_high_low_data",self.previous_high_low_data)
-        print("retracements",self.retracements)
-        return
-
+        self.data = future.result()
         self.is_genering = False
         if self.first_gen == False:
             self.first_gen = True
@@ -1233,69 +1337,22 @@ class SMC(QObject):
         
     
     def callback_gen_historic_data(self, future: Future):
-        (fvg_data,swing_highs_lows_data, bos_choch_data,ob_data,
-                   liquidity_data,previous_high_low_data,retracements) = future.result()
-
-        print("fvg_data",fvg_data)
-        print("swing_highs_lows_data",swing_highs_lows_data)
-        print("bos_choch_data",bos_choch_data)
-        print("ob_data",ob_data)
-        print("liquidity_data",liquidity_data)
-        print("previous_high_low_data",previous_high_low_data)
-        print("retracements",retracements)
-        return
-        return
-        _df = future.result()
-        _len = len(_df)
-        self.df = pd.concat([_df,self.df],ignore_index=True)
+        self.data = future.result()
         self.is_genering = False
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
         self.is_histocric_load = True
+        _len = len(self.data)
         self.sig_add_historic.emit(_len)
-        
-        
+   
     def callback_add(self,future: Future):
-        print("callback_add",future.result())
-        return
-
-        df = future.result()
-
-        last_index = df["index"].iloc[-1]
-        fvg_data = df["fvg_data"].iloc[-1]
-        swing_highs_lows_data = df["swing_highs_lows_data"].iloc[-1]
-        bos_choch_data = df["bos_choch_data"].iloc[-1]
-        liquidity_data = df["liquidity_data"].iloc[-1]
-        previous_high_low_data = df["previous_high_low_data"].iloc[-1]
-        retracements = df["retracements"].iloc[-1]
-        new_frame = pd.DataFrame({
-                                    'index':[last_index],
-                                    'fvg_data':[fvg_data],
-                                    "swing_highs_lows_data":[swing_highs_lows_data],
-                                    "bos_choch_data":[bos_choch_data],
-                                    "liquidity_data":[liquidity_data],
-                                    "previous_high_low_data":[previous_high_low_data],
-                                    "retracements":[retracements]
-                                    })
-            
-        self.df = pd.concat([self.df,new_frame],ignore_index=True)           
+        self.data = future.result()
         self.sig_add_candle.emit()
         #self.is_current_update = True
         
     def callback_update(self,future: Future):
-        # print("callback_update",future.result())
-        return
-
-        df = future.result()
-        last_index = df["fvg"]["index"].iloc[-1]
-        fvg_data = df["fvg"]["fvg_data"].iloc[-1]
-        swing_highs_lows_data = df["fvg"]["swing_highs_lows_data"].iloc[-1]
-        bos_choch_data = df["bos_choch_data"].iloc[-1]
-        liquidity_data = df["liquidity_data"].iloc[-1]
-        previous_high_low_data = df["previous_high_low_data"].iloc[-1]
-        retracements = df["retracements"].iloc[-1]
-        self.df.iloc[-1] = [last_index,fvg_data,swing_highs_lows_data,bos_choch_data,liquidity_data,previous_high_low_data,retracements]
+        self.data = future.result()
         self.sig_update_candle.emit()
         #self.is_current_update = True
         

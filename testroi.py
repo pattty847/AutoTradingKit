@@ -1,68 +1,36 @@
-if self._type_indicator == "Favorites":
-                if new_state == Qt.CheckState.Checked:
-                    if self._data == []:
-                        self._data = [new_data]
-                        if not self.delegate or not self.table_model:
-                            
-                            self.table_model = PositionModel(self._data)
-                            self.setModel(self.table_model)
-                            
-                            self.delegate = PositionItemDelegate(self)
-                            self.setItemDelegate(self.delegate)
+import sys
+from PySide6.QtWidgets import QApplication, QWidget
+from PySide6.QtGui import QPainter, QColor, QFont
+from PySide6.QtCore import Qt
 
-                            hor_header = self.horizontalHeader()
-                            ver_header = self.verticalHeader()
+class TextDrawingWidget(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Vẽ văn bản với QPainter")
+        self.setGeometry(100, 100, 400, 300)  # Đặt kích thước cửa sổ
 
-                            hor_header.setSectionResizeMode(0, QHeaderView.Fixed)  
-                            ver_header.setSectionResizeMode(0, QHeaderView.Fixed)  
-                            hor_header.resizeSection(0, 45)  
-                            ver_header.resizeSection(0, 45) 
+    def paintEvent(self, event):
+        # Tạo một QPainter để vẽ lên widget
+        painter = QPainter(self)
 
-                            hor_header.setSectionResizeMode(2, QHeaderView.Fixed) 
-                            ver_header.setSectionResizeMode(2, QHeaderView.Fixed)  
-                            hor_header.resizeSection(2, 45) 
-                            ver_header.resizeSection(2, 45)  
-                            
-                            hor_header.setSectionResizeMode(1, QHeaderView.Stretch)  
-                        else:
-                            self.table_model.insertRow(0,new_data)
-                    else: 
-                        self.table_model.insertRow(0,new_data)
-                    if _type_indicator != "Favorites":
-                        self.dict_favorites = AppConfig.get_config_value(f"topbar._type_indicator.favorite")
-                        if new_state == Qt.CheckState.Unchecked:
-                            if _type_indicator not in list(self.dict_favorites.keys()):
-                                self.dict_favorites[_type_indicator] = []
-                            else:
-                                if _type_indicator in self.dict_favorites[_type_indicator]:
-                                    self.dict_favorites[_type_indicator].remove(_type_indicator)
-                        else:
-                            if _type_indicator not in list(self.dict_favorites.keys()):
-                                self.dict_favorites[_type_indicator] = [_type_indicator]
-                            else:
-                                if _type_indicator not in self.dict_favorites[_type_indicator]:
-                                    self.dict_favorites[_type_indicator].append(_type_indicator)
-                        AppConfig.sig_set_single_data.emit((f"topbar._type_indicator.favorite.{_type_indicator}",self.dict_favorites[_type_indicator]))
-                        self.dict_favorites = AppConfig.get_config_value(f"topbar._type_indicator.favorite")    
-                    
-                else:
-                    for index,row in enumerate(self.data):
-                        if row[1] == _type_indicator and row[5] == from_indicator_wg:
-                            self.table_model.removeRow(index)
-                            if _type_indicator != "Favorites":
-                                self.dict_favorites = AppConfig.get_config_value(f"topbar._type_indicator.favorite")
-                                if new_state == Qt.CheckState.Unchecked:
-                                    if _type_indicator not in list(self.dict_favorites.keys()):
-                                        self.dict_favorites[_type_indicator] = []
-                                    else:
-                                        if _type_indicator in self.dict_favorites[_type_indicator]:
-                                            self.dict_favorites[_type_indicator].remove(_type_indicator)
-                                else:
-                                    if _type_indicator not in list(self.dict_favorites.keys()):
-                                        self.dict_favorites[_type_indicator] = [_type_indicator]
-                                    else:
-                                        if _type_indicator not in self.dict_favorites[_type_indicator]:
-                                            self.dict_favorites[_type_indicator].append(_type_indicator)
-                                AppConfig.sig_set_single_data.emit((f"topbar._type_indicator.favorite.{_type_indicator}",self.dict_favorites[_type_indicator]))
-                                self.dict_favorites = AppConfig.get_config_value(f"topbar._type_indicator.favorite")  
-                            break
+        # Đặt màu sắc và font chữ
+        painter.setPen(QColor(0, 0, 0))  # Màu đen
+        painter.setFont(QFont("Arial", 20))  # Font Arial, kích thước 20
+
+        # Vẽ văn bản tại vị trí (x, y)
+        text = "Hello, PySide6!"
+        painter.drawText(50, 100, text)  # Vẽ văn bản tại (50, 100)
+
+        # Vẽ thêm một văn bản khác với màu và font khác
+        painter.setPen(QColor(255, 0, 0))  # Màu đỏ
+        painter.setFont(QFont("Times New Roman", 30, QFont.Bold))  # Font Times New Roman, kích thước 30, in đậm
+        painter.drawText(50, 200, "This is a QPainter example!")
+
+        # Kết thúc vẽ
+        painter.end()
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    window = TextDrawingWidget()
+    window.show()
+    sys.exit(app.exec())

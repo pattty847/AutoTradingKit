@@ -12,7 +12,7 @@ from .threadpool import QThreadPool_global,ThreadPoolExecutor_global
 
 
 class WorkerSignals(QObject):
-    setdata = Signal(tuple)  # setdata có graph object
+    setdata = Signal(object)  # setdata có graph object
     error = Signal()
     finished = Signal()
     update_signal = Signal(list)

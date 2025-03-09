@@ -3,9 +3,9 @@
 import time
 from typing import List,TYPE_CHECKING
 
-from PySide6.QtCore import Signal, QObject,Qt,QRectF,QPointF
+from PySide6.QtCore import Signal, QObject,Qt,QRectF,QPointF,QLineF
 from PySide6.QtWidgets import QGraphicsItem
-from PySide6.QtGui import QPainter,QPicture
+from PySide6.QtGui import QPainter,QPicture,QTextItem,QFont
 import pandas as pd
 
 from atklip.graphics.chart_component.base_items.plotdataitem import PlotDataItem
@@ -20,7 +20,7 @@ from atklip.app_utils import *
 from atklip.controls.candle.n_time_smooth_candle import N_SMOOTH_CANDLE
 from atklip.controls.smc.smc import SMC as S_M_C
 
-from atklip.graphics.pyqtgraph.graphicsItems.GraphicsObject import GraphicsObject
+from atklip.graphics.pyqtgraph import GraphicsObject, TextItem
 if TYPE_CHECKING:
     from atklip.graphics.chart_component.viewchart import Chart
 
@@ -41,13 +41,13 @@ class SMC(GraphicsObject):
         
         self.chart:Chart = chart
         self.has = {
-            "name": f"UTBOT Alert",
+            "name": f"SMC Ver_1.0",
             "y_axis_show":False,
             
             "inputs":{
                     "source":self.chart.jp_candle,
                     "source_name": self.chart.jp_candle.source_name,
-                    "window":100,
+                    "window":500,
                     "time_frame":"4h",
                     "swing_length":5,
                     "session":"London",
@@ -59,7 +59,17 @@ class SMC(GraphicsObject):
                     }
         
         self.id = self.chart.objmanager.add(self)
-        
+
+        self.data:dict = {}
+
+        self.list_text:dict = {
+            "fvgs":{},
+            "bos":{},
+            "choch":{},
+            "ob":{},
+            "liquidity":{}
+        }
+        self.is_add = False
         self.list_pos:dict = {}
         self.picture: QPicture = QPicture()
 
@@ -111,72 +121,26 @@ class SMC(GraphicsObject):
     def fisrt_gen_data(self):
         self.connect_signals()
         self.INDICATOR.started_worker()
-    
-    def check_pivot_points(self,df:pd.DataFrame,_type:str="high",n = 10, m=20):
-        _len = len(df)
-        # print(df)   
-        if _type == "high":
-            for i in range(n):  
-                if _len - i - m > 0:  
-                    array = df.iloc[_len-i - m:_len-i][_type].to_numpy()
-                    index = df.iloc[_len-i - m:_len-i]["index"].to_numpy()
-                    max_previous_m = array.max()  
-                    
-                    if array[-1] >= max_previous_m: 
-                        # print(True, array[-1], index[-1])
-                        return (True, array[-1], index[-1])
-            
-        elif _type == "low":
-            for i in range(n):  
-                if _len - i - m > 0:  
-                    array = df.iloc[_len-i - m:_len-i][_type].to_numpy()
-                    index = df.iloc[_len-i - m:_len-i]["index"].to_numpy()
-                    min_previous_m = array.min()   
-                         
-                    if array[-1] <= min_previous_m: 
-                        # print(True, array[-1], index[-1]) 
-                        return (True, array[-1], index[-1])
-        return (False, None, None)
-
-    def check_active_pos(self,_type:str,_open: float):
-        if self.list_pos:
-            for x in self.list_pos.keys():
-                entry_infor:dict = self.list_pos[x]
-                is_entry_closed =  entry_infor["is_stoploss"]
-                is_take_profit_2R =  entry_infor["take_profit_2R"]
-                is_take_profit_1_5R =  entry_infor["take_profit_1_5R"]
-                
-                entry_type = entry_infor["type"]
-                entry:Entry = entry_infor["entry"]
-                
-                if entry_type == _type:
-                    if not is_entry_closed and not is_take_profit_2R:
-                        # self.list_pos[x]["is_stoploss"] = _open
-                        # entry.locked_handle()
-                        return True
-        return False
-                        
+                       
     def delete(self):
         print("deleted--------------------------")
-        
         self.disconnect_signals()
         self.INDICATOR.disconnect()
         self.INDICATOR.deleteLater()
-        # self.macd.deleteLater()
-        # self.super_smoothcandle.deleteLater()
         self.chart.sig_remove_item.emit(self)
     
     def reset_indicator(self):
         self.worker = None
         self.worker = FastWorker(self.regen_indicator)
-        # self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.AutoConnection)
+        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.AutoConnection)
         self.worker.start()
 
     def regen_indicator(self,setdata):
-        xdata,_long,_short= self.INDICATOR.get_data()
-        setdata.emit((xdata,_long,_short))
+        
+        data:dict= self.INDICATOR.get_data()
+        setdata.emit(data)
         self.sig_change_yaxis_range.emit()
-        self.has["name"] = f"UTBOT Ver_1.0"
+        self.has["name"] = f"SMC {self.has['inputs']['window']}"
         self.sig_change_indicator_name.emit(self.has["name"])
         
     def replace_source(self):
@@ -191,12 +155,10 @@ class SMC(GraphicsObject):
       
     def get_inputs(self):
         inputs =  {"source":self.has["inputs"]["source"],
-                    "key_value_long":self.has["inputs"]["key_value_long"],
-                    "key_value_short":self.has["inputs"]["key_value_short"],
-                    "atr_long_period":self.has["inputs"]["atr_long_period"],
-                    "ema_long_period":self.has["inputs"]["ema_long_period"],
-                    "atr_short_period":self.has["inputs"]["atr_short_period"],
-                    "ema_short_period":self.has["inputs"]["ema_short_period"],
+                    "window":self.has["inputs"]["window"],
+                    "time_frame":self.has["inputs"]["time_frame"],
+                    "swing_length":self.has["inputs"]["swing_length"],
+                    "session":self.has["inputs"]["session"]
                     }
         return inputs
     
@@ -217,7 +179,7 @@ class SMC(GraphicsObject):
                 is_update = True
         
         if is_update:
-            self.has["name"] = f"UTBOT"
+            self.has["name"] = f"SMC"
             self.sig_change_indicator_name.emit(self.has["name"])
             self.INDICATOR.change_input(dict_ta_params=self.model.__dict__)
     
@@ -232,234 +194,490 @@ class SMC(GraphicsObject):
             self.show()
         else:
             self.hide()
-
-    def calculate_stop_loss(self,_type:str, price:float):
-        return calculate_stoploss(_type,price,0.0)
-            
-    
-    def check_n_long_short_pos(self,is_new: bool=True,_type:str="long",n:int=5):
-        sorted_pos = sorted(list(self.list_pos.keys()))
-        if len(sorted_pos) == 0:
-            return False
-        if len(sorted_pos) < n:
-            pos =  sorted_pos[:n][::-1]
-        if is_new:
-            pos =  sorted_pos[-n:][::-1]
-        else:
-            pos =  sorted_pos[:n][::-1]
-        if pos:
-            for i in pos:
-                # print(self.list_pos[i]["type"],_type )
-                if self.list_pos[i]["type"] != _type:
-                    return False
-        return True
-    
-    def move_entry(self,index: float, high: float,low: float):
-        """
-        self.list_pos[pivot_point[2]] = {"stop_loss":pivot_point[1],"entry_x":_x,"entry_y":_val,"type":"long","obj":obj, 
-        "entry":entry, "is_stoploss":False, "take_profit_1_5R":None,"take_profit_2R":None}"""
-        if self.list_pos:
-            for x in self.list_pos.keys():
-                entry_infor:dict = self.list_pos[x]
-                is_entry_closed =  entry_infor["is_stoploss"]
-                is_take_profit_2R =  entry_infor["take_profit_2R"]
-                is_take_profit_1_5R =  entry_infor["take_profit_1_5R"]
-                
-                entry_type = entry_infor["type"]
-                
-                stoploss = entry_infor["stop_loss"]
-                
-                entry:Entry = entry_infor["entry"]
-
-                if is_entry_closed or is_take_profit_2R:
-                    continue
-                
-                entry_pos_1_5R:QPointF = entry.has["inputs"]["data"][2.5].chart_pos
-                entry_pos_2R:QPointF = entry.has["inputs"]["data"][3].chart_pos
-                
-                profit_2R = entry_pos_2R.y()
-                profit_1_5R = entry_pos_1_5R.y()
-                
-                if entry_type == "long":
-                    if not is_take_profit_1_5R:
-                        if profit_1_5R <= high:
-                            self.list_pos[x]["take_profit_1_5R"] = profit_1_5R
-                    if not is_take_profit_2R:
-                        if profit_2R <= high:
-                            self.list_pos[x]["take_profit_2R"] = profit_2R
-                    if stoploss >= low:
-                        self.list_pos[x]["is_stoploss"] = True
-                elif entry_type == "short":
-                    if not is_take_profit_1_5R:
-                        if profit_1_5R >= low:
-                            self.list_pos[x]["take_profit_1_5R"] = profit_1_5R
-                    if not is_take_profit_2R:
-                        if profit_2R >= low:
-                            self.list_pos[x]["take_profit_2R"] = profit_2R
-                    if stoploss <= high:
-                        self.list_pos[x]["is_stoploss"] = True
-                
-                is_entry_closed =  self.list_pos[x]["is_stoploss"]
-                is_take_profit_2R =  self.list_pos[x]["take_profit_2R"]
-                
-                entry_y = self.list_pos[x]["entry_y"]
-                self.list_pos[x]["entry_x"] = index
-                entry.moveEntry(index,entry_y)
-                
-                if is_entry_closed or is_take_profit_2R:
-                    entry.locked_handle()
-                   
-    
+     
     def set_Data(self,data):
-
-        print(data)
-
-        return
-
-        if self.list_pos:
-            for obj in self.list_pos.values():
+        all_text = self.list_text.copy()
+        for _key,list_texts in all_text.items():
+            # print(_key,list_texts)
+            list_text = list_texts.copy()
+            for key,ti in list_text.items():
+                ti.setParentItem(None)
+                del self.list_text[_key][key]
                 if self.scene() is not None:
-                    self.scene().removeItem(obj["obj"])
-                    if hasattr(obj["obj"], "obj"):
-                        obj["obj"].deleteLater()
-        self.list_pos.clear()        
-        xData:np.ndarray = data[0]
-        _long:np.ndarray  = data[1]
-        _short:np.ndarray  = data[2]
-        df = pd.DataFrame({
-            "x":xData,
-            "long":_long,
-            "short":_short,
-        })
-        
-        for i in range(1,len(df)):
-            _x = df.iloc[i]['x']
-            if df.iloc[i-1]['long'] == True:
-                _val = self.chart.jp_candle.map_index_ohlcv[_x].low
-                obj = BaseArrowItem(drawtool=self.chart.drawtool,angle=90, tipAngle=60, headLen=10, tailLen=10, tailWidth=5, pen=None, brush='green')
-                obj.setParentItem(self)
-                obj.setPos(_x, _val)
-                obj.locked_handle()
-                self.list_pos[_x] = {"type":"long","obj":obj}
+                    self.scene().removeItem(ti)
+                    if hasattr(ti, "deleteLater"):
+                        ti.deleteLater()
+
+
+        self.picture = QtGui.QPicture()
+        p = QtGui.QPainter(self.picture)
+        # p.setPen(self.outline_pen)
+        if data:
+            fvgs:dict = data.get("FVG")
+            if fvgs:
+                for key,fvg in fvgs.items():
+                    self.draw_fvg(p,fvg)
+                list_text = self.list_text["fvgs"].copy()
+                for key,ti in list_text.items():
+                    if key not in fvgs.keys():
+                        ti.setParentItem(None)
+                        del self.list_text["fvgs"][key]
+                        if self.scene() is not None:
+                            self.scene().removeItem(ti)
+                            if hasattr(ti, "deleteLater"):
+                                ti.deleteLater()
+
+            bos:dict = data.get("BOS")
+            if bos:
+                for key,bo in bos.items():
+                    self.draw_bos(p,bo)
                 
-            elif df.iloc[i-1]['short'] == True:
-                _val = self.chart.jp_candle.map_index_ohlcv[_x].open
-                obj =  BaseArrowItem(drawtool=self.chart.drawtool,angle=270, tipAngle=60, headLen=10, tailLen=10, tailWidth=5, pen=None, brush='red')
-                obj.setParentItem(self)
-                obj.locked_handle()
-                obj.setPos(_x, _val)
-                self.list_pos[_x] = {"type":"short","obj":obj}
+                list_text = self.list_text["bos"].copy()
+                for key,ti in list_text.items():
+                    if key not in bos.keys():
+                        ti.setParentItem(None)
+                        del self.list_text["bos"][key]
+                        if self.scene() is not None:
+                            self.scene().removeItem(ti)
+                            if hasattr(ti, "deleteLater"):
+                                ti.deleteLater()
+            choch:dict = data.get("CHOCH")
+            if choch:
+                for key,cho in choch.items():
+                    self.draw_choch(p,cho)
+                list_text = self.list_text["choch"].copy()
+                for key,ti in list_text.items():
+                    if key not in choch.keys():
+                        ti.setParentItem(None)
+                        del self.list_text["choch"][key]
+                        if self.scene() is not None:
+                            self.scene().removeItem(ti)
+                            if hasattr(ti, "deleteLater"):
+                                ti.deleteLater()
+            ob:dict = data.get("OB")
+            if ob:
+                for key,cho in ob.items():
+                    self.draw_ob(p,cho)
+                list_text = self.list_text["ob"].copy()
+                for key,ti in list_text.items():
+                    if key not in ob.keys():
+                        ti.setParentItem(None)
+                        del self.list_text["ob"][key]
+                        if self.scene() is not None:
+                            self.scene().removeItem(ti)
+                            if hasattr(ti, "deleteLater"):
+                                ti.deleteLater()
+            liquidity:dict = data.get("Liquidity")
+            if liquidity:
+                for key,cho in liquidity.items():
+                    self.draw_liquidity(p,cho)
+                list_text = self.list_text["liquidity"].copy()
+                for key,ti in list_text.items():
+                    if key not in liquidity.keys():
+                        ti.setParentItem(None)
+                        del self.list_text["liquidity"][key]
+                        if self.scene() is not None:
+                            self.scene().removeItem(ti)
+                            if hasattr(ti, "deleteLater"):
+                                ti.deleteLater()
+            
+        p.end()
+        self.prepareGeometryChange()
+        self.informViewBoundsChanged()
         self.INDICATOR.is_current_update = True
 
-    
     def add_historic_Data(self,data):
-        xData:np.ndarray = data[0]
-        _long:np.ndarray  = data[1]
-        _short:np.ndarray  = data[2]
-        df = pd.DataFrame({
-            "x":xData,
-            "long":_long,
-            "short":_short,
-        })
-        
-        for i in range(1,len(df)):
-            _x = df.iloc[i]['x']
-            if self.list_pos.get(_x):
-                continue
-            if df.iloc[i-1]['long'] == True:
-                _val = self.chart.jp_candle.map_index_ohlcv[_x].low
-                obj = BaseArrowItem(drawtool=self.chart.drawtool,angle=90, tipAngle=60, headLen=10, tailLen=10, tailWidth=5, pen=None, brush='green')
-                obj.setParentItem(self)
-                obj.setPos(_x, _val)
-                obj.locked_handle()
-                self.list_pos[_x] = {"type":"long","obj":obj}
+        self.picture = QtGui.QPicture()
+        p = QtGui.QPainter(self.picture)
+        # p.setPen(self.outline_pen)
+        if data:
+            fvgs:dict = data.get("FVG")
+            if fvgs:
+                for key,fvg in fvgs.items():
+                    self.draw_fvg(p,fvg)
+                list_text = self.list_text["fvgs"].copy()
+                for key,ti in list_text.items():
+                    if key not in fvgs.keys():
+                        ti.setParentItem(None)
+                        del self.list_text["fvgs"][key]
+                        if self.scene() is not None:
+                            self.scene().removeItem(ti)
+                            if hasattr(ti, "deleteLater"):
+                                ti.deleteLater()
+                    
+            bos:dict = data.get("BOS")
+            if bos:
+                for key,bo in bos.items():
+                    self.draw_bos(p,bo)
                 
-            elif df.iloc[i-1]['short'] == True:
-                _val = self.chart.jp_candle.map_index_ohlcv[_x].open
-                obj =  BaseArrowItem(drawtool=self.chart.drawtool,angle=270, tipAngle=60, headLen=10, tailLen=10, tailWidth=5, pen=None, brush='red')
-                obj.setParentItem(self)
-                obj.locked_handle()
-                obj.setPos(_x, _val)
-                self.list_pos[_x] = {"type":"short","obj":obj}
+                list_text = self.list_text["bos"].copy()
+                for key,ti in list_text.items():
+                    if key not in bos.keys():
+                        ti.setParentItem(None)
+                        del self.list_text["bos"][key]
+                        if self.scene() is not None:
+                            self.scene().removeItem(ti)
+                            if hasattr(ti, "deleteLater"):
+                                ti.deleteLater()
+            choch:dict = data.get("CHOCH")
+            if choch:
+                for key,cho in choch.items():
+                    self.draw_choch(p,cho)
+                list_text = self.list_text["choch"].copy()
+                for key,ti in list_text.items():
+                    if key not in choch.keys():
+                        ti.setParentItem(None)
+                        del self.list_text["choch"][key]
+                        if self.scene() is not None:
+                            self.scene().removeItem(ti)
+                            if hasattr(ti, "deleteLater"):
+                                ti.deleteLater()
+            ob:dict = data.get("OB")
+            if ob:
+                for key,cho in ob.items():
+                    self.draw_ob(p,cho)
+                list_text = self.list_text["ob"].copy()
+                for key,ti in list_text.items():
+                    if key not in ob.keys():
+                        ti.setParentItem(None)
+                        del self.list_text["ob"][key]
+                        if self.scene() is not None:
+                            self.scene().removeItem(ti)
+                            if hasattr(ti, "deleteLater"):
+                                ti.deleteLater()
+        p.end()
+        self.prepareGeometryChange()
+        self.informViewBoundsChanged()
         self.INDICATOR.is_current_update = True
     
     def update_Data(self,data):
-        xData:np.ndarray = data[0]
-        _long:np.ndarray  = data[1]
-        _short:np.ndarray  = data[2]
-        df = pd.DataFrame({
-            "x":xData,
-            "long":_long,
-            "short":_short,
-        })
-        
-        _x = df.iloc[-1]['x']
-        
-        if self.list_pos.get(_x):
-            self.INDICATOR.is_current_update = True
-            return
+        self.picture = QtGui.QPicture()
+        p = QtGui.QPainter(self.picture)
+        # p.setPen(self.outline_pen)
+        if data:
+            fvgs:dict = data.get("FVG")
+            if fvgs:
+                for key,fvg in fvgs.items():
+                    self.draw_fvg(p,fvg)
+                list_text = self.list_text["fvgs"].copy()
+                for key,ti in list_text.items():
+                    if key not in fvgs.keys():
+                        ti.setParentItem(None)
+                        del self.list_text["fvgs"][key]
+                        if self.scene() is not None:
+                            self.scene().removeItem(ti)
+                            if hasattr(ti, "deleteLater"):
+                                ti.deleteLater()
+                    
+            bos:dict = data.get("BOS")
+            if bos:
+                list_text = self.list_text["bos"].copy()
+                for key,ti in list_text.items():
+                    if key not in bos.keys():
+                        ti.setParentItem(None)
+                        del self.list_text["bos"][key]
+                        if self.scene() is not None:
+                            self.scene().removeItem(ti)
+                            if hasattr(ti, "deleteLater"):
+                                ti.deleteLater()
+                for key,bo in bos.items():
+                    self.draw_bos(p,bo)
+                
+            choch:dict = data.get("CHOCH")
+            if choch:
+                list_text = self.list_text["choch"].copy()
+                for key,ti in list_text.items():
+                    if key not in choch.keys():
+                        ti.setParentItem(None)
+                        del self.list_text["choch"][key]
+                        if self.scene() is not None:
+                            self.scene().removeItem(ti)
+                            if hasattr(ti, "deleteLater"):
+                                ti.deleteLater()
+                for key,cho in choch.items():
+                    self.draw_choch(p,cho)
+            ob:dict = data.get("OB")
+            if ob:
+                list_text = self.list_text["ob"].copy()
+                for key,ti in list_text.items():
+                    if key not in ob.keys():
+                        ti.setParentItem(None)
+                        del self.list_text["ob"][key]
+                        if self.scene() is not None:
+                            self.scene().removeItem(ti)
+                            if hasattr(ti, "deleteLater"):
+                                ti.deleteLater()
+                for key,cho in ob.items():
+                    self.draw_ob(p,cho)
+                self.is_add = False
 
-        if df.iloc[-2]['long'] == True:
-            _val = self.chart.jp_candle.map_index_ohlcv[_x].low
-            obj = BaseArrowItem(drawtool=self.chart.drawtool,angle=90, tipAngle=60, headLen=10, tailLen=10, tailWidth=5, pen=None, brush='green')
-            obj.setParentItem(self)
-            obj.setPos(_x, _val)
-            obj.locked_handle()
-            self.list_pos[_x] = {"type":"long","obj":obj}
-            
-        elif df.iloc[-2]['short'] == True:
-            _val = self.chart.jp_candle.map_index_ohlcv[_x].open
-            obj =  BaseArrowItem(drawtool=self.chart.drawtool,angle=270, tipAngle=60, headLen=10, tailLen=10, tailWidth=5, pen=None, brush='red')
-            obj.setParentItem(self)
-            obj.locked_handle()
-            obj.setPos(_x, _val)
-            self.list_pos[_x] = {"type":"short","obj":obj}
+
+        p.end()
+        self.prepareGeometryChange()
+        self.informViewBoundsChanged()
         self.INDICATOR.is_current_update = True
         
     def setdata_worker(self):
         self.worker = None
         self.worker = FastWorker(self.update_data)
-        # self.worker.signals.setdata.connect(self.update_Data,Qt.ConnectionType.AutoConnection)
+        self.worker.signals.setdata.connect(self.update_Data,Qt.ConnectionType.AutoConnection)
         self.worker.start()  
     
     def add_historic_worker(self,_len):
         self.worker = None
         self.worker = FastWorker(self.load_historic_data,_len)
-        # self.worker.signals.setdata.connect(self.add_historic_Data,Qt.ConnectionType.AutoConnection)
+        self.worker.signals.setdata.connect(self.add_historic_Data,Qt.ConnectionType.AutoConnection)
         self.worker.start() 
     
     def add_worker(self):
+        self.is_add = True
         self.worker = None
         self.worker = FastWorker(self.add_data)
-        # self.worker.signals.setdata.connect(self.update_Data,Qt.ConnectionType.AutoConnection)
+        self.worker.signals.setdata.connect(self.update_Data,Qt.ConnectionType.AutoConnection)
         self.worker.start()    
     
     def load_historic_data(self,_len,setdata):
-        xdata,_long,_short= self.INDICATOR.get_data(stop=_len)
-        setdata.emit((xdata,_long,_short))
+        data:dict= self.INDICATOR.get_data()
+        setdata.emit(data)
         
     def add_data(self,setdata):
-        xdata,_long,_short= self.INDICATOR.get_data(start=-10)
-        setdata.emit((xdata,_long,_short))
+        data:dict= self.INDICATOR.get_data()
+        setdata.emit(data)
     
     def update_data(self,setdata):
-        xdata,_long,_short= self.INDICATOR.get_data(start=-10)
-        setdata.emit((xdata,_long,_short))
+        data:dict= self.INDICATOR.get_data()
+        setdata.emit(data)
+
 
     def boundingRect(self) -> QRectF:
-        if self.list_pos:
-            x_left,x_right = int(self.chart.xAxis.range[0]),int(self.chart.xAxis.range[1])
-            for _x in list(self.list_pos.keys()):
-                obj = self.list_pos.get(_x)
-                if obj:
-                    if x_left < _x < x_right:
-                        obj["obj"].show()
-                    else:
-                        obj["obj"].hide()
-        return self.picture.boundingRect()
-    
-    def paint(self, p:QPainter, *args):
-        self.picture.play(p)
+        x_left,x_right = int(self.chart.xAxis.range[0]),int(self.chart.xAxis.range[1])
+        start_index = self.chart.jp_candle.candles[0].index
+        stop_index = self.chart.jp_candle.candles[-1].index
+        if x_left > start_index:
+            self._start = x_left+2
+        else:
+            self._start = start_index+2
+            
+        if x_right < stop_index:
+            self._stop = x_right
+        else:
+            self._stop = stop_index
+        h_low,h_high = self.chart.yAxis.range[0],self.chart.yAxis.range[1]
+        rect = QRectF(self._start,h_low,self._stop-self._start,h_high-h_low)
+        return rect#     
+
+    def draw_liquidity(self,p:QPainter,liquidity:dict):
+        # {'x': 1514755467, 'x1': np.int64(1514755490), 'liquidity': np.float32(-1.0), 'mid_x': 1514755478, 'mid_y': np.float32(85863.75)}
+        try:
+            _x = liquidity["x"]
+            _x1 = liquidity["x1"]
+            _liquidity = liquidity["liquidity"]
+            _mid_x = liquidity["mid_x"]
+            _mid_y = liquidity["mid_y"]
+            if _liquidity < 0:
+                p.setPen(mkPen(color="red",width=2))
+                # p.setBrush(mkBrush("red"))
+            else:
+                p.setPen(mkPen(color="green",width=2))
+                # p.setBrush(mkBrush("green"))
+            p.setOpacity(0.6)
+            line = QLineF(QPointF(_x, _mid_y), QPointF(_x1, _mid_y))
+            p.drawLine(line)
+
+            ti = self.list_text["liquidity"].get(_x)
+            if not ti:
+                html = f"""
+                    <div style="text-align: center; border-radius: 5px solid #d1d4dc;">
+                        <span style="color: #d1d4dc; font-size: 8pt;">liquidity</span>
+                    </div>
+                    """
+                text = TextItem("", anchor=(0.5, 0.5))
+                text.setHtml(html)
+                text.setParentItem(self)
+                r = text.boundingRect()
+                if _liquidity < 0:
+                    text.setPos(_mid_x, _mid_y)
+                else:
+                    text.setPos(_mid_x, _mid_y)
+                self.list_text["liquidity"][_x] = text
+        except Exception as e:
+            print(e)
+            print(liquidity)
+
+    def draw_choch(self,p:QPainter,choch:dict):
+        # return
+        try:
+            _x = choch["x"]
+            _x1 = choch["x1"]
+            _choch = choch["choch"]
+            _mid_x = choch["mid_x"]
+            _mid_y = choch["mid_y"]
+            if _choch > 0:
+                p.setPen(mkPen(color="red",width=2))
+                # p.setBrush(mkBrush("red"))
+            else:
+                p.setPen(mkPen(color="green",width=2))
+                # p.setBrush(mkBrush("green"))
+            p.setOpacity(0.6)
+            line = QLineF(QPointF(_x, _mid_y), QPointF(_x1, _mid_y))
+            p.drawLine(line)
+
+            ti = self.list_text["choch"].get(_x)
+            if not ti:
+                html = f"""
+                    <div style="text-align: center; border-radius: 5px solid #d1d4dc;">
+                        <span style="color: #d1d4dc; font-size: 8pt;">CHOCH</span>
+                    </div>
+                    """
+
+                text = TextItem("", anchor=(0.5, 0.5))
+                text.setHtml(html)
+                text.setParentItem(self)
+                r = text.boundingRect()
+                if _choch < 0:
+                    text.setPos(_mid_x, _mid_y-r.height())
+                else:
+                    text.setPos(_mid_x, _mid_y+r.height())
+                self.list_text["choch"][_x] = text
+
+        except Exception as e:
+            print(e)
+            print(choch)
+
+    def draw_bos(self,p:QPainter,bo:dict):
+        # return
+        try:
+            _x = bo["x"]
+            _x1 = bo["x1"]
+            _bos = bo["bos"]
+            _mid_x = bo["mid_x"]
+            _mid_y = bo["mid_y"]
+            if _bos > 0:
+                p.setPen(mkPen(color="red",width=2))
+                # p.setBrush(mkBrush("red"))
+            else:
+                p.setPen(mkPen(color="green",width=2))
+                # p.setBrush(mkBrush("green"))
+            p.setOpacity(0.6)
+            line = QLineF(QPointF(_x, _mid_y), QPointF(_x1, _mid_y))
+            p.drawLine(line)
+
+            ti = self.list_text["bos"].get(_x)
+            if not ti:
+                html = f"""
+                    <div style="text-align: center; border-radius: 5px solid #d1d4dc;">
+                        <span style="color: #d1d4dc; font-size: 8pt;">BOS</span>
+                    </div>
+                    """
+                text = TextItem("", anchor=(0.5, 0.5))
+                text.setHtml(html)
+                text.setParentItem(self)
+                text.setPos(_mid_x, _mid_y)
+                r = text.boundingRect()
+                if _bos < 0:
+                    text.setPos(_mid_x, _mid_y-r.height())
+                else:
+                    text.setPos(_mid_x, _mid_y+r.height())
+                self.list_text["bos"][_x] = text
+
+        except Exception as e:
+            print(e)
+            print(bo)
+
+    def draw_ob(self,p:QPainter,ob:dict):
+        # return
+        try:
+            _x = ob["x"]
+            _x1 = ob["x1"]
+            _ob = ob["ob"]
+            _top = ob["top"]
+            _bottom = ob["bottom"]
+            _mid_x = ob["mid_x"]
+            _mid_y = ob["mid_y"]
+            if _ob > 0:
+                p.setPen(Qt.NoPen)
+                p.setBrush(mkBrush("green"))
+            else:
+                p.setPen(Qt.NoPen)
+                p.setBrush(mkBrush("red"))
+            p.setOpacity(0.4)
+            if _top > _bottom:
+                rect = QRectF(_x, _top, _x1-_x, _bottom-_top) 
+            else:
+                 rect = QRectF(_x, _top, _x1-_x, _top-_bottom)
+            p.drawRect(rect)
+
+            ti = self.list_text["ob"].get(_x)
+            if not ti:
+                html = f"""
+                    <div style="text-align: center; border-radius: 5px solid #d1d4dc;">
+                        <span style="color: #d1d4dc; font-size: 8pt;">OB</span>
+                    </div>
+                    """
+                text = TextItem("", anchor=(0.5, 0.5))
+                text.setHtml(html)
+                text.setParentItem(self)
+                # r = text.boundingRect()
+                text.setPos(_mid_x, _mid_y-abs(_bottom-_top)/2)
+                self.list_text["ob"][_x] = text
+            else:
+                if self.is_add:
+                    ti.setPos(_mid_x, _mid_y-abs(_bottom-_top)/2)
+
+        except Exception as e:
+            print(e)
+            print(ob)
+
+
+    def draw_fvg(self,p:QPainter,fvg:dict):
+        # return
+        # print(fvg)
+        try:
+            _x = fvg["x"]
+            _x1 = fvg["x1"]
+            _top = fvg["top"]
+            _fvg = fvg["fvg"]
+            _bottom = fvg["bottom"]
+            _mid_x = fvg["mid_x"]
+            _mid_y = fvg["mid_y"]
+            if _fvg > 0:
+                p.setPen(Qt.NoPen)
+                p.setBrush(mkBrush("orange"))
+            else:
+                p.setPen(Qt.NoPen)
+                p.setBrush(mkBrush("orange"))
+            p.setOpacity(0.4)
+            if _top > _bottom:
+                rect = QRectF(_x, _top, _x1-_x, _bottom-_top) 
+            else:
+                 rect = QRectF(_x, _top, _x1-_x, _top-_bottom)
+            p.drawRect(rect)
+            ti = self.list_text["fvgs"].get(_x)
+            if not ti:
+                html = f"""
+                    <div style="text-align: center; border-radius: 5px solid #d1d4dc;">
+                        <span style="color: #d1d4dc; font-size: 8pt;">FVG</span>
+                    </div>
+                    """
+                text = TextItem("", anchor=(0.5, 0.5))
+                text.setHtml(html)
+                text.setParentItem(self)
+                r = text.boundingRect()
+                if _fvg < 0:
+                    text.setPos(_mid_x, _mid_y)
+                else:
+                    text.setPos(_mid_x, _mid_y)
+                self.list_text["fvgs"][_x] = text
+        except Exception as e:
+            print(e)
+            print(fvg)
+
+
+    def paint(self, p: QtGui.QPainter, *args) -> None:
+        p.drawPicture(0, 0, self.picture)
+
+    def boundingRect(self) -> QtCore.QRect:
+        return QtCore.QRectF(self.picture.boundingRect())
     
     def get_yaxis_param(self):
         _value = None

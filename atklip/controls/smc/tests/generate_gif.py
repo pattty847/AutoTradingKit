@@ -433,6 +433,7 @@ def import_data(symbol, start_str, timeframe):
     df.columns = ["timestamp", "Open", "High", "Low", "Close", "Volume"]
     df = df.set_index("timestamp")
     df.index = pd.to_datetime(df.index, unit="ms").strftime("%Y-%m-%d %H:%M:%S")
+    print(df)
     return df
 
 df = import_data("BTCUSDT", "2024-04-01", "15m")

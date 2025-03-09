@@ -104,7 +104,7 @@ class BasicMenu(ScrollInterface):
                         self.sig_add_indicator.emit(type_indicator)
                     continue
                 
-                elif "period" in _input or "length" in _input or "legs" in _input or "smooth" in _input:
+                elif  "window" in _input or "period" in _input or "length" in _input or "legs" in _input or "smooth" in _input:
                     period = PeriodEdit(self,self.indicator, _input)
                     period.set_name(_input)
                     self.sig_add_indicator.emit(period)
@@ -130,6 +130,7 @@ class BasicMenu(ScrollInterface):
                 elif "indicator_type" in _input:
                     pass
                 else:
+                    continue
                     period = MultiDevEdit(self._parent,self.indicator,_input)
                     period.set_name(_input)
                     self.sig_add_indicator.emit(period)

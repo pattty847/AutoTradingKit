@@ -382,7 +382,6 @@ class CandleStick(GraphicsObject):
     def setData(self, data) -> None:
         """y_data must be in format [[open, close, min, max], ...]"""
         self._to_update = False
-        
         x_data, y_data = data[0],data[1]
         # w = (x_data[-1] - x_data[-2]) / 5
         w = 1 / 5
