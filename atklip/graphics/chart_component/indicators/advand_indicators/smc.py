@@ -345,6 +345,19 @@ class SMC(GraphicsObject):
                             self.scene().removeItem(ti)
                             if hasattr(ti, "deleteLater"):
                                 ti.deleteLater()
+            liquidity:dict = data.get("Liquidity")
+            if liquidity:
+                for key,cho in liquidity.items():
+                    self.draw_liquidity(p,cho)
+                list_text = self.list_text["liquidity"].copy()
+                for key,ti in list_text.items():
+                    if key not in liquidity.keys():
+                        ti.setParentItem(None)
+                        del self.list_text["liquidity"][key]
+                        if self.scene() is not None:
+                            self.scene().removeItem(ti)
+                            if hasattr(ti, "deleteLater"):
+                                ti.deleteLater()
         p.end()
         self.prepareGeometryChange()
         self.informViewBoundsChanged()
@@ -410,6 +423,19 @@ class SMC(GraphicsObject):
                 for key,cho in ob.items():
                     self.draw_ob(p,cho)
                 self.is_add = False
+            liquidity:dict = data.get("Liquidity")
+            if liquidity:
+                for key,cho in liquidity.items():
+                    self.draw_liquidity(p,cho)
+                list_text = self.list_text["liquidity"].copy()
+                for key,ti in list_text.items():
+                    if key not in liquidity.keys():
+                        ti.setParentItem(None)
+                        del self.list_text["liquidity"][key]
+                        if self.scene() is not None:
+                            self.scene().removeItem(ti)
+                            if hasattr(ti, "deleteLater"):
+                                ti.deleteLater()
 
 
         p.end()
@@ -468,6 +494,7 @@ class SMC(GraphicsObject):
 
     def draw_liquidity(self,p:QPainter,liquidity:dict):
         # {'x': 1514755467, 'x1': np.int64(1514755490), 'liquidity': np.float32(-1.0), 'mid_x': 1514755478, 'mid_y': np.float32(85863.75)}
+        # print(liquidity)
         try:
             _x = liquidity["x"]
             _x1 = liquidity["x1"]
