@@ -515,7 +515,7 @@ class SMC(GraphicsObject):
             if not ti:
                 html = f"""
                     <div style="text-align: center; border-radius: 5px solid #d1d4dc;">
-                        <span style="color: #d1d4dc; font-size: 8pt;">liquidity</span>
+                        <span style="color: #d1d4dc; font-size: 8pt;">Liquidity</span>
                     </div>
                     """
                 text = TextItem("", anchor=(0.5, 0.5))
@@ -524,9 +524,9 @@ class SMC(GraphicsObject):
                 r = text.boundingRect()
                 r = text.boundingRect()
                 if _liquidity < 0:
-                    text.setPos(_mid_x, _mid_y-r.height())
+                    text.setPos(_mid_x, _mid_y-r.height()/2)
                 else:
-                    text.setPos(_mid_x, _mid_y+r.height())
+                    text.setPos(_mid_x, _mid_y+r.height()/2)
                 self.list_text["liquidity"][_x] = text
         except Exception as e:
             print(e)
@@ -563,9 +563,9 @@ class SMC(GraphicsObject):
                 text.setParentItem(self)
                 r = text.boundingRect()
                 if _choch < 0:
-                    text.setPos(_mid_x, _mid_y-r.height())
+                    text.setPos(_mid_x, _mid_y-r.height()/2)
                 else:
-                    text.setPos(_mid_x, _mid_y+r.height())
+                    text.setPos(_mid_x, _mid_y+r.height()/2)
                 self.list_text["choch"][_x] = text
 
         except Exception as e:
@@ -603,9 +603,9 @@ class SMC(GraphicsObject):
                 text.setPos(_mid_x, _mid_y)
                 r = text.boundingRect()
                 if _bos < 0:
-                    text.setPos(_mid_x, _mid_y-r.height())
+                    text.setPos(_mid_x, _mid_y-r.height()/2)
                 else:
-                    text.setPos(_mid_x, _mid_y+r.height())
+                    text.setPos(_mid_x, _mid_y+r.height()/2)
                 self.list_text["bos"][_x] = text
 
         except Exception as e:
