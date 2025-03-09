@@ -3,7 +3,7 @@ import sys,asyncio
 from typing import Union, TYPE_CHECKING
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon, QColor, QPainter
-from PySide6.QtWidgets import QHBoxLayout, QApplication, QStackedWidget
+from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout,QApplication, QStackedWidget
 
 from atklip.gui.qfluentwidgets import StackedWidget
 from atklip.gui.qfluentwidgets.common import CryptoIcon as CI
@@ -25,24 +25,22 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
     def __init__(self, parent=None):
         self._isMicaEnabled = False
         super().__init__(parent=parent)
-        
         self.setTitleBar(TitleBar(self))
+        # self.titleBar.setWindowFlag(Qt.WindowTitleHint, True)
         self.tabBar = self.titleBar.tabBar
         
-        # self.titleBar.minBtn.setFixedSize(40,40)
-        # self.titleBar.maxBtn.setFixedSize(40,40)
-        # self.titleBar.closeBtn.setFixedSize(40,40)
-        
-        self.hBoxLayout = QHBoxLayout(self)
+        self.hBoxLayout = QVBoxLayout(self)
         self.hBoxLayout.setSpacing(0)
-        self.hBoxLayout.setContentsMargins(0, 45, 0, 0)
-        
+        self.hBoxLayout.setContentsMargins(0, 0, 0, 0)
+        self.setContentsMargins(0, 0, 0, 0)
+
         self.setLayout(self.hBoxLayout)
 
         self.stackedWidget = QStackedWidget(self)
 
         self.stackedWidget.setContentsMargins(0,0,0,0)
 
+        self.hBoxLayout.addWidget(self.titleBar)
         self.hBoxLayout.addWidget(self.stackedWidget)
         
         # enable mica effect on win11
