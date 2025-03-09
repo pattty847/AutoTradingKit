@@ -48,7 +48,7 @@ class _PushButton(QPushButton):
                             border: none;
                             border-radius: 4px;
                             color: {color};
-                            font: 15px 'Segoe UI', 'Microsoft YaHei', 'PingFang SC';
+                            font: 15px 'Segoe UI', 'Microsoft YaHei', 'PingFang SC',  'Arial';
                             
                         }}""")
     
@@ -63,7 +63,7 @@ class _PushButton(QPushButton):
             border: none;
             border-radius: 4px;
             color: {color};
-            font: 15px 'Segoe UI', 'Microsoft YaHei', 'PingFang SC';
+            font: 15px 'Segoe UI', 'Microsoft YaHei', 'PingFang SC',  'Arial';
             }}""")
 
         super().enterEvent(event)
@@ -143,7 +143,7 @@ class IntervalButton(SplitWidgetBase):
             border-radius: 4px;
             margin: 0;
             color: {color};
-            font: 15px 'Segoe UI', 'Microsoft YaHei', 'PingFang SC';
+            font: 15px 'Segoe UI', 'Microsoft YaHei', 'PingFang SC',  'Arial';
             }}""")
         
     def set_text_color(self,btn):
@@ -154,7 +154,7 @@ class IntervalButton(SplitWidgetBase):
                     border-radius: 4px;
                     margin: 0;
                     color: "#0055ff";
-                    font: 15px 'Segoe UI', 'Microsoft YaHei', 'PingFang SC';
+                    font: 15px 'Segoe UI', 'Microsoft YaHei', 'PingFang SC',  'Arial';
                     }""")
 
     def _postInit(self):

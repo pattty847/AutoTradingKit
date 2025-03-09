@@ -40,7 +40,7 @@ class ObjectManager(QObject):
             font weight
         """
         font = QFont()
-        font.setFamilies(['Segoe UI', 'Microsoft YaHei', 'PingFang SC'])
+        font.setFamilies(['Segoe UI', 'Microsoft YaHei', 'PingFang SC',  'Arial'])
         font.setPixelSize(fontSize)
         font.setWeight(weight)
         return font

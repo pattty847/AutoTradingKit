@@ -49,7 +49,7 @@ class _PushButton(QPushButton):
                             border: none;
                             border-radius: 4px;
                             color: {color};
-                            font: 15px 'Segoe UI', 'Microsoft YaHei', 'PingFang SC';
+                            font: 15px 'Segoe UI', 'Microsoft YaHei', 'PingFang SC',  'Arial';
                             }}""")
     
     def enterEvent(self, event):
@@ -63,7 +63,7 @@ class _PushButton(QPushButton):
             border: none;
             border-radius: 4px;
             color: {color};
-            font: 15px 'Segoe UI', 'Microsoft YaHei', 'PingFang SC';
+            font: 15px 'Segoe UI', 'Microsoft YaHei', 'PingFang SC',  'Arial';
             }}""")
 
         #super().enterEvent(event)

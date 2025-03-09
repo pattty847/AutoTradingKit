@@ -2,7 +2,7 @@ QTableView {
     background: transparent;
     outline: none;
     border: none;
-    font: 13px 'Segoe UI', 'Microsoft YaHei', 'PingFang SC';
+    font: 13px 'Segoe UI', 'Microsoft YaHei', 'PingFang SC',  'Arial';
     selection-background-color: transparent;
     alternate-background-color: transparent;
 }
@@ -38,7 +38,7 @@ QHeaderView::section {
     padding-left: 2px;
     padding-right: 2px;
     border: 1px solid rgba(255, 255, 255, 21);
-    font: 13px 'Segoe UI', 'Microsoft YaHei', 'PingFang SC';
+    font: 13px 'Segoe UI', 'Microsoft YaHei', 'PingFang SC',  'Arial';
 }
 
 QHeaderView::section:horizontal {
