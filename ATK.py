@@ -16,7 +16,6 @@ class MainWindow(WindowBase):
     def __init__(self):
         self.isMicaEnabled = False
         super().__init__()
-        self.setWindowFlag
 
     def closeEvent(self, event: QCloseEvent) -> None:
         quit_msg = QCoreApplication.translate("MainWindow", u"To close window click button OK", None)
