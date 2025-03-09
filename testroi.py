@@ -1,36 +1,57 @@
 import sys
-from PySide6.QtWidgets import QApplication, QWidget
-from PySide6.QtGui import QPainter, QColor, QFont
-from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QApplication, QMainWindow, QLabel, QVBoxLayout, QWidget, QFileDialog, QScrollArea
+from PySide6.QtGui import QPixmap
+from pdf2image import convert_from_path
+from PIL.ImageQt import ImageQt
 
-class TextDrawingWidget(QWidget):
+class PDFViewer(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Vẽ văn bản với QPainter")
-        self.setGeometry(100, 100, 400, 300)  # Đặt kích thước cửa sổ
+        self.initUI()
 
-    def paintEvent(self, event):
-        # Tạo một QPainter để vẽ lên widget
-        painter = QPainter(self)
+    def initUI(self):
+        self.setWindowTitle("PDF Viewer")
+        self.setGeometry(100, 100, 800, 600)
 
-        # Đặt màu sắc và font chữ
-        painter.setPen(QColor(0, 0, 0))  # Màu đen
-        painter.setFont(QFont("Arial", 20))  # Font Arial, kích thước 20
+        # Create a scroll area to display PDF pages
+        self.scroll_area = QScrollArea(self)
+        self.scroll_area.setWidgetResizable(True)
 
-        # Vẽ văn bản tại vị trí (x, y)
-        text = "Hello, PySide6!"
-        painter.drawText(50, 100, text)  # Vẽ văn bản tại (50, 100)
+        # Create a container widget for the scroll area
+        self.container = QWidget()
+        self.layout = QVBoxLayout(self.container)
+        self.scroll_area.setWidget(self.container)
 
-        # Vẽ thêm một văn bản khác với màu và font khác
-        painter.setPen(QColor(255, 0, 0))  # Màu đỏ
-        painter.setFont(QFont("Times New Roman", 30, QFont.Bold))  # Font Times New Roman, kích thước 30, in đậm
-        painter.drawText(50, 200, "This is a QPainter example!")
+        # Set the central widget
+        self.setCentralWidget(self.scroll_area)
 
-        # Kết thúc vẽ
-        painter.end()
+        # Open a PDF file
+        self.openPDF()
+
+    def openPDF(self):
+        # Open a file dialog to select a PDF file
+        file_path, _ = QFileDialog.getOpenFileName(self, "Open PDF File", "", "PDF Files (*.pdf)")
+
+        if file_path:
+            # Convert PDF pages to images
+            images = convert_from_path(file_path,size=(800,1000))
+
+            # Clear previous content
+            for i in reversed(range(self.layout.count())):
+                self.layout.itemAt(i).widget().setParent(None)
+
+            # Display each page as an image in a QLabel
+            for image in images:
+                qimage = ImageQt(image)
+                pixmap = QPixmap.fromImage(qimage)
+                pixmap.scaledToWidth(800)
+                pixmap.scaledToHeight(600)
+                label = QLabel(self)
+                label.setPixmap(pixmap)
+                self.layout.addWidget(label)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    window = TextDrawingWidget()
-    window.show()
+    viewer = PDFViewer()
+    viewer.show()
     sys.exit(app.exec())

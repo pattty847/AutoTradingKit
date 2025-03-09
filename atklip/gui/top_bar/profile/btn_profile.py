@@ -12,13 +12,14 @@ class AvatarButton(QWidget):
     def __init__(self, parent=None,icon_path=u":/qfluentwidgets/images/profiles/profile2.png"): #u":/qfluentwidgets/images/profiles/profile2.png"
         super().__init__(parent)
         self.setStyleSheet("background-color:transparent;")
-        self.installEventFilter(ToolTipFilter(self, 3000, ToolTipPosition.TOP_RIGHT))
-        self.setToolTip("About ATK")
+        
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0,0,0,0)
         self.setLayout(layout)
         self.setMouseTracking(True)
         self.btn = ExchangeICon(self)
+        self.installEventFilter(ToolTipFilter(self.btn, 3000, ToolTipPosition.TOP_RIGHT))
+        self.btn.setToolTip("About ATK")
         layout.addWidget(self.btn)
         self.btn.set_pixmap_icon(icon_path,35)
         self.Readme = ReadmeViewer()

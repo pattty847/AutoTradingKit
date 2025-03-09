@@ -42,7 +42,7 @@ def main():
         os.environ["QT_SCALE_FACTOR"] = str(dpi_scale)
     
     setTheme(Theme.DARK, True, True)
-    app = QApplication(sys.argv)
+    app = QApplication(sys.argv + ['--no-sandbox'])
     app.setAttribute(Qt.AA_DontCreateNativeWidgetSiblings)
     app.setStyle("Fusion")
     app.setApplicationVersion(APP_VERSION)
@@ -63,7 +63,9 @@ try:
 except ImportError:
     pass
 
+
 if __name__ == '__main__':
+    multiprocessing.freeze_support()
     if sys.platform == "darwin" or sys.platform == "linux":
         try:
             import uvloop 
@@ -71,7 +73,7 @@ if __name__ == '__main__':
         except:
             pass
     else:
-        multiprocessing.freeze_support()
+        
         try:
             import winloop 
             winloop.install()
