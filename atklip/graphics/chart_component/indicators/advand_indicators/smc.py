@@ -501,13 +501,12 @@ class SMC(GraphicsObject):
             _liquidity = liquidity["liquidity"]
             _mid_x = liquidity["mid_x"]
             _mid_y = liquidity["mid_y"]
-            # if _liquidity < 0:
-            #     p.setPen(mkPen(color="red",width=2))
-            #     # p.setBrush(mkBrush("red"))
-            # else:
-            #     p.setPen(mkPen(color="green",width=2))
-            #     # p.setBrush(mkBrush("green"))
-            p.setPen(mkPen(color="red",width=2))
+            if _liquidity < 0:
+                p.setPen(mkPen(color="red",width=2))
+                # p.setBrush(mkBrush("red"))
+            else:
+                p.setPen(mkPen(color="green",width=2))
+                # p.setBrush(mkBrush("green"))
             p.setOpacity(0.6)
             line = QLineF(QPointF(_x, _mid_y), QPointF(_x1, _mid_y))
             p.drawLine(line)
@@ -523,10 +522,11 @@ class SMC(GraphicsObject):
                 text.setHtml(html)
                 text.setParentItem(self)
                 r = text.boundingRect()
+                r = text.boundingRect()
                 if _liquidity < 0:
-                    text.setPos(_mid_x, _mid_y)
+                    text.setPos(_mid_x, _mid_y-r.height())
                 else:
-                    text.setPos(_mid_x, _mid_y)
+                    text.setPos(_mid_x, _mid_y+r.height())
                 self.list_text["liquidity"][_x] = text
         except Exception as e:
             print(e)
