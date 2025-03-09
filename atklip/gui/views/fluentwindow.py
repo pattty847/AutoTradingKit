@@ -3,38 +3,38 @@ import sys,asyncio
 from typing import Union, TYPE_CHECKING
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon, QColor, QPainter
-from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout,QApplication, QStackedWidget
+from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout,QApplication, QStackedWidget,QWidget
 
 from atklip.gui.qfluentwidgets import StackedWidget
 from atklip.gui.qfluentwidgets.common import CryptoIcon as CI
 from atklip.gui.qfluentwidgets.common import screen,FluentIconBase,qconfig, qrouter, FluentStyleSheet, isDarkTheme, BackgroundAnimationWidget
 from atklip.gui.qfluentwidgets.common.icon import *
-from qframelesswindow import FramelessWindow
+from qframelesswindow import FramelessMainWindow
 
 from .titlebar import TitleBar
 from .mainlayout import MainWidget
 from atklip.app_utils import *
 from atklip.appmanager.setting import AppConfig
 from atklip.appmanager.worker.threadpool import ThreadPoolExecutor_global,Heavy_ProcessPoolExecutor_global,num_threads
-if TYPE_CHECKING:
-    from atklip.gui.qfluentwidgets.components import TabBar
-"thiếu quản lý tab khi xóa 1 tab bất kỳ, switch to tab khác và xóa tab muốn xóa, thử lưu router key vào 1 dict"
-class WindowBase(BackgroundAnimationWidget, FramelessWindow):
+
+
+class WindowBase(BackgroundAnimationWidget, FramelessMainWindow):
     """ Fluent window base class """
     #currentInterface = Signal(object)
     def __init__(self, parent=None):
         self._isMicaEnabled = False
         super().__init__(parent=parent)
         self.setTitleBar(TitleBar(self))
-        # self.titleBar.setWindowFlag(Qt.WindowTitleHint, True)
         self.tabBar = self.titleBar.tabBar
-        
-        self.hBoxLayout = QVBoxLayout(self)
+
+        self.centralwg = QWidget(self)
+        self.hBoxLayout = QVBoxLayout(self.centralwg)
+        self.centralwg.setLayout(self.hBoxLayout)
         self.hBoxLayout.setSpacing(0)
         self.hBoxLayout.setContentsMargins(0, 0, 0, 0)
         self.setContentsMargins(0, 0, 0, 0)
 
-        self.setLayout(self.hBoxLayout)
+        self.setCentralWidget(self.centralwg)
 
         self.stackedWidget = QStackedWidget(self)
 
