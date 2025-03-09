@@ -36,7 +36,7 @@ class WindowBase(BackgroundAnimationWidget, FramelessWindow):
         self.hBoxLayout = QHBoxLayout(self)
         self.hBoxLayout.setSpacing(0)
         self.hBoxLayout.setContentsMargins(0, 45, 0, 0)
-
+        
         self.setLayout(self.hBoxLayout)
 
         self.stackedWidget = QStackedWidget(self)
