@@ -3,7 +3,7 @@ import sys,asyncio
 from typing import Union, TYPE_CHECKING
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon, QColor, QPainter
-from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout,QApplication, QStackedWidget,QWidget
+from PySide6.QtWidgets import QMainWindow, QVBoxLayout,QApplication, QStackedWidget,QWidget
 
 from atklip.gui.qfluentwidgets import StackedWidget
 from atklip.gui.qfluentwidgets.common import CryptoIcon as CI
@@ -18,7 +18,7 @@ from atklip.appmanager.setting import AppConfig
 from atklip.appmanager.worker.threadpool import ThreadPoolExecutor_global,Heavy_ProcessPoolExecutor_global,num_threads
 
 
-class WindowBase(BackgroundAnimationWidget, FramelessMainWindow):
+class WindowBase(BackgroundAnimationWidget, QMainWindow):
     """ Fluent window base class """
     #currentInterface = Signal(object)
     def __init__(self, parent=None):
@@ -27,20 +27,20 @@ class WindowBase(BackgroundAnimationWidget, FramelessMainWindow):
         self.setWindowFlag(Qt.WindowMaximizeButtonHint, True)
         self.setWindowFlag(Qt.WindowMinimizeButtonHint, True)
         self.setWindowFlag(Qt.WindowCloseButtonHint, True)
-        self.setWindowFlag(Qt.WindowSystemMenuHint, True)
-        self.setWindowFlag(Qt.WindowContextHelpButtonHint, False)
-        self.setWindowFlag(Qt.WindowStaysOnTopHint, False)
-        self.setWindowFlag(Qt.WindowStaysOnBottomHint, False)
-        self.setWindowFlag(Qt.WindowTransparentForInput, False)
+        # self.setWindowFlag(Qt.WindowSystemMenuHint, True)
+        # self.setWindowFlag(Qt.WindowContextHelpButtonHint, False)
+        # self.setWindowFlag(Qt.WindowStaysOnTopHint, False)
+        # self.setWindowFlag(Qt.WindowStaysOnBottomHint, False)
+        # self.setWindowFlag(Qt.WindowTransparentForInput, False)
         self.setWindowFlag(Qt.WindowTitleHint, True)
-        self.setWindowFlags(Qt.FramelessWindowHint)
+        self.setWindowFlag(Qt.FramelessWindowHint, True)
 
         # Add a custom title bar
         
         # self.setTitleBar(TitleBar(self))
 
-        self.titleBar.deleteLater()
-        self.titleBar.hide()
+        # self.titleBar.deleteLater()
+        # self.titleBar.hide()
         self.titleBar = TitleBar(self)
         self.titleBar.setParent(self)
 
@@ -64,7 +64,7 @@ class WindowBase(BackgroundAnimationWidget, FramelessMainWindow):
         # self.hBoxLayout.addWidget(self.stackedWidget)
         
         # enable mica effect on win11
-        self.setMicaEffectEnabled(False)
+        # self.setMicaEffectEnabled(False)
         
         self.tabBar.currentChanged.connect(self.onTabChanged)
         self.tabBar.tabAddRequested.connect(self.onTabAddRequested)
