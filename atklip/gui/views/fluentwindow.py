@@ -9,7 +9,7 @@ from atklip.gui.qfluentwidgets import StackedWidget
 from atklip.gui.qfluentwidgets.common import CryptoIcon as CI
 from atklip.gui.qfluentwidgets.common import screen,FluentIconBase,qconfig, qrouter, FluentStyleSheet, isDarkTheme, BackgroundAnimationWidget
 from atklip.gui.qfluentwidgets.common.icon import *
-from qframelesswindow import FramelessMainWindow
+
 
 from .titlebar import TitleBar
 from .mainlayout import MainWidget
@@ -17,8 +17,14 @@ from atklip.app_utils import *
 from atklip.appmanager.setting import AppConfig
 from atklip.appmanager.worker.threadpool import ThreadPoolExecutor_global,Heavy_ProcessPoolExecutor_global,num_threads
 
+if sys.platform == "darwin":
+    from PySide6.QtWidgets import QMainWindow as FramelessMainWindow
+elif sys.platform == "linux":
+    from .framelesswindow import LinuxFramelessMainWindow as FramelessMainWindow
+else:
+    from .framelesswindow import WindowsFramelessMainWindow as FramelessMainWindow
 
-class WindowBase(BackgroundAnimationWidget, QMainWindow):
+class WindowBase(BackgroundAnimationWidget, FramelessMainWindow):
     """ Fluent window base class """
     #currentInterface = Signal(object)
     def __init__(self, parent=None):
@@ -27,20 +33,9 @@ class WindowBase(BackgroundAnimationWidget, QMainWindow):
         self.setWindowFlag(Qt.WindowMaximizeButtonHint, True)
         self.setWindowFlag(Qt.WindowMinimizeButtonHint, True)
         self.setWindowFlag(Qt.WindowCloseButtonHint, True)
-        # self.setWindowFlag(Qt.WindowSystemMenuHint, True)
-        # self.setWindowFlag(Qt.WindowContextHelpButtonHint, False)
-        # self.setWindowFlag(Qt.WindowStaysOnTopHint, False)
-        # self.setWindowFlag(Qt.WindowStaysOnBottomHint, False)
-        # self.setWindowFlag(Qt.WindowTransparentForInput, False)
         self.setWindowFlag(Qt.WindowTitleHint, True)
         self.setWindowFlag(Qt.FramelessWindowHint, True)
 
-        # Add a custom title bar
-        
-        # self.setTitleBar(TitleBar(self))
-
-        # self.titleBar.deleteLater()
-        # self.titleBar.hide()
         self.titleBar = TitleBar(self)
         self.titleBar.setParent(self)
 
@@ -48,11 +43,6 @@ class WindowBase(BackgroundAnimationWidget, QMainWindow):
 
         self.setMenuWidget(self.titleBar)
 
-        # self.centralwg = QWidget(self)
-        # self.hBoxLayout = QVBoxLayout(self.centralwg)
-        # self.centralwg.setLayout(self.hBoxLayout)
-        # self.hBoxLayout.setSpacing(0)
-        # self.hBoxLayout.setContentsMargins(0, 0, 0, 0)
         self.setContentsMargins(0, 0, 0, 0)
 
         self.stackedWidget = QStackedWidget(self)
@@ -60,12 +50,6 @@ class WindowBase(BackgroundAnimationWidget, QMainWindow):
         self.stackedWidget.setContentsMargins(0,0,0,0)
         self.setCentralWidget(self.stackedWidget)
 
-        # self.hBoxLayout.addWidget(self.titleBar)
-        # self.hBoxLayout.addWidget(self.stackedWidget)
-        
-        # enable mica effect on win11
-        # self.setMicaEffectEnabled(False)
-        
         self.tabBar.currentChanged.connect(self.onTabChanged)
         self.tabBar.tabAddRequested.connect(self.onTabAddRequested)
         self.tabBar.tabCloseRequested.connect(self.onTabCloseRequested)
