@@ -33,7 +33,7 @@ class WindowBase(BackgroundAnimationWidget, QMainWindow):
         # self.setWindowFlag(Qt.WindowStaysOnBottomHint, False)
         # self.setWindowFlag(Qt.WindowTransparentForInput, False)
         self.setWindowFlag(Qt.WindowTitleHint, True)
-        self.setWindowFlag(Qt.FramelessWindowHint, True)
+        #self.setWindowFlag(Qt.FramelessWindowHint, True)
 
         # Add a custom title bar
         
