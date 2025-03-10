@@ -24,24 +24,44 @@ class WindowBase(BackgroundAnimationWidget, FramelessMainWindow):
     def __init__(self, parent=None):
         self._isMicaEnabled = False
         super().__init__(parent=parent)
-        self.setTitleBar(TitleBar(self))
+        self.setWindowFlag(Qt.WindowMaximizeButtonHint, True)
+        self.setWindowFlag(Qt.WindowMinimizeButtonHint, True)
+        self.setWindowFlag(Qt.WindowCloseButtonHint, True)
+        self.setWindowFlag(Qt.WindowSystemMenuHint, True)
+        self.setWindowFlag(Qt.WindowContextHelpButtonHint, False)
+        self.setWindowFlag(Qt.WindowStaysOnTopHint, False)
+        self.setWindowFlag(Qt.WindowStaysOnBottomHint, False)
+        self.setWindowFlag(Qt.WindowTransparentForInput, False)
+        self.setWindowFlag(Qt.WindowTitleHint, True)
+        self.setWindowFlags(Qt.FramelessWindowHint)
+
+        # Add a custom title bar
+        
+        # self.setTitleBar(TitleBar(self))
+
+        self.titleBar.deleteLater()
+        self.titleBar.hide()
+        self.titleBar = TitleBar(self)
+        self.titleBar.setParent(self)
+
         self.tabBar = self.titleBar.tabBar
 
-        self.centralwg = QWidget(self)
-        self.hBoxLayout = QVBoxLayout(self.centralwg)
-        self.centralwg.setLayout(self.hBoxLayout)
-        self.hBoxLayout.setSpacing(0)
-        self.hBoxLayout.setContentsMargins(0, 0, 0, 0)
-        self.setContentsMargins(0, 0, 0, 0)
+        self.setMenuWidget(self.titleBar)
 
-        self.setCentralWidget(self.centralwg)
+        # self.centralwg = QWidget(self)
+        # self.hBoxLayout = QVBoxLayout(self.centralwg)
+        # self.centralwg.setLayout(self.hBoxLayout)
+        # self.hBoxLayout.setSpacing(0)
+        # self.hBoxLayout.setContentsMargins(0, 0, 0, 0)
+        self.setContentsMargins(0, 0, 0, 0)
 
         self.stackedWidget = QStackedWidget(self)
 
         self.stackedWidget.setContentsMargins(0,0,0,0)
+        self.setCentralWidget(self.stackedWidget)
 
-        self.hBoxLayout.addWidget(self.titleBar)
-        self.hBoxLayout.addWidget(self.stackedWidget)
+        # self.hBoxLayout.addWidget(self.titleBar)
+        # self.hBoxLayout.addWidget(self.stackedWidget)
         
         # enable mica effect on win11
         self.setMicaEffectEnabled(False)
