@@ -4,7 +4,7 @@ from atklip.graphics.chart_component.globarvar import global_signal
 class CandlePanel(QWidget):
     def __init__(self, parent):
         super().__init__(parent)
-        self.setStyleSheet("""background-color: transparent; color:#eaeaea; font: bold 14px 'Segoe UI', 'Microsoft YaHei', 'PingFang SC';
+        self.setStyleSheet("""background-color: transparent; color:#eaeaea; font: bold 14px 'Segoe UI', 'Microsoft YaHei', 'PingFang SC',  'Arial';
                             """)
         
         self.setFixedSize(320, 25)

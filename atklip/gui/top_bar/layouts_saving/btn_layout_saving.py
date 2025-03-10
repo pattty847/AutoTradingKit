@@ -123,7 +123,7 @@ class LayoutButton(SplitWidgetBase):
         #             border-radius: 4px;
         #             margin: 0;
         #             color: "#0055ff";
-        #             font: 15px 'Segoe UI', 'PingFang SC';
+        #             font: 15px 'Segoe UI', 'PingFang SC',  'Arial';
         #             font-weight: Bold;
         #             }""")
 

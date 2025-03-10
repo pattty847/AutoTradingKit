@@ -16,7 +16,6 @@ class MainWindow(WindowBase):
     def __init__(self):
         self.isMicaEnabled = False
         super().__init__()
-        self.setWindowFlag
 
     def closeEvent(self, event: QCloseEvent) -> None:
         quit_msg = QCoreApplication.translate("MainWindow", u"To close window click button OK", None)
@@ -43,7 +42,7 @@ def main():
         os.environ["QT_SCALE_FACTOR"] = str(dpi_scale)
     
     setTheme(Theme.DARK, True, True)
-    app = QApplication(sys.argv)
+    app = QApplication(sys.argv + ['--no-sandbox'])
     app.setAttribute(Qt.AA_DontCreateNativeWidgetSiblings)
     app.setStyle("Fusion")
     app.setApplicationVersion(APP_VERSION)
@@ -64,7 +63,9 @@ try:
 except ImportError:
     pass
 
+
 if __name__ == '__main__':
+    multiprocessing.freeze_support()
     if sys.platform == "darwin" or sys.platform == "linux":
         try:
             import uvloop 
@@ -72,14 +73,11 @@ if __name__ == '__main__':
         except:
             pass
     else:
-        multiprocessing.freeze_support()
         try:
             import winloop 
             winloop.install()
         except:
             asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-    event = asyncio.get_event_loop_policy()
-    print(event)
     main()
     
     

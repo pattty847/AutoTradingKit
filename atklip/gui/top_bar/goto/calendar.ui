@@ -35,7 +35,7 @@ QCalendarWidget QToolButton
 	height:38px;
 	width:50px;
 	color:white;
-	font:18px 'Segoe UI', 'Microsoft YaHei', 'PingFang SC';
+	font:18px 'Segoe UI', 'Microsoft YaHei', 'PingFang SC',  'Arial';
 	icon-size:18px 18px;
 	background-color:#2b2b2b;
 }
@@ -86,7 +86,7 @@ QCalendarWidget QWidget#qt_calendar_navigationbar
 #qt_calendar_monthbutton
 {
 	width:100px;
-	font:18px 'Segoe UI', 'Microsoft YaHei', 'PingFang SC';
+	font:18px 'Segoe UI', 'Microsoft YaHei', 'PingFang SC',  'Arial';
 	color:white;
 	background-color:#2b2b2b;
 	margin: 0px 2px;
@@ -96,7 +96,7 @@ QCalendarWidget QWidget#qt_calendar_navigationbar
 
 #qt_calendar_yearbutton
 {
-	font:18px 'Segoe UI', 'Microsoft YaHei', 'PingFang SC';
+	font:18px 'Segoe UI', 'Microsoft YaHei', 'PingFang SC',  'Arial';
 	color:white;
 	background-color:#2b2b2b;
 	margin: 0px 2px;
@@ -116,7 +116,7 @@ QCalendarWidget QMenu
 {
 	width:150px;
 	color:white;
-	font:14px 'Segoe UI', 'Microsoft YaHei', 'PingFang SC';
+	font:14px 'Segoe UI', 'Microsoft YaHei', 'PingFang SC',  'Arial';
 	background-color:#2b2b2b;
 }
 
@@ -133,7 +133,7 @@ QCalendarWidget QWidget
 
 QCalendarWidget QAbstractItemView:enabled
 {
-	font:14px 'Segoe UI', 'Microsoft YaHei', 'PingFang SC';
+	font:14px 'Segoe UI', 'Microsoft YaHei', 'PingFang SC',  'Arial';
 	color:white;
 	background-color:#2b2b2b;
 	selection-background-color:#202020;
@@ -148,14 +148,14 @@ QCalendarWidget QSpinBox
 {
 	width:60px;
 	height:25px;
-	font:14px 'Segoe UI', 'Microsoft YaHei', 'PingFang SC';
+	font:14px 'Segoe UI', 'Microsoft YaHei', 'PingFang SC',  'Arial';
 	color:white;
 	background-color:#2b2b2b;
 }
 
 #qt_calendar_calendarview
 {
-	font:14px 'Segoe UI', 'Microsoft YaHei', 'PingFang SC';
+	font:14px 'Segoe UI', 'Microsoft YaHei', 'PingFang SC',  'Arial';
 	color:white;
 	background-color:#2b2b2b;
 	border-width: 0px;
