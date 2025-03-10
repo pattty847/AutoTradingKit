@@ -75,6 +75,10 @@ for folder in list_dirs:
                 print("delete old",src_path)
                 os.remove(src_path)
             
+            if src_path.endswith(".so"):
+                print("delete old",src_path)
+                os.remove(src_path)
+            
             # if src_path.endswith(".py"):
             #     print(src_path)
             #     convert_one(src_path)
