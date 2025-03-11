@@ -1,10 +1,6 @@
 import datetime as dt
-from functools import lru_cache
-from math import floor
 import re
-from numba import jit,njit
 from typing import List
-from typing import Union
 import numpy as np
 from decimal import Decimal
 
@@ -99,7 +95,7 @@ def calculate_stoploss(_type,start, percent):
         stop = start*(1+percent/100)
     return stop
 
-@jit(nopython=True)
+# @jit(nopython=True)
 def binary_search(x,arr,length):
     left = 0
     right = length - 1

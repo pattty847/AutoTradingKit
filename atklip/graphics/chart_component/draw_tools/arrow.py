@@ -39,7 +39,7 @@ class Arrow(QGraphicsObject):
         self.source, mamode, period, n = self.get_source(self._type)
         
         if mamode != None:
-            self.has = {
+            self.has: dict = {
             "is_candle": True,
             "name": f"{self.source.source_name} {mamode.name} {period} {n}",
             "y_axis_show":True,
@@ -59,7 +59,7 @@ class Arrow(QGraphicsObject):
                     }
                 }
         else:
-            self.has = {
+            self.has: dict = {
             "name": f"{self.source.source_name}",
             "y_axis_show":True,
             "inputs":{

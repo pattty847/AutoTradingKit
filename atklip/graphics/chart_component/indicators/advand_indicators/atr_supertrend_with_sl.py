@@ -39,8 +39,8 @@ class ATRSuperTrend(GraphicsObject):
         self.chart:Chart = chart
         
 
-        self.has = {
-            "name": f"SuperTrendvsSL 20 2",
+        self.has: dict = {
+            "name": "SuperTrendvsSL 20 2",
             "y_axis_show":False,
             "inputs":{
                     "source":self.chart.jp_candle,
@@ -98,7 +98,7 @@ class ATRSuperTrend(GraphicsObject):
         self.chart_id = _chart_id
         
     @property
-    def model(self) -> dict:
+    def model(self):
         return SuperWithSlModel(self.id,"SuperTrend",self.chart.jp_candle.source_name,
                     self.has["inputs"]["supertrend_length"],
                     self.has["inputs"]["supertrend_atr_length"],
@@ -144,7 +144,7 @@ class ATRSuperTrend(GraphicsObject):
         x_data,long_stoploss,short_stoploss,SUPERTd = self.INDICATOR.get_data()
         setdata.emit((x_data,long_stoploss,short_stoploss,SUPERTd))
         
-        self.has["name"] = f"SuperTrendvsSL {self.has["inputs"]["supertrend_length"]} {self.has["inputs"]["supertrend_atr_length"]} {self.has["inputs"]["supertrend_multiplier"]} {self.has["inputs"]["supertrend_atr_mamode"].name}"
+        self.has["name"] = f"""SuperTrendvsSL {self.has["inputs"]["supertrend_length"]} {self.has["inputs"]["supertrend_atr_length"]} {self.has["inputs"]["supertrend_multiplier"]} {self.has["inputs"]["supertrend_atr_mamode"].name}"""
         self.sig_change_indicator_name.emit(self.has["name"])
         
     def replace_source(self):
@@ -194,7 +194,7 @@ class ATRSuperTrend(GraphicsObject):
                 is_update = True
 
         if is_update:
-            self.has["name"] = f"SuperTrendvsSL {self.has["inputs"]["supertrend_length"]} {self.has["inputs"]["supertrend_atr_length"]} {self.has["inputs"]["supertrend_multiplier"]} {self.has["inputs"]["supertrend_atr_mamode"].name}"
+            self.has["name"] = f"""SuperTrendvsSL {self.has["inputs"]["supertrend_length"]} {self.has["inputs"]["supertrend_atr_length"]} {self.has["inputs"]["supertrend_multiplier"]} {self.has["inputs"]["supertrend_atr_mamode"].name}"""
             self.sig_change_indicator_name.emit(self.has["name"])
             self.INDICATOR.change_input(dict_ta_params=self.model.__dict__)
     

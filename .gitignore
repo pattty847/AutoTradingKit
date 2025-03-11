@@ -167,3 +167,11 @@ build
 /app
 app
 định hướng atk.docx
+*.pyd
+*.so
+
+download
+/download
+/.vs
+/.pyarmor
+/.mypy_cache

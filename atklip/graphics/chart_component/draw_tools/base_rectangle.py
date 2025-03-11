@@ -28,7 +28,7 @@ class BaseRect(ROI):
         ROI.__init__(self, pos, size, **args)
         self.setFlag(self.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
         self.setFlag(self.GraphicsItemFlag.ItemSendsGeometryChanges,False)
-        self.has = {
+        self.has: dict = {
             "styles":{
                     'pen': None,
                     'brush': mkBrush((43, 106, 255, 40)),

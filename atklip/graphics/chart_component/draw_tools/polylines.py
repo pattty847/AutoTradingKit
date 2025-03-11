@@ -59,7 +59,7 @@ class RangePolyLine(SpecialROI):     # for date price range
         self.interval = self.chart.interval
         self.precision = self.chart._precision
         
-        self.has = {
+        self.has: dict = {
             "x_axis_show":True,
             "name": "rectangle",
             "type": "drawtool",
