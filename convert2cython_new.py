@@ -115,10 +115,10 @@ def convert_all(folder):
 
 # convert_all(r"atklip\graphics\chart_component\draw_tools")
 
-# for folder in list_dirs:
-#     convert_all(folder)
+for folder in list_dirs:
+    convert_all(folder)
 
-convert_one(r"atklip\gui\views\fluentwindow.py")
+# convert_one(r"atklip\gui\views\fluentwindow.py")
 # convert_one(r"atklip\graphics\chart_component\indicator_panel\indicator_panel_wg.py")
 # convert_one(r"atklip\controls\pandas_ta\trend\trendflex.py")
 # convert_one(r"atklip\controls\candle\smooth_candle.py")
