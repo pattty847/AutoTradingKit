@@ -1,39 +1,9 @@
 # -*- coding: utf-8 -*-
-from numpy import cos, exp, nan, sqrt, zeros_like
-from numba import njit
+from numpy import nan
 from pandas import Series
 from atklip.controls.pandas_ta._typing import Array, DictLike, Int, IntFloat
 from atklip.controls.pandas_ta.utils import v_offset, v_pos_default, v_series
-
-
-
-# Ehler's Trendflex
-# http://traders.com/Documentation/FEEDbk_docs/2020/02/TradersTips.html
-@njit(cache=True)
-def nb_trendflex(x, n, k, alpha, pi, sqrt2):
-    m, ratio = x.size, 2 * sqrt2 / k
-    a = exp(-pi * ratio)
-    b = 2 * a * cos(180 * ratio)
-    c = a * a - b + 1
-
-    _f = zeros_like(x)
-    _ms = zeros_like(x)
-    result = zeros_like(x)
-
-    for i in range(2, m):
-        _f[i] = 0.5 * c * (x[i] + x[i - 1]) + b * _f[i - 1] - a * a * _f[i - 2]
-
-    for i in range(n, m):
-        _sum = 0
-        for j in range(1, n):
-            _sum += _f[i] - _f[i - j]
-        _sum /= n
-
-        _ms[i] = alpha * _sum * _sum + (1 - alpha) * _ms[i - 1]
-        if _ms[i] != 0.0:
-            result[i] = _sum / sqrt(_ms[i])
-
-    return result
+from atklip.controls.pandas_ta.utils._numba import nb_trendflex
 
 
 def trendflex(

@@ -5,7 +5,7 @@ from PySide6.QtCore import QCoreApplication
 from PySide6.QtGui import QCloseEvent,QIcon
 from PySide6.QtWidgets import QApplication
 
-from atklip.gui.qfluentwidgets.common import setTheme,Theme
+from atklip.gui.qfluentwidgets.common.style_sheet import setTheme,Theme
 from atklip.gui.qfluentwidgets.common.icon import *
 from atklip.gui.qfluentwidgets.components.dialog_box import MessageBox
 from atklip.gui.views.fluentwindow import WindowBase
@@ -19,7 +19,27 @@ import dateutil as du
 import six 
 import numba
 import numpy
-
+import arrow
+import click
+import qframelesswindow
+import darkdetect
+import colorthief
+import scipy
+import PIL
+import qasync
+import ccxt
+import OpenGL
+import pandas_datareader
+import pyarrow
+import websockets
+import psygnal
+import pdf2image
+import aiohttp
+import aiodns
+import multidict
+import attr,attrs,yarl,propcache
+import aiohappyeyeballs,aiosignal,frozenlist
+from atklip.appmanager.worker.threadpool import Heavy_ProcessPoolExecutor_global,num_threads
 
 class MainWindow(WindowBase):
     def __init__(self):
@@ -72,7 +92,8 @@ try:
 except ImportError:
     pass
 
-
+def start_worker():
+        pass
 if __name__ == '__main__':
     multiprocessing.freeze_support()
     if sys.platform == "darwin" or sys.platform == "linux":
@@ -87,6 +108,9 @@ if __name__ == '__main__':
             winloop.install()
         except:
             asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+    "đảm bảo ProcessPoolExecutor được kích hoạt trước"
+    for i in range(num_threads):
+        Heavy_ProcessPoolExecutor_global.submit(start_worker)
     main()
     
     

@@ -8,7 +8,7 @@ from .roi import BaseHandle, SpecialROI, _FiboLineSegment
 from atklip.app_utils import mkBrush,mkColor,mkPen
 from .model_draw_tool import Line
 from typing import TYPE_CHECKING, List
-from pyqtgraph import TextItem
+from atklip.graphics.pyqtgraph import TextItem
 
 from atklip.app_utils.calculate import cal_line_price_fibo
 

@@ -1,17 +1,8 @@
-# -*- coding: utf-8 -*-
-from numpy import roll, where
-from numba import njit
+# -*- coding: utf-8 -*
 from pandas import Series
 from atklip.controls.pandas_ta._typing import Array, DictLike, Int, IntFloat
 from atklip.controls.pandas_ta.utils import v_bool, v_offset, v_offset, v_scalar, v_series
-
-
-
-@njit(cache=True)
-def np_cdl_inside(high, low):
-    hdiff = where(high - roll(high, 1) < 0, 1, 0)
-    ldiff = where(low - roll(low, 1) > 0, 1, 0)
-    return hdiff & ldiff
+from atklip.controls.pandas_ta.utils._numba import np_cdl_inside
 
 
 def cdl_inside(

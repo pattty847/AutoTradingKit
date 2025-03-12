@@ -9,7 +9,7 @@ from atklip.app_utils import mkBrush,mkColor,mkPen
 from .model_draw_tool import Line
 from typing import TYPE_CHECKING, List
 from .base_textitem import BaseTextItem
-from pyqtgraph import TextItem
+from atklip.graphics.pyqtgraph import TextItem
 from atklip.app_utils.calculate import cal_line_price_fibo
 
 if TYPE_CHECKING:

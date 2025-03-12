@@ -4,36 +4,8 @@ from numba import njit
 from pandas import Series
 from atklip.controls.pandas_ta._typing import Array, DictLike, Int, IntFloat
 from atklip.controls.pandas_ta.utils import v_offset, v_pos_default, v_series
+from atklip.controls.pandas_ta.utils._numba import np_reflex
 
-
-
-@njit(cache=True)
-def np_reflex(x, n, k, alpha, pi, sqrt2):
-    m, ratio = x.size, 2 * sqrt2 / k
-    a = exp(-pi * ratio)
-    b = 2 * a * cos(180 * ratio)
-    c = a * a - b + 1
-
-    _f = zeros_like(x)
-    _ms = zeros_like(x)
-    result = zeros_like(x)
-
-    for i in range(2, m):
-        _f[i] = 0.5 * c * (x[i] + x[i - 1]) + b * _f[i - 1] - a * a * _f[i - 2]
-
-    for i in range(n, m):
-        slope = (_f[i - n] - _f[i]) / n
-
-        _sum = 0
-        for j in range(1, n):
-            _sum += _f[i] - _f[i - j] + j * slope
-        _sum /= n
-
-        _ms[i] = alpha * _sum * _sum + (1 - alpha) * _ms[i - 1]
-        if _ms[i] != 0.0:
-            result[i] = _sum / sqrt(_ms[i])
-
-    return result
 
 
 def reflex(

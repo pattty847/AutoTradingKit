@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from numba import njit
-from numpy import empty, float64, zeros_like
 from pandas import DataFrame, Series
 from atklip.controls.pandas_ta._typing import DictLike, Int
 from atklip.controls.pandas_ta.ma import ma
@@ -11,23 +9,7 @@ from atklip.controls.pandas_ta.utils import (
     v_pos_default,
     v_series
 )
-
-
-@njit(cache=True)
-def nb_pvi(np_close, np_volume, initial):
-    result = zeros_like(np_close, dtype=float64)
-    result[0] = initial
-
-    m = np_close.size
-    for i in range(1, m):
-        if np_volume[i] > np_volume[i - 1]:
-            result[i] = result[i - i] * (np_close[i] / np_close[i - 1])
-        else:
-            result[i] = result[i - i]
-
-    return result
-
-
+from atklip.controls.pandas_ta.utils._numba import nb_pvi
 
 def pvi(
     close: Series, volume: Series, length: Int = None, initial: Int = None,

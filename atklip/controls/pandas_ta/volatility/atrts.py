@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
-from numpy import isnan, nan, uintc, zeros_like
-from numba import njit
+from numpy import isnan
 from pandas import Series
-from atklip.controls.pandas_ta._typing import Array, DictLike, Int, IntFloat
+from atklip.controls.pandas_ta._typing import DictLike, Int, IntFloat
 from atklip.controls.pandas_ta.ma import ma as _ma
-from atklip.controls.pandas_ta.maps import Imports
 from atklip.controls.pandas_ta.utils import (
     v_drift,
     v_mamode,
@@ -14,39 +12,7 @@ from atklip.controls.pandas_ta.utils import (
     v_talib
 )
 from atklip.controls.pandas_ta.volatility import atr
-
-
-
-@njit(cache=True)
-def nb_atrts(x, ma, atr_, length, ma_length):
-    m = x.size
-    k = max(length, ma_length)
-
-    result = x.copy()
-    up = zeros_like(x, dtype=uintc)
-    dn = zeros_like(x, dtype=uintc)
-
-    expn = x > ma
-    up[expn], dn[~expn] = 1, 1
-    up[:k], dn[:k] = 0, 0
-    result[:k] = nan
-
-    for i in range(k, m):
-        pr = result[i - 1]
-        if up[i]:
-            result[i] = x[i] - atr_[i]
-            if result[i] < pr:
-                result[i] = pr
-        if dn[i]:
-            result[i] = x[i] + atr_[i]
-            if result[i] > pr:
-                result[i] = pr
-
-    long, short = result * up, result * dn
-    long[long == 0], short[short == 0] = nan, nan
-
-    return result, long, short
-
+from atklip.controls.pandas_ta.utils._numba import nb_atrts
 
 def atrts(
     high: Series, low: Series, close: Series, length: Int = None,
@@ -106,15 +72,11 @@ def atrts(
     offset = v_offset(offset)
 
     # Calculate
-    if Imports["talib"] and mode_tal:
-        from talib import ATR
-        atr_ = ATR(high, low, close, length)
-    else:
-        atr_ = atr(
-            high=high, low=low, close=close, length=length,
-            mamode=mamode, drift=drift, talib=mode_tal,
-            offset=offset, **kwargs
-        )
+    atr_ = atr(
+        high=high, low=low, close=close, length=length,
+        mamode=mamode, drift=drift, talib=mode_tal,
+        offset=offset, **kwargs
+    )
 
     if all(isnan(atr_)):
         return  # Emergency Break

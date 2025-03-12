@@ -25,33 +25,8 @@ from atklip.controls.pandas_ta.utils import (
     v_pos_default,
     v_series
 )
+from atklip.controls.pandas_ta.utils._numba import nb_exhc
 
-
-
-@njit(cache=True)
-def nb_exhc(x, n, cap, lb, ub, show_all):
-    x_diff = nb_idiff(x, n)
-    neg_diff, pos_diff = x_diff < 0, x_diff > 0
-
-    dn_csum = cumsum(neg_diff)
-    up_csum = cumsum(pos_diff)
-
-    dn = dn_csum - nb_ffill(where(~neg_diff, dn_csum, nan))
-    up = up_csum - nb_ffill(where(~pos_diff, up_csum, nan))
-
-    if cap > 0:
-        dn = clip(dn, 0, cap)
-        up = clip(up, 0, cap)
-
-    if show_all:
-        dn = where(dn == 0, 0, dn)
-        up = where(up == 0, 0, up)
-    else:
-        between_lu = (dn >= lb) & (dn <= ub)
-        dn = where(between_lu, dn, 0)
-        up = where(between_lu, up, 0)
-
-    return dn, up
 
 
 def exhc(

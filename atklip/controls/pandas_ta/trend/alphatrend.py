@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-from numpy import isnan, nan, zeros_like
-from numba import njit
+from numpy import isnan
 from pandas import DataFrame, Series
 from atklip.controls.pandas_ta._typing import Array, DictLike, Int, IntFloat
 from atklip.controls.pandas_ta.momentum import rsi
@@ -14,28 +13,7 @@ from atklip.controls.pandas_ta.utils import (
     v_str,
     v_talib
 )
-
-
-
-@njit(cache=True)
-def nb_alpha(low_atr, high_atr, momo_threshold):
-    m = momo_threshold.size
-    result = zeros_like(low_atr)
-
-    for i in range(1, m):
-        if momo_threshold[i]:
-            if low_atr[i] < result[i - 1]:
-                result[i] = result[i - 1]
-            else:
-                result[i] = low_atr[i]
-        else:
-            if high_atr[i] > result[i - 1]:
-                result[i] = result[i - 1]
-            else:
-                result[i] = high_atr[i]
-    result[0] = nan
-
-    return result
+from atklip.controls.pandas_ta.utils._numba import nb_alpha
 
 
 def alphatrend(

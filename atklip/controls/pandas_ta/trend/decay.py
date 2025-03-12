@@ -1,38 +1,10 @@
 # -*- coding: utf-8 -*-
-from numpy import zeros_like
-from numba import njit
 from pandas import Series
 from atklip.controls.pandas_ta._typing import Array, DictLike, Int
 from atklip.controls.pandas_ta.utils import v_offset, v_pos_default, v_series, v_str
 
-
-
-# Exponential Decay - https://tulipindicators.org/edecay
-@njit(cache=True)
-def nb_exponential_decay(x, n):
-    m, rate = x.size, 1.0 - (1.0 / n)
-
-    result = zeros_like(x, dtype="float")
-    result[0] = x[0]
-
-    for i in range(1, m):
-        result[i] = max(0, x[i], result[i - 1] * rate)
-
-    return result
-
-
-# Linear Decay -https://tulipindicators.org/decay
-@njit(cache=True)
-def nb_linear_decay(x, n):
-    m, rate = x.size, 1.0 / n
-
-    result = zeros_like(x, dtype="float")
-    result[0] = x[0]
-
-    for i in range(1, m):
-        result[i] = max(0, x[i], result[i - 1] - rate)
-
-    return result
+from atklip.controls.pandas_ta.utils._numba import nb_exponential_decay
+from atklip.controls.pandas_ta.utils._numba import nb_linear_decay
 
 
 def decay(

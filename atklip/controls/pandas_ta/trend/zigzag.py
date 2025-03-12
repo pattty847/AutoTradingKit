@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from numpy import floor, isnan, nan, zeros, zeros_like
-from numba import njit
 from pandas import Series, DataFrame
 from atklip.controls.pandas_ta._typing import DictLike, Int, IntFloat
 from atklip.controls.pandas_ta.utils import (
@@ -9,121 +7,9 @@ from atklip.controls.pandas_ta.utils import (
     v_pos_default,
     v_series,
 )
-
-
-
-@njit(cache=True)
-def nb_rolling_hl(np_high, np_low, window_size):
-    m = np_high.size
-    idx = zeros(m)
-    swing = zeros(m)  # where a high = 1 and low = -1
-    value = zeros(m)
-
-    extremums = 0
-    left = int(floor(window_size / 2))
-    right = left + 1
-    # sample_array = [*[left-window], *[center], *[right-window]]
-    for i in range(left, m - right):
-        low_center = np_low[i]
-        high_center = np_high[i]
-        low_window = np_low[i - left: i + right]
-        high_window = np_high[i - left: i + right]
-
-        if (low_center <= low_window).all():
-            idx[extremums] = i
-            swing[extremums] = -1
-            value[extremums] = low_center
-            extremums += 1
-
-        if (high_center >= high_window).all():
-            idx[extremums] = i
-            swing[extremums] = 1
-            value[extremums] = high_center
-            extremums += 1
-
-    return idx[:extremums], swing[:extremums], value[:extremums]
-
-
-@njit(cache=True)
-def nb_find_zigzags(idx, swing, value, deviation):
-    zz_idx = zeros_like(idx)
-    zz_swing = zeros_like(swing)
-    zz_value = zeros_like(value)
-    zz_dev = zeros_like(idx)
-
-    zigzags = 0
-    zz_idx[zigzags] = idx[-1]
-    zz_swing[zigzags] = swing[-1]
-    zz_value[zigzags] = value[-1]
-    zz_dev[zigzags] = 0
-
-    m = idx.size
-    for i in range(m - 2, -1, -1):
-        # last point in zigzag is bottom
-        if zz_swing[zigzags] == -1:
-            if swing[i] == -1:
-                if zz_value[zigzags] > value[i] and zigzags > 1:
-                    current_dev = (zz_value[zigzags - 1] - value[i]) / value[i]
-                    zz_idx[zigzags] = idx[i]
-                    zz_swing[zigzags] = swing[i]
-                    zz_value[zigzags] = value[i]
-                    zz_dev[zigzags - 1] = 100 * current_dev
-            else:
-                current_dev = (value[i] - zz_value[zigzags]) / value[i]
-                if current_dev > 0.01 * deviation:
-                    if zz_idx[zigzags] == idx[i]:
-                        continue
-                    zigzags += 1
-                    zz_idx[zigzags] = idx[i]
-                    zz_swing[zigzags] = swing[i]
-                    zz_value[zigzags] = value[i]
-                    zz_dev[zigzags - 1] = 100 * current_dev
-
-        # last point in zigzag is peak
-        else:
-            if swing[i] == 1:
-                if zz_value[zigzags] < value[i] and zigzags > 1:
-                    current_dev = (value[i] - zz_value[zigzags - 1]) / value[i]
-                    zz_idx[zigzags] = idx[i]
-                    zz_swing[zigzags] = swing[i]
-                    zz_value[zigzags] = value[i]
-                    zz_dev[zigzags - 1] = 100 * current_dev
-            else:
-                current_dev = (zz_value[zigzags] - value[i]) / value[i]
-                if current_dev > 0.01 * deviation:
-                    if zz_idx[zigzags] == idx[i]:
-                        continue
-                    zigzags += 1
-                    zz_idx[zigzags] = idx[i]
-                    zz_swing[zigzags] = swing[i]
-                    zz_value[zigzags] = value[i]
-                    zz_dev[zigzags - 1] = 100 * current_dev
-
-    _n = zigzags + 1
-    return zz_idx[:_n], zz_swing[:_n], zz_value[:_n], zz_dev[:_n]
-
-
-@njit(cache=True)
-def nb_map_zigzag(idx, swing, value, deviation, n):
-    swing_map = zeros(n)
-    value_map = zeros(n)
-    dev_map = zeros(n)
-
-    for j, i in enumerate(idx):
-        i = int(i)
-        swing_map[i] = swing[j]
-        value_map[i] = value[j]
-        dev_map[i] = deviation[j]
-
-    for i in range(n):
-        if swing_map[i] == 0:
-            swing_map[i] = nan
-            value_map[i] = nan
-            dev_map[i] = nan
-
-    return swing_map, value_map, dev_map
-
-
+from atklip.controls.pandas_ta.utils._numba import nb_rolling_hl
+from atklip.controls.pandas_ta.utils._numba import nb_find_zigzags
+from atklip.controls.pandas_ta.utils._numba import nb_map_zigzag
 
 def zigzag(
     high: Series, low: Series, close: Series = None,

@@ -1,27 +1,8 @@
 # -*- coding: utf-8 -*-
-from numpy import empty_like, maximum, minimum
-from numba import njit
 from pandas import DataFrame, Series
 from atklip.controls.pandas_ta._typing import Array, DictLike, Int
 from atklip.controls.pandas_ta.utils import v_offset, v_series
-
-
-
-@njit(cache=True)
-def np_ha(np_open, np_high, np_low, np_close):
-    ha_close = 0.25 * (np_open + np_high + np_low + np_close)
-    ha_open = empty_like(ha_close)
-    ha_open[0] = 0.5 * (np_open[0] + np_close[0])
-
-    m = np_close.size
-    for i in range(1, m):
-        ha_open[i] = 0.5 * (ha_open[i - 1] + ha_close[i - 1])
-
-    ha_high = maximum(maximum(ha_open, ha_close), np_high)
-    ha_low = minimum(minimum(ha_open, ha_close), np_low)
-
-    return ha_open, ha_high, ha_low, ha_close
-
+from atklip.controls.pandas_ta.utils._numba import np_ha
 
 def ha(
     open_: Series, high: Series, low: Series, close: Series,

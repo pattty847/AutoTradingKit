@@ -17,12 +17,402 @@ from numpy import (
     ones,
     roll,
     sqrt,
+    uintc,
     zeros,
     zeros_like,
-    arctan
+    arctan, 
+    maximum, 
+    minimum,
+    clip,
+    cumsum,
+    diff,
+    nan_to_num,
+    where,
+    rad2deg,
+    floor
 )
 from numba import njit
 
+
+@njit(cache=True)
+def nb_pvi(np_close, np_volume, initial):
+    result = zeros_like(np_close, dtype=float64)
+    result[0] = initial
+
+    m = np_close.size
+    for i in range(1, m):
+        if np_volume[i] > np_volume[i - 1]:
+            result[i] = result[i - i] * (np_close[i] / np_close[i - 1])
+        else:
+            result[i] = result[i - i]
+
+    return result
+
+
+
+@njit(cache=True)
+def nb_atrts(x, ma, atr_, length, ma_length):
+    m = x.size
+    k = max(length, ma_length)
+
+    result = x.copy()
+    up = zeros_like(x, dtype=uintc)
+    dn = zeros_like(x, dtype=uintc)
+
+    expn = x > ma
+    up[expn], dn[~expn] = 1, 1
+    up[:k], dn[:k] = 0, 0
+    result[:k] = nan
+
+    for i in range(k, m):
+        pr = result[i - 1]
+        if up[i]:
+            result[i] = x[i] - atr_[i]
+            if result[i] < pr:
+                result[i] = pr
+        if dn[i]:
+            result[i] = x[i] + atr_[i]
+            if result[i] > pr:
+                result[i] = pr
+
+    long, short = result * up, result * dn
+    long[long == 0], short[short == 0] = nan, nan
+
+    return result, long, short
+
+
+@njit(cache=True)
+def nb_rolling_hl(np_high, np_low, window_size):
+    m = np_high.size
+    idx = zeros(m)
+    swing = zeros(m)  # where a high = 1 and low = -1
+    value = zeros(m)
+
+    extremums = 0
+    left = int(floor(window_size / 2))
+    right = left + 1
+    # sample_array = [*[left-window], *[center], *[right-window]]
+    for i in range(left, m - right):
+        low_center = np_low[i]
+        high_center = np_high[i]
+        low_window = np_low[i - left: i + right]
+        high_window = np_high[i - left: i + right]
+
+        if (low_center <= low_window).all():
+            idx[extremums] = i
+            swing[extremums] = -1
+            value[extremums] = low_center
+            extremums += 1
+
+        if (high_center >= high_window).all():
+            idx[extremums] = i
+            swing[extremums] = 1
+            value[extremums] = high_center
+            extremums += 1
+
+    return idx[:extremums], swing[:extremums], value[:extremums]
+
+
+@njit(cache=True)
+def nb_find_zigzags(idx, swing, value, deviation):
+    zz_idx = zeros_like(idx)
+    zz_swing = zeros_like(swing)
+    zz_value = zeros_like(value)
+    zz_dev = zeros_like(idx)
+
+    zigzags = 0
+    zz_idx[zigzags] = idx[-1]
+    zz_swing[zigzags] = swing[-1]
+    zz_value[zigzags] = value[-1]
+    zz_dev[zigzags] = 0
+
+    m = idx.size
+    for i in range(m - 2, -1, -1):
+        # last point in zigzag is bottom
+        if zz_swing[zigzags] == -1:
+            if swing[i] == -1:
+                if zz_value[zigzags] > value[i] and zigzags > 1:
+                    current_dev = (zz_value[zigzags - 1] - value[i]) / value[i]
+                    zz_idx[zigzags] = idx[i]
+                    zz_swing[zigzags] = swing[i]
+                    zz_value[zigzags] = value[i]
+                    zz_dev[zigzags - 1] = 100 * current_dev
+            else:
+                current_dev = (value[i] - zz_value[zigzags]) / value[i]
+                if current_dev > 0.01 * deviation:
+                    if zz_idx[zigzags] == idx[i]:
+                        continue
+                    zigzags += 1
+                    zz_idx[zigzags] = idx[i]
+                    zz_swing[zigzags] = swing[i]
+                    zz_value[zigzags] = value[i]
+                    zz_dev[zigzags - 1] = 100 * current_dev
+
+        # last point in zigzag is peak
+        else:
+            if swing[i] == 1:
+                if zz_value[zigzags] < value[i] and zigzags > 1:
+                    current_dev = (value[i] - zz_value[zigzags - 1]) / value[i]
+                    zz_idx[zigzags] = idx[i]
+                    zz_swing[zigzags] = swing[i]
+                    zz_value[zigzags] = value[i]
+                    zz_dev[zigzags - 1] = 100 * current_dev
+            else:
+                current_dev = (zz_value[zigzags] - value[i]) / value[i]
+                if current_dev > 0.01 * deviation:
+                    if zz_idx[zigzags] == idx[i]:
+                        continue
+                    zigzags += 1
+                    zz_idx[zigzags] = idx[i]
+                    zz_swing[zigzags] = swing[i]
+                    zz_value[zigzags] = value[i]
+                    zz_dev[zigzags - 1] = 100 * current_dev
+
+    _n = zigzags + 1
+    return zz_idx[:_n], zz_swing[:_n], zz_value[:_n], zz_dev[:_n]
+
+
+@njit(cache=True)
+def nb_map_zigzag(idx, swing, value, deviation, n):
+    swing_map = zeros(n)
+    value_map = zeros(n)
+    dev_map = zeros(n)
+
+    for j, i in enumerate(idx):
+        i = int(i)
+        swing_map[i] = swing[j]
+        value_map[i] = value[j]
+        dev_map[i] = deviation[j]
+
+    for i in range(n):
+        if swing_map[i] == 0:
+            swing_map[i] = nan
+            value_map[i] = nan
+            dev_map[i] = nan
+
+    return swing_map, value_map, dev_map
+
+
+# Ehler's Trendflex
+# http://traders.com/Documentation/FEEDbk_docs/2020/02/TradersTips.html
+@njit(cache=True)
+def nb_trendflex(x, n, k, alpha, pi, sqrt2):
+    m, ratio = x.size, 2 * sqrt2 / k
+    a = exp(-pi * ratio)
+    b = 2 * a * cos(180 * ratio)
+    c = a * a - b + 1
+
+    _f = zeros_like(x)
+    _ms = zeros_like(x)
+    result = zeros_like(x)
+
+    for i in range(2, m):
+        _f[i] = 0.5 * c * (x[i] + x[i - 1]) + b * _f[i - 1] - a * a * _f[i - 2]
+
+    for i in range(n, m):
+        _sum = 0
+        for j in range(1, n):
+            _sum += _f[i] - _f[i - j]
+        _sum /= n
+
+        _ms[i] = alpha * _sum * _sum + (1 - alpha) * _ms[i - 1]
+        if _ms[i] != 0.0:
+            result[i] = _sum / sqrt(_ms[i])
+
+    return result
+
+
+@njit(cache=True)
+def nb_ht_trendline(x):
+    a, b, m = 0.0962, 0.5769, x.size
+
+    wma4, dt = zeros_like(x), zeros_like(x)
+    q1, q2 = zeros_like(x), zeros_like(x)
+    ji, jq = zeros_like(x), zeros_like(x)
+    i1, i2 = zeros_like(x), zeros_like(x)
+    re, im = zeros_like(x), zeros_like(x)
+    period, smp = zeros_like(x), zeros_like(x)
+    i_trend = zeros_like(x)
+
+    result = zeros_like(x)
+    result[:13] = x[:13]
+
+    # Ehler's starts from 6, TALib from 63
+    for i in range(6, m):
+        adj_prev_period = 0.075 * period[i - 1] + 0.54
+
+        wma4[i] = 0.4 * x[i] + 0.3 * x[i - 1] + 0.2 * x[i - 2] + 0.1 * x[i - 3]
+        dt[i] = adj_prev_period * (a * wma4[i] + b * wma4[i - 2] - b * wma4[i - 4] - a * wma4[i - 6])
+
+        q1[i] = adj_prev_period * (a * dt[i] + b * dt[i - 2] - b * dt[i - 4] - a * dt[i - 6])
+        i1[i] = dt[i - 3]
+
+        ji[i] = adj_prev_period * (a * i1[i] + b * i1[i - 2] - b * i1[i - 4] - a * i1[i - 6])
+        jq[i] = adj_prev_period * (a * q1[i] + b * q1[i - 2] - b * q1[i - 4] - a * q1[i - 6])
+
+        i2[i] = i1[i] - jq[i]
+        q2[i] = q1[i] + ji[i]
+
+        i2[i] = 0.2 * i2[i] + 0.8 * i2[i - 1]
+        q2[i] = 0.2 * q2[i] + 0.8 * q2[i - 1]
+
+        re[i] = i2[i] * i2[i - 1] + q2[i] * q2[i - 1]
+        im[i] = i2[i] * q2[i - 1] - q2[i] * i2[i - 1]
+
+        re[i] = 0.2 * re[i] + 0.8 * re[i - 1]
+        im[i] = 0.2 * im[i] + 0.8 * im[i - 1]
+
+        if re[i] != 0 and im[i] != 0:
+            period[i] = 360.0 / rad2deg(arctan(im[i] / re[i]))
+        if period[i] > 1.5 * period[i - 1]:
+            period[i] = 1.5 * period[i - 1]
+        if period[i] < 0.67 * period[i - 1]:
+            period[i] = 0.67 * period[i - 1]
+        if period[i] < 6.0:
+            period[i] = 6.0
+        if period[i] > 50.0:
+            period[i] = 50.0
+        period[i] = 0.2 * period[i] + 0.8 * period[i - 1]
+        smp[i] = 0.33 * period[i] + 0.67 * smp[i - 1]
+
+        dc_period = int(smp[i] + 0.5)
+        dcp_avg = 0
+        for k in range(dc_period):
+            dcp_avg += x[i - k]
+
+        if dc_period > 0:
+            dcp_avg /= dc_period
+
+        i_trend[i] = dcp_avg
+
+        if i > 12:
+            result[i] = 0.4 * i_trend[i] + 0.3 * i_trend[i - 1] + 0.2 * i_trend[i - 2] + 0.1 * i_trend[i - 3]
+
+    return result
+
+
+# Linear Decay -https://tulipindicators.org/decay
+@njit(cache=True)
+def nb_linear_decay(x, n):
+    m, rate = x.size, 1.0 / n
+
+    result = zeros_like(x, dtype="float")
+    result[0] = x[0]
+
+    for i in range(1, m):
+        result[i] = max(0, x[i], result[i - 1] - rate)
+
+    return result
+
+# Exponential Decay - https://tulipindicators.org/edecay
+@njit(cache=True)
+def nb_exponential_decay(x, n):
+    m, rate = x.size, 1.0 - (1.0 / n)
+
+    result = zeros_like(x, dtype="float")
+    result[0] = x[0]
+
+    for i in range(1, m):
+        result[i] = max(0, x[i], result[i - 1] * rate)
+
+    return result
+
+@njit(cache=True)
+def nb_alpha(low_atr, high_atr, momo_threshold):
+    m = momo_threshold.size
+    result = zeros_like(low_atr)
+
+    for i in range(1, m):
+        if momo_threshold[i]:
+            if low_atr[i] < result[i - 1]:
+                result[i] = result[i - 1]
+            else:
+                result[i] = low_atr[i]
+        else:
+            if high_atr[i] > result[i - 1]:
+                result[i] = result[i - 1]
+            else:
+                result[i] = high_atr[i]
+    result[0] = nan
+
+    return result
+
+
+@njit(cache=True)
+def nb_exhc(x, n, cap, lb, ub, show_all):
+    x_diff = nb_idiff(x, n)
+    neg_diff, pos_diff = x_diff < 0, x_diff > 0
+
+    dn_csum = cumsum(neg_diff)
+    up_csum = cumsum(pos_diff)
+
+    dn = dn_csum - nb_ffill(where(~neg_diff, dn_csum, nan))
+    up = up_csum - nb_ffill(where(~pos_diff, up_csum, nan))
+
+    if cap > 0:
+        dn = clip(dn, 0, cap)
+        up = clip(up, 0, cap)
+
+    if show_all:
+        dn = where(dn == 0, 0, dn)
+        up = where(up == 0, 0, up)
+    else:
+        between_lu = (dn >= lb) & (dn <= ub)
+        dn = where(between_lu, dn, 0)
+        up = where(between_lu, up, 0)
+
+    return dn, up
+
+
+@njit(cache=True)
+def np_reflex(x, n, k, alpha, pi, sqrt2):
+    m, ratio = x.size, 2 * sqrt2 / k
+    a = exp(-pi * ratio)
+    b = 2 * a * cos(180 * ratio)
+    c = a * a - b + 1
+
+    _f = zeros_like(x)
+    _ms = zeros_like(x)
+    result = zeros_like(x)
+
+    for i in range(2, m):
+        _f[i] = 0.5 * c * (x[i] + x[i - 1]) + b * _f[i - 1] - a * a * _f[i - 2]
+
+    for i in range(n, m):
+        slope = (_f[i - n] - _f[i]) / n
+
+        _sum = 0
+        for j in range(1, n):
+            _sum += _f[i] - _f[i - j] + j * slope
+        _sum /= n
+
+        _ms[i] = alpha * _sum * _sum + (1 - alpha) * _ms[i - 1]
+        if _ms[i] != 0.0:
+            result[i] = _sum / sqrt(_ms[i])
+
+    return result
+
+
+@njit(cache=True)
+def np_cdl_inside(high, low):
+    hdiff = where(high - roll(high, 1) < 0, 1, 0)
+    ldiff = where(low - roll(low, 1) > 0, 1, 0)
+    return hdiff & ldiff
+
+@njit(cache=True)
+def np_ha(np_open, np_high, np_low, np_close):
+    ha_close = 0.25 * (np_open + np_high + np_low + np_close)
+    ha_open = empty_like(ha_close)
+    ha_open[0] = 0.5 * (np_open[0] + np_close[0])
+
+    m = np_close.size
+    for i in range(1, m):
+        ha_open[i] = 0.5 * (ha_open[i - 1] + ha_close[i - 1])
+
+    ha_high = maximum(maximum(ha_open, ha_close), np_high)
+    ha_low = minimum(minimum(ha_open, ha_close), np_low)
+
+    return ha_open, ha_high, ha_low, ha_close
 
 @njit(cache=True)
 def nb_roc(x, n, k):
