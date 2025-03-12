@@ -65,7 +65,8 @@ def final_time(stime: Float) -> str:
     """Human readable elapsed time. Calculates the final time elapsed since
     stime and returns a string with microseconds and seconds."""
     time_diff = perf_counter() - stime
-    return f"{time_diff * 1000:2.4f} ms ({time_diff:2.4f} s)"
+    _kq = f"{time_diff * 1000:2.4f} ms ({time_diff:2.4f} s)"
+    return _kq.encode('utf-8').decode('utf-8')
 
 
 def get_time(

@@ -175,3 +175,7 @@ download
 /.vs
 /.pyarmor
 /.mypy_cache
+convert2cython_new.py
+convert2cython.py
+/output/ATK
+/output

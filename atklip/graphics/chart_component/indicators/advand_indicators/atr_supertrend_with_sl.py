@@ -1,17 +1,12 @@
-import time
-from typing import List,TYPE_CHECKING
+from typing import TYPE_CHECKING
 
-from PySide6.QtCore import Signal, QObject,Qt,QRectF
-from PySide6.QtWidgets import QGraphicsItem
+from PySide6.QtCore import Signal, Qt,QRectF
 from PySide6.QtGui import QPainter,QPicture
 
-from .fillbetweenitem import FillBetweenItem
-from atklip.graphics.chart_component.base_items.plotdataitem import PlotDataItem
 from atklip.graphics.pyqtgraph import GraphicsObject
 
-from atklip.controls import PD_MAType,IndicatorType,BBANDS
+from atklip.controls import PD_MAType,IndicatorType
 from atklip.controls.models import SuperWithSlModel
-from atklip.controls.overlap.supertrend import SuperTrend
 from atklip.controls.tradingview import SuperTrendWithStopLoss
 
 from atklip.graphics.chart_component.base_items import SuperTrendLine

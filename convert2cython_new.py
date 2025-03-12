@@ -13,13 +13,14 @@ def convert_to_cython(py_file):
     cy_file = ""
     if "init" not in py_file:
         with open(py_file, 'r',encoding= "utf-8") as f:
-            py_code = f.read()
+            py_code = f.read().encode("utf-8").decode("utf-8")
+            # print("@njit(" in py_code)
             if "@njit(" in py_code or "@jit" in py_code:
                 pyd_name = os.path.splitext(py_file)[0] + ".cp313-win_amd64.pyd"
                 if os.path.exists(pyd_name):
                     print(pyd_name)
                     os.remove(pyd_name)
-                    return None
+                return ""
             cy_file = os.path.splitext(py_file)[0] + ".pyx"
             with open(cy_file, 'w',encoding="utf-8") as f:
                 f.write(py_code)
@@ -62,44 +63,62 @@ def convert_all(folder):
                 continue
             elif "__init__" in src_path:
                 continue
-            elif "_ui" in src_path:
-                continue
+            # elif "_ui" in src_path:
+            #     continue
             # elif "controls" in src_path:
             #     continue
             elif "pyqtgraph" in src_path:
                 continue
             elif "qfluentwidgets" in src_path:
                 continue
-            elif "app_api" in src_path:
-                continue
-            elif "app_utils" in src_path:
-                continue
+            # elif "app_api" in src_path:
+            #     continue
+            # elif "app_utils" in src_path:
+            #     continue
             elif "resource" in src_path:
                 continue
             elif src_path.endswith(".ui"):
                 continue
-            elif not src_path.endswith(".py"):
-                continue
+            # elif not src_path.endswith(".py"):
+            #     continue
             
             if src_path.endswith(".pyd"):
                 print("delete old",src_path)
                 os.remove(src_path)
+                # continue
             
-            if src_path.endswith(".so"):
+            elif src_path.endswith(".so"):
                 print("delete old",src_path)
                 os.remove(src_path)
+                # continue
+
+            elif src_path.endswith(".c"):
+                print("delete old",src_path)
+                os.remove(src_path)
+                # continue
+
+            elif src_path.endswith(".cpp"):
+                print("delete old",src_path)
+                os.remove(src_path)
+                # continue
+
+            elif src_path.endswith(".pyx"):
+                print("delete old",src_path)
+                os.remove(src_path)
+                # continue
+
             
             if src_path.endswith(".py"):
                 print(src_path)
                 ThreadPoolExecutor_global.submit(convert_one,src_path)
                 # convert_one(src_path)
 
-convert_all(r"atklip/controls")
+convert_all(r"atklip\controls")
 
 # for folder in list_dirs:
 #     convert_all(folder)
 
-# convert_one(r"atklip\gui\components\navigation_view_interface.py")
-# convert_one(r"atklip\graphics\chart_component\plotwidget.py")
-# convert_one(r"atklip\graphics\chart_component\sub_chart.py")
-# convert_one(r"atklip\graphics\chart_component\sub_panel_indicator.py")
+# convert_one(r"atklip\controls\pandas_ta\utils\_validate.py")
+# convert_one(r"atklip\graphics\chart_component\viewchart.py")
+# convert_one(r"atklip\controls\candle\n_time_smooth_candle.py")
+# convert_one(r"atklip\controls\candle\smooth_candle.py")

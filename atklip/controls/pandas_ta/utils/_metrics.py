@@ -132,7 +132,7 @@ def max_drawdown(
 
     >>> result = ta.max_drawdown(close, method="dollar", all=False)
     """
-    from atklip.controls.pandas_ta.performance import drawdown
+    from atklip.controls.performance import drawdown
     close = v_series(close)
     max_dd = drawdown(close).max()
 
@@ -167,7 +167,7 @@ def optimal_leverage(
 
     >>> result = ta.optimal_leverage(close, benchmark_rate=0.0, log=False)
     """
-    from atklip.controls.pandas_ta.performance import log_return, percent_return
+    from atklip.controls.performance import log_return, percent_return
     close = v_series(close)
 
     use_cagr = kwargs.pop("use_cagr", False)
@@ -221,7 +221,7 @@ def sharpe_ratio(
 
     >>> result = ta.sharpe_ratio(close, benchmark_rate=0.0, log=False)
     """
-    from atklip.controls.pandas_ta.performance import log_return, percent_return
+    from atklip.controls.performance import log_return, percent_return
     close = v_series(close)
     if log:
         returns = log_return(close=close)
@@ -249,7 +249,7 @@ def sortino_ratio(
 
     >>> result = ta.sortino_ratio(close, benchmark_rate=0.0, log=False)
     """
-    from atklip.controls.pandas_ta.performance import log_return, percent_return
+    from atklip.controls.performance import log_return, percent_return
     close = v_series(close)
 
     if log:
@@ -278,7 +278,7 @@ def volatility(
 
     >>> result = ta.volatility(close, tf="years", returns=False, log=False)
     """
-    from atklip.controls.pandas_ta.performance import log_return, percent_return
+    from atklip.controls.performance import log_return, percent_return
     close = v_series(close)
 
     if not returns:
