@@ -12,33 +12,6 @@ from atklip.gui.views.fluentwindow import WindowBase
 from atklip.appmanager.setting.config import cfg
 import asyncio
 
-"for build exe"
-import pandas as pd
-import pytz as pt
-import dateutil as du
-import six 
-import numba
-import numpy
-import arrow
-import click
-import qframelesswindow
-import darkdetect
-import colorthief
-import scipy
-import PIL
-import qasync
-import ccxt
-import OpenGL
-import pandas_datareader
-import pyarrow
-import websockets
-import psygnal
-import pdf2image
-import aiohttp
-import aiodns
-import multidict
-import attr,attrs,yarl,propcache
-import aiohappyeyeballs,aiosignal,frozenlist
 from atklip.appmanager.worker.threadpool import Heavy_ProcessPoolExecutor_global,num_threads
 
 class MainWindow(WindowBase):
