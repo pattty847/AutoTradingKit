@@ -61,8 +61,8 @@ def convert_all(folder):
             # Bỏ qua thư mục __pycache__
             if "__pycache__" in src_path:
                 continue
-            elif "__init__" in src_path:
-                continue
+            # elif "__init__" in src_path:
+            #     continue
             # elif "_ui" in src_path:
             #     continue
             # elif "controls" in src_path:
@@ -113,12 +113,12 @@ def convert_all(folder):
                 ThreadPoolExecutor_global.submit(convert_one,src_path)
                 # convert_one(src_path)
 
-convert_all(r"atklip\controls")
+convert_all(r"atklip")
 
 # for folder in list_dirs:
 #     convert_all(folder)
 
-# convert_one(r"atklip\controls\pandas_ta\utils\_validate.py")
+# convert_one(r"atklip\gui\components\card_item.py")
 # convert_one(r"atklip\graphics\chart_component\viewchart.py")
 # convert_one(r"atklip\controls\candle\n_time_smooth_candle.py")
 # convert_one(r"atklip\controls\candle\smooth_candle.py")

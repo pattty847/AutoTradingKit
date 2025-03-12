@@ -12,6 +12,15 @@ from atklip.gui.views.fluentwindow import WindowBase
 from atklip.appmanager.setting.config import cfg
 import asyncio
 
+"for build exe"
+import pandas as pd
+import pytz as pt
+import dateutil as du
+import six 
+import numba
+import numpy
+
+
 class MainWindow(WindowBase):
     def __init__(self):
         self.isMicaEnabled = False
