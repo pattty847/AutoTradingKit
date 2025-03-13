@@ -1,10 +1,7 @@
 import asyncio
-from typing import Any, Dict
-from ccxt import RequestTimeout
+from typing import Dict
 from .models import *
 from .ta_indicators import CryptoExchange,CryptoExchange_WS
-from qasync import asyncSlot
-from atklip.app_utils.syncer import sync
 
 class ExchangeManager:
     def __init__(self) -> None:
