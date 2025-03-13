@@ -55,7 +55,7 @@ class TitleBar(MSFluentTitleBar):
     def __init__(self, parent):
         super().__init__(parent)
         # add buttons
-        self._parent:WindowBase = self.parent()
+        self._parent = self.parent()
         # self.toolButtonLayout = QHBoxLayout()
         # color = QColor(206, 206, 206) if isDarkTheme() else QColor(96, 96, 96)
         

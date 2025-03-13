@@ -31,12 +31,7 @@ class WindowBase(BackgroundAnimationWidget, FramelessMainWindow):
         self.setWindowFlag(Qt.WindowTitleHint, True)
         self.setWindowFlag(Qt.FramelessWindowHint, True)
 
-        self.titleBar = TitleBar(self)
-        self.titleBar.setParent(self)
 
-        self.tabBar = self.titleBar.tabBar
-
-        self.setMenuWidget(self.titleBar)
 
         self.setContentsMargins(0, 0, 0, 0)
 
@@ -44,6 +39,13 @@ class WindowBase(BackgroundAnimationWidget, FramelessMainWindow):
 
         self.stackedWidget.setContentsMargins(0,0,0,0)
         self.setCentralWidget(self.stackedWidget)
+
+        self.titleBar = TitleBar(self.stackedWidget)
+        # self.titleBar.setParent(self)
+
+        self.tabBar = self.titleBar.tabBar
+
+        self.setMenuWidget(self.titleBar)
 
         self.tabBar.currentChanged.connect(self.onTabChanged)
         self.tabBar.tabAddRequested.connect(self.onTabAddRequested)
@@ -66,8 +68,8 @@ class WindowBase(BackgroundAnimationWidget, FramelessMainWindow):
         self.setMinimumWidth(w//2)
         self.setMinimumHeight(h//2)
         self.resize(w//2, h//2)
-        self.move(w//2 - w//3, h//8)
-        self.resize(2*(w//3) , 3*(h//4) )
+        self.move(w//2 - 500, h//8)
+        self.resize(1000 , 3*(h//4) )
             
 
     def load_pre_config(self):

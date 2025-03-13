@@ -14,9 +14,8 @@ def convert_to_cython(py_file):
     # if "init" not in py_file:
     with open(py_file, 'r',encoding= "utf-8") as f:
         py_code = f.read().encode("utf-8").decode("utf-8")
-        # print("@njit(" in py_code)
-        if "@njit(" in py_code or "@jit" in py_code:
-            pyd_name = os.path.splitext(py_file)[0] + ".cp313-win_amd64.pyd"
+        if "@njit" in py_code or "@jit" in py_code:
+            pyd_name = os.path.splitext(py_file)[0] + ".cp312-win_amd64.pyd"
             if os.path.exists(pyd_name):
                 print(pyd_name)
                 os.remove(pyd_name)
@@ -118,7 +117,7 @@ def convert_all(folder):
 # for folder in list_dirs:
 #     convert_all(folder)
 
-convert_one(r"atklip\controls\exchangemanager.py")
-# convert_one(r"atklip\graphics\chart_component\indicator_panel\indicator_panel_wg.py")
+convert_one(r"atklip\gui\top_bar\profile\profile_menu.py")
+convert_one(r"atklip\gui\top_bar\profile\btn_profile.py")
 # convert_one(r"atklip\controls\pandas_ta\trend\trendflex.py")
 # convert_one(r"atklip\controls\candle\smooth_candle.py")

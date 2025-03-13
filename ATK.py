@@ -82,7 +82,7 @@ if __name__ == '__main__':
         except:
             asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     "đảm bảo ProcessPoolExecutor được kích hoạt trước"
-    for i in range(num_threads):
+    for i in range(int(num_threads/2)):
         Heavy_ProcessPoolExecutor_global.submit(start_worker)
     main()
     
