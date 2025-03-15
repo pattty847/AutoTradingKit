@@ -445,17 +445,18 @@ class HEIKINASHI(QObject):
                         self.map_time_ohlcv[ha_candle.time] = ha_candle
                         
                         
-                        self.df.iloc[-1] = [self.candles[-1].open,
-                                        self.candles[-1].high,
-                                        self.candles[-1].low,
-                                        self.candles[-1].close,
-                                        self.candles[-1].hl2,
-                                        self.candles[-1].hlc3,
-                                        self.candles[-1].ohlc4,
-                                        self.candles[-1].volume,
-                                        self.candles[-1].time,
-                                        self.candles[-1].index
-                                        ]
+                        self.df.loc[self.df.index[-1], :] = [
+                            self.candles[-1].open,
+                            self.candles[-1].high,
+                            self.candles[-1].low,
+                            self.candles[-1].close,
+                            self.candles[-1].hl2,
+                            self.candles[-1].hlc3,
+                            self.candles[-1].ohlc4,
+                            self.candles[-1].volume,
+                            self.candles[-1].time,
+                            self.candles[-1].index
+                        ]
                         
                         # self.start_index:int = self.candles[0].index
                         # self.stop_index:int = self.candles[-1].index
@@ -464,5 +465,5 @@ class HEIKINASHI(QObject):
                         #QCoreApplication.processEvents()
                         return False
         #self.is_current_update = True
-                    
-                    
+
+

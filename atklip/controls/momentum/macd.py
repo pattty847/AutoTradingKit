@@ -334,9 +334,9 @@ class MACD(QObject):
         last_histogram = df["histogram"].iloc[-1]
         last_signalma = df["signalma"].iloc[-1]
          
-        self.df.iloc[-1] = [last_index,last_macd,last_histogram,last_signalma]
+        self.df.loc[self.df.index[-1], ["index", "macd", "histogram", "signalma"]] = [last_index, last_macd, last_histogram, last_signalma]
         self.xdata[-1],self.macd_data[-1],self.histogram[-1],self.signalma[-1] = last_index,last_macd,last_histogram,last_signalma
         self.sig_update_candle.emit()
         #self.is_current_update = True
-            
-            
+
+

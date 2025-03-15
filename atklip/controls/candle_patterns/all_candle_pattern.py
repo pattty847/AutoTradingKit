@@ -532,6 +532,6 @@ class AllCandlePattern(QObject):
   
     def callback_update(self,future: Future):
         _df = future.result()
-        self.df.iloc[-1] = _df.iloc[-1]
+        self.df.loc[self.df.index[-1]] = _df.iloc[-1]
         self.sig_update_candle.emit()
         #self.is_current_update = True

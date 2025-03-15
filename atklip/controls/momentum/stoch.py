@@ -306,8 +306,7 @@ class STOCH(QObject):
         last_index = df["index"].iloc[-1]
         last_signalma = df["signalma"].iloc[-1]
         last_stoch = df["stoch"].iloc[-1]
-        self.df.iloc[-1] = [last_index,last_stoch,last_signalma]       
+        self.df.loc[self.df.index[-1], ["index", "stoch", "signalma"]] = [last_index, last_stoch, last_signalma]
         self.xdata[-1],self.stoch_[-1],self.signalma[-1]  = last_index,last_stoch,last_signalma
         self.sig_update_candle.emit()
         #self.is_current_update = True
-        

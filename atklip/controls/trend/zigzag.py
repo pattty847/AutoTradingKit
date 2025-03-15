@@ -321,4 +321,3 @@ class ZIGZAG(QObject):
         self.list_zizgzag,self.x_data,self.y_data = future.result()
         self.sig_update_candle.emit()
         #self.is_current_update = True
-

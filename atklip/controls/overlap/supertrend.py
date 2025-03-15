@@ -304,7 +304,7 @@ class SuperTrend(QObject):
         last_index = df["index"].iloc[-1]
         last_SUPERTt = df["SUPERTt"].iloc[-1]
         last_SUPERTd = df["SUPERTd"].iloc[-1]
-        self.df.iloc[-1] = [last_index,last_SUPERTt,last_SUPERTd]
+        self.df.loc[self.df.index[-1], ["index", "SUPERTt", "SUPERTd"]] = [last_index, last_SUPERTt, last_SUPERTd]
         self.xdata[-1],self.SUPERTt[-1],self.SUPERTd[-1] = last_index,last_SUPERTt,last_SUPERTd
         self.sig_update_candle.emit()
         #self.is_current_update = True

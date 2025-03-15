@@ -289,9 +289,8 @@ class VORTEX(QObject):
         last_index = df["index"].iloc[-1]
         last_vortex = df["vortex"].iloc[-1]
         last_signalma = df["signalma"].iloc[-1]
-        self.df.iloc[-1] = [last_index,last_vortex,last_signalma]
-        self.xdata[-1],self.vortex_[-1], self.signalma[-1]  = last_index,last_vortex,last_signalma
+        self.df.loc[self.df.index[-1], ["index", "vortex", "signalma"]] = [last_index, last_vortex, last_signalma]
+        self.xdata[-1], self.vortex_[-1], self.signalma[-1] = last_index, last_vortex, last_signalma
         self.sig_update_candle.emit()
         #self.is_current_update = True
-    
-    
+

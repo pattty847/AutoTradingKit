@@ -403,7 +403,7 @@ class SMOOTH_CANDLE(QObject):
     
     def callback_gen_historic_data(self, future: Future):
         _df = future.result()
-        self.df = pd.concat([_df,self.df], ignore_index=True)
+        self.df = pd.concat([_df, self.df], ignore_index=True)
         self.is_genering = False
         if self.first_gen == False:
             self.first_gen = True
@@ -449,9 +449,6 @@ class SMOOTH_CANDLE(QObject):
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
-        # self.start_index:int = self.df["index"].iloc[0]
-        # self.stop_index:int = self.df["index"].iloc[-1]
-        #self.is_current_update = True
         self.sig_reset_all.emit()
     
     def fisrt_gen_data(self):
@@ -470,22 +467,16 @@ class SMOOTH_CANDLE(QObject):
         update_df = future.result()
         
         if self._is_update:
-            self.df.iloc[-1] = update_df.iloc[-1]
+            self.df.loc[self.df.index[-1]] = update_df.iloc[-1]
         else:            
-            self.df = pd.concat([self.df,update_df.iloc[[-1]]],ignore_index=True)
+            self.df = pd.concat([self.df, update_df.iloc[[-1]]], ignore_index=True)
         
         _open, _high, _low, _close, hl2, hlc3, ohlc4,_volume, _time,_index = self.get_ma_ohlc_at_index(None,-1)
         ha_candle = OHLCV(_open,_high,_low,_close,hl2,hlc3,ohlc4,_volume,_time,_index)
         if self._is_update:
-            # self.start_index:int = self.df["index"].iloc[0]
-            # self.stop_index:int = self.df["index"].iloc[-1]
-            #self.is_current_update = True
             self.sig_update_candle.emit([ha_candle])
             return False
         else:
-            # self.start_index:int = self.df["index"].iloc[0]
-            # self.stop_index:int = self.df["index"].iloc[-1]
-            #self.is_current_update = True
             self.sig_add_candle.emit([ha_candle])
             return True
         

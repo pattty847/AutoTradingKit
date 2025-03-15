@@ -399,8 +399,7 @@ class SuperTrendWithStopLoss(QObject):
         last_short_stoploss = df["short_stoploss"].iloc[-1]
         last_SUPERTd = df["SUPERTd"].iloc[-1]
         
-        self.df.iloc[-1] = [last_index,last_long_stoploss,last_short_stoploss,last_SUPERTd]
-        self.xdata[-1],self.long_stoploss[-1],self.short_stoploss[-1],self.SUPERTd[-1]  = last_index,last_long_stoploss,last_short_stoploss,last_SUPERTd
+        self.df.loc[self.df.index[-1], ["index", "long_stoploss", "short_stoploss", "SUPERTd"]] = [last_index, last_long_stoploss, last_short_stoploss, last_SUPERTd]
+        self.xdata[-1], self.long_stoploss[-1], self.short_stoploss[-1], self.SUPERTd[-1] = last_index, last_long_stoploss, last_short_stoploss, last_SUPERTd
         self.sig_update_candle.emit()
         #self.is_current_update = True
-        

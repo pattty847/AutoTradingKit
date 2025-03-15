@@ -319,7 +319,7 @@ class BBANDS(QObject):
         last_lb = df["lb"].iloc[-1]
         last_cb = df["cb"].iloc[-1]
         last_ub = df["ub"].iloc[-1]      
-        self.df.iloc[-1] = [last_index,last_lb,last_cb,last_ub]
+        self.df.loc[self.df.index[-1], ["index", "lb", "cb", "ub"]] = [last_index, last_lb, last_cb, last_ub]
         self.xdata[-1],self.lb[-1],self.cb[-1],self.ub[-1] = last_index,last_lb,last_cb,last_ub
         self.sig_update_candle.emit()
         #self.is_current_update = True

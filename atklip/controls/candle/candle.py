@@ -384,17 +384,18 @@ class JAPAN_CANDLE(QObject):
                     self.map_index_ohlcv[last_candle.index] = last_candle
                     self.map_time_ohlcv[last_candle.time] = last_candle
                     
-                    self.df.iloc[-1] = [last_candle.open,
-                                        last_candle.high,
-                                        last_candle.low,
-                                        last_candle.close,
-                                        last_candle.hl2,
-                                        last_candle.hlc3,
-                                        last_candle.ohlc4,
-                                        last_candle.volume,
-                                        last_candle.time,
-                                        last_candle.index
-                                        ]
+                    self.df.loc[self.df.index[-1], :] = [
+                        last_candle.open,
+                        last_candle.high,
+                        last_candle.low,
+                        last_candle.close,
+                        last_candle.hl2,
+                        last_candle.hlc3,
+                        last_candle.ohlc4,
+                        last_candle.volume,
+                        last_candle.time,
+                        last_candle.index
+                    ]
                     self.start_index:int = self.candles[0].index
                     self.stop_index:int = self.candles[-1].index
                     #self.is_current_update = True
@@ -432,4 +433,4 @@ class JAPAN_CANDLE(QObject):
                 return True
         #self.is_current_update = True
         return None
-            
+

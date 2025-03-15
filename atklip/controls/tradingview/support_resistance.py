@@ -24,8 +24,8 @@ def support_resistance_with_breaks(df,left_bars = 15,
     df['high_pivot'] = df['high'].rolling(window=left_bars + right_bars + 1, center=True).apply(lambda x: np.nan if np.isnan(x).any() else x[left_bars] == max(x), raw=True)
     df['low_pivot'] = df['low'].rolling(window=left_bars + right_bars + 1, center=True).apply(lambda x: np.nan if np.isnan(x).any() else x[left_bars] == min(x), raw=True)
     
-    df['high_use_pivot'] = df['high'].where(df['high_pivot'] == 1, np.nan)
-    df['low_use_pivot'] = df['low'].where(df['low_pivot'] == 1, np.nan)
+    df.loc[df['high_pivot'] == 1, 'high_use_pivot'] = df['high']
+    df.loc[df['low_pivot'] == 1, 'low_use_pivot'] = df['low']
 
     # Forward fill the pivot points
     df['high_use_pivot'] = df['high_use_pivot'].ffill() 
@@ -433,8 +433,7 @@ class SuperTrendWithStopLoss(QObject):
         last_short_stoploss = df["short_stoploss"].iloc[-1]
         last_SUPERTd = df["SUPERTd"].iloc[-1]
         
-        self.df.iloc[-1] = [last_index,last_long_stoploss,last_short_stoploss,last_SUPERTd]
-        self.xdata[-1],self.long_stoploss[-1],self.short_stoploss[-1],self.SUPERTd[-1]  = last_index,last_long_stoploss,last_short_stoploss,last_SUPERTd
+        self.df.iloc[-1] = [last_index, last_long_stoploss, last_short_stoploss, last_SUPERTd]
+        self.xdata[-1], self.long_stoploss[-1], self.short_stoploss[-1], self.SUPERTd[-1] = last_index, last_long_stoploss, last_short_stoploss, last_SUPERTd
         self.sig_update_candle.emit()
         #self.is_current_update = True
-        

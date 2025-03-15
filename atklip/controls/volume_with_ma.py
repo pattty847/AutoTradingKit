@@ -301,7 +301,7 @@ class VolumeWithMa(QObject):
         last_close = df["close"].iloc[-1]
         last_open = df["open"].iloc[-1]
         
-        self.df.iloc[-1] = [last_index,last_data,last_volume,last_close,last_open]
+        self.df.loc[self.df.index[-1], ["index", "data", "volume", "close", "open"]] = [last_index, last_data, last_volume, last_close, last_open]
         self.xdata[-1] = last_index
         self.ydata[-1] = last_data
         self.volume[-1] = last_volume
@@ -309,4 +309,4 @@ class VolumeWithMa(QObject):
         self.open[-1] = last_open
         self.sig_update_candle.emit()
         #self.is_current_update = True
-       
+

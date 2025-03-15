@@ -238,7 +238,7 @@ class MA(QObject):
         _data = data.iloc[-1]
         _index = index.iloc[-1]
 
-        self.df.iloc[-1] = [_index,data.iloc[-1]]
+        self.df.loc[self.df.index[-1], ['index', 'data']] = [_index, _data]
         self.xdata[-1] = _index
         self.ydata[-1] = _data
         self.sig_update_candle.emit()
@@ -254,9 +254,8 @@ class MA(QObject):
         else:
             pass
             #self.is_current_update = True
-            
-            
-            
-            
-            
-            
+
+
+
+
+

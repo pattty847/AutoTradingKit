@@ -107,17 +107,17 @@ def convert_all(folder):
                 # continue
 
             
-            if src_path.endswith(".py"):
-                print(src_path)
-                ThreadPoolExecutor_global.submit(convert_one,src_path)
+            # if src_path.endswith(".py"):
+            #     print(src_path)
+            #     ThreadPoolExecutor_global.submit(convert_one,src_path)
                 # convert_one(src_path)
 
-# convert_all(r"atklip\graphics\chart_component\draw_tools")
+convert_all(r"atklip\controls")
 
 # for folder in list_dirs:
 #     convert_all(folder)
 
-convert_one(r"atklip\gui\top_bar\profile\profile_menu.py")
-convert_one(r"atklip\gui\top_bar\profile\btn_profile.py")
+# convert_one(r"atklip\controls\momentum\rsi.py")
+# convert_one(r"atklip\gui\top_bar\profile\btn_profile.py")
 # convert_one(r"atklip\controls\pandas_ta\trend\trendflex.py")
 # convert_one(r"atklip\controls\candle\smooth_candle.py")

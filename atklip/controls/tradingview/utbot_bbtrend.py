@@ -395,12 +395,11 @@ class UTBOT_ALERT_WITH_BB(QObject):
             df:pd.DataFrame = self._candles.df.iloc[-int(self.atr_length+self.channel_length+self.atr_utbot_length+10):]
             _long,_short = self.calculate(df)
             
-            self.df.iloc[-1] = [new_candle.index,_long.iloc[-1],_short.iloc[-1]]
+            self.df.loc[self.df.index[-1], ['index', 'long', 'short']] = [new_candle.index, _long.iloc[-1], _short.iloc[-1]]
             
             self.xdata[-1],self.long[-1],self.short[-1] = new_candle.index,_long.iloc[-1],_short.iloc[-1]
             
             self.sig_update_candle.emit()
         #self.is_current_update = True
-            
 
-    
+

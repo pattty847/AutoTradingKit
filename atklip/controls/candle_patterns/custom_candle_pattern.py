@@ -141,110 +141,25 @@ def candle_pattern(df:pd.DataFrame,C_Len: int= 14,C_ShadowPercent:float = 5.0):
                                 (df['high'] > df['high'].shift(1))&\
                                 (df['close'] > df['high'].shift(1))
 
-    # output_df['evening_star'] = (df['close'].shift(2) > df['open'].shift(2)) & \
-    #                     (np.minimum(df['open'].shift(1), df['close'].shift(1)) > df['close'].shift(2)) & \
-    #                     (df['open'] < np.minimum(df['open'].shift(1), df['close'].shift(1))) & \
-    #                     (df['close'] < df['open'])
-    # "data3=(close[2] < open[2] and max(open[1], close[1]) < close[2] and open > max(open[1], close[1]) and close > open )"
-    # output_df['morning_star'] = (df['close'].shift(2) < df['open'].shift(2)) & \
-    #                     (np.maximum(df['open'].shift(1), df['close'].shift(1)) < df['close'].shift(2)) & \
-    #                     (df['open'] > np.maximum(df['open'].shift(1), df['close'].shift(1))) & \
-    #                     (df['close'] > df['open'])
-    # "data4=(open[1] < close[1] and open > close[1] and high - max(open, close) >= abs(open - close) * 3 and min(close, open) - low <= abs(open - close))"
-    # output_df['shooting_star'] = (df['open'].shift(1) < df['close'].shift(1)) & \
-    #                     (df['open'] > df['close'].shift(1)) & \
-    #                     ((df['high'] - np.maximum(df['open'], df['close'])) >= abs(df['open'] - df['close']) * 3) & \
-    #                     ((np.minimum(df['close'], df['open']) - df['low']) <= abs(df['open'] - df['close']))
-
-    # df['hammer'] = ((df['high'] - df['low']) > 3 * abs(df['open'] - df['close'])) & \
-    #             (((df['close'] - df['low']) / (0.001 + df['high'] - df['low'])) > 0.6) & \
-    #             (((df['open'] - df['low']) / (0.001 + df['high'] - df['low'])) > 0.6)
-
-    # df['inverted_hammer'] = ((df['high'] - df['low']) > 3 * abs(df['open'] - df['close'])) & \
-    #                         (((df['high'] - df['close']) / (0.001 + df['high'] - df['low'])) > 0.6) & \
-    #                         (((df['high'] - df['open']) / (0.001 + df['high'] - df['low'])) > 0.6)
-    # "data6=(close[1] > open[1] and open > close and open <= close[1] and open[1] <= close and open - close < close[1] - open[1] )"
-    # output_df['bearish_harami'] = (df['close'].shift(1) > df['open'].shift(1)) & \
-    #                     (df['open'] > df['close']) & \
-    #                     (df['open'] <= df['close'].shift(1)) & \
-    #                     (df['open'].shift(1) <= df['close']) & \
-    #                     (abs(df['open'] - df['close']) < abs(df['close'].shift(1) - df['open'].shift(1)))
-    # "data7=(open[1] > close[1] and close > open and close <= open[1] and close[1] <= open and close - open < open[1] - close[1] )"
-    # output_df['bullish_harami'] = (df['open'].shift(1) > df['close'].shift(1)) & \
-    #                     (df['close'] > df['open']) & \
-    #                     (df['close'] <= df['open'].shift(1)) & \
-    #                     (df['close'].shift(1) <= df['open']) & \
-    #                     (abs(df['close'] - df['open']) < abs(df['open'].shift(1) - df['close'].shift(1)))
-    # "data8=(close[1] > open[1] and open > close and open >= close[1] and open[1] >= close and open - close > close[1] - open[1] )"
-    # output_df['bearish_engulfing'] = (df['close'].shift(1) > df['open'].shift(1)) & \
-    #                         (df['open'] > df['close']) & \
-    #                         (df['open'] >= df['close'].shift(1)) & \
-    #                         (df['close'] <= df['open'].shift(1)) & \
-    #                         (abs(df['open'] - df['close']) > abs(df['close'].shift(1) - df['open'].shift(1)))
-    # "data9=(open[1] > close[1] and close > open and close >= open[1] and close[1] >= open and close - open > open[1] - close[1] )"
-    # output_df['bullish_engulfing'] = (df['open'].shift(1) > df['close'].shift(1)) & \
-    #                         (df['close'] > df['open']) & \
-    #                         (df['close'] >= df['open'].shift(1)) & \
-    #                         (df['open'] <= df['close'].shift(1)) & \
-    #                         (abs(df['close'] - df['open']) > abs(df['open'].shift(1) - df['close'].shift(1)))
-    # df['piercing_line'] = (df['close'].shift(1) < df['open'].shift(1)) & \
-    #                     (df['open'] < df['low'].shift(1)) & \
-    #                     (df['close'] > (df['close'].shift(1) + (df['open'].shift(1) - df['close'].shift(1)) / 2)) & \
-    #                     (df['close'] < df['open'].shift(1))
-
-    # df['bullish_belt'] = (df['low'] == df['open']) & \
-    #                     (df['open'] < df['low'].rolling(10).min().shift(1)) & \
-    #                     (df['close'] > ((df['high'].shift(1) - df['low'].shift(1)) / 2) + df['low'].shift(1))
-
-    # output_df['bullish_kicker'] = (df['open'].shift(1) > df['close'].shift(1)) & \
-    #                     (df['open'] >= df['open'].shift(1)) & \
-    #                     (df['close'] > df['open'])
-
-    # output_df['bearish_kicker'] = (df['open'].shift(1) < df['close'].shift(1)) & \
-    #                     (df['open'] <= df['open'].shift(1)) & \
-    #                     (df['close'] <= df['open'])
-    # df['hanging_man'] = ((df['high'] - df['low']) > 4 * abs(df['open'] - df['close'])) & \
-    #                     (((df['close'] - df['low']) / (0.001 + df['high'] - df['low'])) >= 0.75) & \
-    #                     (((df['open'] - df['low']) / (0.001 + df['high'] - df['low'])) >= 0.75) & \
-    #                     (df['high'].shift(1) < df['open']) & \
-    #                     (df['high'].shift(2) < df['open'])
-
-    # df['dark_cloud_cover'] = (df['close'].shift(1) > df['open'].shift(1)) & \
-    #                         (((df['close'].shift(1) + df['open'].shift(1)) / 2) > df['close']) & \
-    #                         (df['open'] > df['close']) & \
-    #                         (df['open'] > df['close'].shift(1)) & \
-    #                         (df['close'] > df['open'].shift(1)) & \
-    #                         ((df['open'] - df['close']) / (0.001 + (df['high'] - df['low'])) > 0.6)
     return output_df
-# # Các mẫu nến khác có thể được bổ sung tương tự theo mã Pine Script gốc.
-
 
 def identify_patterns(df:pd.DataFrame):
-    # Tạo cột Range trung bình cho mỗi 10 cây nến
-    # df['range'] = (df['high'] - df['low']).rolling(window=10).mean()
     df = df.copy()
-    # Khởi tạo các cột mẫu nến
     patterns = ["index","bearish_ziad_francis",'bull_ziad_francis',
                 "bearish_miharris","bull_miharris","bull_miharris2","bearish_miharris2"]
 
-    # Lấy giá Open, High, Low, Close cho các cột trước đó
     O, H, L, C = df['open'], df['high'], df['low'], df['close']
     O1, H1, L1, C1 = O.shift(1), H.shift(1), L.shift(1), C.shift(1)
     O2, H2, L2, C2 = O.shift(2), H.shift(2), L.shift(2), C.shift(2)
     O3, H3, L3, C3 = O.shift(3), H.shift(3), L.shift(3), C.shift(3)
     O4, H4, L4, C4 = O.shift(4), H.shift(4), L.shift(4), C.shift(4)
 
-    # df["sell_simple"] = (O<C)&(L < L1)&(H > H1)&(C > H1)
-    # df["buy_simple"] = (O>C)&(H > H1)&(L < L1)&(C < L1)
-    "https://www.youtube.com/watch?v=tOH6Bd_jvfA&ab_channel=CodeTrading"
     df["bearish_ziad_francis"] = (L<C) & (C<L2) & (L2<L1) & (L1<H) & (H<H2) & (H2<H1)
     df["bull_ziad_francis"] = (H>C) & (C>H2) & (H2>H1) & (H1>L) & (L>L2) & (L2>L1)
     
-    "https://www.youtube.com/watch?v=cKzBu0aqdYA&ab_channel=CodeTrading"
     df["bearish_miharris"] = (L4>H) & (H>L3) & (L3>L2) & (L2>L1) & (C>H1)
     df["bull_miharris"] = (H4<L) & (L<H3) & (H3<H2) & (H2<H1) & (C<L1)
     
-    "https://www.youtube.com/watch?v=H23GLHD__yY&t=163s&ab_channel=CodeTrading"
     df["bull_miharris2"] = (H>H1) & (H1>L) & (L>H2) & (H2>L1) & (L1>H3) & (H3>L2) & (L2>L3)
     df["bearish_miharris2"] = (L<L1) & (L1<H) & (H<L2) & (L2<H1) & (H1<L3) & (L3<H2) & (H2<H3)
 
@@ -371,7 +286,6 @@ class ProCandlePattern(QObject):
     def paire_data(self,INDICATOR:pd.DataFrame|pd.Series):
         return
     
-    
     @staticmethod
     def calculate(df: pd.DataFrame):
         df = df.copy()
@@ -413,7 +327,6 @@ class ProCandlePattern(QObject):
             process.start()
         else:
             pass
-            #self.is_current_update = True
             
     def update(self, new_candles:List[OHLCV]):
         new_candle:OHLCV = new_candles[-1]
@@ -426,7 +339,6 @@ class ProCandlePattern(QObject):
             process.start() 
         else:
             pass
-            #self.is_current_update = True
     
     def callback_first_gen(self, future: Future):
         self.df = future.result()
@@ -434,7 +346,6 @@ class ProCandlePattern(QObject):
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
-        #self.is_current_update = True
         self.sig_reset_all.emit()
     
     def callback_gen_historic_data(self, future: Future):
@@ -453,11 +364,8 @@ class ProCandlePattern(QObject):
         _new_df = _df.iloc[[-1]]
         self.df = pd.concat([self.df,_new_df],ignore_index=True)
         self.sig_add_candle.emit()
-        #self.is_current_update = True
   
     def callback_update(self,future: Future):
         _df = future.result()
         self.df.iloc[-1] = _df.iloc[-1]
         self.sig_update_candle.emit()
-        #self.is_current_update = True
-    

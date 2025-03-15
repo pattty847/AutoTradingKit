@@ -383,5 +383,5 @@ class TrendWithStopLoss(QObject):
 
             self.sig_update_candle.emit()
         #self.is_current_update = True
-            
-            
+
+
