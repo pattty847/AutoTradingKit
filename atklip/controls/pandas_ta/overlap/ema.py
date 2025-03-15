@@ -60,16 +60,12 @@ def ema(
     adjust = kwargs.setdefault("adjust", False)
     
     # Calculate
-    if Imports["talib"] and mode_tal and length > 1:
-        from atklip.controls.talib import EMA
-        ema = EMA(close, length)
-    else:
-        if presma:  # TA Lib implementation
-            close = close.copy()
-            sma_nth = close.iloc[0:length].mean()
-            close.iloc[:length - 1] = nan
-            close.iloc[length - 1] = sma_nth
-        ema = close.ewm(span=length, adjust=adjust).mean()
+    if presma:  # TA Lib implementation
+        close = close.copy()
+        sma_nth = close.iloc[0:length].mean()
+        close.iloc[:length - 1] = nan
+        close.iloc[length - 1] = sma_nth
+    ema = close.ewm(span=length, adjust=adjust).mean()
 
     # Offset
     if offset != 0:
