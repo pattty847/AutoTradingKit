@@ -160,7 +160,6 @@ class LayoutButton(SplitWidgetBase):
 
 
 from typing import Union
-from atklip.gui.components.readme import ReadmeViewer
 from atklip.gui.qfluentwidgets.components import HWIDGET
 from atklip.gui.components._pushbutton import IconTextChangeButton
 

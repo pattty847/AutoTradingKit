@@ -110,9 +110,8 @@ def convert_all(folder):
             # if src_path.endswith(".py"):
             #     print(src_path)
             #     ThreadPoolExecutor_global.submit(convert_one,src_path)
-                # convert_one(src_path)
 
-convert_all(r"atklip\controls")
+convert_all(r"atklip")
 
 # for folder in list_dirs:
 #     convert_all(folder)
