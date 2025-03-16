@@ -14,7 +14,7 @@ ccxt
 PyOpenGL
 cython
 pandas-datareader
-pyarrow
+#pyarrow
 arrow
 setuptools
 python-rapidjson
@@ -22,6 +22,6 @@ humanize
 websockets
 psygnal
 click
-pdf2image
+#pdf2image
 winloop
 pywin32
