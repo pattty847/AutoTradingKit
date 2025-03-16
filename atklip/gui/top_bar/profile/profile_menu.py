@@ -10,7 +10,7 @@ class LoginPage(QWidget):
         self.stack_widget = stack_widget
 
         self.setWindowTitle("Login Page")
-        self.setGeometry(100, 100, 600, 400)
+        # self.setGeometry(100, 100, 600, 400)
 
         main_layout = QVBoxLayout()
 
@@ -23,7 +23,7 @@ class LoginPage(QWidget):
         form_container = CardWidget()
         form_container.setFixedSize(300, 350)
         form_layout = QVBoxLayout(form_container)
-        form_layout.setContentsMargins(20, 20, 20, 35)
+        form_layout.setContentsMargins(5, 10, 5, 15)
         form_layout.setSpacing(10)
 
         form_layout.addWidget(title_label, alignment=Qt.AlignTop)
@@ -87,7 +87,7 @@ class RegisterPage(QWidget):
         self.stack_widget = stack_widget
 
         self.setWindowTitle("Register Page")
-        self.setGeometry(100, 100, 600, 500)
+        # self.setGeometry(100, 100, 600, 500)
 
         main_layout = QVBoxLayout()
 
@@ -100,7 +100,7 @@ class RegisterPage(QWidget):
         form_container = CardWidget()
         form_container.setFixedSize(300, 450)
         form_layout = QVBoxLayout(form_container)
-        form_layout.setContentsMargins(20, 20, 20, 35)
+        form_layout.setContentsMargins(5, 10, 5, 35)
         form_layout.setSpacing(10)
 
         form_layout.addWidget(title_label, alignment=Qt.AlignTop)
@@ -170,7 +170,7 @@ class ProfileWindow(MessageBoxBase):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        # self.resize(600, 600)
+        # self.resize(320, 350)
 
         self.stack_widget = QStackedWidget()
 
@@ -187,8 +187,8 @@ class ProfileWindow(MessageBoxBase):
         self.yesButton.setText('Done')
         self.cancelButton.setText('Cancel')
         self.hideYesButton()
-        self.widget.setMinimumWidth(400)
-        self.widget.setMinimumHeight(450)
+        self.widget.setMinimumWidth(320)
+        self.widget.setMinimumHeight(350)
 
     def validate(self):
         return True
