@@ -14,7 +14,7 @@ ccxt
 PyOpenGL
 cython
 pandas-datareader
-pyarrow
+# pyarrow
 arrow
 setuptools
 python-rapidjson

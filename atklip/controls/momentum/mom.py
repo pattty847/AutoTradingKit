@@ -162,7 +162,7 @@ class MOM(QObject):
         return y_data
 
     @staticmethod
-    def calculate(df: pd.DataFrame,source,length,offset):
+    def calculate(df: pd.DataFrame, source, length, offset):
         df = df.copy()
         df = df.reset_index(drop=True)
         
@@ -170,7 +170,7 @@ class MOM(QObject):
                         length=length,
                         offset=offset).dropna().round(6)
         
-        if isinstance(INDICATOR,pd.Series):
+        if isinstance(INDICATOR, pd.Series):
             y_data = INDICATOR
         else:
             column_names = INDICATOR.columns.tolist()
@@ -184,58 +184,58 @@ class MOM(QObject):
         
         _index = df["index"].tail(_len)
         return pd.DataFrame({
-                            'index':_index,
-                            "data":y_data,
+                            'index': _index,
+                            "data": y_data,
                             })
         
     def fisrt_gen_data(self):
         self.is_current_update = False
         self.is_genering = True
         self.df = pd.DataFrame([])
-        df:pd.DataFrame = self._candles.get_df()
+        df: pd.DataFrame = self._candles.get_df()
         process = HeavyProcess(self.calculate,
                                self.callback_first_gen,
                                df,
-                               self.source,self.length,self.offset)
+                               self.source, self.length, self.offset)
         process.start()
         
     
-    def add_historic(self,n:int):
+    def add_historic(self, n: int):
         self.is_genering = True
         self.is_histocric_load = False
         _pre_len = len(self.df)
         candle_df = self._candles.get_df()
-        df:pd.DataFrame = candle_df.head(-_pre_len)
+        df: pd.DataFrame = candle_df.head(-_pre_len)
         
         process = HeavyProcess(self.calculate,
                                self.callback_gen_historic_data,
                                df,
-                               self.source,self.length,self.offset)
+                               self.source, self.length, self.offset)
         process.start()
        
-    def add(self,new_candles:List[OHLCV]):
-        new_candle:OHLCV = new_candles[-1]
+    def add(self, new_candles: List[OHLCV]):
+        new_candle: OHLCV = new_candles[-1]
         self.is_current_update = False
         if (self.first_gen == True) and (self.is_genering == False):
-            df:pd.DataFrame = self._candles.get_df(self.length*5)
+            df: pd.DataFrame = self._candles.get_df(self.length * 5)
             process = HeavyProcess(self.calculate,
                                self.callback_add,
                                df,
-                               self.source,self.length,self.offset)
+                               self.source, self.length, self.offset)
             process.start()
         else:
             pass
             #self.is_current_update = True
             
-    def update(self, new_candles:List[OHLCV]):
-        new_candle:OHLCV = new_candles[-1]
+    def update(self, new_candles: List[OHLCV]):
+        new_candle: OHLCV = new_candles[-1]
         self.is_current_update = False
         if (self.first_gen == True) and (self.is_genering == False):
-            df:pd.DataFrame = self._candles.get_df(self.length*5)
+            df: pd.DataFrame = self._candles.get_df(self.length * 5)
             process = HeavyProcess(self.calculate,
                                self.callback_update,
                                df,
-                               self.source,self.length,self.offset)
+                               self.source, self.length, self.offset)
             process.start() 
         else:
             pass
@@ -243,7 +243,7 @@ class MOM(QObject):
     
     def callback_first_gen(self, future: Future):
         self.df = future.result()
-        self.xdata,self.data = self.df["index"].to_numpy(),self.df["data"].to_numpy()
+        self.xdata, self.data = self.df["index"].to_numpy(), self.df["data"].to_numpy()
         self.is_genering = False
         if self.first_gen == False:
             self.first_gen = True
@@ -254,7 +254,7 @@ class MOM(QObject):
     def callback_gen_historic_data(self, future: Future):
         _df = future.result()
         _len = len(_df)
-        self.df = pd.concat([_df,self.df],ignore_index=True)
+        self.df = pd.concat([_df, self.df], ignore_index=True)
         self.xdata = np.concatenate((_df["index"].to_numpy(), self.xdata)) 
         self.data = np.concatenate((_df["data"].to_numpy(), self.data))   
         self.is_genering = False
@@ -264,28 +264,28 @@ class MOM(QObject):
         self.is_histocric_load = True
         self.sig_add_historic.emit(_len)
         
-    def callback_add(self,future: Future):
+    def callback_add(self, future: Future):
         df = future.result()
         last_index = df["index"].iloc[-1]
         last_data = df["data"].iloc[-1]
         new_frame = pd.DataFrame({
-                                    'index':[last_index],
-                                    "data":[last_data]
+                                    'index': [last_index],
+                                    "data": [last_data]
                                     })
             
-        self.df = pd.concat([self.df,new_frame],ignore_index=True)
+        self.df = pd.concat([self.df, new_frame], ignore_index=True)
                             
-        self.xdata = np.concatenate((self.xdata,np.array([last_index])))
-        self.data = np.concatenate((self.data,np.array([last_data])))
+        self.xdata = np.concatenate((self.xdata, np.array([last_index])))
+        self.data = np.concatenate((self.data, np.array([last_data])))
         self.sig_add_candle.emit()
         #self.is_current_update = True
         
-    def callback_update(self,future: Future):
+    def callback_update(self, future: Future):
         df = future.result()
         last_index = df["index"].iloc[-1]
         last_data = df["data"].iloc[-1]
         
-        self.df.iloc[-1] = [last_index,last_data]
-        self.xdata[-1],self.data[-1] = last_index,last_data
+        self.df.loc[self.df.index[-1], ["index", "data"]] = [last_index, last_data]
+        self.xdata[-1], self.data[-1] = last_index, last_data
         self.sig_update_candle.emit()
         #self.is_current_update = True

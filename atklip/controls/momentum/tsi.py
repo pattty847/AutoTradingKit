@@ -298,7 +298,7 @@ class TSI(QObject):
         last_index = df["index"].iloc[-1]
         last_tsi = df["tsi"].iloc[-1]
         last_signalma = df["signalma"].iloc[-1]
-        self.df.iloc[-1] = [last_index,last_tsi,last_signalma]
+        self.df.loc[self.df.index[-1], ['index', 'tsi', 'signalma']] = [last_index, last_tsi, last_signalma]
         self.xdata[-1],self.tsi_[-1], self.signalma[-1]  = last_index,last_tsi,last_signalma
         self.sig_update_candle.emit()
         #self.is_current_update = True

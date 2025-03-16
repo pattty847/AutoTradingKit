@@ -167,16 +167,16 @@ class DONCHIAN(QObject):
             elif name.__contains__("DCU_"):
                 upper_name = name
 
-        lb = INDICATOR[lower_name].dropna().round(6)
-        cb = INDICATOR[mid_name].dropna().round(6)
-        ub = INDICATOR[upper_name].dropna().round(6)
-        _len = min([len(lb),len(cb),len(ub)])
+        df.loc[:, lower_name] = INDICATOR[lower_name].dropna().round(6)
+        df.loc[:, mid_name] = INDICATOR[mid_name].dropna().round(6)
+        df.loc[:, upper_name] = INDICATOR[upper_name].dropna().round(6)
+        _len = min([len(df[lower_name]), len(df[mid_name]), len(df[upper_name])])
         _index = df["index"]
         return pd.DataFrame({
                             'index':_index.tail(_len),
-                            "lb":lb.tail(_len),
-                            "cb":cb.tail(_len),
-                            "ub":ub.tail(_len)
+                            "lb":df[lower_name].tail(_len),
+                            "cb":df[mid_name].tail(_len),
+                            "ub":df[upper_name].tail(_len)
                             })
     
     
@@ -299,8 +299,7 @@ class DONCHIAN(QObject):
         last_lb = df["lb"].iloc[-1]
         last_cb = df["cb"].iloc[-1]
         last_ub = df["ub"].iloc[-1]      
-        self.df.iloc[-1] = [last_index,last_lb,last_cb,last_ub]
+        self.df.loc[-1] = [last_index, last_lb, last_cb, last_ub]
         self.xdata[-1],self.lb[-1],self.cb[-1],self.ub[-1] = last_index,last_lb,last_cb,last_ub
         self.sig_update_candle.emit()
         #self.is_current_update = True
-    

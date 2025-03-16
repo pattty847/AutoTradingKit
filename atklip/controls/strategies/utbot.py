@@ -360,12 +360,11 @@ class ATKBOT_ALERT(QObject):
             _short = self.calculate_short(df_short)
             # _long,_short = self.calculate_long_short(df_long)
             
-            self.df.iloc[-1] = [new_candle.index,_long.iloc[-1],_short.iloc[-1]]
+            self.df.loc[self.df.index[-1], ['index', 'long', 'short']] = [new_candle.index, _long.iloc[-1], _short.iloc[-1]]
             
             self.xdata[-1],self.long[-1],self.short[-1] = new_candle.index,_long.iloc[-1],_short.iloc[-1]
             
             self.sig_update_candle.emit()
         #self.is_current_update = True
-            
 
-    
+

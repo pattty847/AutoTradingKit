@@ -291,7 +291,7 @@ class RSI(QObject):
         last_index = df["index"].iloc[-1]
         last_data = df["data"].iloc[-1]
         
-        self.df.iloc[-1] = [last_index,last_data]
+        self.df.loc[self.df.index[-1], ["index", "data"]] = [last_index, last_data]
         self.xdata[-1],self.data[-1] = last_index,last_data
         self.sig_update_candle.emit()
         #self.is_current_update = True

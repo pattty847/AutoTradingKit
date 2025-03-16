@@ -40,8 +40,7 @@ def utbot(dataframe:pd.DataFrame, key_value=1, atr_period=10, ema_period=1, ma_a
     data["xATR"] = atr(high, low, src, length=atr_period,mamode=ma_atr_mode)
     data["nLoss"] = key_value * data["xATR"]
 
-    data["ATRTrailingStop"] = [0.0] + [np.nan for i in range(len(data) - 1)]
- 
+    data.loc[0, "ATRTrailingStop"] = 0.0
     for i in range(1, len(data)):
         data.loc[i, "ATRTrailingStop"] = xATRTrailingStop_func(
             data.loc[i, "close"],
@@ -51,12 +50,12 @@ def utbot(dataframe:pd.DataFrame, key_value=1, atr_period=10, ema_period=1, ma_a
         )
     # EMA for crossover logic
     _ema = ema(src, length=ema_period)
-    data["Above"] = crossover(_ema,data["ATRTrailingStop"])  
-    data["Below"] = crossover(data["ATRTrailingStop"],_ema)  
+    data["Above"] = crossover(_ema, data["ATRTrailingStop"])  
+    data["Below"] = crossover(data["ATRTrailingStop"], _ema)  
     
-    data["long"] = (src > data["ATRTrailingStop"]) & (data["Above"]==1)
-    data["short"] = (src < data["ATRTrailingStop"]) & (data["Below"]==1)
-    kq = data.iloc[max([ema_period,atr_period])-1:]
+    data["long"] = (src > data["ATRTrailingStop"]) & (data["Above"] == 1)
+    data["short"] = (src < data["ATRTrailingStop"]) & (data["Below"] == 1)
+    kq = data.iloc[max([ema_period, atr_period]) - 1:]
     return kq[["long", "short"]]
 
 
@@ -353,8 +352,7 @@ class UTBOT_ALERT(QObject):
         last_index = df["index"].iloc[-1]
         last_long = df["long"].iloc[-1]
         last_short = df["short"].iloc[-1]
-        self.df.iloc[-1] = [last_index,last_long,last_short]
-        self.xdata[-1],self.long[-1],self.short[-1] = last_index,last_long,last_short
+        self.df.loc[self.df.index[-1], ["index", "long", "short"]] = [last_index, last_long, last_short]
+        self.xdata[-1], self.long[-1], self.short[-1] = last_index, last_long, last_short
         self.sig_update_candle.emit()
         #self.is_current_update = True
-          

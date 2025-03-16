@@ -2,6 +2,8 @@
 
 This is a free software designed for traders. If you become wealthy thanks to it, that is our happiness.
 
+![1741981521836](images/README/1741981521836.png)
+
 ## Description
 
 Auto Trading Kit: its mean, this project can be used to build your own strategy, backtest to test and improve strategy. and can live trading by using your strategy.
@@ -22,8 +24,9 @@ Let’s build the future of algorithmic trading together! 🚀🔥
 
 ## ATK - Features
 
-|               **Features**               |                **All Plan**                |
-| :--------------------------------------------: | :----------------------------------------------: |
+
+|               **Features**               |                   **All Plan**                   |
+| :--------------------------------------: | :----------------------------------------------: |
 |           **Number of Charts**           |   Unlimited (depends on user's PC performance)   |
 |         **Number of Indicators**         |                    Unlimited                    |
 |                **Alerts**                |                Under Development                |
@@ -60,8 +63,8 @@ Let’s build the future of algorithmic trading together! 🚀🔥
 
 ## Many indicators, sourced from famous libraries such as [pandas-ta](https://github.com/twopirllc/pandas-ta/tree/main), [ta-lib](), and even indicators converted from TradingView,MT4,MT5
 
- Currently provides below set of indicators. If your favourite indicator
- is missing, then create a ticket via GitHub Issues and there is a good
+Currently provides below set of indicators. If your favourite indicator
+is missing, then create a ticket via GitHub Issues and there is a good
 chance that it will be included in the future version of ATK.
 
 In the future, we will update more indicators, which are populars and famous on tradingview, MT4, MT5
@@ -121,10 +124,10 @@ activate venv: venv/scripts/activate
 
 install libs: pip install -r requirements.txt
 
-- Have to install pdf2image if your os system is MacOS or Linux/Ubuntu: https://pypi.org/project/pdf2image/ 
-- on MacOS: install : Brew https://brew.sh/ with cmd: 
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" 
-,then install poppler: brew install poppler
+- Have to install pdf2image if your os system is MacOS or Linux/Ubuntu: https://pypi.org/project/pdf2image/
+- on MacOS: install : Brew https://brew.sh/ with cmd:
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  ,then install poppler: brew install poppler
 - on Linux: conda install -c conda-forge poppler ,then install poppler:  pip install pdf2image
 
 run ATK.py to start app: python ATK.py or python3 ATK.py

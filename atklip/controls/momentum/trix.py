@@ -282,7 +282,7 @@ class TRIX(QObject):
         last_index = df["index"].iloc[-1]
         last_trix = df["trix"].iloc[-1]
         last_signalma = df["signalma"].iloc[-1]
-        self.df.iloc[-1] = [last_index,last_trix,last_signalma]
+        self.df.loc[self.df.index[-1], ["index", "trix", "signalma"]] = [last_index, last_trix, last_signalma]
         self.xdata[-1],self.trix_[-1], self.signalma[-1]  = last_index,last_trix,last_signalma
         self.sig_update_candle.emit()
         #self.is_current_update = True

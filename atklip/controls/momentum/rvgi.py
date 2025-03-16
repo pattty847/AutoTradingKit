@@ -297,7 +297,7 @@ class RVGI(QObject):
         last_index = df["index"].iloc[-1]
         last_rvgi = df["rvgi"].iloc[-1]
         last_signalma = df["signalma"].iloc[-1]
-        self.df.iloc[-1] = [last_index,last_rvgi,last_signalma]   
+        self.df.loc[self.df.index[-1], ['index', 'rvgi', 'signalma']] = [last_index, last_rvgi, last_signalma]
         self.xdata[-1],self.rvgi_[-1] , self.signalma[-1]  = last_index,last_rvgi,last_signalma
         #self.is_current_update = True
         self.sig_update_candle.emit()

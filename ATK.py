@@ -69,11 +69,12 @@ def start_worker():
         pass
 if __name__ == '__main__':
     multiprocessing.freeze_support()
-    if sys.platform == "darwin" or sys.platform == "linux":
+    platform = sys.platform 
+    if platform == "darwin" or platform == "linux":
         try:
             import uvloop 
             asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-        except:
+        except ImportError:
             pass
     else:
         try:

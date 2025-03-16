@@ -39,7 +39,7 @@ def atr_stoploss(df:pd.DataFrame,length = 14,
     df['atr'] = ma_function(df['tr'], length, smoothing)
     # Tính toán các giá trị cho stop loss
     df['a'] = df['atr'] * multiplier
-    df['short_stoploss'] = df['a'] + src1  # ATR Short Stop Loss
-    df['long_stoploss'] = src2 - df['a']  # ATR Long Stop Loss
+    df.loc[:, 'short_stoploss'] = df['a'] + src1  # ATR Short Stop Loss
+    df.loc[:, 'long_stoploss'] = src2 - df['a']  # ATR Long Stop Loss
     return df
 

@@ -92,10 +92,10 @@ def trend_with_stoploss(data:pd.DataFrame, macd_fast=12, macd_slow=26, macd_sign
     data['_short_stoploss'] = data['short_stoploss'].shift(1)
     
     "(macdLine > 0) and (macdLine[0] > macdLine[1])"
-    data['Uptrend'] = (macd_line > 0) & (data["long_stoploss_diff"]) & ((data["macd_line_diff"]) | (data["histogram_diff"]==False) | (data["signalma_diff"]))
+    data.loc[:, 'Uptrend'] = (macd_line > 0) & (data["long_stoploss_diff"]) & ((data["macd_line_diff"]) | (data["histogram_diff"]==False) | (data["signalma_diff"]))
     #  & ((abs(data['_long_stoploss'] - data['open'])/data['_long_stoploss'])*100 < 0.5)
     "color = macdLine < 0 and macdLine[0] < macdLine[1]  "
-    data['Downtrend'] = (macd_line < 0) & (data["short_stoploss_diff"]) & ( ((data["macd_line_diff"]==False))  | (data["histogram_diff"]) | (data["signalma_diff"]==False) )
+    data.loc[:, 'Downtrend'] = (macd_line < 0) & (data["short_stoploss_diff"]) & ( ((data["macd_line_diff"]==False))  | (data["histogram_diff"]) | (data["signalma_diff"]==False) )
     # & ((abs(data['_short_stoploss'] - data['open'])/data['_short_stoploss'])*100 < 0.5) 
     return data[["long_stoploss","short_stoploss","Uptrend","Downtrend"]]
 
@@ -422,8 +422,8 @@ class TrendWithStopLoss(QObject):
         last_Uptrend = df["Uptrend"].iloc[-1]
         last_Downtrend = df["Downtrend"].iloc[-1]
         
-        self.df.iloc[-1] = [last_index,last_long_stoploss,last_short_stoploss,last_Uptrend,last_Downtrend]
+        self.df.loc[self.df.index[-1], :] = [last_index,last_long_stoploss,last_short_stoploss,last_Uptrend,last_Downtrend]
         self.xdata[-1],self.long_stoploss[-1],self.short_stoploss[-1],self.Uptrend[-1] ,self.Downtrend[-1] = last_index,last_long_stoploss,last_short_stoploss,last_Uptrend,last_Downtrend
         self.sig_update_candle.emit()
-        #self.is_current_update = True          
-            
+        #self.is_current_update = True
+

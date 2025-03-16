@@ -31,19 +31,19 @@ def caculate_zz(list_zizgzag:list,ohlcv:OHLCV,percent: float):
         if list_zizgzag[-1][2] == 'low':
             if percent_caculator(list_zizgzag[-1][1],ohlcv.high) > percent:
                 list_zizgzag.append([ohlcv.index,ohlcv.high,'high'])
-            elif list_zizgzag[-1][1] > ohlcv.low:
-                if list_zizgzag[-1][0] == ohlcv.index:
-                    list_zizgzag[-1]=[ohlcv.index,ohlcv.low,'low']
-                else:
-                    list_zizgzag.append([ohlcv.index,ohlcv.low,'low'])
+            # elif list_zizgzag[-1][1] > ohlcv.low:
+            #     if list_zizgzag[-1][0] == ohlcv.index:
+            #         list_zizgzag[-1]=[ohlcv.index,ohlcv.low,'low']
+            #     else:
+            #         list_zizgzag.append([ohlcv.index,ohlcv.low,'low'])
         elif list_zizgzag[-1][2] == 'high':
             if percent_caculator(list_zizgzag[-1][1],ohlcv.low) > percent:
                 list_zizgzag.append([ohlcv.index,ohlcv.low,'low'])
-            elif list_zizgzag[-1][1] < ohlcv.high:
-                if list_zizgzag[-1][0] == ohlcv.index:
-                    list_zizgzag[-1]=[ohlcv.index,ohlcv.high,'high']
-                else:
-                    list_zizgzag.append([ohlcv.index,ohlcv.high,'high'])
+            # elif list_zizgzag[-1][1] < ohlcv.high:
+            #     if list_zizgzag[-1][0] == ohlcv.index:
+            #         list_zizgzag[-1]=[ohlcv.index,ohlcv.high,'high']
+            #     else:
+            #         list_zizgzag.append([ohlcv.index,ohlcv.high,'high'])
     return list_zizgzag
 
 
@@ -321,4 +321,3 @@ class ZIGZAG(QObject):
         self.list_zizgzag,self.x_data,self.y_data = future.result()
         self.sig_update_candle.emit()
         #self.is_current_update = True
-

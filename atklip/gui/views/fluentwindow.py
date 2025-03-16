@@ -65,9 +65,9 @@ class WindowBase(BackgroundAnimationWidget, FramelessMainWindow):
         desktop = QApplication.screens()[0].availableGeometry()
         w, h = desktop.width(), desktop.height()
         # self.resize(800, 600)
-        self.setMinimumWidth(w//2)
-        self.setMinimumHeight(h//2)
-        self.resize(w//2, h//2)
+        # self.setMinimumWidth(w//2)
+        # self.setMinimumHeight(h//2)
+        # self.resize(w//2, h//2)
         self.move(w//2 - 500, h//8)
         self.resize(1000 , 3*(h//4) )
             

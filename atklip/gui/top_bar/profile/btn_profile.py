@@ -4,7 +4,6 @@ from typing import Union
 from PySide6.QtWidgets import QWidget,QVBoxLayout
 from PySide6.QtGui import QIcon,Qt
 from atklip.gui.components.exchange_icon import ExchangeICon
-# from atklip.gui.components.readme import ReadmeViewer
 from atklip.gui.qfluentwidgets.common.icon import get_real_path
 from atklip.gui.qfluentwidgets.components.widgets.tool_tip import ToolTipFilter, ToolTipPosition
 from atklip.gui.qfluentwidgets.components import MaskDialogBase

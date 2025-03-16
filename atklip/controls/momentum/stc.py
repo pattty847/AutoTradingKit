@@ -333,8 +333,7 @@ class STC(QObject):
         last_stc = df["stc"].iloc[-1]
         last_macd = df["macd"].iloc[-1]
         last_stoch = df["stoch"].iloc[-1]
-        self.df.iloc[-1] = [last_index,last_stc,last_macd,last_stoch]
+        self.df.loc[self.df.index[-1], ["index", "stc", "macd", "stoch"]] = [last_index, last_stc, last_macd, last_stoch]
         self.xdata[-1],self.stc_[-1],self.macd[-1],self.stoch[-1] = last_index,last_stc,last_macd,last_stoch
         self.sig_update_candle.emit()
         #self.is_current_update = True
-        

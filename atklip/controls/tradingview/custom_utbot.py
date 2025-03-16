@@ -413,7 +413,7 @@ class CUSTOM_UTBOT_ALERT(QObject):
             _long = self.calculate_long(df_long)
             _short = self.calculate_short(df_short)
                         
-            self.df.iloc[-1] = [new_candle.index,_long.iloc[-1],_short.iloc[-1]]
+            self.df.loc[self.df.index[-1], ['index', 'long', 'short']] = [new_candle.index, _long.iloc[-1], _short.iloc[-1]]
             
             self.xdata[-1],self.long[-1],self.short[-1] = new_candle.index,_long.iloc[-1],_short.iloc[-1]
             
@@ -421,6 +421,5 @@ class CUSTOM_UTBOT_ALERT(QObject):
             
             self.sig_update_candle.emit()
         #self.is_current_update = True
-            
 
-    
+
