@@ -58,23 +58,18 @@ def dm(
     drift = v_drift(drift)
     offset = v_offset(offset)
 
-    if Imports["talib"] and mode_tal and high.size and low.size:
-        from talib import MINUS_DM, PLUS_DM
-        pos = PLUS_DM(high, low, length)
-        neg = MINUS_DM(high, low, length)
-    else:
-        up = high - high.shift(drift)
-        dn = low.shift(drift) - low
+    up = high - high.shift(drift)
+    dn = low.shift(drift) - low
 
-        pos_ = ((up > dn) & (up > 0)) * up
-        neg_ = ((dn > up) & (dn > 0)) * dn
+    pos_ = ((up > dn) & (up > 0)) * up
+    neg_ = ((dn > up) & (dn > 0)) * dn
 
-        pos_ = pos_.apply(zero)
-        neg_ = neg_.apply(zero)
+    pos_ = pos_.apply(zero)
+    neg_ = neg_.apply(zero)
 
-        # Not the same values as TA Lib's -+DM (Good First Issue)
-        pos = ma(mamode, pos_, length=length, talib=mode_tal)
-        neg = ma(mamode, neg_, length=length, talib=mode_tal)
+    # Not the same values as TA Lib's -+DM (Good First Issue)
+    pos = ma(mamode, pos_, length=length, talib=mode_tal)
+    neg = ma(mamode, neg_, length=length, talib=mode_tal)
 
     # Offset
     if offset != 0:

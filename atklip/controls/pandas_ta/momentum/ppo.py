@@ -63,13 +63,9 @@ def ppo(
     offset = v_offset(offset)
 
     # Calculate
-    if Imports["talib"] and mode_tal:
-        from talib import PPO
-        ppo = PPO(close, fast, slow, tal_ma(mamode))
-    else:
-        fastma = ma(mamode, close, length=fast, talib=mode_tal)
-        slowma = ma(mamode, close, length=slow, talib=mode_tal)
-        ppo = scalar * (fastma - slowma) / slowma
+    fastma = ma(mamode, close, length=fast, talib=mode_tal)
+    slowma = ma(mamode, close, length=slow, talib=mode_tal)
+    ppo = scalar * (fastma - slowma) / slowma
 
     if all(isnan(ppo)):
         return  # Emergency Break

@@ -47,13 +47,9 @@ def stdev(
     offset = v_offset(offset)
 
     # Calculate
-    if Imports["talib"] and mode_tal:
-        from talib import STDDEV
-        stdev = STDDEV(close, length)
-    else:
-        stdev = variance(
-            close=close, length=length, ddof=ddof, talib=mode_tal
-        ).apply(sqrt)
+    stdev = variance(
+        close=close, length=length, ddof=ddof, talib=mode_tal
+    ).apply(sqrt)
 
     # Offset
     if offset != 0:

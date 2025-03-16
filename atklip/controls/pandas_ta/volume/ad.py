@@ -44,19 +44,15 @@ def ad(
     offset = v_offset(offset)
 
     # Calculate
-    if Imports["talib"] and mode_tal and volume.size:
-        from talib import AD
-        ad = AD(high, low, close, volume)
+    if open_ is not None:
+        open_ = v_series(open_)
+        ad = non_zero_range(close, open_)  # AD with Open
     else:
-        if open_ is not None:
-            open_ = v_series(open_)
-            ad = non_zero_range(close, open_)  # AD with Open
-        else:
-            ad = 2 * close - (high + low)  # AD with High, Low, Close
+        ad = 2 * close - (high + low)  # AD with High, Low, Close
 
-        high_low_range = non_zero_range(high, low)
-        ad *= volume / high_low_range
-        ad = ad.cumsum()
+    high_low_range = non_zero_range(high, low)
+    ad *= volume / high_low_range
+    ad = ad.cumsum()
 
     # Offset
     if offset != 0:

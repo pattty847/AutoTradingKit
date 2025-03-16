@@ -66,16 +66,12 @@ def natr(
     offset = v_offset(offset)
 
     # Calculate
-    if Imports["talib"] and mode_tal:
-        from talib import NATR
-        natr = NATR(high, low, close, length)
-    else:
-        natr = (scalar / close) * \
-        atr(
-            high=high, low=low, close=close, length=length,
-            mamode=mamode, drift=drift, talib=mode_tal,
-            prenan=prenan, offset=offset, **kwargs
-        )
+    natr = (scalar / close) * \
+    atr(
+        high=high, low=low, close=close, length=length,
+        mamode=mamode, drift=drift, talib=mode_tal,
+        prenan=prenan, offset=offset, **kwargs
+    )
 
     # Offset
     if offset != 0:

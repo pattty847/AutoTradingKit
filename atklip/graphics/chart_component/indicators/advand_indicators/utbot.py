@@ -116,56 +116,11 @@ class UTBOT(GraphicsObject):
     def fisrt_gen_data(self):
         self.connect_signals()
         self.INDICATOR.started_worker()
-    
-    def check_pivot_points(self,df:pd.DataFrame,_type:str="high",n = 10, m=20):
-        _len = len(df)
-        # print(df)   
-        if _type == "high":
-            for i in range(n):  
-                if _len - i - m > 0:  
-                    array = df.iloc[_len-i - m:_len-i][_type].to_numpy()
-                    index = df.iloc[_len-i - m:_len-i]["index"].to_numpy()
-                    max_previous_m = array.max()  
-                    
-                    if array[-1] >= max_previous_m: 
-                        # print(True, array[-1], index[-1])
-                        return (True, array[-1], index[-1])
-            
-        elif _type == "low":
-            for i in range(n):  
-                if _len - i - m > 0:  
-                    array = df.iloc[_len-i - m:_len-i][_type].to_numpy()
-                    index = df.iloc[_len-i - m:_len-i]["index"].to_numpy()
-                    min_previous_m = array.min()   
-                         
-                    if array[-1] <= min_previous_m: 
-                        # print(True, array[-1], index[-1]) 
-                        return (True, array[-1], index[-1])
-        return (False, None, None)
-
-    def check_active_pos(self,_type:str,_open: float):
-        if self.list_pos:
-            for x in self.list_pos.keys():
-                entry_infor:dict = self.list_pos[x]
-                is_entry_closed =  entry_infor["is_stoploss"]
-                is_take_profit_2R =  entry_infor["take_profit_2R"]
-                is_take_profit_1_5R =  entry_infor["take_profit_1_5R"]
-                
-                entry_type = entry_infor["type"]
-                entry:Entry = entry_infor["entry"]
-                
-                if entry_type == _type:
-                    if not is_entry_closed and not is_take_profit_2R:
-                        # self.list_pos[x]["is_stoploss"] = _open
-                        # entry.locked_handle()
-                        return True
-        return False
                         
     def delete(self):
         print("deleted--------------------------")
-        
         self.disconnect_signals()
-        self.INDICATOR.disconnect()
+        self.INDICATOR.disconnect_signals()
         self.INDICATOR.deleteLater()
         # self.macd.deleteLater()
         # self.super_smoothcandle.deleteLater()
@@ -393,6 +348,8 @@ class UTBOT(GraphicsObject):
             "short":_short,
         })
         
+        if df.empty:
+            return
         _x = df.iloc[-1]['x']
         
         if self.list_pos.get(_x):

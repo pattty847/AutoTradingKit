@@ -125,7 +125,7 @@ class SMC(GraphicsObject):
     def delete(self):
         print("deleted--------------------------")
         self.disconnect_signals()
-        self.INDICATOR.disconnect()
+        self.INDICATOR.disconnect_signals()
         self.INDICATOR.deleteLater()
         self.chart.sig_remove_item.emit(self)
     

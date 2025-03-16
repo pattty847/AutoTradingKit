@@ -45,12 +45,8 @@ def obv(
     offset = v_offset(offset)
 
     # Calculate
-    if Imports["talib"] and mode_tal:
-        from talib import OBV
-        obv = OBV(close, volume)
-    else:
-        sv = signed_series(close, initial=1) * volume
-        obv = sv.cumsum()
+    sv = signed_series(close, initial=1) * volume
+    obv = sv.cumsum()
 
     # Offset
     if offset != 0:

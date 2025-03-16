@@ -50,13 +50,9 @@ def bop(
     offset = v_offset(offset)
 
     # Calculate
-    if Imports["talib"] and mode_tal and close.size:
-        from talib import BOP
-        bop = BOP(open_, high, low, close)
-    else:
-        high_low_range = non_zero_range(high, low)
-        close_open_range = non_zero_range(close, open_)
-        bop = scalar * close_open_range / high_low_range
+    high_low_range = non_zero_range(high, low)
+    close_open_range = non_zero_range(close, open_)
+    bop = scalar * close_open_range / high_low_range
 
     # Offset
     if offset != 0:

@@ -53,23 +53,18 @@ def true_range(
     if high is None or low is None or close is None:
         return
 
-    mode_tal = v_talib(talib)
     prenan = v_bool(prenan, False)
     drift = v_drift(drift)
     offset = v_offset(offset)
 
     # Calculate
-    if Imports["talib"] and mode_tal:
-        from talib import TRANGE
-        true_range = TRANGE(high, low, close)
-    else:
-        hl_range = non_zero_range(high, low)
-        pc = close.shift(drift)
-        ranges = [hl_range, high - pc, pc - low]
-        true_range = concat(ranges, axis=1)
-        true_range = true_range.abs().max(axis=1)
-        if prenan:
-            true_range.iloc[:drift] = nan
+    hl_range = non_zero_range(high, low)
+    pc = close.shift(drift)
+    ranges = [hl_range, high - pc, pc - low]
+    true_range = concat(ranges, axis=1)
+    true_range = true_range.abs().max(axis=1)
+    if prenan:
+        true_range.iloc[:drift] = nan
 
     if all(isnan(true_range)):
         return  # Emergency Break

@@ -211,7 +211,7 @@ class UTBOT_WITH_BBAND(GraphicsObject):
                         
     def delete(self):        
         self.disconnect_signals()
-        self.INDICATOR.disconnect()
+        self.INDICATOR.disconnect_signals()
         self.INDICATOR.deleteLater()
         # self.macd.deleteLater()
         # self.super_smoothcandle.deleteLater()

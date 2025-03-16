@@ -329,12 +329,12 @@ class UTBOT_ALERT(QObject):
             self.is_genering = False
         self.is_histocric_load = True
         self.sig_add_historic.emit(_len)
-        
+
     def callback_add(self,future: Future):
-        df = future.result()
-        last_index = df["index"].iloc[-1]
-        last_long = df["long"].iloc[-1]
-        last_short = df["short"].iloc[-1]
+        df = pd.DataFrame(future.result())
+        last_index = df.iloc[-1]["index"]
+        last_long = df.iloc[-1]["long"]
+        last_short = df.iloc[-1]["short"]
         new_frame = pd.DataFrame({
                                     'index':[last_index],
                                     "long":[last_long],
@@ -348,10 +348,10 @@ class UTBOT_ALERT(QObject):
         #self.is_current_update = True
         
     def callback_update(self,future: Future):
-        df = future.result()
-        last_index = df["index"].iloc[-1]
-        last_long = df["long"].iloc[-1]
-        last_short = df["short"].iloc[-1]
+        df = pd.DataFrame(future.result())
+        last_index = df.iloc[-1]["index"]
+        last_long = df.iloc[-1]["long"]
+        last_short = df.iloc[-1]["short"]
         self.df.loc[self.df.index[-1], ["index", "long", "short"]] = [last_index, last_long, last_short]
         self.xdata[-1], self.long[-1], self.short[-1] = last_index, last_long, last_short
         self.sig_update_candle.emit()

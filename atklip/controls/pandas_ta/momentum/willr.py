@@ -52,14 +52,10 @@ def willr(
     offset = v_offset(offset)
 
     # Calculate
-    if Imports["talib"] and mode_tal:
-        from talib import WILLR
-        willr = WILLR(high, low, close, length)
-    else:
-        lowest_low = low.rolling(length, min_periods=min_periods).min()
-        highest_high = high.rolling(length, min_periods=min_periods).max()
+    lowest_low = low.rolling(length, min_periods=min_periods).min()
+    highest_high = high.rolling(length, min_periods=min_periods).max()
 
-        willr = 100 * ((close - lowest_low) / (highest_high - lowest_low) - 1)
+    willr = 100 * ((close - lowest_low) / (highest_high - lowest_low) - 1)
 
     # Offset
     if offset != 0:

@@ -55,7 +55,7 @@ def ema(
         return
 
     mode_tal = v_talib(talib)
-    presma = v_bool(presma, True)
+    presma = v_bool(presma, False)
     offset = v_offset(offset)
     adjust = kwargs.setdefault("adjust", False)
     

@@ -55,22 +55,18 @@ def cmo(
     offset = v_offset(offset)
 
     # Calculate
-    if Imports["talib"] and mode_tal:
-        from talib import CMO
-        cmo = CMO(close, length)
+    mom = close.diff(drift)
+    positive = mom.copy().clip(lower=0)
+    negative = mom.copy().clip(upper=0).abs()
+
+    if mode_tal:
+        pos_ = rma(positive, length)
+        neg_ = rma(negative, length)
     else:
-        mom = close.diff(drift)
-        positive = mom.copy().clip(lower=0)
-        negative = mom.copy().clip(upper=0).abs()
+        pos_ = positive.rolling(length).sum()
+        neg_ = negative.rolling(length).sum()
 
-        if mode_tal:
-            pos_ = rma(positive, length)
-            neg_ = rma(negative, length)
-        else:
-            pos_ = positive.rolling(length).sum()
-            neg_ = negative.rolling(length).sum()
-
-        cmo = scalar * (pos_ - neg_) / (pos_ + neg_)
+    cmo = scalar * (pos_ - neg_) / (pos_ + neg_)
 
     # Offset
     if offset != 0:

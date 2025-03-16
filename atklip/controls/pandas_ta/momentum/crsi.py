@@ -153,22 +153,17 @@ def crsi(
     np_close = close.to_numpy()
     streak = Series(consecutive_streak(np_close), index=close.index)
 
-    if Imports["talib"] and mode_tal:
-        from talib import RSI
-        close_rsi = RSI(close, length_rsi)
-        streak_rsi = RSI(streak, length_streak)
-    else:
-        # Both TA-lib and Pandas-TA use the Wilder's RSI and its smoothing
-        # function.
-        close_rsi = rsi(
-            close, length=length_rsi, scalar=scalar, talib=talib,
-            drift=drift, offset=offset, **kwargs
-        )
+    # Both TA-lib and Pandas-TA use the Wilder's RSI and its smoothing
+    # function.
+    close_rsi = rsi(
+        close, length=length_rsi, scalar=scalar, talib=talib,
+        drift=drift, offset=offset, **kwargs
+    )
 
-        streak_rsi = rsi(
-            streak, length=length_streak, scalar=scalar, talib=talib,
-            drift=drift, offset=offset, **kwargs
-        )
+    streak_rsi = rsi(
+        streak, length=length_streak, scalar=scalar, talib=talib,
+        drift=drift, offset=offset, **kwargs
+    )
 
     pr = percent_rank(close, length_rank)
     crsi = (close_rsi + streak_rsi + pr) / 3.0

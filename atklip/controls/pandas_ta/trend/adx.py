@@ -100,12 +100,7 @@ def adx(
     pos = pos.apply(zero)
     neg = neg.apply(zero)
 
-    if not mode_tv and Imports["talib"] and mode_tal and length > 1:
-        from talib import ADX, MINUS_DM, PLUS_DM
-        adx = ADX(high, low, close, length)
-        dmp = PLUS_DM(high, low, length)
-        dmn = MINUS_DM(high, low, length)
-    elif mode_tv:
+    if mode_tv:
         # How to treat the initial value of RMA varies from one another.
         # It follows the way TradingView does, setting it to the average of
         # previous values. Since 'pandas' does not provide API to control

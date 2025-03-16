@@ -62,22 +62,18 @@ def mfi(
     offset = v_offset(offset)
 
     # Calculate
-    if Imports["talib"] and mode_tal:
-        from talib import MFI
-        mfi = MFI(high, low, close, volume, length)
-    else:
-        m, _ones = close.size, ones(length)
+    m, _ones = close.size, ones(length)
 
-        tp = (high.to_numpy() + low.to_numpy() + close.to_numpy()) / 3.0
-        smf = tp * volume.to_numpy() * where(tp > roll(tp, shift=drift), 1, -1)
+    tp = (high.to_numpy() + low.to_numpy() + close.to_numpy()) / 3.0
+    smf = tp * volume.to_numpy() * where(tp > roll(tp, shift=drift), 1, -1)
 
-        pos, neg = maximum(smf, 0), maximum(-smf, 0)
-        avg_gain, avg_loss = convolve(pos, _ones)[:m], convolve(neg, _ones)[:m]
+    pos, neg = maximum(smf, 0), maximum(-smf, 0)
+    avg_gain, avg_loss = convolve(pos, _ones)[:m], convolve(neg, _ones)[:m]
 
-        _mfi = (100.0 * avg_gain) / (avg_gain + avg_loss + sflt.epsilon)
-        _mfi[:length] = nan
+    _mfi = (100.0 * avg_gain) / (avg_gain + avg_loss + sflt.epsilon)
+    _mfi[:length] = nan
 
-        mfi = Series(_mfi, index=close.index)
+    mfi = Series(_mfi, index=close.index)
 
     # Offset
     if offset != 0:

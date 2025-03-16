@@ -8,7 +8,7 @@ pillow
 qasync
 numpy
 pyqtgraph
-pandas
+pandas==2.2.3
 numba
 ccxt
 PyOpenGL

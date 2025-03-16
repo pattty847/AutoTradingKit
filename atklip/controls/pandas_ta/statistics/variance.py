@@ -50,11 +50,7 @@ def variance(
     offset = v_offset(offset)
 
     # Calculate
-    if Imports["talib"] and mode_tal:
-        from talib import VAR
-        variance = VAR(close, length)
-    else:
-        variance = close.rolling(length, min_periods=min_periods).var(ddof)
+    variance = close.rolling(length, min_periods=min_periods).var(ddof)
 
     # Offset
     if offset != 0:

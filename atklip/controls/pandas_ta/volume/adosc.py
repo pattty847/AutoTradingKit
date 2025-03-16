@@ -57,21 +57,17 @@ def adosc(
     offset = v_offset(offset)
 
     # Calculate
-    if Imports["talib"] and mode_tal:
-        from talib import ADOSC
-        adosc = ADOSC(high, low, close, volume, fast, slow)
-    else:
-        # remove length so it doesn't override ema length
-        if "length" in kwargs:
-            kwargs.pop("length")
+    # remove length so it doesn't override ema length
+    if "length" in kwargs:
+        kwargs.pop("length")
 
-        ad_ = ad(
-            high=high, low=low, close=close, volume=volume,
-            open_=open_, talib=mode_tal
-        )
-        fast_ad = ema(close=ad_, length=fast, **kwargs, talib=mode_tal)
-        slow_ad = ema(close=ad_, length=slow, **kwargs, talib=mode_tal)
-        adosc = fast_ad - slow_ad
+    ad_ = ad(
+        high=high, low=low, close=close, volume=volume,
+        open_=open_, talib=mode_tal
+    )
+    fast_ad = ema(close=ad_, length=fast, **kwargs, talib=mode_tal)
+    slow_ad = ema(close=ad_, length=slow, **kwargs, talib=mode_tal)
+    adosc = fast_ad - slow_ad
 
     # Offset
     if offset != 0:

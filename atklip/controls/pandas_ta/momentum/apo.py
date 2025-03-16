@@ -53,13 +53,9 @@ def apo(
     offset = v_offset(offset)
 
     # Calculate
-    if Imports["talib"] and mode_tal:
-        from talib import APO
-        apo = APO(close, fast, slow, tal_ma(mamode))
-    else:
-        fastma = ma(mamode, close, length=fast, talib=mode_tal)
-        slowma = ma(mamode, close, length=slow, talib=mode_tal)
-        apo = fastma - slowma
+    fastma = ma(mamode, close, length=fast, talib=mode_tal)
+    slowma = ma(mamode, close, length=slow, talib=mode_tal)
+    apo = fastma - slowma
 
     # Offset
     if offset != 0:
