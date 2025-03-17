@@ -15,7 +15,7 @@ from .titlebar import TitleBar
 from .mainlayout import MainWidget
 from atklip.app_utils import *
 from atklip.appmanager.setting import AppConfig
-from atklip.appmanager.worker.threadpool import ThreadPoolExecutor_global,Heavy_ProcessPoolExecutor_global
+from atklip.appmanager.worker.threadpool import ThreadPoolExecutor_global,Heavy_ProcessPoolExecutor_global,num_threads
 
 from .framelesswindow import FramelessMainWindow
 
@@ -25,12 +25,15 @@ class WindowBase(BackgroundAnimationWidget, FramelessMainWindow):
     def __init__(self, parent=None):
         self._isMicaEnabled = False
         super().__init__(parent=parent)
+        self._parent = parent
+        for i in range(int(num_threads/2)):
+            Heavy_ProcessPoolExecutor_global.submit(self.start_worker)
+
         self.setWindowFlag(Qt.WindowMaximizeButtonHint, True)
         self.setWindowFlag(Qt.WindowMinimizeButtonHint, True)
         self.setWindowFlag(Qt.WindowCloseButtonHint, True)
         self.setWindowFlag(Qt.WindowTitleHint, True)
         self.setWindowFlag(Qt.FramelessWindowHint, True)
-
 
 
         self.setContentsMargins(0, 0, 0, 0)
@@ -40,7 +43,7 @@ class WindowBase(BackgroundAnimationWidget, FramelessMainWindow):
         self.stackedWidget.setContentsMargins(0,0,0,0)
         self.setCentralWidget(self.stackedWidget)
 
-        self.titleBar = TitleBar(self.stackedWidget)
+        self.titleBar = TitleBar(self)
         # self.titleBar.setParent(self)
 
         self.tabBar = self.titleBar.tabBar

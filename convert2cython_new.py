@@ -30,7 +30,7 @@ def convert_one(path_:str=r"atklip\graph_objects\chart_component\viewchart.py"):
     if not pyx_path:
         return
     try:
-        os.system(f'cythonize --build -3 --3str --force --no-docstrings {pyx_path}') #--inplace
+        os.system(f'cythonize --build -3 --3str --force --inplace --no-docstrings {pyx_path}') #
     except Exception as e:
         print(e)
     
@@ -111,12 +111,12 @@ def convert_all(folder):
                 print(src_path)
                 ThreadPoolExecutor_global.submit(convert_one,src_path)
 
-convert_all(r"atklip")
+# convert_all(r"atklip")
 
 # for folder in list_dirs:
 #     convert_all(folder)
 
-# convert_one(r"atklip\controls\tradingview\utbot.py")
+convert_one(r"atklip\controls\pandas_ta\utils\_numba.py")
 # convert_one(r"atklip\gui\top_bar\profile\btn_profile.py")
 # convert_one(r"atklip\controls\pandas_ta\trend\trendflex.py")
 # convert_one(r"atklip\controls\candle\smooth_candle.py")

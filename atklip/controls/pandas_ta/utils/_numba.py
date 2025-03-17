@@ -31,10 +31,10 @@ from numpy import (
     rad2deg,
     floor
 )
-from numba import njit
+# from numba import njit
 
 
-@njit(cache=True)
+
 def nb_pvi(np_close, np_volume, initial):
     result = zeros_like(np_close, dtype=float64)
     result[0] = initial
@@ -50,7 +50,7 @@ def nb_pvi(np_close, np_volume, initial):
 
 
 
-@njit(cache=True)
+
 def nb_atrts(x, ma, atr_, length, ma_length):
     m = x.size
     k = max(length, ma_length)
@@ -81,7 +81,7 @@ def nb_atrts(x, ma, atr_, length, ma_length):
     return result, long, short
 
 
-@njit(cache=True)
+
 def nb_rolling_hl(np_high, np_low, window_size):
     m = np_high.size
     idx = zeros(m)
@@ -113,7 +113,7 @@ def nb_rolling_hl(np_high, np_low, window_size):
     return idx[:extremums], swing[:extremums], value[:extremums]
 
 
-@njit(cache=True)
+
 def nb_find_zigzags(idx, swing, value, deviation):
     zz_idx = zeros_like(idx)
     zz_swing = zeros_like(swing)
@@ -172,7 +172,7 @@ def nb_find_zigzags(idx, swing, value, deviation):
     return zz_idx[:_n], zz_swing[:_n], zz_value[:_n], zz_dev[:_n]
 
 
-@njit(cache=True)
+
 def nb_map_zigzag(idx, swing, value, deviation, n):
     swing_map = zeros(n)
     value_map = zeros(n)
@@ -195,7 +195,7 @@ def nb_map_zigzag(idx, swing, value, deviation, n):
 
 # Ehler's Trendflex
 # http://traders.com/Documentation/FEEDbk_docs/2020/02/TradersTips.html
-@njit(cache=True)
+
 def nb_trendflex(x, n, k, alpha, pi, sqrt2):
     m, ratio = x.size, 2 * sqrt2 / k
     a = exp(-pi * ratio)
@@ -222,7 +222,7 @@ def nb_trendflex(x, n, k, alpha, pi, sqrt2):
     return result
 
 
-@njit(cache=True)
+
 def nb_ht_trendline(x):
     a, b, m = 0.0962, 0.5769, x.size
 
@@ -292,7 +292,7 @@ def nb_ht_trendline(x):
 
 
 # Linear Decay -https://tulipindicators.org/decay
-@njit(cache=True)
+
 def nb_linear_decay(x, n):
     m, rate = x.size, 1.0 / n
 
@@ -305,7 +305,7 @@ def nb_linear_decay(x, n):
     return result
 
 # Exponential Decay - https://tulipindicators.org/edecay
-@njit(cache=True)
+
 def nb_exponential_decay(x, n):
     m, rate = x.size, 1.0 - (1.0 / n)
 
@@ -317,7 +317,7 @@ def nb_exponential_decay(x, n):
 
     return result
 
-@njit(cache=True)
+
 def nb_alpha(low_atr, high_atr, momo_threshold):
     m = momo_threshold.size
     result = zeros_like(low_atr)
@@ -338,7 +338,7 @@ def nb_alpha(low_atr, high_atr, momo_threshold):
     return result
 
 
-@njit(cache=True)
+
 def nb_exhc(x, n, cap, lb, ub, show_all):
     x_diff = nb_idiff(x, n)
     neg_diff, pos_diff = x_diff < 0, x_diff > 0
@@ -364,7 +364,7 @@ def nb_exhc(x, n, cap, lb, ub, show_all):
     return dn, up
 
 
-@njit(cache=True)
+
 def np_reflex(x, n, k, alpha, pi, sqrt2):
     m, ratio = x.size, 2 * sqrt2 / k
     a = exp(-pi * ratio)
@@ -393,13 +393,13 @@ def np_reflex(x, n, k, alpha, pi, sqrt2):
     return result
 
 
-@njit(cache=True)
+
 def np_cdl_inside(high, low):
     hdiff = where(high - roll(high, 1) < 0, 1, 0)
     ldiff = where(low - roll(low, 1) > 0, 1, 0)
     return hdiff & ldiff
 
-@njit(cache=True)
+
 def np_ha(np_open, np_high, np_low, np_close):
     ha_close = 0.25 * (np_open + np_high + np_low + np_close)
     ha_open = empty_like(ha_close)
@@ -414,17 +414,17 @@ def np_ha(np_open, np_high, np_low, np_close):
 
     return ha_open, ha_high, ha_low, ha_close
 
-@njit(cache=True)
+
 def nb_roc(x, n, k):
     return k * nb_idiff(x, n) / nb_shift(x, n)
 
 
-@njit(cache=True)
+
 def nb_mom(x, n):
     return nb_idiff(x, n)
 
 
-@njit(cache=True)
+
 def fibonacci(n, weighted):
     n = n if n > 1 else 2
     sqrt5 = sqrt(5.0)
@@ -439,14 +439,14 @@ def fibonacci(n, weighted):
     return result
 
 
-@njit(cache=True)
+
 def nb_non_zero_range(x, y):
     diff = x - y
     if diff.any() == 0:
         diff += finfo(float64).eps
     return diff
 
-@njit(cache=True)
+
 def nb_wma(x, n, asc, prenan):
     m = x.size
     w = arange(1, n + 1, dtype=float64)
@@ -467,7 +467,7 @@ def nb_wma(x, n, asc, prenan):
 
 # John F. Ehler's Super Smoother Filter by Everget (3 poles), Tradingview
 # https://www.tradingview.com/script/VdJy0yBJ-Ehlers-Super-Smoother-Filter/
-@njit(cache=True)
+
 def nb_ssf3(x, n, pi, sqrt3):
     m, result = x.size, copy(x)
     a = exp(-pi / n)
@@ -489,7 +489,7 @@ def nb_ssf3(x, n, pi, sqrt3):
 
 # Ehler's Super Smoother Filter
 # http://traders.com/documentation/feedbk_docs/2014/01/traderstips.html
-@njit(cache=True)
+
 def nb_ssf(x, n, pi, sqrt2):
     m, ratio, result = x.size, sqrt2 / n, copy(x)
     a = exp(-pi * ratio)
@@ -506,7 +506,7 @@ def nb_ssf(x, n, pi, sqrt2):
 
 # John F. Ehler's Super Smoother Filter by Everget (2 poles), Tradingview
 # https://www.tradingview.com/script/VdJy0yBJ-Ehlers-Super-Smoother-Filter/
-@njit(cache=True)
+
 def nb_ssf_everget(x, n, pi, sqrt2):
     m, arg, result = x.size, pi * sqrt2 / n, copy(x)
     a = exp(-arg)
@@ -523,14 +523,14 @@ def nb_ssf_everget(x, n, pi, sqrt2):
 
 
 # Fast SMA Options: https://github.com/numba/numba/issues/4119
-@njit(cache=True)
+
 def nb_sma(x, n):
     result = convolve(ones(n) / n, x)[n - 1:1 - n]
     return nb_prepend(result, n - 1)
 
 
 
-@njit(cache=True)
+
 def pivot_camarilla(high, low, close):
     tp = (high + low + close) / 3
     hl_range = nb_non_zero_range(high, low)
@@ -548,7 +548,7 @@ def pivot_camarilla(high, low, close):
     return tp, s1, s2, s3, s4, r1, r2, r3, r4
 
 
-@njit(cache=True)
+
 def pivot_classic(high, low, close):
     tp = (high + low + close) / 3
     hl_range = nb_non_zero_range(high, low)
@@ -566,7 +566,7 @@ def pivot_classic(high, low, close):
     return tp, s1, s2, s3, s4, r1, r2, r3, r4
 
 
-@njit(cache=True)
+
 def pivot_demark(open_, high, low, close):
     if (open_ == close).all():
         tp = 0.25 * (high + low + 2 * close)
@@ -581,7 +581,7 @@ def pivot_demark(open_, high, low, close):
     return tp, s1, r1
 
 
-@njit(cache=True)
+
 def pivot_fibonacci(high, low, close):
     tp = (high + low + close) / 3
     hl_range = nb_non_zero_range(high, low)
@@ -597,7 +597,7 @@ def pivot_fibonacci(high, low, close):
     return tp, s1, s2, s3, r1, r2, r3
 
 
-@njit(cache=True)
+
 def pivot_traditional(high, low, close):
     tp = (high + low + close) / 3
     hl_range = nb_non_zero_range(high, low)
@@ -615,7 +615,7 @@ def pivot_traditional(high, low, close):
     return tp, s1, s2, s3, s4, r1, r2, r3, r4
 
 
-@njit(cache=True)
+
 def pivot_woodie(open_, high, low):
     tp = (2 * open_ + high + low) / 4
     hl_range = nb_non_zero_range(high, low)
@@ -636,7 +636,7 @@ def pivot_woodie(open_, high, low):
 
 # Ehler's Mother of Adaptive Moving Averages
 # http://traders.com/documentation/feedbk_docs/2014/01/traderstips.html
-@njit(cache=True)
+
 def nb_mama(x, fastlimit, slowlimit, prenan):
     a, b, m = 0.0962, 0.5769, x.size
     p_w, smp_w, smp_w_c = 0.2, 0.33, 0.67
@@ -719,7 +719,7 @@ def nb_mama(x, fastlimit, slowlimit, prenan):
     return mama, fama
 
 # Numba version of ffill()
-@njit(cache=True)
+
 def nb_ffill(x):
     mask = isnan(x)
     idx = zeros_like(mask, dtype=int64)
@@ -735,7 +735,7 @@ def nb_ffill(x):
 
 # Indexwise element difference by k indices of array x.
 # Similar to Pandas Series/DataFrame diff()
-@njit(cache=True)
+
 def nb_idiff(x, k):
     n, k = x.size, int(k)
     result = zeros_like(x, dtype=float64)
@@ -748,7 +748,7 @@ def nb_idiff(x, k):
 
 
 # Prepend n values, typically np.nan, to array x.
-@njit(cache=True)
+
 def nb_prenan(x, n, value = nan):
     if n > 0:
         x[:n - 1] = value
@@ -757,13 +757,13 @@ def nb_prenan(x, n, value = nan):
 
 
 # Prepend n values, typically np.nan, to array x.
-@njit(cache=True)
+
 def nb_prepend(x, n, value = nan):
     return append(array([value] * n), x)
 
 
 # Like Pandas Rolling Window. x.rolling(n).fn()
-@njit(cache=True)
+
 def nb_rolling(x, n, fn = None):
     if fn is None:
         return x
@@ -782,7 +782,7 @@ def nb_rolling(x, n, fn = None):
 # np shift
 # shift5 - preallocate empty array and assign slice by chrisaycock
 # https://stackoverflow.com/questions/30399534/shift-elements-in-a-numpy-array
-@njit(cache=True)
+
 def nb_shift(x, n, value = nan):
     result = empty_like(x)
     if n > 0:
@@ -797,7 +797,7 @@ def nb_shift(x, n, value = nan):
 
 
 # Uncategorized
-# @njit(cache=True)
+# 
 # def nb_roofing_filter(x: Array, n: Int, k: Int, pi: Float, sqrt2: Float):
 #     """Ehler's Roofing Filter (INCOMPLETE)
 #     http://traders.com/documentation/feedbk_docs/2014/01/traderstips.html"""
