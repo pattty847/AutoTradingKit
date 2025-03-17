@@ -12,8 +12,6 @@ from atklip.gui.views.fluentwindow import WindowBase
 from atklip.appmanager.setting.config import cfg
 import asyncio
 
-from atklip.appmanager.worker.threadpool import Heavy_ProcessPoolExecutor_global,num_threads
-
 class MainWindow(WindowBase):
     def __init__(self):
         self.isMicaEnabled = False
@@ -85,8 +83,6 @@ if __name__ == '__main__':
             winloop.install()
         except:
             asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-    for i in range(int(num_threads/2)):
-        Heavy_ProcessPoolExecutor_global.submit(start_worker)
     main()
     
     
