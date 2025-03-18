@@ -231,7 +231,7 @@ Zalo: 0343845888
 
 Telegram: +79921849116 or username : @Chelinh0308
 
-Phone number: +84343845888 (VN) or +79921849116 (RU)
+Phone number: +84343845888 (VietNamese phone number)
 
 Youtube Chanel: [AutoTradingKit](https://www.youtube.com/@AutoTradingKit)
 
