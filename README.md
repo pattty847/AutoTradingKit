@@ -21,10 +21,15 @@ This project is built for traders who want to  **enhance their strategy, reduce 
 
 Let’s build the future of algorithmic trading together! 🚀🔥
 
+This is a free software designed for traders. If you become wealthy thanks to it, that is our happiness.
+
+![1741981521836](images/README/1741981521836.png)
+
 ## ATK - Features
 
-|               **Features**               |                **All Plan**                |
-| :--------------------------------------------: | :----------------------------------------------: |
+
+|               **Features**               |                   **All Plan**                   |
+| :--------------------------------------: | :----------------------------------------------: |
 |           **Number of Charts**           |   Unlimited (depends on user's PC performance)   |
 |         **Number of Indicators**         |                    Unlimited                    |
 |                **Alerts**                |                Under Development                |
@@ -56,13 +61,13 @@ Let’s build the future of algorithmic trading together! 🚀🔥
 
 ## Connect with ATK team
 
-- Create an issue or request a new feature on this [Github repository](https://github.com/Khanhlinhdang/AutoTradingKit-Pro)
+- Create an issue or request a new feature on this [Github repository](https://github.com/Khanhlinhdang/AutoTradingKit)
 - If you want to update some personal feature, please sent an email to khanhlinhdangthditrach@gmail.com
 
-## Many indicators, sourced from famous libraries such as [pandas-ta](https://github.com/twopirllc/pandas-ta/tree/main), [ta-lib](), and even indicators converted from TradingView,MT4,MT5
+## Many indicators, sourced from famous libraries such as [pandas-ta](https://github.com/twopirllc/pandas-ta/tree/main), and even indicators converted from TradingView,MT4,MT5
 
- Currently provides below set of indicators. If your favourite indicator
- is missing, then create a ticket via GitHub Issues and there is a good
+Currently provides below set of indicators. If your favourite indicator
+is missing, then create a ticket via GitHub Issues and there is a good
 chance that it will be included in the future version of ATK.
 
 In the future, we will update more indicators, which are populars and famous on tradingview, MT4, MT5
@@ -114,24 +119,26 @@ In the future, we will update more indicators, which are populars and famous on 
 
 ## Installation
 
-clone from: https://github.com/Khanhlinhdang/AutoTradingKit-Pro
+clone from: https://github.com/Khanhlinhdang/AutoTradingKit.git
 
-create python evironment: python -m venv .venv
+create python evironment: python -m venv venv
 
-activate venv: .venv/scripts/activate
-
-- on Window:  Use source in main brand python 3.12
-- on MacOS:  Use source in macos brand python 3.12
-- on Linux: Use source in linux brand python 3.12 
+activate venv: venv/scripts/activate
 
 install libs: pip install -r requirements.txt
 
+- Have to install pdf2image if your os system is MacOS or Linux/Ubuntu: https://pypi.org/project/pdf2image/
+- on MacOS: install : Brew https://brew.sh/ with cmd:
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  ,then install poppler: brew install poppler
+- on Linux: conda install -c conda-forge poppler ,then install poppler:  pip install pdf2image
+
 run ATK.py to start app: python ATK.py or python3 ATK.py
 
-## Build application
+## Build exe
 
-- Convert py to pyd/so using cython to improve perfomance
-- Use pyinstaller to build exe on window, so on linux/macos
+- Convert py to pyd using cython
+- Use pyinstaller to build
 
 ## Roadmap 2025
 
@@ -156,9 +163,11 @@ This software is open source, and its source code is publicly available for revi
 
 ### License Terms:
 
-1. **Public Source Code** : The source code is not openly currently.
-2. **Usage Requires Permission** : You can use this project everytime.
+1. **Public Source Code** : The source code is openly available but restricted in usage.
+2. **Usage Requires Permission** : You **must** obtain written consent from the author before using this software.
 3. **Paid License or Sponsorship**: If you get rich, please say thank to us by:
+
+* Purchase a license from the author, or
 * Provide sponsorship or financial support as agreed upon with the author.
 
 1. **No Redistribution** : You are not allowed to share, resell, or distribute this code without explicit permission.
@@ -201,7 +210,8 @@ With gratitude,
 mr.BigD - Creator/Developer of ATK
 
 1. Bank account: MB Bank: 8699991689999 | Pham Cong Che | (Viet Nam Bank)
-2. Paypal:
+2. [Github Sponsor](https://github.com/sponsors/Khanhlinhdang)
+3. Paypal:
 
 - [Paypal sponsor](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=XTHUBP3TB5H7J) (khanhlinhdangthditrach@gmail.com) (any value)
 - [Sponsor via paypal](https://www.paypal.com/ncp/payment/363TPLRF4NAF4)  20$
