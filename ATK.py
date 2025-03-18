@@ -66,8 +66,6 @@ except ImportError:
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
-def start_worker():
-        pass
 if __name__ == '__main__':
     multiprocessing.freeze_support()
     platform = sys.platform 
