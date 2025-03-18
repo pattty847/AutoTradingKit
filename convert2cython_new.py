@@ -109,7 +109,7 @@ def convert_all(folder):
             
             if src_path.endswith(".py"):
                 print(src_path)
-                #ThreadPoolExecutor_global.submit(convert_one,src_path)
+                ThreadPoolExecutor_global.submit(convert_one,src_path)
 
 # convert_all(r"atklip")
 
