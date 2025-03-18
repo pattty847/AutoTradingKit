@@ -1,3 +1,0 @@
-[pack]
-pyi_options = json::["--hidden-import", "multiprocessing", "--name", "ATK"]
-
