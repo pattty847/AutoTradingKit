@@ -157,16 +157,17 @@ This software is open source, and its source code is publicly available for revi
 
 ### License Terms:
 
-1. **Public Source Code** : The source code is not openly currently.
-2. **Usage Requires Permission** : You can use this project everytime.
+1. **Public Source Code** : The source code is openly available but restricted in usage.
+2. **Usage Requires Permission** : You **must** obtain written consent from the author before using this software.
 3. **Paid License or Sponsorship**: If you get rich, please say thank to us by:
 
+* Purchase a license from the author, or
 * Provide sponsorship or financial support as agreed upon with the author.
 
 1. **No Redistribution** : You are not allowed to share, resell, or distribute this code without explicit permission.
 2. **No Unauthorized Modifications** : Modifying or creating derivative works from this software without approval is prohibited.
 3. **No Warranty** : This software is provided "as is" without any warranties or guarantees.
-4. **For any question**, please contact: **khanhlinhdangthditrach@gmail.com**
+4. **For any question**, please contact: **khanhlinhdangthditrach@gmail.com
 
 ## Project status
 
