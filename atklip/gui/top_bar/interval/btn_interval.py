@@ -9,7 +9,7 @@ from atklip.gui.components import _SplitDropButton,_PushButton
 from atklip.gui.qfluentwidgets.common.icon import FluentIcon as FIF
 from atklip.gui.qfluentwidgets.common import isDarkTheme
 
-from atklip.gui import qconfig, Config
+from atklip.appmanager import qconfig, Config
 
 from .interval_menu import INTERVALS
 
@@ -241,7 +241,6 @@ class IntervalButton(SplitWidgetBase):
                 if button.title().lower() == title.lower():
                     if button not in self.favorites:
                         self.favorites.append(button)
-                        # self.cfg.intervalFavorites
                         button.show()
                     else:
                         if self.current_active != None:

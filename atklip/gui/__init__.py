@@ -1,5 +1,3 @@
-from .config import qconfig, Config
-
 from atklip.gui.qfluentwidgets import *
 from atklip.gui.components import *
 

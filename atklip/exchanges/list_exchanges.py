@@ -23,7 +23,7 @@ exchanges = [
     'cex',
     'coinbase',
     'coinbaseinternational',
-    'coinbasepro',
+    'coinbaseadvanced',
     'coincheck',
     'coinex',
     'coinone',

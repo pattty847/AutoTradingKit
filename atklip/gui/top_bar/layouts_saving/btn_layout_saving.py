@@ -5,7 +5,7 @@ from PySide6.QtWidgets import QWidget
 from atklip.gui.components.scroll_interface import ScrollInterface
 from atklip.gui.qfluentwidgets import *
 from atklip.gui.qfluentwidgets.common.icon import FluentIcon as FIF
-from atklip.gui import qconfig, Config
+from atklip.appmanager import qconfig, Config
 
 class _SplitDropButton(SplitDropButton):
     def __init__(self, parent=None):

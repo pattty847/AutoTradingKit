@@ -363,7 +363,7 @@ class BaseMenu(TableView):
         
         dict_data, self.dict_favorites = self.get_symbols(self.exchange_id)
         echange_icon_path,exchange_name,_mode = get_exchange_icon(self.exchange_id)
-        
+        # print(dict_data)
         if self.exchange_id != "favorite":
             if dict_data != []:
                 for index,symbol in enumerate(dict_data):
@@ -442,8 +442,12 @@ class BaseMenu(TableView):
     def get_symbols(self,exchange_id="binance"):
         dict_data = AppConfig.get_config_value(f"topbar.symbol.{exchange_id}")
         dict_favorites = AppConfig.get_config_value(f"topbar.symbol.favorite")
+
+        # print("dict_data",dict_data)
+
         if exchange_id != "favorite":
             if not dict_data:
+                dict_data = []
                 crypto_ex = CryptoExchange()
                 exchange = crypto_ex.setupEchange(exchange_name=exchange_id)
                 try:
@@ -471,7 +475,8 @@ class BaseMenu(TableView):
                         AppConfig.sig_set_single_data.emit((f"topbar.symbol.{exchange_id}",dict_data))
                         
                 except Exception as e:
-                    traceback.print_exception(e)
+                    print("Error",e)
+                    # traceback.print_exception(e)
                 crypto_ex.deleteLater()
         return dict_data, dict_favorites
     

@@ -1,13 +1,10 @@
-import traceback,asyncio,time
+import asyncio,time
 from typing import Dict
-from PySide6 import QtCore
-from PySide6.QtCore import Qt, QEvent, QCoreApplication, QKeyCombination, QThreadPool,QObject
-from PySide6.QtGui import QKeyEvent,QImage
-from atklip.app_utils.syncer import sync
+from PySide6.QtCore import Qt, QEvent, QKeyCombination
+from PySide6.QtGui import QKeyEvent
 from atklip.graphics.chart_component.base_items import CandleStick
 
 from atklip.graphics.chart_component import ViewPlotWidget
-from atklip.exchanges import CryptoExchange,CryptoExchange_WS
 from ccxt.base.errors import *
 # from ccxt.base.errors import BadSymbol
 from atklip.controls import IndicatorType,OHLCV
@@ -15,7 +12,6 @@ from atklip.controls.candle import HEIKINASHI, SMOOTH_CANDLE,JAPAN_CANDLE, N_SMO
 
 from atklip.graphics.chart_component.draw_tools import *
 
-from .unique_object_id import ObjManager
 
 from atklip.app_utils import *
 
@@ -548,6 +544,7 @@ class Chart(ViewPlotWidget):
                 break
             if client_socket != None and ws_socket != None:
                 try:
+                    # print(list(ws_socket.has.keys()))
                     if "watchOHLCV" in list(ws_socket.has.keys()):
                         if _ohlcv == []:
                             _ohlcv = client_socket.fetch_ohlcv(symbol,interval,limit=2)
@@ -567,6 +564,7 @@ class Chart(ViewPlotWidget):
                                 # _ohlcv = _ohlcv[-2:]
                     elif "fetchOHLCV" in list(client_socket.has.keys()):
                         _ohlcv = client_socket.fetch_ohlcv(symbol,interval,limit=2)
+                        await asyncio.sleep(1)
                     else:
                         await asyncio.sleep(0.3)
                         continue

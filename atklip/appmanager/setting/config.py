@@ -1,10 +1,15 @@
+# coding:utf-8
+import sys
+from enum import Enum
 import json
 import threading
-from PySide6.QtCore import QCoreApplication,Signal,QObject,Qt,Slot
+from atklip.gui import (qconfig, QConfig, ConfigItem, OptionsConfigItem, BoolValidator,
+                            OptionsValidator, RangeConfigItem, RangeValidator,
+                            FolderListValidator, Theme, FolderValidator, ConfigSerializer)
+from PySide6.QtCore import QCoreApplication,Signal,QObject,Qt,Slot,QLocale
 from atklip.gui.qfluentwidgets.common.icon import *
-# Gets or creates a logger
 
-config_path = get_real_path("atklip/appdata")
+config_path = get_real_path("atklip/appmanager/setting")
 
 class ConfigManager(QObject):
     sig_set_single_data = Signal(tuple)
@@ -110,21 +115,9 @@ class ConfigManager(QObject):
 AppConfig = ConfigManager()
 
 
-# coding:utf-8
-import sys
-from enum import Enum
-
-from PySide6.QtCore import QLocale
-from atklip.gui import (qconfig, QConfig, ConfigItem, OptionsConfigItem, BoolValidator,
-                            OptionsValidator, RangeConfigItem, RangeValidator,
-                            FolderListValidator, Theme, FolderValidator, ConfigSerializer)
-
-
 class Language(Enum):
     """ Language enumeration """
-
-    CHINESE_SIMPLIFIED = QLocale(QLocale.Chinese, QLocale.China)
-    CHINESE_TRADITIONAL = QLocale(QLocale.Chinese, QLocale.HongKong)
+    VIETNAMESE = QLocale(QLocale.Vietnamese, QLocale.Vietnam)
     ENGLISH = QLocale(QLocale.English)
     AUTO = QLocale()
 
@@ -145,39 +138,39 @@ def isWin11():
 
 class Config(QConfig):
     """ Config of application """
+    candleCurrent = ConfigItem(
+        "Candle", "current", "japanese")
+    
+    candleFavorites= ConfigItem(
+        "Candle", "favorites", [])
 
-    # folders
-    musicFolders = ConfigItem(
-        "Folders", "LocalMusic", [], FolderListValidator())
-    downloadFolder = ConfigItem(
-        "Folders", "Download", "app/download", FolderValidator())
-
+    intervalCurrent = ConfigItem(
+        "Interval", "current", "1m")
+    
+    intervalFavorites= ConfigItem(
+        "Interval", "favorites", [])
+    
+    drawFavorites= ConfigItem(
+        "Draw", "favorites", [])
     # main window
     micaEnabled = ConfigItem("MainWindow", "MicaEnabled", isWin11(), BoolValidator())
     dpiScale = OptionsConfigItem(
         "MainWindow", "DpiScale", "Auto", OptionsValidator([1, 1.25, 1.5, 1.75, 2, "Auto"]), restart=True)
     language = OptionsConfigItem(
         "MainWindow", "Language", Language.AUTO, OptionsValidator(Language), LanguageSerializer(), restart=True)
-
     # Material
     blurRadius  = RangeConfigItem("Material", "AcrylicBlurRadius", 15, RangeValidator(0, 40))
-
     # software update
     checkUpdateAtStartUp = ConfigItem("Update", "CheckUpdateAtStartUp", True, BoolValidator())
 
 
-YEAR = 2023
-AUTHOR = "zhiyiYo"
-
-HELP_URL = "https://qfluentwidgets.com"
-REPO_URL = "https://github.com/zhiyiYo/PyQt-Fluent-Widgets"
-EXAMPLE_URL = "https://github.com/zhiyiYo/PyQt-Fluent-Widgets/tree/PySide6/examples"
-FEEDBACK_URL = "https://github.com/zhiyiYo/PyQt-Fluent-Widgets/issues"
-RELEASE_URL = "https://github.com/zhiyiYo/PyQt-Fluent-Widgets/releases/latest"
-ZH_SUPPORT_URL = "https://qfluentwidgets.com/zh/price/"
-EN_SUPPORT_URL = "https://qfluentwidgets.com/price/"
-
-
+YEAR = 2025
+AUTHOR = "ATK-Team"
+ORGANIZATION = "ATK.COM"
+APP_NAME = "Auto Trading Kit"
+APP_VERSION = "1.0.0"
+APP_DISPLAY_NAME = f"ATK (v{APP_VERSION})"
+ICON_PATH = get_real_path("atklip/appdata/appico.ico")
 cfg = Config()
-cfg.themeMode.value = Theme.AUTO
-qconfig.load('app/config/config.json', cfg)
+cfg.themeMode.value = Theme.DARK
+qconfig.load('atklip/appmanager/setting/config.json', cfg)

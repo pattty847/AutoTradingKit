@@ -1,1 +1,1 @@
-from .config import AppConfig
+from .config import AppConfig,Config,qconfig

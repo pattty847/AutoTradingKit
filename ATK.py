@@ -4,7 +4,6 @@ import os
 from PySide6.QtCore import QCoreApplication
 from PySide6.QtGui import QCloseEvent,QIcon
 from PySide6.QtWidgets import QApplication
-
 from atklip.gui.qfluentwidgets.common.style_sheet import setTheme,Theme
 from atklip.gui.qfluentwidgets.common.icon import *
 from atklip.gui.qfluentwidgets.components.dialog_box import MessageBox
@@ -35,12 +34,10 @@ def main():
     ORGANIZATION_NAME = "ATK-Team"
     ORGANIZATION_DOMAIN = "ATK.COM"
     ICON_PATH = os.path.join("atklip", "appdata", "appico.ico")
-
     dpi_scale = cfg.get(cfg.dpiScale)
     if dpi_scale != "Auto":
         os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "0"
         os.environ["QT_SCALE_FACTOR"] = str(dpi_scale)
-    
     setTheme(Theme.DARK, True, True)
     app = QApplication(sys.argv + ['--no-sandbox'])
     app.setAttribute(Qt.AA_DontCreateNativeWidgetSiblings)
@@ -56,12 +53,6 @@ def main():
     w.setWindowIcon(icon)
     sys.exit(app.exec())
 
-try: 
-    from ctypes import windll # Only exists on Windows.
-    myappid = "atkteam.atk.subproduct.version" 
-    windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
-except ImportError:
-    pass
 
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -76,6 +67,12 @@ if __name__ == '__main__':
         except ImportError:
             pass
     else:
+        try: 
+            from ctypes import windll # Only exists on Windows.
+            myappid = "atkteam.atk.subproduct.version" 
+            windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+        except ImportError:
+            pass
         try:
             import winloop 
             winloop.install()

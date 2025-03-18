@@ -60,7 +60,7 @@ class exchanges:
     FAVORITE = "favorite"
     
     COINBASE_EXCHANGE = "coinbaseexchange"
-    COINBASE = "coinbase"
+    COINBASE = "coinbaseadvanced"
 
     OKEX = "okx" 
 
