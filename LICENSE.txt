@@ -2,12 +2,12 @@ Automated Trading Kit - ATK License
 Effective Date: 1.1.2025
 Copyright (c) 2025 @mr.BigD
 
-This software is open source, and its source code is publicly available for review and learning purposes  **only** . However, any form of usage, including commercial, personal, or academic purposes, requires explicit written permission from the author.
+This software is open source, and its source code is publicly available for review and learning purposes  "only" . However, any form of usage, including commercial, personal, or academic purposes, requires explicit written permission from the author.
 
-### License Terms:
+License Terms:
 
-1. **Public Source Code** : This is an open-source project, and you are completely free to use it for review, learning, research, and personal open-source projects.
-2. **Usage Requires Permission** : You are not allowed to sell or use this code in your commercial project without the author's consent.
-3. **Sponsorship**: Provide sponsorship or financial support as agreed upon with the author.
-4. **No Warranty** : This software is provided "as is" without any warranties or guarantees.
-5. **For any question**, please contact via e-mail:  khanhlinhdangthditrach@gmail.com
+1. Public Source Code: This is an open-source project, and you are completely free to use it for review, learning, research, and personal open-source projects.
+2. Usage Requires Permission: You are not allowed to sell or use this code in your commercial project without the author's consent.
+3. Sponsorship: Provide sponsorship or financial support as agreed upon with the author.
+4. No Warranty: This software is provided "as is" without any warranties or guarantees.
+5. For any question, please contact via e-mail:  khanhlinhdangthditrach@gmail.com
