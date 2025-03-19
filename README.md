@@ -31,13 +31,13 @@ Let’s build the future of algorithmic trading together! 🚀🔥
 |                **Alerts**                |                Under Development                |
 |           **Historical Data**           |                    Unlimited                    |
 |             **Data Export**             |                Under Development                |
-|           **Customer Support**           |                       24/7                       |
+|           **Customer Support**           |                       8/5                       |
 |            **Real-time Data**            |                       Yes                       |
 |              **Auto Trade**              | Under Development (using API key and Secret key) |
 |             **Backtesting**             |                       Yes                       |
 |   **Basic and Advanced Drawing Tools**   |                       Yes                       |
 |         **Support multiple tab**         |                       Yes                       |
-|          **Support timeframe**          |                  Yes (1m to 3D)                  |
+|          **Support timeframe**          |                  Yes (1m to 1M)                  |
 | **buy/sell market, limit, trallingstop** |                Under Development                |
 |                **Crypto**                |                       Yes                       |
 |                **Forex**                |                Under Development                |
@@ -60,7 +60,7 @@ Let’s build the future of algorithmic trading together! 🚀🔥
 - Create an issue or request a new feature on this [Github repository](https://github.com/Khanhlinhdang/AutoTradingKit)
 - If you want to update some personal feature, please sent an email to khanhlinhdangthditrach@gmail.com
 
-## Many indicators, sourced from famous libraries such as [pandas-ta](https://github.com/twopirllc/pandas-ta/tree/main), [ta-lib](), and even indicators converted from TradingView,MT4,MT5
+## Many indicators, sourced from famous libraries such as [pandas-ta](https://github.com/twopirllc/pandas-ta/tree/main), and even indicators converted from TradingView,MT4,MT5
 
 Currently provides below set of indicators. If your favourite indicator
 is missing, then create a ticket via GitHub Issues and there is a good
