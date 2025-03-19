@@ -71,8 +71,12 @@ class WindowBase(BackgroundAnimationWidget, FramelessMainWindow):
         # self.setMinimumWidth(w//2)
         # self.setMinimumHeight(h//2)
         # self.resize(w//2, h//2)
-        self.move(w//2 - 500, h//8)
-        self.resize(1000 , 3*(h//4) )
+        if w > 1000:
+            self.move(w//2 - 500, h//8)
+            self.resize(1000 , 4*(h//5) )
+        else:
+            self.move(w//2 - 400, h//8)
+            self.resize(800, 4*(h//5) )
             
 
     def load_pre_config(self):
