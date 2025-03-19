@@ -1,8 +1,30 @@
-Để tạo một sub indicator mới cho ATK từ thư viện pandas_ta cần phải thực hiện các bước sau:
-thứ 1:trong folder "atklip\controls" trong mỗi folder có tên tương ứng với các folder trong "atklip\controls\pandas_ta" tạo một file .py với tên giống với tên của file thuộc thư viện pandas_ta,
-ví dụ: file "atklip\controls\momentum\cci.py" là file code của chỉ báo cci tương ứng trong "atklip\controls\pandas_ta\momentum\cci.py",
-thứ 2: Trong file tạo ra hãy generate code có các hàm tương tự như code của "atklip\controls\momentum\cci.py", "atklip\controls\momentum\macd.py",
-"atklip\controls\momentum\mom.py", "atklip\controls\momentum\roc.py"... tuy nhiên hãy import hàm tính chỉ báo tương ứng từ thư viện pandas_ta trong folder "atklip\controls\pandas_ta".
-thứ 3: hãy chú ý hàm calculate để xác định tên collume cho chính xác.
-thứ 4:  trong folder "atklip\graphics\chart_component\indicators\sub_indicators" cũng tạo file có tên giống với tên indicator đang generate code, và có cấu trúc code giống với các file đã tồn tại ở đó, tuy nhiên hãy chỉnh sửa sao cho phù hợp với indicator mới.
-Hãy áp dụng các tiêu chí trên để tạo các file "atklip\controls\momentum\ao.py", ứng với file "atklip\controls\pandas_ta\momentum\ao.py", và tạo file "atklip\graphics\chart_component\indicators\sub_indicators\ao.py"
+Để tạo một sub indicator mới cho ATK từ thư viện pandas_ta cần phải tuân thủ các yêu cầu sau:
+Hãy nghiên cứu thật kỹ code trong repository "https://github.com/Khanhlinhdang/AutoTradingKit" và các yêu cầu dưới đây
+thứ 1: trong folder "atklip\controls" trong mỗi folder có tên tương ứng với các folder trong "atklip\controls\pandas_ta" tạo một file .py với tên giống với tên của file thuộc thư viện pandas_ta,
+ví dụ: file "atklip\controls\momentum\cci.py" là file code của chỉ báo cci tương ứng trong "atklip\controls\pandas_ta\momentum\cci.py" tuy nhiên hãy import hàm tính chỉ báo có tên tương ứng từ thư viện pandas_ta trong folder "atklip\controls\pandas_ta".
+thứ 3: hãy nghiên cứu kỹ hàm calculate để xác định tên collume và tính toán cho chính xác tương ứng với tên của mỗi cột trong kết quả trả về sau khi tính toán chỉ báo.
+thứ 4:  trong folder "atklip\graphics\chart_component\indicators\sub_indicators",
+ cũng tạo file có tên giống với tên indicator đang generate code, 
+ và có cấu trúc code giống với các file "", 
+ Hãy tạo code thật giống với cấu trúc code file mẫu,tuy nhiên hãy chỉnh sửa code sao cho phù hợp với indicator mới, chú ý đến atribute self.has hãy convert thật đúng dựa vào thông tin của indicator mới.
+thứ 5: Hãy thêm class Model cho indicator mới trong file "atklip\controls\models.py"
+thứ 5: trong file "atklip\gui\top_bar\indicator\indicator_menu.py" hãy thêm trường thông tin IndicatorType của indicator tương ứng mới vào biến dict_indicators
+thứ 6: Nếu trong file "atklip\controls\ma_type.py" chưa có thông tin IndicatorType của indicator thì hãy thêm thông tin IndicatorType của indicator vào class IndicatorType trong "atklip\controls\ma_type.py"
+thứ 7: Hãy update indicator mới vào "sub_panel_indicator" bằng cách thêm vào hàm thông tin của indicator mới "setup_indicator" trong file "atklip\graphics\chart_component\sub_panel_indicator.py"
+Hãy áp dụng các tiêu yêu cầu trên để tạo các file "atklip\controls\momentum\bop.py", ứng với file "atklip\controls\pandas_ta\momentum\bop.py", và tạo file "atklip\graphics\chart_component\indicators\sub_indicators\bop.py"
+
+
+
+
+english version: 
+
+To create a new sub-indicator for ATK using the pandas_ta library, the following requirements must be met:
+1. In the "atklip\controls" folder, within each subfolder corresponding to the folders in "atklip\controls\pandas_ta", create a .py file with the same name as the file in the pandas_ta library.  
+   For example: The file "atklip\controls\momentum\cci.py" is the code file for the CCI indicator, corresponding to "atklip\controls\pandas_ta\momentum\cci.py". However, ensure to import the corresponding indicator calculation function from the pandas_ta library located in the "atklip\controls\pandas_ta" folder.
+2. Thoroughly study the `calculate` function to determine the column names and ensure accurate calculations corresponding to the names of each column in the returned result after calculating the indicator.
+3. In the folder "atklip\graphics\chart_component\indicators\sub_indicators", also create a file with the same name as the indicator being generated. The code structure should be similar to the existing files. Ensure the code closely follows the structure of the template file, but modify it to suit the new indicator. Pay special attention to the `self.has` attribute and ensure it is correctly converted based on the new indicator's information.
+4. Add a new Model class for the new indicator in the file "atklip\controls\models.py".
+5. In the file "atklip\gui\top_bar\indicator\indicator_menu.py", add the corresponding new indicator's `IndicatorType` information to the `dict_indicators` variable.
+6. If the `IndicatorType` information for the indicator is not yet available in the file "atklip\controls\ma_type.py", add the `IndicatorType` information for the new indicator to the `IndicatorType` class in "atklip\controls\ma_type.py".
+7. Update the new indicator in the "sub_panel_indicator" by adding the new indicator's information to the `setup_indicator` function in the file "atklip\graphics\chart_component\sub_panel_indicator.py".
+Apply the above requirements to create the files "atklip\controls\momentum\bop.py", corresponding to "atklip\controls\pandas_ta\momentum\ao.py", and create the file "atklip\graphics\chart_component\indicators\sub_indicators\bop.py".

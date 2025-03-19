@@ -121,6 +121,25 @@ chance that it will be included in the future version of ATK.
 * Accumulation/Distribution (ADL)
 * .....
 
+### Easy to add a new indicator to ATK, follow the steps below, or simply input  the prompt provided below into ChatGPT/GitHub Copilot,
+
+As the code  structure and principles for each indicator in ATK are the same.to add new indicator to ATK, Do these step above, because structure of the code of any indicator is the same
+
+For excample to implement indicator "bop" to ATK.
+
+To create a new sub-indicator for ATK using the pandas_ta library, the following requirements must be met:
+
+1. In the "atklip\controls" folder, within each subfolder corresponding to the folders in "atklip\controls\pandas_ta", create a .py file with the same name as the file in the pandas_ta library.
+   For example: The file "atklip\controls\momentum\cci.py" is the code file for the CCI indicator, corresponding to "atklip\controls\pandas_ta\momentum\cci.py". However, ensure to import the corresponding indicator calculation function from the pandas_ta library located in the "atklip\controls\pandas_ta" folder.
+2. Thoroughly study the `calculate` function to determine the column names and ensure accurate calculations corresponding to the names of each column in the returned result after calculating the indicator.
+3. In the folder "atklip\graphics\chart_component\indicators\sub_indicators", also create a file with the same name as the indicator being generated. The code structure should be similar to the existing files. Ensure the code closely follows the structure of the template file, but modify it to suit the new indicator. Pay special attention to the `self.has` attribute and ensure it is correctly converted based on the new indicator's information.
+4. Add a new Model class for the new indicator in the file "atklip\controls\models.py".
+5. In the file "atklip\gui\top_bar\indicator\indicator_menu.py", add the corresponding new indicator's `IndicatorType` information to the `dict_indicators` variable.
+6. If the `IndicatorType` information for the indicator is not yet available in the file "atklip\controls\ma_type.py", add the `IndicatorType` information for the new indicator to the `IndicatorType` class in "atklip\controls\ma_type.py".
+7. Update the new indicator in the "sub_panel_indicator" by adding the new indicator's information to the `setup_indicator` function in the file "atklip\graphics\chart_component\sub_panel_indicator.py".
+
+Apply the above requirements to create the files "atklip\controls\momentum\bop.py", corresponding to "atklip\controls\pandas_ta\momentum\bop.py", and create the file "atklip\graphics\chart_component\indicators\sub_indicators\bop.py".
+
 ## Installation
 
 Prerequirement: python 3.12 , Window 10/11 64bit/MacOS/Linux
@@ -237,8 +256,8 @@ Phone number: +84343845888 (VietNamese phone number)
 
 Youtube Chanel: [AutoTradingKit](https://www.youtube.com/@AutoTradingKit)
 
-Facebook: [Pham Cong Che](https://www.facebook.com/che.linh.9096/)
+Author's Facebook: [Pham Cong Che](https://www.facebook.com/che.linh.9096/)
 
-Discord: [AutoTradingKit](https://discord.gg/UNDh5MyR)
+Discord: [AutoTradingKit](https://discord.com/channels/1342693850350751774/)
 
 ATK Facebook Group: [Auto Trading Kit (ATK) - Facebook group](https://www.facebook.com/groups/748831980507126 "Facebook group of ATK")
