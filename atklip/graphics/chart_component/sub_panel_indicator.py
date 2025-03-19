@@ -174,6 +174,11 @@ class ViewSubPanel(PlotWidget):
             self.indicator = BaSicSqeeze(self.get_last_pos_worker,self.Chart,self)
         elif _indicator_type == IndicatorType.VOLUMEWITHMA:
             self.indicator = VolumeWithMA(self.get_last_pos_worker,self.Chart,self)
+        elif _indicator_type == IndicatorType.Aroon:
+            self.indicator = BasicAroon(self.get_last_pos_worker,self.Chart,self)
+        
+        elif _indicator_type == IndicatorType.ADX:
+            self.indicator = BasicADX(self.get_last_pos_worker,self.Chart,self)
         
         
         

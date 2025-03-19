@@ -16,7 +16,7 @@ from atklip.controls.pandas_ta.utils import (
 
 def aroon(
     high: Series, low: Series,
-    length: Int = None, scalar: IntFloat = None, talib: bool = None,
+    length: Int = None, scalar: IntFloat = None, 
     offset: Int = None, **kwargs: DictLike
 ) -> DataFrame:
     """Aroon & Aroon Oscillator (AROON)
@@ -51,7 +51,6 @@ def aroon(
         return
 
     scalar = v_scalar(scalar, 100)
-    mode_tal = v_talib(talib)
     offset = v_offset(offset)
 
     # Calculate

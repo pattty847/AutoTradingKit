@@ -66,52 +66,60 @@ Currently provides below set of indicators. If your favourite indicator
 is missing, then create a ticket via GitHub Issues and there is a good
 chance that it will be included in the future version of ATK.
 
-In the future, we will update more indicators, which are populars and famous on tradingview, MT4, MT5
+### Current indicators are supported
 
-* Accumulation/Distribution (ADL)
 * Aroon
 * Average Directional Index (ADX)
 * Average True Range (ATR)
-* Awesome Oscillator (AO)
-* Balance of Power (BOP)
 * Bollinger Bands (BB)
-* Chaikin Oscillator
-* Chande Kroll Stop
-* Choppiness Index (CHOP)
-* Coppock Curve
 * Commodity Channel Index (CCI)
 * Donchian Channel (DC)
-* Detrended Price Oscillator (DPO)
-* Ease of Movement (EMV)
-* Force Index
-* IBS
-* Ichimoku Kinko Hyo
 * Keltner Channel (KC)
-* Klinger Volume Oscillator (KVO)
-* Know Sure Thing (KST)
-* Mass Index
-* McGinley Dynamic
-* Mean Deviation
 * Moving Average (ALMA, DEMA, EMA, HMA, KAMA, SMA, SMMA, T3, TEMA, VWMA, WMA, ZLEMA)
 * Moving Average Convergence Divergence (MACD)
-* On-balance Volume (OBV), Smoothed On-balance Volume (SOBV)
-* Parabolic SAR
-* Pivots High/Low
 * Rate of Change (ROC)
 * Relative strength index (RSI)
 * Schaff Trend Cycle (STC)
-* SFX TOR
-* Standard Deviation
 * Stochastic Oscillator
 * Stochastic RSI
 * SuperTrend
 * TRIX
-* TTM Squeeze
 * True Strength Index (TSI)
 * Ultimate Oscillator (UO)
 * Vortex Indicator (VTX)
 * Volume Weighted Average Price (VWAP)
+* Smart Money Concept (SMC)
+* UTBOT
 * ......
+
+### Next indicators will be added
+
+- TTM Squeeze
+- Standard Deviation
+- SFX TOR
+- Pivots High/Low
+- Parabolic SAR
+- On-balance Volume (OBV)
+- Smoothed On-balance Volume (SOBV)
+- Mean Deviation
+- McGinley Dynamic
+- Mass Index
+- Know Sure Thing (KST)
+- Klinger Volume Oscillator (KVO)
+- Ichimoku Kinko Hyo
+- Force Index
+- Detrended Price Oscillator (DPO)
+
+* IBS
+* Ease of Movement (EMV)
+* Chaikin Oscillator
+* Chande Kroll Stop
+* Choppiness Index (CHOP)
+* Coppock Curve
+* Awesome Oscillator (AO)
+* Balance of Power (BOP)
+* Accumulation/Distribution (ADL)
+* .....
 
 ## Installation
 

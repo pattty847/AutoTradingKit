@@ -224,6 +224,21 @@ class RGVIModel(IndicatorBase):
     length :int 
     swma_length :int 
 
+@dataclass          
+class AroonModel(IndicatorBase):
+    length :int 
+    scalar :int 
+
+@dataclass
+class ADXModel(IndicatorBase):
+    length:int 
+    lensig:int 
+    adxr_length:int 
+    scalar:float 
+    tvmode:bool 
+    mamode:str 
+
+
 @dataclass
 class UOModel(IndicatorBase):
     fast_period :int

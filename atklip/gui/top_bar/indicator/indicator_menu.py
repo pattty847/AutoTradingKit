@@ -89,7 +89,14 @@ dict_indicators = {
                         # IndicatorType.T3,
                         ],
     
-    "Sub Indicators":[IndicatorType.VOLUME,
+    "Sub Indicators":[
+                    # IndicatorType.ATR,
+                    IndicatorType.Aroon,
+                    # IndicatorType.AO,
+                    IndicatorType.ADX,
+                    # IndicatorType.AccuDist,
+                    
+                    IndicatorType.VOLUME,
                     IndicatorType.MACD,
                     IndicatorType.RSI,
                     IndicatorType.MOM,
@@ -124,11 +131,7 @@ dict_indicators = {
                     # IndicatorType.ChaikinOsc,
                     IndicatorType.CCI,
                     # IndicatorType.BOP,
-                    # IndicatorType.ATR,
-                    # IndicatorType.Aroon,
-                    # IndicatorType.AO,
-                    # IndicatorType.ADX,
-                    # IndicatorType.AccuDist,
+                    
                     ],
     
     "Paterns": [

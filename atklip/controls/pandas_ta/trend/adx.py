@@ -22,7 +22,7 @@ from atklip.controls.pandas_ta.volatility import atr
 def adx(
     high: Series, low: Series, close: Series, length: Int = None,
     lensig: Int = None, adxr_length: Int = None, scalar: IntFloat = None,
-    talib: bool = None, tvmode: bool = None, mamode: str = None,
+    tvmode: bool = None, mamode: str = None,
     drift: Int = None, offset: Int = None, **kwargs: DictLike
 ) -> DataFrame:
     """Average Directional Movement (ADX)
@@ -70,7 +70,6 @@ def adx(
 
     scalar = v_scalar(scalar, 100)
     mamode = v_mamode(mamode, "rma")
-    mode_tal = v_talib(talib)
     mode_tv = v_bool(tvmode, False)
 
     drift = v_drift(drift)
