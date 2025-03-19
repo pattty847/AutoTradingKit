@@ -151,13 +151,11 @@ class AO(QObject):
     def calculate(df: pd.DataFrame, fast, slow):
         df = df.copy()
         df = df.reset_index(drop=True)
-        print(df)
         INDICATOR = ao(high=df["high"],
                        low=df["low"],
                        fast=fast,
                        slow=slow).dropna().round(6)
-        print("INDICATOR")
-        print(INDICATOR)
+
         if isinstance(INDICATOR, pd.Series):
             y_data = INDICATOR
         else:
