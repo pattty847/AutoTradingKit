@@ -248,7 +248,7 @@ class JAPAN_CANDLE(QObject):
         else:
             return []
     
-    def fisrt_gen_data(self,ohlcv,_precision):
+    def first_gen_data(self,ohlcv,_precision):
         self.is_current_update = False
         self.first_gen = False
         self.df = pd.DataFrame([])

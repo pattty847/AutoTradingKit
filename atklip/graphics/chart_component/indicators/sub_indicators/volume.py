@@ -64,7 +64,7 @@ class Volume(GraphicsObject):
         self._to_update: bool = False
         self._is_change_source: bool = False
         
-        self.chart.jp_candle.sig_reset_all.connect(self.fisrt_gen_data,Qt.ConnectionType.AutoConnection)
+        self.chart.jp_candle.sig_reset_all.connect(self.first_gen_data,Qt.ConnectionType.AutoConnection)
         self.chart.jp_candle.sig_add_candle.connect(self.update_asyncworker,Qt.ConnectionType.AutoConnection)
         self.chart.jp_candle.sig_update_candle.connect(self.update_asyncworker,Qt.ConnectionType.AutoConnection)
         self.chart.jp_candle.sig_add_historic.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
@@ -111,7 +111,7 @@ class Volume(GraphicsObject):
         _min,_max = sr.min(), sr.max()
         return _min,_max
     
-    def fisrt_gen_data(self):
+    def first_gen_data(self):
         self.worker = None
         self._is_change_source = True
         self.worker = FastWorker(self.update_last_data,True)

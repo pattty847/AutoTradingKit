@@ -267,15 +267,15 @@ class ATKBOT(GraphicsObject):
         self.Source.sig_add_historic.connect(self.add_historic_worker,Qt.ConnectionType.AutoConnection)
         self.Source.signal_delete.connect(self.replace_source,Qt.ConnectionType.AutoConnection)
             
-    def fisrt_gen_data(self):
+    def first_gen_data(self):
         self.connect_signals()
-        self.utbot.fisrt_gen_data()
-        self.supertrend.fisrt_gen_data()
-        # self.trendwithsl.fisrt_gen_data()
-        self.rsi.fisrt_gen_data()
-        self.rsifast.fisrt_gen_data()
-        # self.mafast.fisrt_gen_data()
-        # self.maslow.fisrt_gen_data()
+        self.utbot.first_gen_data()
+        self.supertrend.first_gen_data()
+        # self.trendwithsl.first_gen_data()
+        self.rsi.first_gen_data()
+        self.rsifast.first_gen_data()
+        # self.mafast.first_gen_data()
+        # self.maslow.first_gen_data()
         # self.Source.sig_reset_all.emit()
         self.reset_threadpool_asyncworker()
     
@@ -498,7 +498,7 @@ class ATKBOT(GraphicsObject):
             if self.chart.sources[_source] != self.has["inputs"][_input]:
                 self.has["inputs"]["source"] = self.chart.sources[_source]
                 self.has["inputs"]["source_name"] = self.chart.sources[_source].source_name
-                self.fisrt_gen_data()
+                self.first_gen_data()
                 # self.Source.change_input(self.has["inputs"]["source"])
         elif _source != self.has["inputs"][_input]:
                 self.has["inputs"][_input] = _source
@@ -511,16 +511,16 @@ class ATKBOT(GraphicsObject):
             
             if _input == "n_smooth_period" or _input == "ma_smooth_period" or _input == "mamode":
                 self.stoploss_smooth_heikin.refresh_data(self.has["inputs"]["mamode"].value,self.has["inputs"]["ma_smooth_period"],self.has["inputs"]["n_smooth_period"])
-                self.stoploss_smooth_heikin.fisrt_gen_data()
-                # self.super_trend.fisrt_gen_data()
-                # self.sqeeze.fisrt_gen_data()
+                self.stoploss_smooth_heikin.first_gen_data()
+                # self.super_trend.first_gen_data()
+                # self.sqeeze.first_gen_data()
 
             
             # if  _input == "supertrend_length" or _input == "supertrend_atr_length" or \
             #         _input == "supertrend_multiplier" or _input == "supertrend_atr_mamode":
             #     self.super_trend.change_input(dict_ta_params=self.supertrend_model.__dict__)
             
-            self.fisrt_gen_data()
+            self.first_gen_data()
             
             # self.Source.change_input(dict_ta_params=self.model.__dict__)
     

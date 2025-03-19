@@ -206,7 +206,7 @@ class ZIGZAG(QObject):
     
     def started_worker(self):
         self.worker = None
-        self.worker = CandleWorker(self.fisrt_gen_data)
+        self.worker = CandleWorker(self.first_gen_data)
         self.worker.start()
     
     @staticmethod
@@ -238,7 +238,7 @@ class ZIGZAG(QObject):
  
         return list_zizgzag,x_data,y_data
            
-    def fisrt_gen_data(self):
+    def first_gen_data(self):
         self.is_current_update = False
         self.is_genering = True
         self.df = pd.DataFrame([])

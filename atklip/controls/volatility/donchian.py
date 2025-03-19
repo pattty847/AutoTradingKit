@@ -75,7 +75,7 @@ class DONCHIAN(QObject):
         self.is_genering = True
         self.is_current_update = False
         
-        self.fisrt_gen_data()
+        self.first_gen_data()
              
     def disconnect_signals(self):
         try:
@@ -143,7 +143,7 @@ class DONCHIAN(QObject):
         self.worker.submit(self.add_historic,n)
 
     def started_worker(self):
-        self.worker.submit(self.fisrt_gen_data)
+        self.worker.submit(self.first_gen_data)
     
     @staticmethod
     def calculate(df: pd.DataFrame,lower_length,upper_length,offset):
@@ -180,7 +180,7 @@ class DONCHIAN(QObject):
                             })
     
     
-    def fisrt_gen_data(self):
+    def first_gen_data(self):
         self.is_current_update = False
         self.is_genering = True
         self.df = pd.DataFrame([])

@@ -192,12 +192,12 @@ class INTERVALS():
         
         self.set_market_by_symbol(ExchangeModel)
         
-        ExchangeModel.japan_cdl.fisrt_gen_data(data,ExchangeModel.precision)
+        ExchangeModel.japan_cdl.first_gen_data(data,ExchangeModel.precision)
         ExchangeModel.japan_cdl.source_name = f"jp {self.symbol} {interval}"
         # self.chart.update_sources(ExchangeModel.japan_cdl)
         ExchangeModel.heikin_cdl.source_name = f"heikin {self.symbol} {interval}"
         # self.chart.update_sources(ExchangeModel.heikin_cdl)
-        ExchangeModel.heikin_cdl.fisrt_gen_data(ExchangeModel.precision)
+        ExchangeModel.heikin_cdl.first_gen_data(ExchangeModel.precision)
         
         await self.loop_watch_ohlcv(ExchangeModel)
     

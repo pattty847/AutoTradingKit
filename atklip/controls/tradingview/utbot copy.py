@@ -129,7 +129,7 @@ class UTBOT_ALERT(QObject):
         self.is_genering = True
         self.is_current_update = False
         
-        self.fisrt_gen_data()
+        self.first_gen_data()
     
     def disconnect_signals(self):
         try:
@@ -201,7 +201,7 @@ class UTBOT_ALERT(QObject):
         self.worker.submit(self.add_historic,n)
 
     def started_worker(self):
-        self.worker.submit(self.fisrt_gen_data)
+        self.worker.submit(self.first_gen_data)
     
     @staticmethod
     def paire_data(INDICATOR:pd.DataFrame|pd.Series):
@@ -240,7 +240,7 @@ class UTBOT_ALERT(QObject):
                             "short":_short
                             })
         
-    def fisrt_gen_data(self):
+    def first_gen_data(self):
         self.is_current_update = False
         self.is_genering = True
         self.df = pd.DataFrame([])

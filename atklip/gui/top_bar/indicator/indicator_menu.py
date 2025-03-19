@@ -92,7 +92,7 @@ dict_indicators = {
     "Sub Indicators":[
                     # IndicatorType.ATR,
                     IndicatorType.Aroon,
-                    # IndicatorType.AO,
+                    IndicatorType.AO,
                     IndicatorType.ADX,
                     # IndicatorType.AccuDist,
                     

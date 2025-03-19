@@ -259,7 +259,7 @@ class MACD(QObject):
     
     def started_worker(self):
         self.worker = None
-        self.worker = CandleWorker(self.fisrt_gen_data)
+        self.worker = CandleWorker(self.first_gen_data)
         self.worker.start()
     
     def paire_data(self,INDICATOR:DataFrame):
@@ -288,7 +288,7 @@ class MACD(QObject):
                         mamode=self.mamode.name.lower())
         return self.paire_data(INDICATOR)
     
-    def fisrt_gen_data(self):
+    def first_gen_data(self):
         self.is_genering = True
         self.df = pd.DataFrame([])
         

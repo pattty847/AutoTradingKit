@@ -319,7 +319,7 @@ class HEIKINASHI(QObject):
         self.candles = []
     
     
-    def fisrt_gen_data(self,_precision):
+    def first_gen_data(self,_precision):
         self.precision = _precision
         self.is_current_update = False
         self.first_gen = False

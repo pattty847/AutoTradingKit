@@ -12,3 +12,4 @@ from .stochrsi import  STOCHRSI
 from .trix import  TRIX
 from .tsi import  TSI
 from .uo import  UO
+from .ao import  AO

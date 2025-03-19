@@ -127,30 +127,30 @@ class ATKBOT(GraphicsObject):
                                                   13,
                                                   self.has["inputs"]["mamode"].value,
                                                   3)
-        self.smooth_heikin.fisrt_gen_data()
+        self.smooth_heikin.first_gen_data()
         
         
         self.stoploss_smooth_heikin = N_SMOOTH_CANDLE(self.chart._precision,self.chart.heikinashi,
                                                   3,
                                                   self.has["inputs"]["mamode"].value,
                                                   3)
-        self.stoploss_smooth_heikin.fisrt_gen_data()
+        self.stoploss_smooth_heikin.first_gen_data()
         
         
         self.super_smoothcandle = N_SMOOTH_CANDLE(self.chart._precision,self.has["inputs"]["source"],
                                                   self.has["inputs"]["n_smooth_period"],
                                                   self.has["inputs"]["mamode"].value,
                                                   self.has["inputs"]["ma_smooth_period"])
-        self.super_smoothcandle.fisrt_gen_data()
+        self.super_smoothcandle.first_gen_data()
         
         # self.macd = MACD(self.has["inputs"]["source"], self.macd_model.__dict__)
-        # self.macd.fisrt_gen_data()
+        # self.macd.first_gen_data()
         
         # self.sqeeze = SQEEZE(self.has["inputs"]["source"], self.sqeeze_model.__dict__)
-        # self.sqeeze.fisrt_gen_data()
+        # self.sqeeze.first_gen_data()
         
         self.super_trend = SuperTrend(self.super_smoothcandle, self.supertrend_model.__dict__)
-        self.super_trend.fisrt_gen_data()
+        self.super_trend.first_gen_data()
         
         self.INDICATOR  = ATKBOT_ALERT(self.has["inputs"]["source"], self.model.__dict__)
                 
@@ -234,7 +234,7 @@ class ATKBOT(GraphicsObject):
         self.INDICATOR.sig_add_historic.connect(self.add_historic_worker,Qt.ConnectionType.AutoConnection)
         self.INDICATOR.signal_delete.connect(self.replace_source,Qt.ConnectionType.AutoConnection)
             
-    def fisrt_gen_data(self):
+    def first_gen_data(self):
         self.connect_signals()
         self.INDICATOR.started_worker()
     

@@ -4,8 +4,6 @@ from atklip.controls.pandas_ta._typing import DictLike, Int
 from atklip.controls.pandas_ta.overlap import sma
 from atklip.controls.pandas_ta.utils import v_offset, v_pos_default, v_series
 
-
-
 def ao(
     high: Series, low: Series, fast: Int = None, slow: Int = None,
     offset: Int = None, **kwargs: DictLike

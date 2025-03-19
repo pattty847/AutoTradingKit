@@ -83,7 +83,7 @@ class INDICATOR(QObject):
         self.worker.submit(self.add_historic,n)
 
     def started_worker(self):
-        self.worker.submit(self.fisrt_gen_data)
+        self.worker.submit(self.first_gen_data)
     
     @staticmethod
     def paire_data(INDICATOR:pd.DataFrame):...
@@ -93,7 +93,7 @@ class INDICATOR(QObject):
     
     def callback_first_gen(self, future: Future):...
     
-    def fisrt_gen_data(self):...
+    def first_gen_data(self):...
     
     def callback_gen_historic_data(self, future: Future):...
     

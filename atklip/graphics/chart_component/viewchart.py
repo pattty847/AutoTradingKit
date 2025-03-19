@@ -227,13 +227,13 @@ class Chart(ViewPlotWidget):
         if len(data) == 0:
             raise BadSymbol(f"{self.exchange_name} data not received")
         self.set_market_by_symbol(self.crypto_ex)
-        self.jp_candle.fisrt_gen_data(data,self._precision)
+        self.jp_candle.first_gen_data(data,self._precision)
         self.jp_candle.source_name = f"jp {self.symbol} {self.interval}"
         self.update_sources(self.jp_candle)
         
         self.heikinashi.source_name = f"heikin {self.symbol} {self.interval}"
         self.update_sources(self.heikinashi)
-        self.heikinashi.fisrt_gen_data(self._precision)
+        self.heikinashi.first_gen_data(self._precision)
         
         if isinstance(self.replay_obj,ReplayObject):
                 self.drawtool.drawing_object = None
@@ -501,13 +501,13 @@ class Chart(ViewPlotWidget):
         if len(data) == 0:
             raise BadSymbol(f"{self.exchange_name} data not received")
         self.set_market_by_symbol(self.crypto_ex)
-        self.jp_candle.fisrt_gen_data(data,self._precision)
+        self.jp_candle.first_gen_data(data,self._precision)
         self.jp_candle.source_name = f"jp {self.symbol} {self.interval}"
         self.update_sources(self.jp_candle)
         
         self.heikinashi.source_name = f"heikin {self.symbol} {self.interval}"
         self.update_sources(self.heikinashi)
-        self.heikinashi.fisrt_gen_data(self._precision)
+        self.heikinashi.first_gen_data(self._precision)
         print("===========reset_exchange============ OK",self.crypto_ex,self.symbol,self.interval)
         self.auto_xrange()
         await self.loop_watch_ohlcv(self.symbol,self.interval,self.exchange_name)
@@ -728,7 +728,7 @@ class Chart(ViewPlotWidget):
             self.add_item(indicator)
             panel = IndicatorPanel(self.mainwindow,self, indicator)
             self.container_indicator_wg.add_indicator_panel(panel)
-            indicator.fisrt_gen_data()
+            indicator.first_gen_data()
 
     def set_data_dataconnect(self):
         if self.indicators == []:

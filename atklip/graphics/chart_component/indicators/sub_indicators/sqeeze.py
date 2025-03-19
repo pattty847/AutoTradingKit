@@ -69,7 +69,7 @@ class BaSicSqeeze(GraphicsObject):
                     }
      
         self.id = self.chart.objmanager.add(self)
-        self.fisrt_setup = False
+        self.first_setup = False
 
         self.on_click.connect(self.on_click_event)
         self.signal_visible.connect(self.setVisible)
@@ -140,7 +140,7 @@ class BaSicSqeeze(GraphicsObject):
         self.INDICATOR.sig_add_historic.connect(self.add_historic_worker,Qt.ConnectionType.AutoConnection)
         self.INDICATOR.signal_delete.connect(self.replace_source,Qt.ConnectionType.AutoConnection)
     
-    def fisrt_gen_data(self):
+    def first_gen_data(self):
         self.connect_signals()
         self.INDICATOR.started_worker()
        
@@ -153,7 +153,7 @@ class BaSicSqeeze(GraphicsObject):
         self.histogram.sig_reset_histogram.emit((xdata,histogram),"reset")
         
     def reset_indicator(self):
-        self.fisrt_setup = False
+        self.first_setup = False
         self.worker = None
         self.worker = FastWorker(self.regen_indicator)
         self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.AutoConnection)
@@ -237,8 +237,8 @@ class BaSicSqeeze(GraphicsObject):
         xData = data[0]
         histogram = data[1]
         self.histogram.sig_update_histogram.emit((xData[-2:],histogram[-2:]),"add")
-        if not self.fisrt_setup:
-            self.fisrt_setup = True
+        if not self.first_setup:
+            self.first_setup = True
             self.sig_change_yaxis_range.emit()
         self.prepareGeometryChange()
         self.informViewBoundsChanged()

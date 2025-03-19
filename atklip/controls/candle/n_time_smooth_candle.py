@@ -105,7 +105,7 @@ class N_SMOOTH_CANDLE(QObject):
             self.source_name = source_name
         self.first_gen = False
         self.is_genering = True        
-        self.fisrt_gen_data()
+        self.first_gen_data()
         
     def set_candle_infor(self,id_exchange,symbol,interval):
         self.id_exchange = id_exchange
@@ -120,7 +120,7 @@ class N_SMOOTH_CANDLE(QObject):
     
     def connect_signals(self):
         self._candles.sig_update_source.connect(self.sig_update_source)
-        self._candles.sig_reset_all.connect(self.fisrt_gen_data)
+        self._candles.sig_reset_all.connect(self.first_gen_data)
         self._candles.sig_update_candle.connect(self.update_worker)
         self._candles.sig_add_candle.connect(self.update_worker)
         self._candles.sig_add_historic.connect(self.update_historic_worker)
@@ -128,7 +128,7 @@ class N_SMOOTH_CANDLE(QObject):
     def disconnect_signals(self):
         try:
             self._candles.sig_update_source.disconnect(self.sig_update_source)
-            self._candles.sig_reset_all.disconnect(self.fisrt_gen_data)
+            self._candles.sig_reset_all.disconnect(self.first_gen_data)
             self._candles.sig_update_candle.disconnect(self.update_worker)
             self._candles.sig_add_candle.disconnect(self.update_worker)
             self._candles.sig_add_historic.disconnect(self.update_historic_worker)
@@ -170,7 +170,7 @@ class N_SMOOTH_CANDLE(QObject):
         self.worker.submit(self.update,candle)
     
     def threadpool_asyncworker(self):
-        self.worker.submit(self.fisrt_gen_data)
+        self.worker.submit(self.first_gen_data)
     
     def update_historic_worker(self,n):
         self.worker.submit(self.gen_historic_data,n)
@@ -383,7 +383,7 @@ class N_SMOOTH_CANDLE(QObject):
         
     def refresh_data(self,mamode,ma_ma_leng,n_smooth_ma_leng):
         self.reset_parameters(mamode,ma_ma_leng,n_smooth_ma_leng)
-        self.fisrt_gen_data()
+        self.first_gen_data()
     
     def reset_parameters(self,mamode,ma_ma_leng,n_smooth_ma_leng):
         self.mamode = mamode
@@ -527,7 +527,7 @@ class N_SMOOTH_CANDLE(QObject):
         self.sig_reset_all.emit()
         return future.result()
     
-    def fisrt_gen_data(self):
+    def first_gen_data(self):
         self.is_current_update = False
         self.is_genering = True
         self.df = pd.DataFrame([])

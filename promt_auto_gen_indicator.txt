@@ -1,0 +1,8 @@
+Để tạo một sub indicator mới cho ATK từ thư viện pandas_ta cần phải thực hiện các bước sau:
+thứ 1:trong folder "atklip\controls" trong mỗi folder có tên tương ứng với các folder trong "atklip\controls\pandas_ta" tạo một file .py với tên giống với tên của file thuộc thư viện pandas_ta,
+ví dụ: file "atklip\controls\momentum\cci.py" là file code của chỉ báo cci tương ứng trong "atklip\controls\pandas_ta\momentum\cci.py",
+thứ 2: Trong file tạo ra hãy generate code có các hàm tương tự như code của "atklip\controls\momentum\cci.py", "atklip\controls\momentum\macd.py",
+"atklip\controls\momentum\mom.py", "atklip\controls\momentum\roc.py"... tuy nhiên hãy import hàm tính chỉ báo tương ứng từ thư viện pandas_ta trong folder "atklip\controls\pandas_ta".
+thứ 3: hãy chú ý hàm calculate để xác định tên collume cho chính xác.
+thứ 4:  trong folder "atklip\graphics\chart_component\indicators\sub_indicators" cũng tạo file có tên giống với tên indicator đang generate code, và có cấu trúc code giống với các file đã tồn tại ở đó, tuy nhiên hãy chỉnh sửa sao cho phù hợp với indicator mới.
+Hãy áp dụng các tiêu chí trên để tạo các file "atklip\controls\momentum\ao.py", ứng với file "atklip\controls\pandas_ta\momentum\ao.py", và tạo file "atklip\graphics\chart_component\indicators\sub_indicators\ao.py"

@@ -203,7 +203,7 @@ class UTBOT_ALERT_WITH_BB(QObject):
         self.is_genering = True
         self.is_current_update = False
         
-        self.fisrt_gen_data()
+        self.first_gen_data()
     
     def disconnect_signals(self):
         try:
@@ -275,7 +275,7 @@ class UTBOT_ALERT_WITH_BB(QObject):
         self.worker.submit(self.add_historic,n)
 
     def started_worker(self):
-        self.worker.submit(self.fisrt_gen_data)
+        self.worker.submit(self.first_gen_data)
     
     def paire_data(self,INDICATOR:pd.DataFrame|pd.Series):
         _long,_short = INDICATOR["BuySignal"],INDICATOR["SellSignal"]
@@ -294,7 +294,7 @@ class UTBOT_ALERT_WITH_BB(QObject):
         return _long,_short
     
     
-    def fisrt_gen_data(self):
+    def first_gen_data(self):
                 
         self.is_current_update = False
         self.is_genering = True

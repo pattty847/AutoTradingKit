@@ -178,12 +178,12 @@ class EMA_SUPER_TREND_BOT(GraphicsObject):
         self.INDICATOR.sig_add_historic.connect(self.add_historic_worker,Qt.ConnectionType.AutoConnection)
         self.INDICATOR.signal_delete.connect(self.replace_source,Qt.ConnectionType.AutoConnection)
             
-    def fisrt_gen_data(self):
+    def first_gen_data(self):
         self.connect_signals()
-        self.INDICATOR.fisrt_gen_data()
-        self.supertrend.fisrt_gen_data()
-        # self.rsi.fisrt_gen_data()
-        self.ema_trend_metter.fisrt_gen_data()
+        self.INDICATOR.first_gen_data()
+        self.supertrend.first_gen_data()
+        # self.rsi.first_gen_data()
+        self.ema_trend_metter.first_gen_data()
     
     def check_pivot_points(self,df:pd.DataFrame,_type:str="high",n = 10, m=20):
         _len = len(df)

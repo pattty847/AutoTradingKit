@@ -197,7 +197,7 @@ class SuperTrendWithStopLoss(QObject):
         self.is_genering = True
         self.is_current_update = False
         
-        self.fisrt_gen_data()
+        self.first_gen_data()
     
     def disconnect_signals(self):
         try:
@@ -267,7 +267,7 @@ class SuperTrendWithStopLoss(QObject):
         self.worker.submit(self.add_historic,n)
 
     def started_worker(self):
-        self.worker.submit(self.fisrt_gen_data)
+        self.worker.submit(self.first_gen_data)
     
     def paire_data(self,INDICATOR:pd.DataFrame):
         try:
@@ -305,7 +305,7 @@ class SuperTrendWithStopLoss(QObject):
         
     
 
-    def fisrt_gen_data(self):
+    def first_gen_data(self):
         self.is_current_update = False
         self.is_genering = True
         self.df = pd.DataFrame([])

@@ -238,6 +238,10 @@ class ADXModel(IndicatorBase):
     tvmode:bool 
     mamode:str 
 
+@dataclass
+class AOModel(IndicatorBase):
+    fast:int 
+    slow:int 
 
 @dataclass
 class UOModel(IndicatorBase):

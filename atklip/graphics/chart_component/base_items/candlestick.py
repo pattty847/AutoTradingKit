@@ -110,7 +110,7 @@ class CandleStick(GraphicsObject):
         self.source.sig_add_historic.connect(self.threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
         
         if not (isinstance(self.source,JAPAN_CANDLE) or isinstance(self.source,HEIKINASHI)):
-            self.source.fisrt_gen_data()
+            self.source.first_gen_data()
         else:
             self.first_setup_candle()
         

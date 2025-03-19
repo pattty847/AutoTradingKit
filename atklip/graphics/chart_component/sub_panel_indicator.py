@@ -179,6 +179,9 @@ class ViewSubPanel(PlotWidget):
         
         elif _indicator_type == IndicatorType.ADX:
             self.indicator = BasicADX(self.get_last_pos_worker,self.Chart,self)
+
+        elif _indicator_type == IndicatorType.AO:
+            self.indicator = BasicAO(self.get_last_pos_worker,self.Chart,self)
         
         
         
@@ -187,7 +190,7 @@ class ViewSubPanel(PlotWidget):
             self.add_item(self.indicator)
             self.panel = IndicatorPanel(mainwindow,self, self.indicator)
             self.container_indicator_wg.add_indicator_panel(self.panel)
-            self.indicator.fisrt_gen_data()
+            self.indicator.first_gen_data()
         return self.indicator
             
     

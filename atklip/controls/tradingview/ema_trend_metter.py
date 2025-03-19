@@ -93,7 +93,7 @@ class EMA_TREND_METTER(QObject):
         self.is_genering = True
         self.is_current_update = False
         
-        self.fisrt_gen_data()
+        self.first_gen_data()
     
       
     def disconnect_signals(self):
@@ -162,7 +162,7 @@ class EMA_TREND_METTER(QObject):
         self.worker.submit(self.add_historic, n)
 
     def started_worker(self):
-        self.worker.submit(self.fisrt_gen_data)
+        self.worker.submit(self.first_gen_data)
     
     def paire_data(self, INDICATOR: pd.DataFrame | pd.Series):
         uptrend_name = 'up'
@@ -196,7 +196,7 @@ class EMA_TREND_METTER(QObject):
                             "downtrend": downtrend.tail(_len)
                             })
         
-    def fisrt_gen_data(self):
+    def first_gen_data(self):
         self.is_current_update = False
         self.is_genering = True
         self.df = pd.DataFrame([])

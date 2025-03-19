@@ -134,7 +134,7 @@ class BasicUO(PlotDataItem):
         self.INDICATOR.signal_delete.connect(self.replace_source,Qt.ConnectionType.AutoConnection)
         self.INDICATOR.sig_add_historic.connect(self.add_historic_worker,Qt.ConnectionType.AutoConnection)
     
-    def fisrt_gen_data(self):
+    def first_gen_data(self):
         self.connect_signals()
         self.INDICATOR.started_worker()
        

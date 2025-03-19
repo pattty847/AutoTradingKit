@@ -190,14 +190,14 @@ class Arrow(QGraphicsObject):
             smooth_jp_candle = SMOOTH_CANDLE(self.precision,self.chart.jp_candle,mamode,period)
             smooth_jp_candle._source_name = f"sm_jp {self.chart.symbol} {self.chart.interval}"
             self.chart.update_sources(smooth_jp_candle)
-            smooth_jp_candle.fisrt_gen_data()
+            smooth_jp_candle.first_gen_data()
             return smooth_jp_candle, mamode,period, n
         
         elif _type.value == "n_smooth_jp":
             n_smooth_jp = N_SMOOTH_CANDLE(self.precision,self.chart.jp_candle,n,mamode,period)
             n_smooth_jp._source_name = f"n_smooth_jp {self.chart.symbol} {self.chart.interval}"
             self.chart.update_sources(n_smooth_jp)
-            n_smooth_jp.fisrt_gen_data()
+            n_smooth_jp.first_gen_data()
             return n_smooth_jp, mamode, period,n
         
         elif _type.value == "heikin":
@@ -207,14 +207,14 @@ class Arrow(QGraphicsObject):
             smooth_heikin = SMOOTH_CANDLE(self.precision,self.chart.heikinashi,mamode,period)
             smooth_heikin._source_name = f"sm_heikin {self.chart.symbol} {self.chart.interval}"
             self.chart.update_sources(smooth_heikin)
-            smooth_heikin.fisrt_gen_data()
+            smooth_heikin.first_gen_data()
             return smooth_heikin, mamode,period, n
             
         elif _type.value == "n_smooth_heikin":
             n_smooth_heikin = N_SMOOTH_CANDLE(self.precision,self.chart.heikinashi,n,mamode,period)
             n_smooth_heikin._source_name = f"n_smooth_heikin {self.chart.symbol} {self.chart.interval}"
             self.chart.update_sources(n_smooth_heikin)
-            n_smooth_heikin.fisrt_gen_data()
+            n_smooth_heikin.first_gen_data()
             return n_smooth_heikin, mamode, period,n
             
     def get_inputs(self):
