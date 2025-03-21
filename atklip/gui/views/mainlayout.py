@@ -90,7 +90,7 @@ class MainWidget(QWidget,Ui_MainWidget):
     
     def draw_tool(self,tool_infor):
         current_tool,is_enabled,self.tool_name = tool_infor[0],tool_infor[1],tool_infor[2]# "draw_trenlines"
-        print(current_tool,is_enabled,self.tool_name)
+        # print(current_tool,is_enabled,self.tool_name)
         self.chartbox_splitter.chart.drawtool.draw_object_name = self.tool_name
     
     def resizeEvent(self, e):
@@ -112,7 +112,7 @@ class MainWidget(QWidget,Ui_MainWidget):
     def extend_right_menu(self, target_object:QFrame):
         width = target_object.width()
         self.maxExtend = 250
-        print(width)
+        # print(width)
         # SET MAX WIDTH
         if width < self.maxExtend:
             box_width = width

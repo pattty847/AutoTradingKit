@@ -1,11 +1,9 @@
-from functools import lru_cache
-from typing import Union, Optional, Any, List, TYPE_CHECKING
+from typing import Union, List, TYPE_CHECKING
 import time
 from PySide6 import QtGui
 from PySide6.QtGui import QPainter,QMouseEvent
-from PySide6.QtCore import Signal,QPointF,Qt,QThreadPool,QEvent
+from PySide6.QtCore import Signal,Qt,QThreadPool,QEvent
 from PySide6.QtWidgets import QGraphicsView
-import numpy as np
 from atklip.app_utils.calculate import round_
 from atklip.graphics.pyqtgraph import mkPen, PlotWidget
 from atklip.appmanager import FastWorker
@@ -42,7 +40,6 @@ class ViewSubPanel(PlotWidget):
     sig_remove_item = Signal(object)
     sig_add_indicator_panel = Signal(tuple)
     sig_delete_sub_panel = Signal(object)
-    first_run = Signal()
     sig_update_y_axis = Signal()
     def __init__(self,chart, parent=None, background: str = "#161616",) -> None: #str = "#f0f0f0"
         # Make sure we have LiveAxis in the bottom
@@ -183,11 +180,7 @@ class ViewSubPanel(PlotWidget):
         elif _indicator_type == IndicatorType.AO:
             self.indicator = BasicAO(self.get_last_pos_worker,self.Chart,self)
         
-        
-        
-    
         if self.indicator:
-            self.add_item(self.indicator)
             self.panel = IndicatorPanel(mainwindow,self, self.indicator)
             self.container_indicator_wg.add_indicator_panel(self.panel)
             self.indicator.first_gen_data()
@@ -216,14 +209,17 @@ class ViewSubPanel(PlotWidget):
         else:
             item = args
         self.addItem(item) 
-        self.yAxis.dict_objects.update({item:item.has["y_axis_show"]})
+        if hasattr(item,"has"):
+            self.yAxis.dict_objects.update({item:item.has["y_axis_show"]})
 
     def remove_item(self,args):
         if isinstance(args,tuple):
             item = args[0]
         else:
             item = args
-        del self.yAxis.dict_objects[item]
+
+        if hasattr(item,"has"):
+            del self.yAxis.dict_objects[item]
         
         if item in self.Chart.indicators:
             self.Chart.indicators.remove(item) 
@@ -256,6 +252,11 @@ class ViewSubPanel(PlotWidget):
         # self.setXRange(x_left,x_right,0.2)
         self.setYRange(_max + (_max-_min)*0.1, _min - (_max-_min)*0.1, padding=0.05)
 
+        if not self.first_run:
+            self.add_item(self.indicator)
+            self.first_run = True
+
+
     def show_hide_cross(self, value):
         _isshow, self.nearest_value = value[0],value[1]
         if _isshow:
@@ -270,9 +271,9 @@ class ViewSubPanel(PlotWidget):
             self.crosshair_y_value_change.emit(("#363a45",None))
         self.vb.update()
     # Override addItem method
-    def addItem(self, *args: Any, **kwargs: Any) -> None:
-        self.vb.addItem(*args)
-        # args[0].plot_widget = self
+    def addItem(self, item) -> None:
+        self.vb.addItem(item, ignoreBounds=True)
+        # item.plot_widget = self
     
     def removeItem(self, *args):
         return self.vb.removeItem(*args)

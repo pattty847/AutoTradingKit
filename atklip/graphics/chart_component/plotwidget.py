@@ -215,9 +215,9 @@ class ViewPlotWidget(PlotWidget):
         if hasattr(item, "deleteLater"):
             item.deleteLater()
             
-    def addItem(self, *args: Any, **kwargs: Any) -> None:
-        self.vb.addItem(*args)
-        # args[0].plot_widget = self
+    def addItem(self, item) -> None:
+        self.vb.addItem(item, ignoreBounds=True)
+        # item.plot_widget = self
     def auto_xrange(self):
         timedata,data = self.jp_candle.get_index_data()
         # Clip values to avoid overflow

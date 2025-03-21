@@ -107,7 +107,7 @@ class WindowBase(BackgroundAnimationWidget, FramelessMainWindow):
         interface.deleteLater()
         
     def onTabCloseRequested(self, index):
-        print(index,self.tabBar.tab)
+        # print(index,self.tabBar.tab)
         self.tabBar.removeTab(index)
         self.removeInterface(self.stackedWidget.widget(index))
     def close_window(self):
@@ -122,7 +122,7 @@ class WindowBase(BackgroundAnimationWidget, FramelessMainWindow):
         self.deleteLater()
     
     def onTabChanged(self, index: int):
-        print("index--",index)
+        # print("index--",index)
         objectName = self.tabBar.currentTab().routeKey()
         TabInterface = self.findChild(MainWidget, objectName)
         old_interface = self.stackedWidget.currentWidget()

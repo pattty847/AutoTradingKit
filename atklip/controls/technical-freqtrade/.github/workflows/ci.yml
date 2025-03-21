@@ -1,0 +1,272 @@
+name: Technical CI
+
+on:
+  push:
+    branches:
+      - main
+      - ci/*
+    tags:
+  release:
+    types: [published]
+  pull_request:
+  schedule:
+    - cron:  '0 5 * * 4'
+
+
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}"
+  cancel-in-progress: true
+
+jobs:
+  test:
+
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ "ubuntu-20.04", "ubuntu-22.04", "ubuntu-24.04", "macos-13", "macos-14", "macos-15" ]
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        exclude:
+          - os: "macos-14"
+            python-version: "3.9"
+          - os: "macos-15"
+            python-version: "3.9"
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5.1.1
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Cache_dependencies
+      uses: actions/cache@v4
+      id: cache
+      with:
+        path: ~/dependencies/
+        key: ${{ matrix.os }}-dependencies
+
+    - name: pip cache (linux)
+      uses: actions/cache@v4
+      if: startsWith(matrix.os, 'ubuntu')
+      with:
+        path: ~/.cache/pip
+        key: test-${{ matrix.os }}-${{ matrix.python-version }}-pip
+
+    - name: pip cache (macOS)
+      uses: actions/cache@v4
+      if: startsWith(matrix.os, 'macOS')
+      with:
+        path: ~/Library/Caches/pip
+        key: test-${{ matrix.os }}-${{ matrix.python-version }}-pip
+
+    - name: TA binary *nix
+      if: steps.cache.outputs.cache-hit != 'true'
+      run: |
+        wget https://github.com/freqtrade/freqtrade/raw/develop/build_helpers/ta-lib-0.4.0-src.tar.gz
+        tar zxvf ta-lib-0.4.0-src.tar.gz
+        cd ta-lib
+        ./configure --prefix ${HOME}/dependencies/
+        make
+        which sudo && sudo make install || make bigip_software_install
+        cd ..
+        rm -rf ta-lib/
+
+    - name: Installation - *nix
+      run: |
+        python -m pip install --upgrade pip
+        export LD_LIBRARY_PATH=${HOME}/dependencies/lib:$LD_LIBRARY_PATH
+        export TA_LIBRARY_PATH=${HOME}/dependencies/lib
+        export TA_INCLUDE_PATH=${HOME}/dependencies/include
+        pip install -r requirements-dev.txt
+        pip install -e .
+
+    - name: Tests
+      run: |
+        pytest --random-order --cov=technical --cov-config=.coveragerc
+
+    - name: Run Ruff
+      run: |
+        ruff check --output-format=github .
+
+    - name: Run Ruff format check
+      run: |
+        ruff format --check
+
+    - name: Run Codespell
+      run: |
+        codespell
+
+    - name: Sort imports (isort)
+      run: |
+        isort --check .
+
+    - name: Discord notification
+      uses: rjstone/discord-webhook-notify@v1
+      if: failure() && ( github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false)
+      with:
+          severity: error
+          details: Technical CI failed on ${{ matrix.os }}
+          webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
+
+
+  test_windows:
+
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ windows-latest ]
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        exclude:
+          - os: "windows-latest"
+            python-version: "3.9"
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5.1.1
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Pip cache (Windows)
+      uses: actions/cache@v4
+      if: startsWith(runner.os, 'Windows')
+      with:
+        path: ~\AppData\Local\pip\Cache
+        key: ${{ matrix.os }}-${{ matrix.python-version }}-pip
+
+    - uses: actions/checkout@v4
+      with:
+        repository: freqtrade/freqtrade
+        path: './freqtrade_tmp'
+
+    - name: Installation (uses freqtrade dependencies)
+      run: |
+        cp -r ./freqtrade_tmp/build_helpers .
+
+        ./build_helpers/install_windows.ps1
+
+    - name: Tests
+      run: |
+        pytest --random-order --cov=technical --cov-config=.coveragerc tests
+
+    - name: Run Ruff
+      run: |
+        ruff check --output-format=github technical tests
+
+    - name: Discord notification
+      uses: rjstone/discord-webhook-notify@v1
+      if: failure() && ( github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false)
+      with:
+          severity: error
+          details: Technical CI failed on ${{ matrix.os }}
+          webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
+
+  # Notify on discord only once - when CI completes (and after deploy) in case it's successfull
+  notify-complete:
+    needs: [ test, test_windows ]
+    runs-on: ubuntu-latest
+    # Discord notification can't handle schedule events
+    if: (github.event_name != 'schedule')
+    steps:
+    - name: Check user permission
+      id: check
+      uses: scherermichael-oss/action-has-permission@1.0.6
+      with:
+        required-permission: write
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Discord notification
+      uses: rjstone/discord-webhook-notify@v1
+      if: always() && steps.check.outputs.has-permission && ( github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false)
+      with:
+          severity: info
+          details: Technical CI
+          webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
+
+  build:
+    needs: [ test, test_windows ]
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5.1.1
+      with:
+        python-version: 3.11
+
+    - name: Extract branch name
+      id: extract-branch
+      run: |
+        echo "GITHUB_REF='${GITHUB_REF}'"
+        echo "branch=${GITHUB_REF##*/}" >> "$GITHUB_OUTPUT"
+
+    - name: Build distribution
+      run: |
+        pip install -U build
+        python -m build --sdist --wheel
+
+    - name: Upload artifacts 📦
+      uses: actions/upload-artifact@v4
+      with:
+        name: technical
+        path: |
+          dist
+        retention-days: 10
+
+  deploy-test-pypi:
+    if: (github.event_name == 'release') && github.repository == 'freqtrade/technical'
+    needs: [ build ]
+    runs-on: ubuntu-22.04
+    environment:
+      name: pypi-test
+      url: https://test.pypi.org/p/technical
+    permissions:
+      id-token: write
+
+    steps:
+
+    - name: Download artifact  📦
+      uses: actions/download-artifact@v4
+      with:
+        name: technical
+        path: dist
+        merge-multiple: true
+
+    - name: Publish to PyPI (Test)
+      uses: pypa/gh-action-pypi-publish@v1.12.4
+      if: (github.event_name == 'release')
+      with:
+        repository-url: https://test.pypi.org/legacy/
+
+  deploy-pypi:
+    if: (github.event_name == 'release') && github.repository == 'freqtrade/technical'
+    needs: [ build ]
+    runs-on: ubuntu-22.04
+    environment:
+      name: pypi
+      url: https://pypi.org/p/technical
+    permissions:
+      id-token: write
+
+    steps:
+
+    - name: Download artifact  📦
+      uses: actions/download-artifact@v4
+      with:
+        name: technical
+        path: dist
+        merge-multiple: true
+
+    - name: Publish to PyPI
+      uses: pypa/gh-action-pypi-publish@v1.12.4
+
+    - name: Discord notification
+      uses: rjstone/discord-webhook-notify@v1
+      if: always() && ( github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false)
+      with:
+          severity: info
+          details: Technical CI Deploy
+          webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
