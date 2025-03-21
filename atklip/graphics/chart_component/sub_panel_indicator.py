@@ -210,7 +210,9 @@ class ViewSubPanel(PlotWidget):
             item = args
         self.addItem(item) 
         if hasattr(item,"has"):
-            self.yAxis.dict_objects.update({item:item.has["y_axis_show"]})
+            if item.has.get("y_axis_show"):
+                self.yAxis.dict_objects.update({item:item.has["y_axis_show"]})
+
 
     def remove_item(self,args):
         if isinstance(args,tuple):
@@ -218,7 +220,7 @@ class ViewSubPanel(PlotWidget):
         else:
             item = args
 
-        if hasattr(item,"has"):
+        if self.yAxis.dict_objects.get(item):
             del self.yAxis.dict_objects[item]
         
         if item in self.Chart.indicators:

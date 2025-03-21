@@ -31,6 +31,7 @@ class EMATrendMetter(GraphicsObject):
     signal_change_width = Signal(int)
     signal_change_type = Signal(str)
     sig_change_indicator_name = Signal(str)
+    sig_change_yaxis_range = Signal()
     def __init__(self,get_last_pos_worker,chart,panel) -> None:
         GraphicsObject.__init__(self)
         # super().__init__()
@@ -38,7 +39,7 @@ class EMATrendMetter(GraphicsObject):
         self.setFlag(self.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
         self.chart:Chart = chart
         self._panel:ViewSubPanel = panel
-        self.get_last_pos_worker = get_last_pos_worker
+        self.sig_change_yaxis_range.connect(get_last_pos_worker, Qt.ConnectionType.AutoConnection)
         self.has: dict = {
             "name": f"EMATrendMetter 21 34 55",
             "y_axis_show":False,
@@ -67,6 +68,7 @@ class EMATrendMetter(GraphicsObject):
                     }
                     }
         self.id = self.chart.objmanager.add(self)
+        self.first_setup = False
         
         self.trend_line = TrendLine(self.chart)  # for z value
         self.trend_line.setParentItem(self)
@@ -126,6 +128,7 @@ class EMATrendMetter(GraphicsObject):
         self.chart.sig_remove_item.emit(self)
     
     def reset_indicator(self):
+        self.first_setup = False
         self.worker = None
         self.worker = FastWorker(self.regen_indicator)
         self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.AutoConnection)
@@ -202,6 +205,11 @@ class EMATrendMetter(GraphicsObject):
         self._panel.setYRange(4,-4)
         x_data,uptrend,downtrend = data[0],data[1],data[2]
         self.trend_line.setData((x_data,uptrend,downtrend))
+
+        if not self.first_setup:
+            self.first_setup = True
+            self.sig_change_yaxis_range.emit()
+
         self.INDICATOR.is_current_update = True
     
     def add_historic_Data(self,data):
@@ -263,7 +271,7 @@ class EMATrendMetter(GraphicsObject):
     
     def get_min_max(self):
         try:
-            return None,None
+            return -5,5
         except Exception as e:
             pass
         return None,None
