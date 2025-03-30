@@ -2,6 +2,8 @@
 
 This is a free software designed for traders and developers.
 
+![1743352009179](images/README/1743352009179.png)
+
 ## Description
 
 Auto Trading Kit: its mean, this project can be used to build your own strategy, backtest to test and improve strategy. and can live trading by using your strategy.
