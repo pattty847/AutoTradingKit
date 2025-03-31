@@ -178,19 +178,27 @@ run ATK.py to start app: python ATK.py or python3 ATK.py
 11) Build AI indicator
 12) Build AI Strategy
 
-## Restricted Open Source License
+## MIT License
 
-Copyright (c) 2025 @mr.BigD
+Copyright (c) 2025 Pham Cong Che
 
-This software is open source, and its source code is publicly available for review and learning purposes  **only** . However, any form of usage, including commercial, personal, or academic purposes, requires explicit written permission from the author.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-### License Terms:
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-1. **Public Source Code** : This is an open-source project, and you are completely free to use it for review, learning, research, and personal open-source projects.
-2. **Usage Requires Permission** : You are not allowed to sell or use this code in your commercial project without the author's consent.
-3. **Sponsorship**: Provide sponsorship or financial support as agreed upon with the author.
-4. **No Warranty** : This software is provided "as is" without any warranties or guarantees.
-5. **For any question**, please contact via e-mail:  khanhlinhdangthditrach@gmail.com
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
 ## Project status
 

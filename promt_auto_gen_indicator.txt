@@ -28,3 +28,25 @@ To create a new sub-indicator for ATK using the pandas_ta library, the following
 6. If the `IndicatorType` information for the indicator is not yet available in the file "atklip\controls\ma_type.py", add the `IndicatorType` information for the new indicator to the `IndicatorType` class in "atklip\controls\ma_type.py".
 7. Update the new indicator in the "sub_panel_indicator" by adding the new indicator's information to the `setup_indicator` function in the file "atklip\graphics\chart_component\sub_panel_indicator.py".
 Apply the above requirements to create the files "atklip\controls\momentum\bop.py", corresponding to "atklip\controls\pandas_ta\momentum\ao.py", and create the file "atklip\graphics\chart_component\indicators\sub_indicators\bop.py".
+
+
+
+Copyright (c) 2025 Pham Cong Che
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

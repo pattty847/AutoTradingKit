@@ -67,7 +67,7 @@ Dưới đây là một ví dụ về việc sử dụng `cythonize` với một
 Lệnh này sẽ biên dịch `example.pyx` thành một extension
 Python, sử dụng Python 3 và tạo các tệp HTML chứa thông tin về cách mã
 Python được biên dịch. Nó cũng buộc Cython biên dịch lại tất cả các tệp,
- sử dụng 4 công việc song song và sau đó xóa các tệp `.c` tạm thời. Cuối cùng, nó sử dụng tùy chọn trình biên dịch `-O3` để tối ưu hóa mã C.
+sử dụng 4 công việc song song và sau đó xóa các tệp `.c` tạm thời. Cuối cùng, nó sử dụng tùy chọn trình biên dịch `-O3` để tối ưu hóa mã C.
 
 Tùy chọn `--compiler-options=-O3` trong lệnh `cythonize` cho biết Cython sẽ chuyển các tùy chọn `'-O3'` cho trình biên dịch C khi biên dịch mã Python thành mã C.
 
