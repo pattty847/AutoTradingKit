@@ -243,10 +243,6 @@ mr.BigD - Creator/Developer of ATK
 - [Sponsor via paypal](https://www.paypal.com/ncp/payment/363TPLRF4NAF4)  20$
 - [Sponsor via Paypal ](https://www.paypal.com/ncp/payment/G9R3YNN89KR8Y)10$
 
-3. Binance pay:
-
-![1739980400330](image/README/1739980400330.png)
-
 ## Authors and acknowledgment
 
 Pham Cong Che (nickname: BigD) - A trader, a freelancer and a developer from Viet Nam. The author of ATK.
