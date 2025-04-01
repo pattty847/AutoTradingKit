@@ -235,8 +235,8 @@ With gratitude,
 mr.BigD - Creator/Developer of ATK
 
 1. [Github Sponsor](https://github.com/sponsors/Khanhlinhdang)
-3. [opencollective](https://opencollective.com/autotradingkit)
-4. Paypal:
+2. [opencollective](https://opencollective.com/autotradingkit)
+3. Paypal:
 
 - [Paypal sponsor](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=XTHUBP3TB5H7J) (any value)
 - [Sponsor via paypal](https://www.paypal.com/ncp/payment/363TPLRF4NAF4)  20$
@@ -250,6 +250,6 @@ Youtube Chanel: [AutoTradingKit](https://www.youtube.com/@AutoTradingKit)
 
 Author's Facebook: [Pham Cong Che](https://www.facebook.com/che.linh.9096/)
 
-Discord: [AutoTradingKit](https://discord.gg/g8hH5DTZEQ)
+Discord: [AutoTradingKit](https://discord.gg/bRDF7KxyQR)
 
 ATK Facebook Group: [Auto Trading Kit (ATK) - Facebook group](https://www.facebook.com/groups/748831980507126 "Facebook group of ATK")
