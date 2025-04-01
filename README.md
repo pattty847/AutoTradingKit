@@ -234,8 +234,7 @@ Your generosity and belief in ATK mean the world to us. Together, we can make AT
 With gratitude,
 mr.BigD - Creator/Developer of ATK
 
-1. Bank account: MB Bank: 8699991689999 | Pham Cong Che | (Viet Nam Bank)
-2. [Github Sponsor](https://github.com/sponsors/Khanhlinhdang)
+1. [Github Sponsor](https://github.com/sponsors/Khanhlinhdang)
 3. [opencollective](https://opencollective.com/autotradingkit)
 4. Paypal:
 
