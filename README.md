@@ -239,7 +239,7 @@ mr.BigD - Creator/Developer of ATK
 3. [opencollective](https://opencollective.com/autotradingkit)
 4. Paypal:
 
-- [Paypal sponsor](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=XTHUBP3TB5H7J) (khanhlinhdangthditrach@gmail.com) (any value)
+- [Paypal sponsor](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=XTHUBP3TB5H7J) (any value)
 - [Sponsor via paypal](https://www.paypal.com/ncp/payment/363TPLRF4NAF4)  20$
 - [Sponsor via Paypal ](https://www.paypal.com/ncp/payment/G9R3YNN89KR8Y)10$
 
@@ -250,16 +250,6 @@ mr.BigD - Creator/Developer of ATK
 ## Authors and acknowledgment
 
 Pham Cong Che (nickname: BigD) - A trader, a freelancer and a developer from Viet Nam. The author of ATK.
-
-Email: khanhlinhdangthditrach@gmail.com
-
-Skype: khanhlinhdangthditrach@gmail.com
-
-Zalo: 0343845888
-
-Telegram: +79921849116 or username : @Chelinh0308
-
-Phone number: +84343845888 (VietNamese phone number)
 
 Youtube Chanel: [AutoTradingKit](https://www.youtube.com/@AutoTradingKit)
 
