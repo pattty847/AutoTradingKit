@@ -11,20 +11,28 @@ from atklip.controls.pandas_ta.utils import (
     v_pos_default,
     v_series,
     v_str,
-    v_talib
+    v_talib,
 )
 from atklip.controls.pandas_ta.utils._numba import nb_alpha
 
 
 def alphatrend(
-    open_: Series, high: Series, low: Series, close: Series,
-    volume: Series = None, src: str = None,
-    length: int = None, multiplier: IntFloat = None,
-    threshold: IntFloat = None, lag: Int = None,
-    mamode: str = None, talib: bool = None,
-    offset: Int = None, **kwargs: DictLike
+    open_: Series,
+    high: Series,
+    low: Series,
+    close: Series,
+    volume: Series = None,
+    src: str = None,
+    length: int = None,
+    multiplier: IntFloat = None,
+    threshold: IntFloat = None,
+    lag: Int = None,
+    mamode: str = None,
+    talib: bool = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ):
-    """ Alpha Trend (alphatrend)
+    """Alpha Trend (alphatrend)
 
     Alpha Trend attemps to solve the problems of Magic Trend. For instance, it
     tries to ilter out sideways market conditions and yield more accurate
@@ -82,8 +90,7 @@ def alphatrend(
 
     # Calculate
     atr_ = atr(
-        high=high, low=low, close=close, length=length,
-        mamode=mamode, talib=mode_tal
+        high=high, low=low, close=close, length=length, mamode=mamode, talib=mode_tal
     )
 
     if atr_ is None or all(isnan(atr_)):
@@ -97,8 +104,12 @@ def alphatrend(
         momo = rsi(close=_src[src], length=length, mamode=mamode, talib=mode_tal)
     else:
         momo = mfi(
-            high=high, low=low, close=close, volume=volume,
-            length=length, talib=mode_tal
+            high=high,
+            low=low,
+            close=close,
+            volume=volume,
+            length=length,
+            talib=mode_tal,
         )
 
     if momo is None:

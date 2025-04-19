@@ -1,26 +1,41 @@
 """
 Real-time quotes charting components
 """
-from PySide6 import QtCore, QtGui,QtWidgets
-from PySide6.QtGui import QPainter,QPicture
+
+from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6.QtGui import QPainter, QPicture
 
 from atklip.app_utils.functions import mkBrush
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from atklip.graphics.chart_component.viewchart import Chart
 
 from math import atan2, degrees
 
-from atklip.graphics.pyqtgraph import GraphicsObject,Point,functions as fn
+from pyqtgraph import GraphicsObject, Point, functions as fn
 
-__all__ = ['TextItem']
+__all__ = ["TextItem"]
+
 
 class TextItem(GraphicsObject):
     """
-    GraphicsItem displaying unscaled text (the text will always appear normal even inside a scaled ViewBox). 
+    GraphicsItem displaying unscaled text (the text will always appear normal even inside a scaled ViewBox).
     """
-    def __init__(self,chart=None, text='', color=(200,200,200), html=None, anchor=(0,0),
-                 border=None, fill=None, angle=0, rotateAxis=None, ensureInBounds=False):
+
+    def __init__(
+        self,
+        chart=None,
+        text="",
+        color=(200, 200, 200),
+        html=None,
+        anchor=(0, 0),
+        border=None,
+        fill=None,
+        angle=0,
+        rotateAxis=None,
+        ensureInBounds=False,
+    ):
         """
         ================  =================================================================================
         **Arguments:**
@@ -40,7 +55,7 @@ class TextItem(GraphicsObject):
                           Allows text to follow both the position and orientation of its parent while still
                           discarding any scale and shear factors.
         *ensureInBounds*  Ensures that the entire TextItem will be visible when using autorange, but may
-                          produce runaway scaling in certain circumstances (See issue #2642). Setting to 
+                          produce runaway scaling in certain circumstances (See issue #2642). Setting to
                           "True" retains legacy behavior.
         ================  =================================================================================
 
@@ -53,27 +68,27 @@ class TextItem(GraphicsObject):
           * rotateAxis=(0, 1), angle=0 -> text aligned with y axis of its parent
           * rotateAxis=(1, 0), angle=90 -> text orthogonal to x axis of its parent
         """
-                     
+
         self.anchor = Point(anchor)
         self.rotateAxis = None if rotateAxis is None else Point(rotateAxis)
-        #self.angle = 0
+        # self.angle = 0
         GraphicsObject.__init__(self)
-        
-        self.chart:Chart = chart
+
+        self.chart: Chart = chart
         self.picture = QPicture()
-        self.x,self.y = None,None
-        
+        self.x, self.y = None, None
+
         self.textItem = QtWidgets.QGraphicsTextItem()
         self.textItem.setParentItem(self)
         self._lastTransform = None
         self._lastScene = None
 
-        # Note: The following is pretty scuffed; ideally there would likely be 
-        # some inheritance changes, But this is the least-intrusive thing that 
+        # Note: The following is pretty scuffed; ideally there would likely be
+        # some inheritance changes, But this is the least-intrusive thing that
         # works for now
         if ensureInBounds:
             self.dataBounds = None
-        
+
         self._bounds = QtCore.QRectF()
         if html is None:
             self.setColor(color)
@@ -86,8 +101,8 @@ class TextItem(GraphicsObject):
 
     def setText(self, text, color=None):
         """
-        Set the text of this item. 
-        
+        Set the text of this item.
+
         This method sets the plain text of the item; see also setHtml().
         """
         if color is not None:
@@ -96,8 +111,8 @@ class TextItem(GraphicsObject):
 
     def setPlainText(self, text):
         """
-        Set the plain text to be rendered by this item. 
-        
+        Set the plain text to be rendered by this item.
+
         See QtWidgets.QGraphicsTextItem.setPlainText().
         """
         if text != self.toPlainText():
@@ -106,41 +121,41 @@ class TextItem(GraphicsObject):
 
     def toPlainText(self):
         return self.textItem.toPlainText()
-        
+
     def setHtml(self, html):
         """
-        Set the HTML code to be rendered by this item. 
-        
+        Set the HTML code to be rendered by this item.
+
         See QtWidgets.QGraphicsTextItem.setHtml().
         """
         if self.toHtml() != html:
             self.textItem.setHtml(html)
             self.updateTextPos()
-        
+
     def toHtml(self):
         return self.textItem.toHtml()
-        
+
     def setTextWidth(self, *args):
         """
         Set the width of the text.
-        
+
         If the text requires more space than the width limit, then it will be
         wrapped into multiple lines.
-        
+
         See QtWidgets.QGraphicsTextItem.setTextWidth().
         """
         self.textItem.setTextWidth(*args)
         self.updateTextPos()
-        
+
     def setFont(self, *args):
         """
-        Set the font for this text. 
-        
+        Set the font for this text.
+
         See QtWidgets.QGraphicsTextItem.setFont().
         """
         self.textItem.setFont(*args)
         self.updateTextPos()
-        
+
     def setAngle(self, angle):
         """
         Set the angle of the text in degrees.
@@ -159,12 +174,12 @@ class TextItem(GraphicsObject):
     def setColor(self, color):
         """
         Set the color for this text.
-        
+
         See QtWidgets.QGraphicsItem.setDefaultTextColor().
         """
         self.color = fn.mkColor(color)
         self.textItem.setDefaultTextColor(self.color)
-        
+
     def updateTextPos(self):
         # update text position to obey anchor
         r = self.textItem.boundingRect()
@@ -176,7 +191,7 @@ class TextItem(GraphicsObject):
     def dataBounds(self, ax, frac=1.0, orthoRange=None):
         """
         Returns only the anchor point for when calulating view ranges.
-        
+
         Sacrifices some visual polish for fixing issue #2642.
         """
         if orthoRange:
@@ -185,7 +200,7 @@ class TextItem(GraphicsObject):
                 return [None, None]
 
         return [self.anchor[ax], self.anchor[ax]]
-        
+
     def boundingRect(self):
         return self.textItem.mapRectToParent(self.textItem.boundingRect())
 
@@ -193,18 +208,18 @@ class TextItem(GraphicsObject):
         # called whenever view transform has changed.
         # Do this here to avoid double-updates when view changes.
         self.updateTransform()
-    
-    def setPos(self,point):
-        self.x,self.y = point.x(),point.y()
+
+    def setPos(self, point):
+        self.x, self.y = point.x(), point.y()
         super().setPos(point)
-    
+
     def paint(self, p, *args):
-        x_left,x_right = self.chart.xAxis.range[0],self.chart.xAxis.range[1]
+        x_left, x_right = self.chart.xAxis.range[0], self.chart.xAxis.range[1]
         if self.x:
             if x_left < self.x < x_right:
                 self.show()
                 p = QPainter(self.picture)
-                
+
                 s = self.scene()
                 ls = self._lastScene
                 if s is not ls:
@@ -215,20 +230,25 @@ class TextItem(GraphicsObject):
                         s.sigPrepareForPaint.connect(self.updateTransform)
                     self.updateTransform()
                     p.setTransform(self.sceneTransform())
-                
-                if self.border.style() != QtCore.Qt.PenStyle.NoPen or self.fill.style() != QtCore.Qt.BrushStyle.NoBrush:
+
+                if (
+                    self.border.style() != QtCore.Qt.PenStyle.NoPen
+                    or self.fill.style() != QtCore.Qt.BrushStyle.NoBrush
+                ):
                     p.setPen(self.border)
                     p.setBrush(self.fill)
                     p.setRenderHint(p.RenderHint.Antialiasing, True)
-                    p.drawPolygon(self.textItem.mapToParent(self.textItem.boundingRect()))
+                    p.drawPolygon(
+                        self.textItem.mapToParent(self.textItem.boundingRect())
+                    )
             else:
                 self.hide()
-        
+
     def setVisible(self, v):
         GraphicsObject.setVisible(self, v)
         if v:
             self.updateTransform()
-    
+
     def updateTransform(self, force=False):
         if not self.isVisible():
             return
@@ -236,32 +256,31 @@ class TextItem(GraphicsObject):
         # update transform such that this item has the correct orientation
         # and scaling relative to the scene, but inherits its position from its
         # parent.
-        # This is similar to setting ItemIgnoresTransformations = True, but 
+        # This is similar to setting ItemIgnoresTransformations = True, but
         # does not break mouse interaction and collision detection.
         p = self.parentItem()
         if p is None:
             pt = QtGui.QTransform()
         else:
             pt = p.sceneTransform()
-        
+
         if not force and pt == self._lastTransform:
             return
 
         t = fn.invertQTransform(pt)
         # reset translation
         t.setMatrix(t.m11(), t.m12(), t.m13(), t.m21(), t.m22(), t.m23(), 0, 0, t.m33())
-        
+
         # apply rotation
         angle = -self.angle
         if self.rotateAxis is not None:
             d = pt.map(self.rotateAxis) - pt.map(Point(0, 0))
             a = degrees(atan2(d.y(), d.x()))
             angle += a
-        t.rotate(angle)  
+        t.rotate(angle)
         self.setTransform(t)
         self._lastTransform = pt
         self.updateTextPos()
-
 
 
 # TODO: test this out as our help menu
@@ -269,7 +288,7 @@ class CenteredTextItem(QtWidgets.QGraphicsTextItem):
     def __init__(
         self,
         chart,
-        text='',
+        text="",
         parent=None,
         pos=(0, 0),
         pen=None,
@@ -278,7 +297,7 @@ class CenteredTextItem(QtWidgets.QGraphicsTextItem):
         opacity=0.1,
     ):
         super().__init__(text, parent)
-        self.chart:Chart = chart
+        self.chart: Chart = chart
         self.pen = pen
         self.brush = mkBrush(brush)
         self.opacity = opacity
@@ -286,29 +305,29 @@ class CenteredTextItem(QtWidgets.QGraphicsTextItem):
         self.text_flags = QtCore.Qt.AlignCenter
         self.setPos(*pos)
         self.setFlag(self.GraphicsItemFlag.ItemIgnoresTransformations)
-        
+
         self.has: dict = {
-            "x_axis_show":True,
+            "x_axis_show": True,
             "name": "rectangle",
             "type": "drawtool",
             "id": id,
-            "inputs":{
-                    },
-            "styles":{
-                    'brush': pen,
-                    "lock":True,
-                    "setting": False,
-                    "delete":True,}
+            "inputs": {},
+            "styles": {
+                "brush": pen,
+                "lock": True,
+                "setting": False,
+                "delete": True,
+            },
         }
-        
+
         self.picture = QPicture()
-        self.x,self.y = None,None
+        self.x, self.y = None, None
         self.setdata()
 
-    def setPos(self,x,y):
-        self.x,self.y = x,y
-        super().setPos(x,y)
-    
+    def setPos(self, x, y):
+        self.x, self.y = x, y
+        super().setPos(x, y)
+
     def boundingRect(self):  # noqa
         r = super().boundingRect()
         if self.valign == QtCore.Qt.AlignTop:
@@ -321,10 +340,10 @@ class CenteredTextItem(QtWidgets.QGraphicsTextItem):
         # if self.x:
         #     if x_left < self.x < x_right:
         self.picture.play(p)
-    
+
     def setdata(self):
         p = QPainter(self.picture)
-        
+
         p.setRenderHint(QPainter.Antialiasing, False)
         p.setRenderHint(QPainter.TextAntialiasing, True)
         p.setPen(self.pen)

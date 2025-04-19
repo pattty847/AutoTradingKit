@@ -5,11 +5,13 @@ from atklip.controls.pandas_ta._typing import DictLike, Int, List
 from atklip.controls.pandas_ta.utils import v_list, v_lowerbound, v_offset, v_series
 
 
-
 def tos_stdevall(
-    close: Series, length: Int = None,
-    stds: List = None, ddof: Int = None,
-    offset: Int = None, **kwargs: DictLike
+    close: Series,
+    length: Int = None,
+    stds: List = None,
+    ddof: Int = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> DataFrame:
     """TD Ameritrade's Think or Swim Standard Deviation All (TOS_STDEV)
 

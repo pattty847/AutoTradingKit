@@ -7,11 +7,15 @@ from atklip.controls.pandas_ta.ma import ma
 from atklip.controls.pandas_ta.utils import v_mamode, v_offset, v_pos_default, v_series
 
 
-
 def hilo(
-    high: Series, low: Series, close: Series,
-    high_length: Int = None, low_length: Int = None, mamode: str = None,
-    offset: Int = None, **kwargs: DictLike
+    high: Series,
+    low: Series,
+    close: Series,
+    high_length: Int = None,
+    low_length: Int = None,
+    mamode: str = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> DataFrame:
     """Gann HiLo Activator(HiLo)
 
@@ -93,11 +97,7 @@ def hilo(
 
     # Name and Category
     _props = f"_{high_length}_{low_length}"
-    data = {
-        f"HILO{_props}": hilo,
-        f"HILOl{_props}": long,
-        f"HILOs{_props}": short
-    }
+    data = {f"HILO{_props}": hilo, f"HILOl{_props}": long, f"HILOs{_props}": short}
     df = DataFrame(data, index=close.index)
 
     df.name = f"HILO{_props}"

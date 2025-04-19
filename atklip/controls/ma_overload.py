@@ -25,8 +25,9 @@ from atklip.controls.pandas_ta.overlap.wma import wma
 from atklip.controls.pandas_ta.overlap.zlma import zlma
 
 
-
-def ma(name: str = None, source: Series = None,length: Int = None,mamode: str="ema") -> Series:
+def ma(
+    name: str = None, source: Series = None, length: Int = None, mamode: str = "ema"
+) -> Series:
     """Simple MA Utility for easier MA selection
 
     Available MAs:
@@ -49,8 +50,24 @@ def ma(name: str = None, source: Series = None,length: Int = None,mamode: str="e
         pd.Series: New feature generated.
     """
     _mas = [
-        "dema", "ema", "fwma", "hma", "linreg", "midpoint", "pwma", "rma","smma"
-        "sinwma", "sma", "ssf", "swma", "t3", "tema", "trima", "vidya", "wma","zlma"
+        "dema",
+        "ema",
+        "fwma",
+        "hma",
+        "linreg",
+        "midpoint",
+        "pwma",
+        "rma",
+        "smma" "sinwma",
+        "sma",
+        "ssf",
+        "swma",
+        "t3",
+        "tema",
+        "trima",
+        "vidya",
+        "wma",
+        "zlma",
     ]
     if name is None and source is None:
         return _mas
@@ -58,24 +75,44 @@ def ma(name: str = None, source: Series = None,length: Int = None,mamode: str="e
         name = name.lower()
     else:  # "ema"
         name = "ema"
-    
-    if   name == "dema": return dema(source, length)
-    elif name == "fwma": return fwma(source, length)
-    elif name == "hma": return hma(source, length)
-    elif name == "linreg": return linreg(source, length)
-    elif name == "midpoint": return midpoint(source, length)
-    elif name == "pwma": return pwma(source, length)
-    elif name == "rma": return rma(source, length)
-    elif name == "sinwma": return sinwma(source, length)
-    elif name == "sma": return sma(source, length)
-    elif name == "smma": return smma(source, length,mamode)
-    elif name == "ssf": return ssf(source, length)
-    elif name == "ssf3": return ssf3(source, length)
-    elif name == "swma": return swma(source, length)
-    elif name == "t3": return t3(source, length)
-    elif name == "tema": return tema(source, length)
-    elif name == "trima": return trima(source, length)
-    elif name == "vidya": return vidya(source, length)
-    elif name == "wma": return wma(source, length)
-    elif name == "zlma": return zlma(source, length,mamode)
-    else: return ema(source, length)
+
+    if name == "dema":
+        return dema(source, length)
+    elif name == "fwma":
+        return fwma(source, length)
+    elif name == "hma":
+        return hma(source, length)
+    elif name == "linreg":
+        return linreg(source, length)
+    elif name == "midpoint":
+        return midpoint(source, length)
+    elif name == "pwma":
+        return pwma(source, length)
+    elif name == "rma":
+        return rma(source, length)
+    elif name == "sinwma":
+        return sinwma(source, length)
+    elif name == "sma":
+        return sma(source, length)
+    elif name == "smma":
+        return smma(source, length, mamode)
+    elif name == "ssf":
+        return ssf(source, length)
+    elif name == "ssf3":
+        return ssf3(source, length)
+    elif name == "swma":
+        return swma(source, length)
+    elif name == "t3":
+        return t3(source, length)
+    elif name == "tema":
+        return tema(source, length)
+    elif name == "trima":
+        return trima(source, length)
+    elif name == "vidya":
+        return vidya(source, length)
+    elif name == "wma":
+        return wma(source, length)
+    elif name == "zlma":
+        return zlma(source, length, mamode)
+    else:
+        return ema(source, length)

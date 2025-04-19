@@ -3,14 +3,23 @@ from numpy import isnan
 from pandas import DataFrame, Series
 from atklip.controls.pandas_ta._typing import DictLike, Int
 from atklip.controls.pandas_ta.overlap import swma
-from atklip.controls.pandas_ta.utils import non_zero_range, v_offset, v_pos_default, v_series
-
+from atklip.controls.pandas_ta.utils import (
+    non_zero_range,
+    v_offset,
+    v_pos_default,
+    v_series,
+)
 
 
 def rvgi(
-    open_: Series, high: Series, low: Series, close: Series,
-    length: Int = None, swma_length: Int = None,
-    offset: Int = None, **kwargs: DictLike
+    open_: Series,
+    high: Series,
+    low: Series,
+    close: Series,
+    length: Int = None,
+    swma_length: Int = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Relative Vigor Index (RVGI)
 
@@ -55,10 +64,8 @@ def rvgi(
     high_low_range = non_zero_range(high, low)
     close_open_range = non_zero_range(close, open_)
 
-    numerator = swma(close_open_range, length=swma_length) \
-        .rolling(length).sum()
-    denominator = swma(high_low_range, length=swma_length) \
-        .rolling(length).sum()
+    numerator = swma(close_open_range, length=swma_length).rolling(length).sum()
+    denominator = swma(high_low_range, length=swma_length).rolling(length).sum()
 
     rvgi = numerator / denominator
     signal = swma(rvgi, length=swma_length)

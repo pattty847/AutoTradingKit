@@ -10,16 +10,19 @@ from atklip.controls.pandas_ta.utils import (
     v_pos_default,
     v_offset,
     v_series,
-    zero
+    zero,
 )
 
 
-
 def wb_tsv(
-    close: Series, volume: Series,
-    length: Int = None, signal: Int = None,
-    mamode: str = None, drift: Int = None,
-    offset: Int = None, **kwargs: DictLike
+    close: Series,
+    volume: Series,
+    length: Int = None,
+    signal: Int = None,
+    mamode: str = None,
+    drift: Int = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> DataFrame:
     """Time Segmented Value (TSV)
 
@@ -64,9 +67,9 @@ def wb_tsv(
     offset = v_offset(offset)
 
     # Calculate
-    signed_volume = volume * signed_series(close, 1)     # > 0
-    signed_volume[signed_volume < 0] = -signed_volume    # < 0
-    signed_volume.apply(zero)                            # ~ 0
+    signed_volume = volume * signed_series(close, 1)  # > 0
+    signed_volume[signed_volume < 0] = -signed_volume  # < 0
+    signed_volume.apply(zero)  # ~ 0
     cvd = signed_volume * close.diff(drift)
 
     tsv = cvd.rolling(length).sum()

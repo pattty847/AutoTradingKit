@@ -8,14 +8,16 @@ from atklip.controls.pandas_ta.utils import (
     v_ascending,
     v_pos_default,
     v_series,
-    weights
+    weights,
 )
 
 
-
 def pwma(
-    close: Series, length: Int = None, asc: bool = None,
-    offset: Int = None, **kwargs: DictLike
+    close: Series,
+    length: Int = None,
+    asc: bool = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Pascal's Weighted Moving Average (PWMA)
 
@@ -48,8 +50,7 @@ def pwma(
 
     # Calculate
     triangle = pascals_triangle(n=length - 1, weighted=True)
-    pwma = close.rolling(length, min_periods=length) \
-        .apply(weights(triangle), raw=True)
+    pwma = close.rolling(length, min_periods=length).apply(weights(triangle), raw=True)
 
     # Offset
     if offset != 0:

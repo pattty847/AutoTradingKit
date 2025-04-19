@@ -1,23 +1,34 @@
 # coding:utf-8
 from PySide6.QtCore import Qt, QSize, QRectF, QModelIndex
 from PySide6.QtGui import QPainter, QColor, QPalette
-from PySide6.QtWidgets import QTreeWidget, QStyledItemDelegate, QStyle, QTreeView, QApplication, QStyleOptionViewItem
+from PySide6.QtWidgets import (
+    QTreeWidget,
+    QStyledItemDelegate,
+    QStyle,
+    QTreeView,
+    QApplication,
+    QStyleOptionViewItem,
+)
 
-from ...common.style_sheet import FluentStyleSheet, themeColor, isDarkTheme, setCustomStyleSheet
+from ...common.style_sheet import (
+    FluentStyleSheet,
+    themeColor,
+    isDarkTheme,
+    setCustomStyleSheet,
+)
 from ...common.font import getFont
 from .check_box import CheckBoxIcon
 from .scroll_area import SmoothScrollDelegate
 
 
 class TreeItemDelegate(QStyledItemDelegate):
-    """ Tree item delegate """
+    """Tree item delegate"""
 
     def __init__(self, parent: QTreeView):
         super().__init__(parent)
 
     def paint(self, painter, option, index):
-        painter.setRenderHints(
-            QPainter.Antialiasing | QPainter.TextAntialiasing)
+        painter.setRenderHints(QPainter.Antialiasing | QPainter.TextAntialiasing)
         super().paint(painter, option, index)
 
         if index.data(Qt.CheckStateRole) is not None:
@@ -34,16 +45,22 @@ class TreeItemDelegate(QStyledItemDelegate):
         c = 255 if isDarkTheme() else 0
         painter.setBrush(QColor(c, c, c, 9))
         painter.drawRoundedRect(
-            4, option.rect.y() + 2, self.parent().width() - 8, h, 4, 4)
+            4, option.rect.y() + 2, self.parent().width() - 8, h, 4, 4
+        )
 
         # draw indicator
-        if option.state & QStyle.State_Selected and self.parent().horizontalScrollBar().value() == 0:
+        if (
+            option.state & QStyle.State_Selected
+            and self.parent().horizontalScrollBar().value() == 0
+        ):
             painter.setBrush(themeColor())
-            painter.drawRoundedRect(4, 9+option.rect.y(), 3, h - 13, 1.5, 1.5)
+            painter.drawRoundedRect(4, 9 + option.rect.y(), 3, h - 13, 1.5, 1.5)
 
         painter.restore()
 
-    def _drawCheckBox(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex):
+    def _drawCheckBox(
+        self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex
+    ):
         painter.save()
         checkState = Qt.CheckState(index.data(Qt.ItemDataRole.CheckStateRole))
 
@@ -55,10 +72,10 @@ class TreeItemDelegate(QStyledItemDelegate):
         rect = QRectF(x, y, 19, 19)
 
         if checkState == Qt.CheckState.Unchecked:
-            painter.setBrush(QColor(0, 0, 0, 26)
-                             if isDark else QColor(0, 0, 0, 6))
-            painter.setPen(QColor(255, 255, 255, 142)
-                           if isDark else QColor(0, 0, 0, 122))
+            painter.setBrush(QColor(0, 0, 0, 26) if isDark else QColor(0, 0, 0, 6))
+            painter.setPen(
+                QColor(255, 255, 255, 142) if isDark else QColor(0, 0, 0, 122)
+            )
             painter.drawRoundedRect(rect, r, r)
         else:
             painter.setPen(themeColor())
@@ -71,7 +88,6 @@ class TreeItemDelegate(QStyledItemDelegate):
                 CheckBoxIcon.PARTIAL_ACCEPT.render(painter, rect)
 
         painter.restore()
-
 
     def initStyleOption(self, option, index):
         super().initStyleOption(option, index)
@@ -90,7 +106,7 @@ class TreeItemDelegate(QStyledItemDelegate):
 
 
 class TreeViewBase:
-    """ Tree view base class """
+    """Tree view base class"""
 
     def _initView(self):
         self.scrollDelagate = SmoothScrollDelegate(self)
@@ -108,18 +124,18 @@ class TreeViewBase:
         return QTreeView.drawBranches(self, painter, rect, index)
 
     def setBorderVisible(self, isVisible: bool):
-        """ set the visibility of border """
+        """set the visibility of border"""
         self.setProperty("isBorderVisible", isVisible)
         self.setStyle(QApplication.style())
 
     def setBorderRadius(self, radius: int):
-        """ set the radius of border """
+        """set the radius of border"""
         qss = f"QTreeView{{border-radius: {radius}px}}"
         setCustomStyleSheet(self, qss, qss)
 
 
 class TreeWidget(TreeViewBase, QTreeWidget):
-    """ Tree widget """
+    """Tree widget"""
 
     def __init__(self, parent=None):
         super().__init__(parent=parent)
@@ -127,7 +143,7 @@ class TreeWidget(TreeViewBase, QTreeWidget):
 
 
 class TreeView(TreeViewBase, QTreeView):
-    """ Tree view """
+    """Tree view"""
 
     def __init__(self, parent=None):
         super().__init__(parent=parent)

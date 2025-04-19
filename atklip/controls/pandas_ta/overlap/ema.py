@@ -8,15 +8,17 @@ from atklip.controls.pandas_ta.utils import (
     v_offset,
     v_pos_default,
     v_series,
-    v_talib
+    v_talib,
 )
 
 
-
 def ema(
-    close: Series, length: Int = None,
-    talib: bool = False, presma: bool = None,
-    offset: Int = None, **kwargs: DictLike
+    close: Series,
+    length: Int = None,
+    talib: bool = False,
+    presma: bool = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Exponential Moving Average (EMA)
 
@@ -58,12 +60,12 @@ def ema(
     presma = v_bool(presma, False)
     offset = v_offset(offset)
     adjust = kwargs.setdefault("adjust", False)
-    
+
     # Calculate
     if presma:  # TA Lib implementation
         close = close.copy()
         sma_nth = close.iloc[0:length].mean()
-        close.iloc[:length - 1] = nan
+        close.iloc[: length - 1] = nan
         close.iloc[length - 1] = sma_nth
     ema = close.ewm(span=length, adjust=adjust).mean()
 

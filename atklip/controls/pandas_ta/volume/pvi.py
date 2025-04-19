@@ -7,14 +7,20 @@ from atklip.controls.pandas_ta.utils import (
     v_mamode,
     v_offset,
     v_pos_default,
-    v_series
+    v_series,
 )
 from atklip.controls.pandas_ta.utils._numba import nb_pvi
 
+
 def pvi(
-    close: Series, volume: Series, length: Int = None, initial: Int = None,
-    mamode: str = None, overlay: bool = None, offset: Int = None,
-    **kwargs: DictLike
+    close: Series,
+    volume: Series,
+    length: Int = None,
+    initial: Int = None,
+    mamode: str = None,
+    overlay: bool = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> DataFrame:
     """Positive Volume Index (PVI)
 
@@ -84,7 +90,7 @@ def pvi(
     pvi_ma.name = f"PVI{_props}"
     pvi.category = pvi_ma.category = "volume"
 
-    data = { pvi.name: pvi}
+    data = {pvi.name: pvi}
     if np_close.size > length + 1:
         data[pvi_ma.name] = pvi_ma
     df = DataFrame(data, index=close.index)

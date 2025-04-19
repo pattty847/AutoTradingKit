@@ -5,10 +5,12 @@ from atklip.controls.pandas_ta._typing import DictLike, Int
 from atklip.controls.pandas_ta.utils import v_bool, v_offset, v_pos_default, v_series
 
 
-
 def log_return(
-    close: Series, length: Int = None, cumulative: bool = None,
-    offset: Int = None, **kwargs: DictLike
+    close: Series,
+    length: Int = None,
+    cumulative: bool = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Log Return
 

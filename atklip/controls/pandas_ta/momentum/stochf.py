@@ -10,16 +10,20 @@ from atklip.controls.pandas_ta.utils import (
     v_offset,
     v_pos_default,
     v_series,
-    v_talib
+    v_talib,
 )
 
 
-
 def stochf(
-    high: Series, low: Series, close: Series,
-    k: Int = None, d: Int = None,
-    mamode: str = None, talib: bool = None,
-    offset: Int = None, **kwargs: DictLike
+    high: Series,
+    low: Series,
+    close: Series,
+    k: Int = None,
+    d: Int = None,
+    mamode: str = None,
+    talib: bool = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> DataFrame:
     """Fast Stochastic (STOCHF)
 
@@ -67,9 +71,8 @@ def stochf(
     lowest_low = low.rolling(k).min()
     highest_high = high.rolling(k).max()
 
-    stochf_k = 100 * (close - lowest_low) \
-        / non_zero_range(highest_high, lowest_low)
-    stochfk_fvi = stochf_k.loc[stochf_k.first_valid_index():, ]
+    stochf_k = 100 * (close - lowest_low) / non_zero_range(highest_high, lowest_low)
+    stochfk_fvi = stochf_k.loc[stochf_k.first_valid_index() :,]
     stochf_d = ma(mamode, stochfk_fvi, length=d, talib=mode_tal)
 
     # Offset

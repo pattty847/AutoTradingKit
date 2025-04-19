@@ -9,15 +9,18 @@ from atklip.controls.pandas_ta.utils import (
     v_pos_default,
     v_scalar,
     v_series,
-    v_talib
+    v_talib,
 )
 
 
-
 def cmo(
-    close: Series, length: Int = None, scalar: IntFloat = None,
-    talib: bool = None, drift: Int = None,
-    offset: Int = None, **kwargs: DictLike
+    close: Series,
+    length: Int = None,
+    scalar: IntFloat = None,
+    talib: bool = None,
+    drift: Int = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Chande Momentum Oscillator (CMO)
 

@@ -5,10 +5,10 @@ from PySide6.QtCore import QPointF
 
 @dataclass
 class Line:
-    text:str
+    text: str
     pos: list
     chart_pos: QPointF
     item: object
-    color: tuple|str
-    brush: tuple|str
+    color: tuple | str
+    brush: tuple | str
     show: bool

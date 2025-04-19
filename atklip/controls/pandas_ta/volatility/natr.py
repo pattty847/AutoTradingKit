@@ -10,17 +10,23 @@ from atklip.controls.pandas_ta.utils import (
     v_pos_default,
     v_scalar,
     v_series,
-    v_talib
+    v_talib,
 )
 from atklip.controls.pandas_ta.volatility import atr
 
 
-
 def natr(
-    high: Series, low: Series, close: Series,
-    length: Int = None, scalar: IntFloat = None, mamode: str = None,
-    talib: bool = None, prenan: bool = None, drift: Int = None,
-    offset: Int = None, **kwargs: DictLike
+    high: Series,
+    low: Series,
+    close: Series,
+    length: Int = None,
+    scalar: IntFloat = None,
+    mamode: str = None,
+    talib: bool = None,
+    prenan: bool = None,
+    drift: Int = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Normalized Average True Range (NATR)
 
@@ -66,11 +72,17 @@ def natr(
     offset = v_offset(offset)
 
     # Calculate
-    natr = (scalar / close) * \
-    atr(
-        high=high, low=low, close=close, length=length,
-        mamode=mamode, drift=drift, talib=mode_tal,
-        prenan=prenan, offset=offset, **kwargs
+    natr = (scalar / close) * atr(
+        high=high,
+        low=low,
+        close=close,
+        length=length,
+        mamode=mamode,
+        drift=drift,
+        talib=mode_tal,
+        prenan=prenan,
+        offset=offset,
+        **kwargs,
     )
 
     # Offset

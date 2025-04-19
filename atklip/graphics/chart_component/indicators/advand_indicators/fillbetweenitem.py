@@ -1,25 +1,27 @@
 from typing import Union
 
-from atklip.graphics.pyqtgraph import functions as fn,PlotDataItem,PlotCurveItem
+from pyqtgraph import functions as fn, PlotDataItem, PlotCurveItem
 from PySide6 import QtGui, QtWidgets, QtCore
 
 
-__all__ = ['FillBetweenItem']
+__all__ = ["FillBetweenItem"]
+
 
 class FillBetweenItem(QtWidgets.QGraphicsPathItem):
     """
     GraphicsItem filling the space between two PlotDataItems.
     """
+
     def __init__(
         self,
         curve1: Union[PlotDataItem, PlotCurveItem],
         curve2: Union[PlotDataItem, PlotCurveItem],
         brush=None,
         pen=None,
-        fillRule: QtCore.Qt.FillRule=QtCore.Qt.FillRule.OddEvenFill
+        fillRule: QtCore.Qt.FillRule = QtCore.Qt.FillRule.OddEvenFill,
     ):
         """FillBetweenItem fills a region between two curves with a specified
-        :class:`~QtGui.QBrush`. 
+        :class:`~QtGui.QBrush`.
 
         Parameters
         ----------
@@ -64,8 +66,10 @@ class FillBetweenItem(QtWidgets.QGraphicsPathItem):
     def fillRule(self):
         return self._fillRule
 
-    def setFillRule(self, fillRule: QtCore.Qt.FillRule=QtCore.Qt.FillRule.OddEvenFill):
-        """Set the underlying :class:`~QtGui.QPainterPath` to the specified 
+    def setFillRule(
+        self, fillRule: QtCore.Qt.FillRule = QtCore.Qt.FillRule.OddEvenFill
+    ):
+        """Set the underlying :class:`~QtGui.QPainterPath` to the specified
         :class:`~QtCore.Qt.FillRule`
 
         This can be useful for allowing in the filling of voids.
@@ -77,21 +81,19 @@ class FillBetweenItem(QtWidgets.QGraphicsPathItem):
         """
         self._fillRule = fillRule
         self.updatePath()
-        
+
     def setBrush(self, *args, **kwds):
-        """Change the fill brush. Accepts the same arguments as :func:`~pyqtgraph.mkBrush`
-        """
+        """Change the fill brush. Accepts the same arguments as :func:`~pyqtgraph.mkBrush`"""
         QtWidgets.QGraphicsPathItem.setBrush(self, fn.mkBrush(*args, **kwds))
-        
+
     def setPen(self, *args, **kwds):
-        """Change the fill pen. Accepts the same arguments as :func:`~pyqtgraph.mkColor`
-        """
+        """Change the fill pen. Accepts the same arguments as :func:`~pyqtgraph.mkColor`"""
         QtWidgets.QGraphicsPathItem.setPen(self, fn.mkPen(*args, **kwds))
 
     def setCurves(
         self,
         curve1: Union[PlotDataItem, PlotCurveItem],
-        curve2: Union[PlotDataItem, PlotCurveItem]
+        curve2: Union[PlotDataItem, PlotCurveItem],
     ):
         """Method to set the Curves to draw the FillBetweenItem between
 
@@ -101,13 +103,13 @@ class FillBetweenItem(QtWidgets.QGraphicsPathItem):
             Line to draw fill from
         curve2 : :class:`~pyqtgraph.PlotDataItem` | :class:`~pyqtgraph.PlotCurveItem`
             Line to draw fill to
-    
+
         Raises
         ------
         TypeError
             Raised when input arguments are not either :class:`~pyqtgraph.PlotDataItem` or
             :class:`~pyqtgraph.PlotCurveItem`
-        """        
+        """
         if self.curves is not None:
             for c in self.curves:
                 try:
@@ -122,12 +124,12 @@ class FillBetweenItem(QtWidgets.QGraphicsPathItem):
         self.curves = curves
         curve1.sigPlotChanged.connect(self.curveChanged)
         # curve2.sigPlotChanged.connect(self.curveChanged)
-        self.setZValue(min(curve1.zValue(), curve2.zValue())-1)
+        self.setZValue(min(curve1.zValue(), curve2.zValue()) - 1)
         self.curveChanged()
 
     def curveChanged(self):
         self.updatePath()
-    
+
     def updatePath(self):
         if self.curves is None:
             self.setPath(QtGui.QPainterPath())
@@ -140,7 +142,7 @@ class FillBetweenItem(QtWidgets.QGraphicsPathItem):
                 paths.append(c.getPath())
 
         path = QtGui.QPainterPath()
-        path.setFillRule(self.fillRule())   
+        path.setFillRule(self.fillRule())
 
         ps1 = paths[0].toSubpathPolygons()
         ps2 = paths[1].toReversed().toSubpathPolygons()

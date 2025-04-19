@@ -1,1 +1,1 @@
-from .btn_interval import  IntervalButton
+from .btn_interval import IntervalButton

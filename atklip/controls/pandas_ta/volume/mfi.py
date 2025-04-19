@@ -11,15 +11,20 @@ from atklip.controls.pandas_ta.utils import (
     v_offset,
     v_pos_default,
     v_series,
-    v_talib
+    v_talib,
 )
 
 
-
 def mfi(
-    high: Series, low: Series, close: Series, volume: Series,
-    length: Int = None, talib: bool = None, drift: Int = None,
-    offset: Int = None, **kwargs: DictLike
+    high: Series,
+    low: Series,
+    close: Series,
+    volume: Series,
+    length: Int = None,
+    talib: bool = None,
+    drift: Int = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Money Flow Index (MFI)
 

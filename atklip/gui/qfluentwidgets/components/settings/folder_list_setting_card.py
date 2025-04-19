@@ -4,8 +4,15 @@ from pathlib import Path
 
 from PySide6.QtCore import Qt, Signal, QSize
 from PySide6.QtGui import QPainter, QIcon
-from PySide6.QtWidgets import (QPushButton, QFileDialog, QWidget, QLabel,
-                               QHBoxLayout, QToolButton, QSizePolicy)
+from PySide6.QtWidgets import (
+    QPushButton,
+    QFileDialog,
+    QWidget,
+    QLabel,
+    QHBoxLayout,
+    QToolButton,
+    QSizePolicy,
+)
 
 from ...components.widgets.button import ToolButton, PushButton
 from ...common.config import ConfigItem, qconfig
@@ -15,9 +22,8 @@ from ..dialog_box.dialog import Dialog
 from .expand_setting_card import ExpandSettingCard
 
 
-
 class FolderItem(QWidget):
-    """ Folder item """
+    """Folder item"""
 
     removed = Signal(QWidget)
 
@@ -40,16 +46,22 @@ class FolderItem(QWidget):
         self.hBoxLayout.addWidget(self.removeButton, 0, Qt.AlignRight)
         self.hBoxLayout.setAlignment(Qt.AlignVCenter)
 
-        self.removeButton.clicked.connect(
-            lambda: self.removed.emit(self))
+        self.removeButton.clicked.connect(lambda: self.removed.emit(self))
 
 
 class FolderListSettingCard(ExpandSettingCard):
-    """ Folder list setting card """
+    """Folder list setting card"""
 
     folderChanged = Signal(list)
 
-    def __init__(self, configItem: ConfigItem, title: str, content: str = None, directory="./", parent=None):
+    def __init__(
+        self,
+        configItem: ConfigItem,
+        title: str,
+        content: str = None,
+        directory="./",
+        parent=None,
+    ):
         """
         Parameters
         ----------
@@ -71,9 +83,9 @@ class FolderListSettingCard(ExpandSettingCard):
         super().__init__(FIF.FOLDER, title, content, parent)
         self.configItem = configItem
         self._dialogDirectory = directory
-        self.addFolderButton = PushButton(self.tr('Add folder'), self, FIF.FOLDER_ADD)
+        self.addFolderButton = PushButton(self.tr("Add folder"), self, FIF.FOLDER_ADD)
 
-        self.folders = qconfig.get(configItem).copy()   # type:List[str]
+        self.folders = qconfig.get(configItem).copy()  # type:List[str]
         self.__initWidget()
 
     def __initWidget(self):
@@ -89,9 +101,10 @@ class FolderListSettingCard(ExpandSettingCard):
         self.addFolderButton.clicked.connect(self.__showFolderDialog)
 
     def __showFolderDialog(self):
-        """ show folder dialog """
+        """show folder dialog"""
         folder = QFileDialog.getExistingDirectory(
-            self, self.tr("Choose folder"), self._dialogDirectory)
+            self, self.tr("Choose folder"), self._dialogDirectory
+        )
 
         if not folder or folder in self.folders:
             return
@@ -102,7 +115,7 @@ class FolderListSettingCard(ExpandSettingCard):
         self.folderChanged.emit(self.folders)
 
     def __addFolderItem(self, folder: str):
-        """ add folder item """
+        """add folder item"""
         item = FolderItem(folder, self.view)
         item.removed.connect(self.__showConfirmDialog)
         self.viewLayout.addWidget(item)
@@ -110,18 +123,23 @@ class FolderListSettingCard(ExpandSettingCard):
         self._adjustViewSize()
 
     def __showConfirmDialog(self, item: FolderItem):
-        """ show confirm dialog """
+        """show confirm dialog"""
         name = Path(item.folder).name
-        title = self.tr('Are you sure you want to delete the folder?')
-        content = self.tr("If you delete the ") + f'"{name}"' + \
-            self.tr(" folder and remove it from the list, the folder will no "
-                    "longer appear in the list, but will not be deleted.")
+        title = self.tr("Are you sure you want to delete the folder?")
+        content = (
+            self.tr("If you delete the ")
+            + f'"{name}"'
+            + self.tr(
+                " folder and remove it from the list, the folder will no "
+                "longer appear in the list, but will not be deleted."
+            )
+        )
         w = Dialog(title, content, self.window())
         w.yesSignal.connect(lambda: self.__removeFolder(item))
         w.exec_()
 
     def __removeFolder(self, item: FolderItem):
-        """ remove folder """
+        """remove folder"""
         if item.folder not in self.folders:
             return
 

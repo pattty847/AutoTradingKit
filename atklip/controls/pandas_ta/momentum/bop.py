@@ -7,15 +7,19 @@ from atklip.controls.pandas_ta.utils import (
     v_offset,
     v_scalar,
     v_series,
-    v_talib
+    v_talib,
 )
 
 
-
 def bop(
-    open_: Series, high: Series, low: Series, close: Series,
-    scalar: IntFloat = None, talib: bool = None,
-    offset: Int = None, **kwargs: DictLike
+    open_: Series,
+    high: Series,
+    low: Series,
+    close: Series,
+    scalar: IntFloat = None,
+    talib: bool = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Balance of Power (BOP)
 

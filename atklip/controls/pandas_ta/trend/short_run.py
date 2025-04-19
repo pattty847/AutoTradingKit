@@ -6,10 +6,12 @@ from .decreasing import decreasing
 from .increasing import increasing
 
 
-
 def short_run(
-    fast: Series, slow: Series, length: Int = None,
-    offset: Int = None, **kwargs: DictLike
+    fast: Series,
+    slow: Series,
+    length: Int = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Short Run
 

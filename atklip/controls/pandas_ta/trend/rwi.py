@@ -9,15 +9,20 @@ from atklip.controls.pandas_ta.utils import (
     v_offset,
     v_pos_default,
     v_series,
-    v_talib
+    v_talib,
 )
 
 
-
 def rwi(
-    high: Series, low: Series, close: Series,
-    length: Int = None, mamode: str = None, talib: bool = None,
-    drift: Int = None, offset: Int = None, **kwargs: DictLike
+    high: Series,
+    low: Series,
+    close: Series,
+    length: Int = None,
+    mamode: str = None,
+    talib: bool = None,
+    drift: Int = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> DataFrame:
     """Random Walk Index (RWI)
 
@@ -61,13 +66,12 @@ def rwi(
 
     # Calculate
     atr_ = atr(
-        high=high, low=low, close=close,
-        length=length, mamode=mamode, talib=mode_tal
+        high=high, low=low, close=close, length=length, mamode=mamode, talib=mode_tal
     )
     if all(isnan(atr_)):
         return  # Emergency Break
 
-    denom = atr_ * (length ** 0.5)
+    denom = atr_ * (length**0.5)
     rwi_high = (high - low.shift(length)) / denom
     rwi_low = (high.shift(length) - low) / denom
 

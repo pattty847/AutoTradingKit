@@ -9,17 +9,20 @@ from atklip.controls.pandas_ta.utils import (
     v_offset,
     v_pos_default,
     v_scalar,
-    v_series
+    v_series,
 )
 from .rsi import rsi
 
 
-
 def qqe(
-    close: Series, length: Int = None,
-    smooth: Int = None, factor: IntFloat = None,
-    mamode: str = None, drift: Int = None,
-    offset: Int = None, **kwargs: DictLike
+    close: Series,
+    length: Int = None,
+    smooth: Int = None,
+    factor: IntFloat = None,
+    mamode: str = None,
+    drift: Int = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> DataFrame:
     """Quantitative Qualitative Estimation (QQE)
 
@@ -121,12 +124,14 @@ def qqe(
         # Trend & QQE Calculation
         # Long: Current RSI_MA value Crosses the Prior Short Line Value
         # Short: Current RSI_MA Crosses the Prior Long Line Value
-        if (c_rsi > c_short and p_rsi < p_short) or \
-            (c_rsi <= c_short and p_rsi >= p_short):
+        if (c_rsi > c_short and p_rsi < p_short) or (
+            c_rsi <= c_short and p_rsi >= p_short
+        ):
             trend.iat[i] = 1
             qqe.iat[i] = qqe_long.iat[i] = long.iat[i]
-        elif (c_rsi > c_long and p_rsi < p_long) or \
-            (c_rsi <= c_long and p_rsi >= p_long):
+        elif (c_rsi > c_long and p_rsi < p_long) or (
+            c_rsi <= c_long and p_rsi >= p_long
+        ):
             trend.iat[i] = -1
             qqe.iat[i] = qqe_short.iat[i] = short.iat[i]
         else:
@@ -165,7 +170,7 @@ def qqe(
         # long.name: long,
         # short.name: short
         qqe_long.name: qqe_long,
-        qqe_short.name: qqe_short
+        qqe_short.name: qqe_short,
     }
     df = DataFrame(data, index=close.index)
     df.name = f"QQE{_props}"

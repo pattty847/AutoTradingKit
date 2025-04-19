@@ -11,15 +11,19 @@ from atklip.controls.pandas_ta.utils import (
     v_offset,
     v_pos_default,
     v_series,
-    v_talib
+    v_talib,
 )
 
 
-
 def bbands(
-    close: Series, length: Int = None, std: IntFloat = None, ddof: Int = 0,
-    mamode: str = None, talib: bool = None,
-    offset: Int = None, **kwargs: DictLike
+    close: Series,
+    length: Int = None,
+    std: IntFloat = None,
+    ddof: Int = 0,
+    mamode: str = None,
+    talib: bool = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> DataFrame:
     """Bollinger Bands (BBANDS)
 
@@ -105,7 +109,7 @@ def bbands(
         mid.name: mid,
         upper.name: upper,
         bandwidth.name: bandwidth,
-        percent.name: percent
+        percent.name: percent,
     }
     df = DataFrame(data, index=close.index)
     df.name = f"BBANDS{_props}"

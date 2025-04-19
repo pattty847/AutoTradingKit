@@ -3,14 +3,23 @@ from warnings import simplefilter
 from pandas import DataFrame, Series
 from atklip.controls.pandas_ta._typing import DictLike, Int, List
 from atklip.controls.pandas_ta.overlap import hlc3
-from atklip.controls.pandas_ta.utils import v_datetime_ordered, v_list, v_offset, v_series
-
+from atklip.controls.pandas_ta.utils import (
+    v_datetime_ordered,
+    v_list,
+    v_offset,
+    v_series,
+)
 
 
 def vwap(
-    high: Series, low: Series, close: Series, volume: Series,
-    anchor: str = None, bands: List = None,
-    offset: Int = None, **kwargs: DictLike
+    high: Series,
+    low: Series,
+    close: Series,
+    volume: Series,
+    anchor: str = None,
+    bands: List = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Volume Weighted Average Price (VWAP)
 
@@ -66,8 +75,7 @@ def vwap(
         anchor = "D"
 
     typical_price = hlc3(high=high, low=low, close=close)
-    if not v_datetime_ordered(volume) or \
-        not v_datetime_ordered(typical_price):
+    if not v_datetime_ordered(volume) or not v_datetime_ordered(typical_price):
         print("[!] VWAP requires an ordered DatetimeIndex.")
         return
 
@@ -75,16 +83,16 @@ def vwap(
     _props = f"VWAP_{anchor}"
     wp = typical_price * volume
     simplefilter(action="ignore", category=UserWarning)
-    vwap = wp.groupby(wp.index.to_period(anchor)).cumsum() \
+    vwap = (
+        wp.groupby(wp.index.to_period(anchor)).cumsum()
         / volume.groupby(volume.index.to_period(anchor)).cumsum()
+    )
 
     if bands and len(bands):
         # Calculate vwap stdev bands
         vwap_var = volume * (typical_price - vwap) ** 2
-        vwap_var_sum = vwap_var \
-            .groupby(vwap_var.index.to_period(anchor)).cumsum()
-        vwap_volume_sum = volume \
-            .groupby(volume.index.to_period(anchor)).cumsum()
+        vwap_var_sum = vwap_var.groupby(vwap_var.index.to_period(anchor)).cumsum()
+        vwap_volume_sum = volume.groupby(volume.index.to_period(anchor)).cumsum()
         std_volume_weighted = (vwap_var_sum / vwap_volume_sum) ** 0.5
 
     # Name and Category

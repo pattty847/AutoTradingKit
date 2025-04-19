@@ -7,10 +7,13 @@ from atklip.controls.pandas_ta.utils import v_offset, v_pos_default, v_series
 from .roc import roc
 
 
-
 def coppock(
-    close: Series, length: Int = None, fast: Int = None, slow: Int = None,
-    offset: Int = None, **kwargs: DictLike
+    close: Series,
+    length: Int = None,
+    fast: Int = None,
+    slow: Int = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Coppock Curve (COPC)
 

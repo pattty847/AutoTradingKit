@@ -5,10 +5,13 @@ from atklip.controls.pandas_ta.overlap import hl2
 from atklip.controls.pandas_ta.utils import v_offset, v_pos_default, v_series
 
 
-
 def ttm_trend(
-    high: Series, low: Series, close: Series, length: Int = None,
-    offset: Int = None, **kwargs: DictLike
+    high: Series,
+    low: Series,
+    close: Series,
+    length: Int = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> DataFrame:
     """TTM Trend (TTM_TRND)
 

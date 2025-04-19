@@ -8,15 +8,18 @@ from atklip.controls.pandas_ta.utils import (
     v_offset,
     v_pos_default,
     v_scalar,
-    v_series
+    v_series,
 )
 
 
-
 def trix(
-    close: Series, length: Int = None, signal: Int = None,
-    scalar: IntFloat = None, drift: Int = None,
-    offset: Int = None, **kwargs: DictLike
+    close: Series,
+    length: Int = None,
+    signal: Int = None,
+    scalar: IntFloat = None,
+    drift: Int = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Trix (TRIX)
 

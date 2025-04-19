@@ -3,13 +3,21 @@ from numpy import isnan, log, nan
 from pandas import DataFrame, Series
 from atklip.controls.pandas_ta._typing import DictLike, Int
 from atklip.controls.pandas_ta.overlap import hl2
-from atklip.controls.pandas_ta.utils import high_low_range, v_offset, v_pos_default, v_series
-
+from atklip.controls.pandas_ta.utils import (
+    high_low_range,
+    v_offset,
+    v_pos_default,
+    v_series,
+)
 
 
 def fisher(
-    high: Series, low: Series, length: Int = None, signal: Int = None,
-    offset: Int = None, **kwargs: DictLike
+    high: Series,
+    low: Series,
+    length: Int = None,
+    signal: Int = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Fisher Transform (FISHT)
 

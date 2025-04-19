@@ -9,15 +9,20 @@ from atklip.controls.pandas_ta.utils import (
     v_offset,
     v_pos_default,
     v_series,
-    v_talib
+    v_talib,
 )
 
 
-
 def stochrsi(
-    close: Series, length: Int = None, rsi_length: Int = None,
-    k: Int = None, d: Int = None, mamode: str = None,
-    talib: bool = None, offset: Int = None, **kwargs: DictLike
+    close: Series,
+    length: Int = None,
+    rsi_length: Int = None,
+    k: Int = None,
+    d: Int = None,
+    mamode: str = None,
+    talib: bool = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> DataFrame:
     """Stochastic (STOCHRSI)
 

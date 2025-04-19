@@ -10,7 +10,7 @@ from numpy import (
     nan,
     nan_to_num,
     where,
-    zeros_like
+    zeros_like,
 )
 from numba import njit
 from pandas import DataFrame, Series
@@ -23,17 +23,20 @@ from atklip.controls.pandas_ta.utils import (
     v_int,
     v_offset,
     v_pos_default,
-    v_series
+    v_series,
 )
 from atklip.controls.pandas_ta.utils._numba import nb_exhc
 
 
-
 def exhc(
-    close: Series, length: Int = None,
-    cap: Int = None, asint: bool = None,
-    show_all: bool = None, nozeros: bool = None,
-    offset: Int = None, **kwargs: DictLike
+    close: Series,
+    length: Int = None,
+    cap: Int = None,
+    asint: bool = None,
+    show_all: bool = None,
+    nozeros: bool = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> DataFrame:
     """Exhaustion Count (EXHC)
 
@@ -83,7 +86,7 @@ def exhc(
     # Name and Category
     data = {
         "EXHC_DNa" if show_all else "EXHC_DN": dn,
-        "EXHC_UPa" if show_all else "EXHC_UP": up
+        "EXHC_UPa" if show_all else "EXHC_UP": up,
     }
     df = DataFrame(data, index=close.index)
     df.name = "EXHCa" if show_all else "EXHC"
@@ -92,7 +95,7 @@ def exhc(
     if nozeros:
         df.replace({0: nan}, inplace=True)
 
-     # Offset
+    # Offset
     if offset != 0:
         df = df.shift(offset)
 

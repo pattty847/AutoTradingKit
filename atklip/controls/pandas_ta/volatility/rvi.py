@@ -11,9 +11,8 @@ from atklip.controls.pandas_ta.utils import (
     v_mamode,
     v_offset,
     v_pos_default,
-    v_series
+    v_series,
 )
-
 
 
 def _rvi(source, length, scalar, mode, drift):
@@ -32,11 +31,17 @@ def _rvi(source, length, scalar, mode, drift):
 
 
 def rvi(
-    close: Series, high: Series = None, low: Series = None,
-    length: Int = None, scalar: IntFloat = None,
-    refined: bool = None, thirds: bool = None,
-    mamode: str = None, drift: Int = None,
-    offset: Int = None, **kwargs: DictLike
+    close: Series,
+    high: Series = None,
+    low: Series = None,
+    length: Int = None,
+    scalar: IntFloat = None,
+    refined: bool = None,
+    thirds: bool = None,
+    mamode: str = None,
+    drift: Int = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Relative Volatility Index (RVI)
 

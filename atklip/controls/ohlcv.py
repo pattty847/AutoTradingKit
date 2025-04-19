@@ -16,5 +16,5 @@ class OHLCV:
     hlc3: Optional[float]
     ohlc4: Optional[float]
     volume: Optional[float]
-    time: Optional[int] 
-    index: Optional[int]  
+    time: Optional[int]
+    index: Optional[int]

@@ -10,16 +10,19 @@ from atklip.controls.pandas_ta.utils import (
     v_pos_default,
     v_scalar,
     v_series,
-    v_talib
+    v_talib,
 )
 
 
-
 def rsi(
-    close: Series, length: Int = None, scalar: IntFloat = None,
-    mamode: str = None, talib: bool = None,
-    drift: Int = None, offset: Int = None,
-    **kwargs: DictLike
+    close: Series,
+    length: Int = None,
+    scalar: IntFloat = None,
+    mamode: str = None,
+    talib: bool = None,
+    drift: Int = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Relative Strength Index (RSI)
 

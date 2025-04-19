@@ -36,6 +36,8 @@ class MorningStarDoji(CandlestickFinder):
             and prev_close < open
             and prev_open < open
             and close > b_prev_close
-            and (prev_high - max(prev_close, prev_open)) > (3 * abs(prev_close - prev_open))
-            and (min(prev_close, prev_open) - prev_low) > (3 * abs(prev_close - prev_open))
+            and (prev_high - max(prev_close, prev_open))
+            > (3 * abs(prev_close - prev_open))
+            and (min(prev_close, prev_open) - prev_low)
+            > (3 * abs(prev_close - prev_open))
         )

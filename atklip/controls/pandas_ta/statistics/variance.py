@@ -5,11 +5,13 @@ from atklip.controls.pandas_ta.maps import Imports
 from atklip.controls.pandas_ta.utils import v_lowerbound, v_offset, v_series, v_talib
 
 
-
 def variance(
-    close: Series, length: Int = None,
-    ddof: Int = None, talib: bool = None,
-    offset: Int = None, **kwargs: DictLike
+    close: Series,
+    length: Int = None,
+    ddof: Int = None,
+    talib: bool = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Rolling Variance
 

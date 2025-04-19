@@ -4,11 +4,14 @@ from atklip.controls.pandas_ta._typing import DictLike, Int, IntFloat
 from atklip.controls.pandas_ta.utils import v_float, v_offset, v_series
 
 
-
 def remap(
-    close: Series, from_min: IntFloat = None, from_max: IntFloat = None,
-    to_min: IntFloat = None, to_max: IntFloat = None,
-    offset: Int = None, **kwargs: DictLike
+    close: Series,
+    from_min: IntFloat = None,
+    from_max: IntFloat = None,
+    to_min: IntFloat = None,
+    to_max: IntFloat = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """
     Indicator: ReMap (REMAP)

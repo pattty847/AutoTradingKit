@@ -7,14 +7,16 @@ from atklip.controls.pandas_ta.utils import (
     v_offset,
     v_pos_default,
     v_series,
-    weights
+    weights,
 )
 
 
-
 def fwma(
-    close: Series, length: Int = None, asc: bool = None,
-    offset: Int = None, **kwargs: DictLike
+    close: Series,
+    length: Int = None,
+    asc: bool = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Fibonacci's Weighted Moving Average (FWMA)
 
@@ -47,8 +49,7 @@ def fwma(
 
     # Calculate
     fibs = fibonacci(n=length, weighted=True)
-    fwma = close.rolling(length, min_periods=length) \
-        .apply(weights(fibs), raw=True)
+    fwma = close.rolling(length, min_periods=length).apply(weights(fibs), raw=True)
 
     # Offset
     if offset != 0:

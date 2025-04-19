@@ -1,5 +1,4 @@
-from .roi import  DEFAULTS_COLOR, DEFAULTS_FIBO,\
- SpecialROI, CustomLineSegmentROI
+from .roi import DEFAULTS_COLOR, DEFAULTS_FIBO, SpecialROI, CustomLineSegmentROI
 from .horizontal_line import Horizontal_line
 from .horizontal_ray import Horizontal_ray, HorizontalRayNoHandle
 from .brush_path import PathROI

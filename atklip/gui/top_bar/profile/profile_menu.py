@@ -1,8 +1,30 @@
-from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QSizePolicy, QSpacerItem, QStackedWidget
+from PySide6.QtWidgets import (
+    QApplication,
+    QMainWindow,
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QSizePolicy,
+    QSpacerItem,
+    QStackedWidget,
+)
 from PySide6.QtCore import Qt
-from atklip.gui.qfluentwidgets.components.dialog_box.message_box_base import MessageBoxBase
-from atklip.gui.qfluentwidgets import FluentIcon, PrimaryPushButton, PushButton, LineEdit as FluentLineEdit, CardWidget, TitleLabel, BodyLabel
+from atklip.gui.qfluentwidgets.components.dialog_box.message_box_base import (
+    MessageBoxBase,
+)
+from atklip.gui.qfluentwidgets import (
+    FluentIcon,
+    PrimaryPushButton,
+    PushButton,
+    LineEdit as FluentLineEdit,
+    CardWidget,
+    TitleLabel,
+    BodyLabel,
+)
 from atklip.gui.qfluentwidgets.window.stacked_widget import StackedWidget
+
 
 class LoginPage(QWidget):
     def __init__(self, stack_widget):
@@ -42,7 +64,9 @@ class LoginPage(QWidget):
         self.password_input.setEchoMode(QLineEdit.Password)
         form_layout.addWidget(password_label)
         form_layout.addWidget(self.password_input)
-        form_layout.addSpacerItem(QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding))
+        form_layout.addSpacerItem(
+            QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        )
 
         # Login button
         login_button = PrimaryPushButton("Login")
@@ -134,8 +158,10 @@ class RegisterPage(QWidget):
         self.confirm_password_input.setEchoMode(QLineEdit.Password)
         form_layout.addWidget(confirm_password_label)
         form_layout.addWidget(self.confirm_password_input)
-        
-        form_layout.addSpacerItem(QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding))
+
+        form_layout.addSpacerItem(
+            QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        )
 
         # Register button
         register_button = PrimaryPushButton("Register")
@@ -160,7 +186,9 @@ class RegisterPage(QWidget):
         password = self.password_input.text()
         confirm_password = self.confirm_password_input.text()
         # Handle register logic here
-        print(f"Registering with username: {username}, email: {email}, password: {password}, confirm_password: {confirm_password}")
+        print(
+            f"Registering with username: {username}, email: {email}, password: {password}, confirm_password: {confirm_password}"
+        )
 
     def go_to_login(self):
         self.stack_widget.setCurrentIndex(0)
@@ -184,8 +212,8 @@ class ProfileWindow(MessageBoxBase):
 
         self.viewLayout.addWidget(self.stack_widget)
 
-        self.yesButton.setText('Done')
-        self.cancelButton.setText('Cancel')
+        self.yesButton.setText("Done")
+        self.cancelButton.setText("Cancel")
         self.hideYesButton()
         self.widget.setMinimumWidth(320)
         self.widget.setMinimumHeight(350)

@@ -13,7 +13,7 @@ from .fast_calendar_view import FastCalendarView
 
 
 class CalendarPicker(QPushButton):
-    """ Calendar picker """
+    """Calendar picker"""
 
     dateChanged = Signal(QDate)
 
@@ -23,7 +23,7 @@ class CalendarPicker(QPushButton):
         self._dateFormat = Qt.DateFormat.ISODate
         self._isResetEnabled = False
 
-        self.setText(self.tr('Pick a date'))
+        self.setText(self.tr("Pick a date"))
         FluentStyleSheet.CALENDAR_PICKER.apply(self)
 
         self.clicked.connect(self._showCalendarView)
@@ -32,22 +32,22 @@ class CalendarPicker(QPushButton):
         return self._date
 
     def setDate(self, date: QDate):
-        """ set the selected date """
+        """set the selected date"""
         self._onDateChanged(date)
 
     def reset(self):
-        """ reset date """
+        """reset date"""
         self._date = QDate()
-        self.setText(self.tr('Pick a date'))
-        self.setProperty('hasDate', False)
+        self.setText(self.tr("Pick a date"))
+        self.setProperty("hasDate", False)
         self.setStyle(QApplication.style())
         self.update()
 
     def reset(self):
-        """ reset date """
+        """reset date"""
         self._date = QDate()
-        self.setText(self.tr('Pick a date'))
-        self.setProperty('hasDate', False)
+        self.setText(self.tr("Pick a date"))
+        self.setProperty("hasDate", False)
         self.setStyle(QApplication.style())
         self.update()
 
@@ -63,7 +63,7 @@ class CalendarPicker(QPushButton):
         return self._isResetEnabled
 
     def setResetEnabled(self, isEnabled: bool):
-        """ set the visibility of reset button """
+        """set the visibility of reset button"""
         self._isResetEnabled = isEnabled
 
     def _showCalendarView(self):
@@ -76,14 +76,14 @@ class CalendarPicker(QPushButton):
         if self.date.isValid():
             view.setDate(self.date)
 
-        x = int(self.width()/2 - view.sizeHint().width()/2)
+        x = int(self.width() / 2 - view.sizeHint().width() / 2)
         y = self.height()
         view.exec(self.mapToGlobal(QPoint(x, y)))
 
     def _onDateChanged(self, date: QDate):
         self._date = QDate(date)
         self.setText(date.toString(self.dateFormat))
-        self.setProperty('hasDate', True)
+        self.setProperty("hasDate", True)
         self.setStyle(QApplication.style())
         self.update()
 
@@ -94,11 +94,11 @@ class CalendarPicker(QPushButton):
         painter = QPainter(self)
         painter.setRenderHints(QPainter.Antialiasing)
 
-        if not self.property('hasDate'):
+        if not self.property("hasDate"):
             painter.setOpacity(0.6)
 
         w = 12
-        rect = QRectF(self.width() - 23, self.height()/2 - w/2, w, w)
+        rect = QRectF(self.width() - 23, self.height() / 2 - w / 2, w, w)
         FIF.CALENDAR.render(painter, rect)
 
     date = Property(QDate, getDate, setDate)
@@ -106,7 +106,7 @@ class CalendarPicker(QPushButton):
 
 
 class FastCalendarPicker(CalendarPicker):
-    """ Pro calendar picker """
+    """Pro calendar picker"""
 
     def __init__(self, parent=None):
         super().__init__(parent=parent)

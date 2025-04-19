@@ -15,7 +15,6 @@ from atklip.controls.pandas_ta.utils._time import get_time
 # ]
 
 
-
 # Study DataClass
 @dataclass
 class Study:
@@ -44,22 +43,28 @@ class Study:
         {"kind": "sma", "close": "volume", "length": 20, "prefix": "VOLUME"},
     ],
     """
+
     name: str  # = None # Required.
     ta: List = field(default_factory=list)  # Required.
-    cores: Int  = cpu_count()  # Number of cores. Default cpu_count()
+    cores: Int = cpu_count()  # Number of cores. Default cpu_count()
     description: str = ""  # Helpful. More descriptive version or notes or w/e.
     # Optional. Gets Exchange Time and Local Time execution time
     created: str = get_time(to_string=True)
 
     def __post_init__(self):
-        if isinstance(self.cores, int) and self.cores >= 0 and self.cores <= cpu_count():
+        if (
+            isinstance(self.cores, int)
+            and self.cores >= 0
+            and self.cores <= cpu_count()
+        ):
             self.cores = int(self.cores)
 
         req_args = ["[X] Study requires the following argument(s):"]
 
         if self._is_name():
             req_args.append(
-                ' - name. Must be a string. Example: "My TA". Note: "all" is reserved.')
+                ' - name. Must be a string. Example: "My TA". Note: "all" is reserved.'
+            )
 
         if self.ta is None:
             self.ta = None
@@ -104,8 +109,8 @@ CommonStudy = Study(
         {"kind": "sma", "length": 20},
         {"kind": "sma", "length": 50},
         {"kind": "sma", "length": 200},
-        {"kind": "sma", "close": "volume", "length": 20, "prefix": "VOL"}
-    ]
+        {"kind": "sma", "close": "volume", "length": 20, "prefix": "VOL"},
+    ],
 )
 
 # Temporary Strategy DataClass Alias

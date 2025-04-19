@@ -4,14 +4,20 @@ from warnings import simplefilter
 from numpy import array_split, mean, sum
 from pandas import cut, concat, DataFrame, Series
 from atklip.controls.pandas_ta._typing import DictLike, Int
-from atklip.controls.pandas_ta.utils import signed_series, v_bool, v_pos_default, v_series
-
+from atklip.controls.pandas_ta.utils import (
+    signed_series,
+    v_bool,
+    v_pos_default,
+    v_series,
+)
 
 
 def vp(
-    close: Series, volume: Series,
-    width: Int = None, sort: bool = None,
-    **kwargs: DictLike
+    close: Series,
+    volume: Series,
+    width: Int = None,
+    sort: bool = None,
+    **kwargs: DictLike,
 ) -> DataFrame:
     """Volume Profile (VP)
 
@@ -76,33 +82,43 @@ def vp(
         vp[mean_price_col] = vp[close_col]
 
         vpdf = vp.groupby(
-            cut(vp[close_col], width, include_lowest=True, precision=2),
-            observed=False
-        ).agg({
-            mean_price_col: mean,
-            pos_volume_col: sum,
-            neg_volume_col: sum,
-            neut_volume_col: sum
-        })
+            cut(vp[close_col], width, include_lowest=True, precision=2), observed=False
+        ).agg(
+            {
+                mean_price_col: mean,
+                pos_volume_col: sum,
+                neg_volume_col: sum,
+                neut_volume_col: sum,
+            }
+        )
 
         vpdf[low_price_col] = [x.left for x in vpdf.index]
         vpdf[high_price_col] = [x.right for x in vpdf.index]
         vpdf = vpdf.reset_index(drop=True)
 
-        vpdf = vpdf[[
-            low_price_col, mean_price_col, high_price_col,
-            pos_volume_col, neg_volume_col, neut_volume_col
-        ]]
+        vpdf = vpdf[
+            [
+                low_price_col,
+                mean_price_col,
+                high_price_col,
+                pos_volume_col,
+                neg_volume_col,
+                neut_volume_col,
+            ]
+        ]
     else:
         vp_ranges = array_split(vp, width)
-        result = list({
-            low_price_col: r[close_col].min(),
-            mean_price_col: r[close_col].mean(),
-            high_price_col: r[close_col].max(),
-            pos_volume_col: r[pos_volume_col].sum(),
-            neg_volume_col: r[neg_volume_col].sum(),
-            neut_volume_col: r[neut_volume_col].sum(),
-        } for r in vp_ranges)
+        result = list(
+            {
+                low_price_col: r[close_col].min(),
+                mean_price_col: r[close_col].mean(),
+                high_price_col: r[close_col].max(),
+                pos_volume_col: r[pos_volume_col].sum(),
+                neg_volume_col: r[neg_volume_col].sum(),
+                neut_volume_col: r[neut_volume_col].sum(),
+            }
+            for r in vp_ranges
+        )
 
         vpdf = DataFrame(result)
 

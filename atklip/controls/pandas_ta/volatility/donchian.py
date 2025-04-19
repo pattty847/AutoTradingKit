@@ -4,11 +4,13 @@ from atklip.controls.pandas_ta._typing import DictLike, Int
 from atklip.controls.pandas_ta.utils import v_offset, v_pos_default, v_series
 
 
-
 def donchian(
-    high: Series, low: Series,
-    lower_length: Int = None, upper_length: Int = None,
-    offset: Int = None, **kwargs: DictLike
+    high: Series,
+    low: Series,
+    lower_length: Int = None,
+    upper_length: Int = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> DataFrame:
     """Donchian Channels (DC)
 

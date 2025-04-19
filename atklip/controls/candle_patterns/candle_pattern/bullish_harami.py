@@ -26,5 +26,7 @@ class BullishHarami(CandlestickFinder):
         #        and low > prev_close)
 
         return (
-            prev_open > prev_close and prev_close <= open < close <= prev_open and close - open < prev_open - prev_close
+            prev_open > prev_close
+            and prev_close <= open < close <= prev_open
+            and close - open < prev_open - prev_close
         )

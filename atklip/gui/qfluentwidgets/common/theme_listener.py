@@ -6,7 +6,7 @@ import darkdetect
 
 
 class SystemThemeListener(QThread):
-    """ System theme listener """
+    """System theme listener"""
 
     systemThemeChanged = Signal()
 

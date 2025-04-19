@@ -5,11 +5,14 @@ from atklip.controls.pandas_ta.utils import v_bool, v_offset, v_pos_default, v_s
 from atklip.controls.pandas_ta.utils._numba import nb_ssf, nb_ssf_everget
 
 
-
 def ssf(
-    close: Series, length: Int = None,
-    everget: bool = None, pi: IntFloat = None, sqrt2: IntFloat = None,
-    offset: Int = None, **kwargs: DictLike
+    close: Series,
+    length: Int = None,
+    everget: bool = None,
+    pi: IntFloat = None,
+    sqrt2: IntFloat = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Ehler's Super Smoother Filter (SSF) © 2013
 

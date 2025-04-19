@@ -8,16 +8,21 @@ from atklip.controls.pandas_ta.utils import (
     v_mamode,
     v_offset,
     v_pos_default,
-    v_series
+    v_series,
 )
 
 
-
 def thermo(
-    high: Series, low: Series, length: Int = None,
-    long: Int = None, short: Int = None,
-    mamode: str = None, asint: bool = None, drift: Int = None,
-    offset: Int = None, **kwargs: DictLike
+    high: Series,
+    low: Series,
+    length: Int = None,
+    long: Int = None,
+    short: Int = None,
+    mamode: str = None,
+    asint: bool = None,
+    drift: Int = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> DataFrame:
     """Elders Thermometer (THERMO)
 
@@ -103,7 +108,7 @@ def thermo(
         thermo.name: thermo,
         thermo_ma.name: thermo_ma,
         thermo_long.name: thermo_long,
-        thermo_short.name: thermo_short
+        thermo_short.name: thermo_short,
     }
     df = DataFrame(data, index=high.index)
     df.name = f"THERMO{_props}"

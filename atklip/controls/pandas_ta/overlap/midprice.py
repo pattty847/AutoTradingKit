@@ -4,10 +4,13 @@ from atklip.controls.pandas_ta._typing import DictLike, Int
 from atklip.controls.pandas_ta.utils import v_offset, v_pos_default, v_series, v_talib
 
 
-
 def midprice(
-    high: Series, low: Series, length: Int = None, talib: bool = False,
-    offset: Int = None, **kwargs: DictLike
+    high: Series,
+    low: Series,
+    length: Int = None,
+    talib: bool = False,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Midprice
 
@@ -42,7 +45,6 @@ def midprice(
 
     mode_tal = v_talib(talib)
     offset = v_offset(offset)
-
 
     lowest_low = low.rolling(length, min_periods=min_periods).min()
     highest_high = high.rolling(length, min_periods=min_periods).max()

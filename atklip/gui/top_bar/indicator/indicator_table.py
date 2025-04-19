@@ -4,21 +4,42 @@ import re
 import traceback
 from typing import List
 
-from PySide6.QtCore import Qt, QMargins, QModelIndex, QRectF,Qt, \
-    QAbstractTableModel, QModelIndex,QPointF,QPoint,Signal
+from PySide6.QtCore import (
+    Qt,
+    QMargins,
+    QModelIndex,
+    QRectF,
+    Qt,
+    QAbstractTableModel,
+    QModelIndex,
+    QPointF,
+    QPoint,
+    Signal,
+)
 from PySide6.QtGui import QPainter, QColor, QPalette, QBrush, QMouseEvent
-from PySide6.QtWidgets import (QStyledItemDelegate, QApplication, QStyleOptionViewItem,QHeaderView,
-                             QTableView, QWidget)
+from PySide6.QtWidgets import (
+    QStyledItemDelegate,
+    QApplication,
+    QStyleOptionViewItem,
+    QHeaderView,
+    QTableView,
+    QWidget,
+)
 
 from atklip.appmanager.setting.config import AppConfig
 from atklip.controls.ma_type import IndicatorType
 from atklip.exchanges.crypto import CryptoExchange
 from atklip.gui.qfluentwidgets.common.icon import check_icon_exist, get_exchange_icon
-from atklip.gui.qfluentwidgets.components import isDarkTheme, Theme, TableView,getFont
-from atklip.gui.qfluentwidgets.common import FluentIcon as FI,CryptoIcon as CI, EchangeIcon as EI
+from atklip.gui.qfluentwidgets.components import isDarkTheme, Theme, TableView, getFont
+from atklip.gui.qfluentwidgets.common import (
+    FluentIcon as FI,
+    CryptoIcon as CI,
+    EchangeIcon as EI,
+)
 from atklip.gui.qfluentwidgets.components.widgets.label import TitleLabel
 
 from atklip.gui.qfluentwidgets.common import get_symbol_icon
+
 
 class PositionItemDelegate(QStyledItemDelegate):
     def __init__(self, parent: QTableView):
@@ -27,11 +48,11 @@ class PositionItemDelegate(QStyledItemDelegate):
         self.margin = 2
         self.hoverRow = -1
         self.pressedRow = -1
-        self.mouse_pos:QPointF|QPoint = None
+        self.mouse_pos: QPointF | QPoint = None
         self.selectedRows = set()
         self.on_favorite_btn = False
         # self._data = self._parent.table_model._data
-    
+
     def setHoverRow(self, row: int):
         self.hoverRow = row
 
@@ -51,15 +72,19 @@ class PositionItemDelegate(QStyledItemDelegate):
         size = size.grownBy(QMargins(0, self.margin, 0, self.margin))
         return size
 
-    def createEditor(self, parent: QWidget, option: QStyleOptionViewItem, index: QModelIndex) -> QWidget:
+    def createEditor(
+        self, parent: QWidget, option: QStyleOptionViewItem, index: QModelIndex
+    ) -> QWidget:
         lineEdit = TitleLabel(parent)
         # lineEdit = LineEdit(parent)
         lineEdit.setProperty("transparent", False)
         lineEdit.setStyle(QApplication.style())
         lineEdit.setText(option.text)
         return lineEdit
-    
-    def updateEditorGeometry(self, editor: QWidget, option: QStyleOptionViewItem, index: QModelIndex):
+
+    def updateEditorGeometry(
+        self, editor: QWidget, option: QStyleOptionViewItem, index: QModelIndex
+    ):
         rect = option.rect
         y = rect.y() + (rect.height() - editor.height()) // 2
         x, w = max(8, rect.x()), rect.width()
@@ -74,7 +99,7 @@ class PositionItemDelegate(QStyledItemDelegate):
         option.font = index.data(Qt.FontRole) or getFont(13)
         # text color
         textColor = Qt.white if isDarkTheme() else Qt.black
-        textBrush = index.data(Qt.ForegroundRole)   # type: QBrush
+        textBrush = index.data(Qt.ForegroundRole)  # type: QBrush
         if textBrush is not None:
             textColor = textBrush.color()
 
@@ -97,7 +122,7 @@ class PositionItemDelegate(QStyledItemDelegate):
             # draw highlight background
             isHover = self.hoverRow == index.row()
             isPressed = self.pressedRow == index.row()
-            
+
             isAlternate = index.row() % 2 == 0 and self.parent().alternatingRowColors()
             isDark = isDarkTheme()
 
@@ -118,26 +143,28 @@ class PositionItemDelegate(QStyledItemDelegate):
                     alpha = 25
                 else:
                     alpha = 17
-    
+
             if index.data(Qt.ItemDataRole.BackgroundRole):
                 painter.setBrush(index.data(Qt.ItemDataRole.BackgroundRole))
             else:
                 painter.setBrush(QColor(c, c, c, alpha))
 
             self._drawBackground(painter, option, index)
-            
+
             if index.column() == 0:
                 self._drawHelpBtn(painter, option, index)
             elif index.column() == 2:
                 self._drawFavorite(painter, option, index)
-            
+
             painter.restore()
             super().paint(painter, option, index)
         else:
             super().paint(painter, option, index)
 
-    def _drawBackground(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex):
-        """ draw row background """
+    def _drawBackground(
+        self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex
+    ):
+        """draw row background"""
         r = 5
         if index.column() == 0:
             rect = option.rect.adjusted(4, 0, r + 1, 0)
@@ -148,11 +175,13 @@ class PositionItemDelegate(QStyledItemDelegate):
         else:
             rect = option.rect.adjusted(-1, 0, 1, 0)
             painter.drawRect(rect)
-    
-    def _drawFavorite(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex):
-         # Lấy trạng thái check (nếu cần)
+
+    def _drawFavorite(
+        self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex
+    ):
+        # Lấy trạng thái check (nếu cần)
         checkState = Qt.CheckState(index.data(Qt.ItemDataRole.CheckStateRole))
-        
+
         # Xác định theme (Dark hoặc Light)
         theme = Theme.DARK if isDarkTheme() else Theme.LIGHT
         # Kích thước của hình chữ nhật (rect) để vẽ SVG
@@ -170,15 +199,17 @@ class PositionItemDelegate(QStyledItemDelegate):
         if checkState == Qt.CheckState.Checked:
             FI.FAVORITE.render(painter, rect, Theme.DARK)
         else:
-            if index.row()==self.hoverRow:
+            if index.row() == self.hoverRow:
                 FI.HEART.render(painter, rect, Theme.DARK)
-                if isinstance(mouse_pos,QPoint):
+                if isinstance(mouse_pos, QPoint):
                     if rect.contains(mouse_pos):
                         self.on_favorite_btn = True
                         FI.FAVORITE.render(painter, rect, Theme)
-        
-    def _drawHelpBtn(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex):
-         # Lấy trạng thái check (nếu cần)
+
+    def _drawHelpBtn(
+        self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex
+    ):
+        # Lấy trạng thái check (nếu cần)
         checkState = Qt.CheckState(index.data(Qt.ItemDataRole.CheckStateRole))
         # Xác định theme (Dark hoặc Light)
         theme = Theme.DARK if isDarkTheme() else Theme.LIGHT
@@ -192,28 +223,29 @@ class PositionItemDelegate(QStyledItemDelegate):
         # Tạo QRectF với tâm trùng với tâm của option.rect
         rect = QRectF(x, y, icon_size, icon_size)
         FI.HELP.render(painter, rect, theme)
-    
+
 
 class PositionModel(QAbstractTableModel):
     def __init__(self, data):
         super().__init__()
         self._data = data if data is not None else []
         self._original_data = self._data.copy()
-        self._check_states:dict = {}
+        self._check_states: dict = {}
 
     @property
     def _original_data(self):
         return self.original_data
+
     @_original_data.setter
-    def _original_data(self,_original_data):
-        self.original_data=_original_data
+    def _original_data(self, _original_data):
+        self.original_data = _original_data
 
     def rowCount(self, parent=QModelIndex()):
         return len(self._data)
 
     def columnCount(self, parent=QModelIndex()):
         return 3
-    
+
     def removeRow(self, row, parent=QModelIndex()):
         if row < 0 or row >= self.rowCount():
             return False
@@ -223,7 +255,7 @@ class PositionModel(QAbstractTableModel):
         self._original_data = self._data.copy()
         self.endRemoveRows()  # Kết thúc xóa hàng
         return True
-    
+
     def addRow(self, row_data, parent=QModelIndex()):
         # Thêm hàng mới vào cuối danh sách
         row_position = self.rowCount()
@@ -233,7 +265,7 @@ class PositionModel(QAbstractTableModel):
         self._original_data = self._data.copy()
         self.endInsertRows()  # Kết thúc thêm hàng
         return True
-    
+
     def updateRow(self, row, new_data, parent=QModelIndex()):
         # Kiểm tra xem hàng có hợp lệ không
         if row < 0 or row >= self.rowCount():
@@ -246,7 +278,7 @@ class PositionModel(QAbstractTableModel):
         bottom_right = self.index(row, self.columnCount() - 1)
         self.dataChanged.emit(top_left, bottom_right)
         return True
-    
+
     def insertRow(self, row, row_data, parent=QModelIndex()):
         # Kiểm tra xem vị trí chèn có hợp lệ không
         if row < 0 or row > self.rowCount():
@@ -257,30 +289,37 @@ class PositionModel(QAbstractTableModel):
         self._original_data = self._data.copy()
         self.endInsertRows()  # Kết thúc chèn hàng
         return True
-    
+
     def resetData(self, new_data):
         # Xóa toàn bộ dữ liệu cũ và thay thế bằng dữ liệu mới
         self.beginResetModel()  # Thông báo cho view biết dữ liệu sắp thay đổi
         self._data = new_data
         self._original_data = self._data.copy()
         self.endResetModel()  # Kết thúc thay đổi dữ liệu
-    
-    def filterData(self, keyword:str=""):
+
+    def filterData(self, keyword: str = ""):
         filtered_data = [
-            row for row in self._original_data
-            if str(row[1].lower()).startswith(keyword.lower())   # Lọc theo cột Name (index 1)
+            row
+            for row in self._original_data
+            if str(row[1].lower()).startswith(
+                keyword.lower()
+            )  # Lọc theo cột Name (index 1)
         ]
         self.beginResetModel()
         self._data = filtered_data
         self.endResetModel()
-    
+
     def data(self, index: QModelIndex, role):
         "để thêm các vai trò cho cell, column, row theo dựa vào index, quy định nội dung và cách thức hiện thị cho bảng"
         if self._data:
             if role == Qt.CheckStateRole:
-                state = self._data[index.row()][2] 
-                return Qt.CheckState.Checked if (state == Qt.CheckState.Checked) else Qt.CheckState.Unchecked
-                
+                state = self._data[index.row()][2]
+                return (
+                    Qt.CheckState.Checked
+                    if (state == Qt.CheckState.Checked)
+                    else Qt.CheckState.Unchecked
+                )
+
             elif role == Qt.DisplayRole:
                 if index.column() == 1:
                     return self._data[index.row()][1]
@@ -289,126 +328,156 @@ class PositionModel(QAbstractTableModel):
             elif role == Qt.TextAlignmentRole:
                 "Thiết lập căn chỉnh lề cho từng cột"
                 if index.column() == 1:
-                    return Qt.AlignVCenter|Qt.AlignLeft
+                    return Qt.AlignVCenter | Qt.AlignLeft
                 elif index.column() == 2:
-                    return Qt.AlignVCenter|Qt.AlignRight
+                    return Qt.AlignVCenter | Qt.AlignRight
 
     def flags(self, index):
         # Cho phép cell có thể được check/uncheck
         return Qt.ItemIsEnabled | super().flags(index) | Qt.ItemIsUserCheckable
-    
+
+
 class BasicMenu(TableView):
     sig_add_indicator = Signal(tuple)
     sig_remove_indicator = Signal(object)
-    def __init__(self,parent:QWidget=None,sig_add_indicator_to_chart=None,sig_add_remove_favorite=None,list_indicators:IndicatorType=[],_type_indicator=""):
-        super(BasicMenu,self).__init__(parent)
-        
+
+    def __init__(
+        self,
+        parent: QWidget = None,
+        sig_add_indicator_to_chart=None,
+        sig_add_remove_favorite=None,
+        list_indicators: IndicatorType = [],
+        _type_indicator="",
+    ):
+        super(BasicMenu, self).__init__(parent)
+
         self._type_indicator = _type_indicator
         self.setObjectName(_type_indicator)
 
         self.verticalHeader().hide()
         self.horizontalHeader().hide()
-        # self.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents) 
+        # self.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
         self.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        
+
         self.setBorderRadius(8)
-        
+
         self.verticalHeader().setDefaultSectionSize(45)
-        
+
         self.sig_add_indicator_to_chart = sig_add_indicator_to_chart
-        self.sig_add_remove_favorite=sig_add_remove_favorite
+        self.sig_add_remove_favorite = sig_add_remove_favorite
         self._data = []
         self._favorites, self.dict_favorites = self._load_favorites()
-        
+
         if self._type_indicator != "Favorites":
             if list_indicators != []:
                 for indicator in list_indicators:
-                    if self._favorites !=[]:
+                    if self._favorites != []:
                         if indicator.name in self._favorites:
                             state = Qt.CheckState.Checked
                         else:
                             state = Qt.CheckState.Unchecked
                     else:
                         state = Qt.CheckState.Unchecked
-                    self._data.append(['', indicator.value,state,indicator,self._type_indicator]) 
+                    self._data.append(
+                        ["", indicator.value, state, indicator, self._type_indicator]
+                    )
         else:
             if self.dict_favorites:
-                for _type_indicator,list_indicator in self.dict_favorites.items():
+                for _type_indicator, list_indicator in self.dict_favorites.items():
                     if list_indicator:
                         for indicator in list_indicator:
                             _indicator = None
                             try:
-                                _indicator =  IndicatorType.__getitem__(indicator)
+                                _indicator = IndicatorType.__getitem__(indicator)
                             except KeyError:
                                 pass
                             if _indicator:
                                 state = Qt.CheckState.Checked
-                                self._data.append(['', _indicator.value,state,_indicator,_type_indicator]) 
-        
+                                self._data.append(
+                                    [
+                                        "",
+                                        _indicator.value,
+                                        state,
+                                        _indicator,
+                                        _type_indicator,
+                                    ]
+                                )
+
         self.delegate = None
         self.table_model = None
-        
-        if self._data!=[]:
+
+        if self._data != []:
             self.table_model = PositionModel(self._data)
             self.setModel(self.table_model)
-            
+
             self.delegate = PositionItemDelegate(self)
             self.setItemDelegate(self.delegate)
 
             hor_header = self.horizontalHeader()
             ver_header = self.verticalHeader()
 
-            hor_header.setSectionResizeMode(0, QHeaderView.Fixed)  
-            ver_header.setSectionResizeMode(0, QHeaderView.Fixed)  
-            hor_header.resizeSection(0, 45)  
-            ver_header.resizeSection(0, 45) 
+            hor_header.setSectionResizeMode(0, QHeaderView.Fixed)
+            ver_header.setSectionResizeMode(0, QHeaderView.Fixed)
+            hor_header.resizeSection(0, 45)
+            ver_header.resizeSection(0, 45)
 
-            hor_header.setSectionResizeMode(2, QHeaderView.Fixed) 
-            ver_header.setSectionResizeMode(2, QHeaderView.Fixed)  
-            hor_header.resizeSection(2, 45) 
-            ver_header.resizeSection(2, 45)  
-            
-            hor_header.setSectionResizeMode(1, QHeaderView.Stretch)  
-            
+            hor_header.setSectionResizeMode(2, QHeaderView.Fixed)
+            ver_header.setSectionResizeMode(2, QHeaderView.Fixed)
+            hor_header.resizeSection(2, 45)
+            ver_header.resizeSection(2, 45)
+
+            hor_header.setSectionResizeMode(1, QHeaderView.Stretch)
+
         self.setFixedHeight(410)
         self.clicked.connect(self.item_changed)
+
     @property
-    def _data(self)-> list:
-        return self.data 
-    
+    def _data(self) -> list:
+        return self.data
+
     @_data.setter
     def _data(self, data):
-        self.data = data 
-    
-    def filter_table(self,keyword:str=""):
+        self.data = data
+
+    def filter_table(self, keyword: str = ""):
         self.table_model.filterData(keyword)
-    
-    def _load_favorites(self): #->"IndicatorType"
+
+    def _load_favorites(self):  # ->"IndicatorType"
         self.dict_favorites = AppConfig.get_config_value(f"topbar.indicator.favorite")
         if not self.dict_favorites:
-            AppConfig.sig_set_single_data.emit((f"topbar.indicator.favorite",{}))
-            self.dict_favorites = AppConfig.get_config_value(f"topbar.indicator.favorite")
-        
+            AppConfig.sig_set_single_data.emit((f"topbar.indicator.favorite", {}))
+            self.dict_favorites = AppConfig.get_config_value(
+                f"topbar.indicator.favorite"
+            )
+
         _list_pre_favorites = []
         if self._type_indicator in list(self.dict_favorites.keys()):
             _list_pre_favorites = self.dict_favorites[self._type_indicator]
         else:
-            AppConfig.sig_set_single_data.emit((f"topbar.indicator.favorite.{self._type_indicator}",[]))
-            _list_pre_favorites = AppConfig.get_config_value(f"topbar.indicator.favorite.{self._type_indicator}")
+            AppConfig.sig_set_single_data.emit(
+                (f"topbar.indicator.favorite.{self._type_indicator}", [])
+            )
+            _list_pre_favorites = AppConfig.get_config_value(
+                f"topbar.indicator.favorite.{self._type_indicator}"
+            )
 
         return _list_pre_favorites, self.dict_favorites
-    
+
     def item_changed(self, index):
         "click on cell, item là PySide6.QtCore.QModelIndex(19,3,0x0,PositionModel(0x1d787459870)) tại cell đó"
         indicator = self.table_model._data[index.row()][3]
         target_type_indicator = self.table_model._data[index.row()][4]
         if index.column() == 2:
             checkState = Qt.CheckState(index.data(Qt.ItemDataRole.CheckStateRole))
-            if checkState==Qt.CheckState.Checked:
-                new_state = self.table_model._data[index.row()][2] = Qt.CheckState.Unchecked
+            if checkState == Qt.CheckState.Checked:
+                new_state = self.table_model._data[index.row()][2] = (
+                    Qt.CheckState.Unchecked
+                )
                 _bool = False
             else:
-                new_state = self.table_model._data[index.row()][2] = Qt.CheckState.Checked
+                new_state = self.table_model._data[index.row()][2] = (
+                    Qt.CheckState.Checked
+                )
                 _bool = True
             new_data = self.table_model._data[index.row()]
             if new_state == Qt.CheckState.Unchecked:
@@ -417,45 +486,70 @@ class BasicMenu(TableView):
                     self.table_model.removeRow(index.row())
                 else:
                     "update data"
-                    self.table_model.dataChanged.emit(index, index,Qt.CheckStateRole)
+                    self.table_model.dataChanged.emit(index, index, Qt.CheckStateRole)
             else:
                 if self._type_indicator != "Favorites":
-                    self.table_model.dataChanged.emit(index, index,Qt.CheckStateRole)
-            
-            self.sig_add_remove_favorite.emit((self._type_indicator,new_data))
-            return
-        self.sig_add_indicator_to_chart.emit((target_type_indicator,indicator))
+                    self.table_model.dataChanged.emit(index, index, Qt.CheckStateRole)
 
-    def add_remove_favorite_item(self,_type_indicator,new_data):        
+            self.sig_add_remove_favorite.emit((self._type_indicator, new_data))
+            return
+        self.sig_add_indicator_to_chart.emit((target_type_indicator, indicator))
+
+    def add_remove_favorite_item(self, _type_indicator, new_data):
         indicator = new_data[1]
         new_state = new_data[2]
-        save_indicator:IndicatorType = new_data[3]
-        
+        save_indicator: IndicatorType = new_data[3]
+
         indicator_name = save_indicator.name
-        
+
         from_indicator_wg = new_data[4]
         if _type_indicator == "Favorites":
             if self._type_indicator != "Favorites":
-                for index,row in enumerate(self.data):
+                for index, row in enumerate(self.data):
                     if row[1] == indicator:
                         self.data[index][2] = new_state
                         self.table_model.updateRow(index, self.data[index])
-                        
-                        self.dict_favorites = AppConfig.get_config_value(f"topbar.indicator.favorite")
+
+                        self.dict_favorites = AppConfig.get_config_value(
+                            f"topbar.indicator.favorite"
+                        )
                         if new_state == Qt.CheckState.Unchecked:
-                            if self._type_indicator not in list(self.dict_favorites.keys()):
+                            if self._type_indicator not in list(
+                                self.dict_favorites.keys()
+                            ):
                                 self.dict_favorites[self._type_indicator] = []
                             else:
-                                if indicator_name in self.dict_favorites[self._type_indicator]:
-                                    self.dict_favorites[self._type_indicator].remove(indicator_name)
+                                if (
+                                    indicator_name
+                                    in self.dict_favorites[self._type_indicator]
+                                ):
+                                    self.dict_favorites[self._type_indicator].remove(
+                                        indicator_name
+                                    )
                         else:
-                            if self._type_indicator not in list(self.dict_favorites.keys()):
-                                self.dict_favorites[self._type_indicator] = [indicator_name]
+                            if self._type_indicator not in list(
+                                self.dict_favorites.keys()
+                            ):
+                                self.dict_favorites[self._type_indicator] = [
+                                    indicator_name
+                                ]
                             else:
-                                if indicator_name not in self.dict_favorites[self._type_indicator]:
-                                    self.dict_favorites[self._type_indicator].append(indicator_name)
-                        AppConfig.sig_set_single_data.emit((f"topbar.indicator.favorite.{self._type_indicator}",self.dict_favorites[self._type_indicator]))
-                        self.dict_favorites = AppConfig.get_config_value(f"topbar.indicator.favorite")
+                                if (
+                                    indicator_name
+                                    not in self.dict_favorites[self._type_indicator]
+                                ):
+                                    self.dict_favorites[self._type_indicator].append(
+                                        indicator_name
+                                    )
+                        AppConfig.sig_set_single_data.emit(
+                            (
+                                f"topbar.indicator.favorite.{self._type_indicator}",
+                                self.dict_favorites[self._type_indicator],
+                            )
+                        )
+                        self.dict_favorites = AppConfig.get_config_value(
+                            f"topbar.indicator.favorite"
+                        )
                         break
         else:
             if self._type_indicator == "Favorites":
@@ -463,88 +557,131 @@ class BasicMenu(TableView):
                     if self._data == []:
                         self._data = [new_data]
                         if not self.delegate or not self.table_model:
-                            
+
                             self.table_model = PositionModel(self._data)
                             self.setModel(self.table_model)
-                            
+
                             self.delegate = PositionItemDelegate(self)
                             self.setItemDelegate(self.delegate)
 
                             hor_header = self.horizontalHeader()
                             ver_header = self.verticalHeader()
 
-                            hor_header.setSectionResizeMode(0, QHeaderView.Fixed)  
-                            ver_header.setSectionResizeMode(0, QHeaderView.Fixed)  
-                            hor_header.resizeSection(0, 45)  
-                            ver_header.resizeSection(0, 45) 
+                            hor_header.setSectionResizeMode(0, QHeaderView.Fixed)
+                            ver_header.setSectionResizeMode(0, QHeaderView.Fixed)
+                            hor_header.resizeSection(0, 45)
+                            ver_header.resizeSection(0, 45)
 
-                            hor_header.setSectionResizeMode(2, QHeaderView.Fixed) 
-                            ver_header.setSectionResizeMode(2, QHeaderView.Fixed)  
-                            hor_header.resizeSection(2, 45) 
-                            ver_header.resizeSection(2, 45)  
-                            
-                            hor_header.setSectionResizeMode(1, QHeaderView.Stretch)  
+                            hor_header.setSectionResizeMode(2, QHeaderView.Fixed)
+                            ver_header.setSectionResizeMode(2, QHeaderView.Fixed)
+                            hor_header.resizeSection(2, 45)
+                            ver_header.resizeSection(2, 45)
+
+                            hor_header.setSectionResizeMode(1, QHeaderView.Stretch)
                         else:
-                            self.table_model.insertRow(0,new_data)
-                    else: 
-                        self.table_model.insertRow(0,new_data)
-                    
+                            self.table_model.insertRow(0, new_data)
+                    else:
+                        self.table_model.insertRow(0, new_data)
+
                     if _type_indicator != "Favorites":
-                        self.dict_favorites = AppConfig.get_config_value(f"topbar.indicator.favorite")
+                        self.dict_favorites = AppConfig.get_config_value(
+                            f"topbar.indicator.favorite"
+                        )
                         if new_state == Qt.CheckState.Unchecked:
                             if _type_indicator not in list(self.dict_favorites.keys()):
                                 self.dict_favorites[_type_indicator] = []
                             else:
-                                if indicator_name in self.dict_favorites[_type_indicator]:
-                                    self.dict_favorites[_type_indicator].remove(indicator_name)
+                                if (
+                                    indicator_name
+                                    in self.dict_favorites[_type_indicator]
+                                ):
+                                    self.dict_favorites[_type_indicator].remove(
+                                        indicator_name
+                                    )
                         else:
                             if _type_indicator not in list(self.dict_favorites.keys()):
                                 self.dict_favorites[_type_indicator] = [indicator_name]
                             else:
-                                if indicator_name not in self.dict_favorites[_type_indicator]:
-                                    self.dict_favorites[_type_indicator].append(indicator_name)
-                        AppConfig.sig_set_single_data.emit((f"topbar.indicator.favorite.{_type_indicator}",self.dict_favorites[_type_indicator]))
-                        self.dict_favorites = AppConfig.get_config_value(f"topbar.indicator.favorite")    
-                    
+                                if (
+                                    indicator_name
+                                    not in self.dict_favorites[_type_indicator]
+                                ):
+                                    self.dict_favorites[_type_indicator].append(
+                                        indicator_name
+                                    )
+                        AppConfig.sig_set_single_data.emit(
+                            (
+                                f"topbar.indicator.favorite.{_type_indicator}",
+                                self.dict_favorites[_type_indicator],
+                            )
+                        )
+                        self.dict_favorites = AppConfig.get_config_value(
+                            f"topbar.indicator.favorite"
+                        )
+
                 else:
-                    for index,row in enumerate(self.data):
+                    for index, row in enumerate(self.data):
                         if row[1] == indicator and row[4] == from_indicator_wg:
                             self.table_model.removeRow(index)
                             if _type_indicator != "Favorites":
-                                self.dict_favorites = AppConfig.get_config_value(f"topbar.indicator.favorite")
+                                self.dict_favorites = AppConfig.get_config_value(
+                                    f"topbar.indicator.favorite"
+                                )
                                 if new_state == Qt.CheckState.Unchecked:
-                                    if _type_indicator not in list(self.dict_favorites.keys()):
+                                    if _type_indicator not in list(
+                                        self.dict_favorites.keys()
+                                    ):
                                         self.dict_favorites[_type_indicator] = []
                                     else:
-                                        if indicator_name in self.dict_favorites[_type_indicator]:
-                                            self.dict_favorites[_type_indicator].remove(indicator_name)
+                                        if (
+                                            indicator_name
+                                            in self.dict_favorites[_type_indicator]
+                                        ):
+                                            self.dict_favorites[_type_indicator].remove(
+                                                indicator_name
+                                            )
                                 else:
-                                    if _type_indicator not in list(self.dict_favorites.keys()):
-                                        self.dict_favorites[_type_indicator] = [indicator_name]
+                                    if _type_indicator not in list(
+                                        self.dict_favorites.keys()
+                                    ):
+                                        self.dict_favorites[_type_indicator] = [
+                                            indicator_name
+                                        ]
                                     else:
-                                        if indicator_name not in self.dict_favorites[_type_indicator]:
-                                            self.dict_favorites[_type_indicator].append(indicator_name)
-                                AppConfig.sig_set_single_data.emit((f"topbar.indicator.favorite.{_type_indicator}",self.dict_favorites[_type_indicator]))
-                                self.dict_favorites = AppConfig.get_config_value(f"topbar.indicator.favorite")  
+                                        if (
+                                            indicator_name
+                                            not in self.dict_favorites[_type_indicator]
+                                        ):
+                                            self.dict_favorites[_type_indicator].append(
+                                                indicator_name
+                                            )
+                                AppConfig.sig_set_single_data.emit(
+                                    (
+                                        f"topbar.indicator.favorite.{_type_indicator}",
+                                        self.dict_favorites[_type_indicator],
+                                    )
+                                )
+                                self.dict_favorites = AppConfig.get_config_value(
+                                    f"topbar.indicator.favorite"
+                                )
                             break
-                
-    def leaveEvent(self,ev):
+
+    def leaveEvent(self, ev):
         super().leaveEvent(ev)
-    
-    def enterEvent(self,ev):
+
+    def enterEvent(self, ev):
         super().leaveEvent(ev)
-    
-    def mouseMoveEvent(self,ev:QMouseEvent):
+
+    def mouseMoveEvent(self, ev: QMouseEvent):
         pos = ev.position()
         index = self.indexAt(pos.toPoint())
         self.row_hover = index.row()
         if self.delegate:
             self.delegate.setHoverRow(index.row())
-            self.delegate.mouse_pos = pos     
-        if self.table_model:   
+            self.delegate.mouse_pos = pos
+        if self.table_model:
             self.table_model.dataChanged.emit(index, index)
         super().mouseMoveEvent(ev)
 
-    def mousePressEvent(self,ev:QMouseEvent):
+    def mousePressEvent(self, ev: QMouseEvent):
         super().mousePressEvent(ev)
-            

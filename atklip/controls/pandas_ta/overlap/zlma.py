@@ -25,10 +25,12 @@ from .vidya import vidya
 from .wma import wma
 
 
-
 def zlma(
-    close: Series, length: Int = None, mamode: str = None,
-    offset: Int = None, **kwargs: DictLike
+    close: Series,
+    length: Int = None,
+    mamode: str = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Zero Lag Moving Average (ZLMA)
 
@@ -60,8 +62,23 @@ def zlma(
 
     mamode = v_mamode(mamode, "ema")
     supported_mas = [
-        "dema", "ema", "fwma", "hma", "linreg", "midpoint", "pwma", "rma",
-        "sinwma", "sma", "ssf", "swma", "t3", "tema", "trima", "vidya", "wma"
+        "dema",
+        "ema",
+        "fwma",
+        "hma",
+        "linreg",
+        "midpoint",
+        "pwma",
+        "rma",
+        "sinwma",
+        "sma",
+        "ssf",
+        "swma",
+        "t3",
+        "tema",
+        "trima",
+        "vidya",
+        "wma",
     ]
 
     if mamode not in supported_mas:

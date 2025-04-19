@@ -5,13 +5,20 @@ from atklip.controls.pandas_ta.utils import v_drift, v_offset, v_pos_default, v_
 from .roc import roc
 
 
-
 def kst(
-    close: Series, signal: Int = None,
-    roc1: Int = None, roc2: Int = None, roc3: Int = None, roc4: Int = None,
-    sma1: Int = None, sma2: Int = None, sma3: Int = None, sma4: Int = None,
+    close: Series,
+    signal: Int = None,
+    roc1: Int = None,
+    roc2: Int = None,
+    roc3: Int = None,
+    roc4: Int = None,
+    sma1: Int = None,
+    sma2: Int = None,
+    sma3: Int = None,
+    sma4: Int = None,
     drift: Int = None,
-    offset: Int = None, **kwargs: DictLike
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> DataFrame:
     """'Know Sure Thing' (KST)
 

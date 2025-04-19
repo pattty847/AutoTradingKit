@@ -11,11 +11,19 @@ from .expand_setting_card import ExpandSettingCard
 
 
 class OptionsSettingCard(ExpandSettingCard):
-    """ setting card with a group of options """
+    """setting card with a group of options"""
 
     optionChanged = Signal(OptionsConfigItem)
 
-    def __init__(self, configItem, icon: Union[str, QIcon, FluentIconBase], title, content=None, texts=None, parent=None):
+    def __init__(
+        self,
+        configItem,
+        icon: Union[str, QIcon, FluentIconBase],
+        title,
+        content=None,
+        texts=None,
+        parent=None,
+    ):
         """
         Parameters
         ----------
@@ -62,7 +70,7 @@ class OptionsSettingCard(ExpandSettingCard):
         self.buttonGroup.buttonClicked.connect(self.__onButtonClicked)
 
     def __onButtonClicked(self, button: RadioButton):
-        """ button clicked slot """
+        """button clicked slot"""
         if button.text() == self.choiceLabel.text():
             return
 
@@ -74,7 +82,7 @@ class OptionsSettingCard(ExpandSettingCard):
         self.optionChanged.emit(self.configItem)
 
     def setValue(self, value):
-        """ select button according to the value """
+        """select button according to the value"""
         qconfig.set(self.configItem, value)
 
         for button in self.buttonGroup.buttons():

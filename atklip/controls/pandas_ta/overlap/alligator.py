@@ -5,10 +5,14 @@ from atklip.controls.pandas_ta.utils import v_offset, v_pos_default, v_series, v
 from .smma import smma
 
 
-
 def alligator(
-    close: Series, jaw: Int = None, teeth: Int = None, lips: Int = None,
-    talib: bool = False, offset: Int = None, **kwargs: DictLike
+    close: Series,
+    jaw: Int = None,
+    teeth: Int = None,
+    lips: Int = None,
+    talib: bool = False,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> DataFrame:
     """Bill Williams Alligator (ALLIGATOR)
 
@@ -74,7 +78,7 @@ def alligator(
     data = {
         f"AGj{_props}": gator_jaw,
         f"AGt{_props}": gator_teeth,
-        f"AGl{_props}": gator_lips
+        f"AGl{_props}": gator_lips,
     }
     df = DataFrame(data, index=close.index)
 

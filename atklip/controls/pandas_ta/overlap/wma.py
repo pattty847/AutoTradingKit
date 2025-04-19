@@ -6,16 +6,18 @@ from atklip.controls.pandas_ta.utils import (
     v_offset,
     v_pos_default,
     v_series,
-    v_talib
+    v_talib,
 )
 from atklip.controls.pandas_ta.utils._numba import nb_wma
 
 
-
 def wma(
-    close: Series, length: Int = None,
-    asc: bool = None, talib: bool = False,
-    offset: Int = None, **kwargs: DictLike
+    close: Series,
+    length: Int = None,
+    asc: bool = None,
+    talib: bool = False,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Weighted Moving Average (WMA)
 

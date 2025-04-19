@@ -1,5 +1,5 @@
 from .rsi import BasicRSI
-from .macd import  BasicMACD
+from .macd import BasicMACD
 from .volume import Volume
 from .histogram import Histogram
 from .roc import BasicROC

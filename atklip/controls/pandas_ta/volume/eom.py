@@ -7,15 +7,20 @@ from atklip.controls.pandas_ta.utils import (
     v_drift,
     v_pos_default,
     v_offset,
-    v_series
+    v_series,
 )
 
 
-
 def eom(
-    high: Series, low: Series, close: Series, volume: Series,
-    length: Int = None, divisor: IntFloat= None, drift: Int = None,
-    offset: Int = None, **kwargs: DictLike
+    high: Series,
+    low: Series,
+    close: Series,
+    volume: Series,
+    length: Int = None,
+    divisor: IntFloat = None,
+    drift: Int = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Ease of Movement (EOM)
 

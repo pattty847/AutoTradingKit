@@ -4,10 +4,13 @@ from atklip.controls.pandas_ta._typing import DictLike, Int
 from atklip.controls.pandas_ta.utils import v_offset, v_series, v_talib
 
 
-
 def wcp(
-    high: Series, low: Series, close: Series, talib: bool = False,
-    offset: Int = None, **kwargs: DictLike
+    high: Series,
+    low: Series,
+    close: Series,
+    talib: bool = False,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Weighted Closing Price (WCP)
 

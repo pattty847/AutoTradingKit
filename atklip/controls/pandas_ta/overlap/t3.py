@@ -5,10 +5,13 @@ from atklip.controls.pandas_ta.utils import v_offset, v_pos_default, v_series, v
 from .ema import ema
 
 
-
 def t3(
-    close: Series, length: Int = None, a: IntFloat = None, talib: bool = False,
-    offset: Int = None, **kwargs: DictLike
+    close: Series,
+    length: Int = None,
+    a: IntFloat = None,
+    talib: bool = False,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Tim Tillson's T3 Moving Average (T3)
 

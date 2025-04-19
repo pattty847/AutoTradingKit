@@ -2,6 +2,7 @@ from PySide6.QtCore import QObject, Signal
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QWidget
 
+
 class ObjectManager(QObject):
     object_added = Signal(object)
     object_removed = Signal(object)
@@ -10,11 +11,11 @@ class ObjectManager(QObject):
         super().__init__()
         self.objects = []
 
-    def widget_update_stylesheet(self,widget):
+    def widget_update_stylesheet(self, widget):
         widget.update_stylesheet()
 
-    def setFont(self,widget: QWidget, fontSize=14, weight=QFont.Normal):
-        """ set the font of widget
+    def setFont(self, widget: QWidget, fontSize=14, weight=QFont.Normal):
+        """set the font of widget
         Parameters
         ----------
         widget: QWidget
@@ -28,8 +29,8 @@ class ObjectManager(QObject):
         widget.setFont(self.getFont(fontSize, weight))
         widget.update()
 
-    def getFont(self,fontSize=14, weight=QFont.Normal):
-        """ create font
+    def getFont(self, fontSize=14, weight=QFont.Normal):
+        """create font
 
         Parameters
         ----------
@@ -40,13 +41,13 @@ class ObjectManager(QObject):
             font weight
         """
         font = QFont()
-        font.setFamilies(['Segoe UI', 'Microsoft YaHei', 'PingFang SC',  'Arial'])
+        font.setFamilies(["Segoe UI", "Microsoft YaHei", "PingFang SC", "Arial"])
         font.setPixelSize(fontSize)
         font.setWeight(weight)
         return font
 
     def get_all_element(self):
-        return 
+        return
 
     def add_object(self, obj):
         if obj not in self.objects:

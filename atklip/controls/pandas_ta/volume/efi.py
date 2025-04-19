@@ -7,15 +7,18 @@ from atklip.controls.pandas_ta.utils import (
     v_mamode,
     v_offset,
     v_pos_default,
-    v_series
+    v_series,
 )
 
 
-
 def efi(
-    close: Series, volume: Series, length: Int = None,
-    mamode: str = None, drift: Int = None,
-    offset: Int = None, **kwargs: DictLike
+    close: Series,
+    volume: Series,
+    length: Int = None,
+    mamode: str = None,
+    drift: Int = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Elder's Force Index (EFI)
 

@@ -11,13 +11,19 @@ from atklip.controls.pandas_ta.utils._numba import nb_rolling_hl
 from atklip.controls.pandas_ta.utils._numba import nb_find_zigzags
 from atklip.controls.pandas_ta.utils._numba import nb_map_zigzag
 
+
 def zigzag(
-    high: Series, low: Series, close: Series = None,
-    legs: int = None, deviation: IntFloat = None,
-    retrace: bool = None, last_extreme: bool = None,
-    offset: Int = None, **kwargs: DictLike
+    high: Series,
+    low: Series,
+    close: Series = None,
+    legs: int = None,
+    deviation: IntFloat = None,
+    retrace: bool = None,
+    last_extreme: bool = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ):
-    """ Zigzag (ZIGZAG)
+    """Zigzag (ZIGZAG)
 
     Zigzag attempts to filter out smaller price movments while highlighting
     trend direction. It does not predict future trends, but it does identify
@@ -60,7 +66,7 @@ def zigzag(
         return
 
     if close is not None:
-        close = v_series(close,_length)
+        close = v_series(close, _length)
         np_close = close.values
         if close is None:
             return

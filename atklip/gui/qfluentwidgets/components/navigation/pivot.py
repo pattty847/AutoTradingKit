@@ -3,24 +3,34 @@ from typing import Dict
 
 from PySide6.QtCore import Qt, Signal, QRectF
 from PySide6.QtGui import QPainter, QFont
-from PySide6.QtWidgets import QApplication, QPushButton, QWidget, QHBoxLayout, QSizePolicy
+from PySide6.QtWidgets import (
+    QApplication,
+    QPushButton,
+    QWidget,
+    QHBoxLayout,
+    QSizePolicy,
+)
 
 from ...common.font import setFont
 from ...common.router import qrouter
 from ...common.style_sheet import themeColor, FluentStyleSheet
-from ...common.animation import FluentAnimation, FluentAnimationType, FluentAnimationProperty
+from ...common.animation import (
+    FluentAnimation,
+    FluentAnimationType,
+    FluentAnimationProperty,
+)
 from ..widgets.button import PushButton
 from .navigation_panel import RouteKeyError
 
 
 class PivotItem(PushButton):
-    """ Pivot item """
+    """Pivot item"""
 
     itemClicked = Signal(bool)
 
     def _postInit(self):
         self.isSelected = False
-        self.setProperty('isSelected', False)
+        self.setProperty("isSelected", False)
         self.clicked.connect(lambda: self.itemClicked.emit(True))
         self.setAttribute(Qt.WA_LayoutUsesWidgetRect)
 
@@ -32,13 +42,13 @@ class PivotItem(PushButton):
             return
 
         self.isSelected = isSelected
-        self.setProperty('isSelected', isSelected)
+        self.setProperty("isSelected", isSelected)
         self.setStyle(QApplication.style())
         self.update()
 
 
 class Pivot(QWidget):
-    """ Pivot """
+    """Pivot"""
 
     currentItemChanged = Signal(str)
 
@@ -49,7 +59,11 @@ class Pivot(QWidget):
 
         self.hBoxLayout = QHBoxLayout(self)
         self.slideAni = FluentAnimation.create(
-            FluentAnimationType.POINT_TO_POINT, FluentAnimationProperty.SCALE, value=0, parent=self)
+            FluentAnimationType.POINT_TO_POINT,
+            FluentAnimationProperty.SCALE,
+            value=0,
+            parent=self,
+        )
 
         FluentStyleSheet.PIVOT.apply(self)
 
@@ -61,7 +75,7 @@ class Pivot(QWidget):
         self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
 
     def addItem(self, routeKey: str, text: str, onClick=None, icon=None):
-        """ add item
+        """add item
 
         Parameters
         ----------
@@ -80,7 +94,7 @@ class Pivot(QWidget):
         return self.insertItem(-1, routeKey, text, onClick, icon)
 
     def addWidget(self, routeKey: str, widget: PivotItem, onClick=None):
-        """ add widget
+        """add widget
 
         Parameters
         ----------
@@ -96,7 +110,7 @@ class Pivot(QWidget):
         self.insertWidget(-1, routeKey, widget, onClick)
 
     def insertItem(self, index: int, routeKey: str, text: str, onClick=None, icon=None):
-        """ insert item
+        """insert item
 
         Parameters
         ----------
@@ -126,7 +140,7 @@ class Pivot(QWidget):
         return item
 
     def insertWidget(self, index: int, routeKey: str, widget: PivotItem, onClick=None):
-        """ insert item
+        """insert item
 
         Parameters
         ----------
@@ -145,7 +159,7 @@ class Pivot(QWidget):
         if routeKey in self.items:
             return
 
-        widget.setProperty('routeKey', routeKey)
+        widget.setProperty("routeKey", routeKey)
         widget.itemClicked.connect(self._onItemClicked)
         if onClick:
             widget.itemClicked.connect(onClick)
@@ -154,7 +168,7 @@ class Pivot(QWidget):
         self.hBoxLayout.insertWidget(index, widget, 1)
 
     def removeWidget(self, routeKey: str):
-        """ remove widget
+        """remove widget
 
         Parameters
         ----------
@@ -173,7 +187,7 @@ class Pivot(QWidget):
             self._currentRouteKey = None
 
     def clear(self):
-        """ clear all navigation items """
+        """clear all navigation items"""
         for k, w in self.items.items():
             self.hBoxLayout.removeWidget(w)
             qrouter.remove(k)
@@ -183,7 +197,7 @@ class Pivot(QWidget):
         self._currentRouteKey = None
 
     def currentItem(self):
-        """ Returns the current selected item """
+        """Returns the current selected item"""
         if self._currentRouteKey is None:
             return None
 
@@ -193,7 +207,7 @@ class Pivot(QWidget):
         return self._currentRouteKey
 
     def setCurrentItem(self, routeKey: str):
-        """ set current selected item
+        """set current selected item
 
         Parameters
         ----------
@@ -216,7 +230,7 @@ class Pivot(QWidget):
         self._adjustIndicatorPos()
 
     def setItemFontSize(self, size: int):
-        """ set the pixel font size of items """
+        """set the pixel font size of items"""
         for item in self.items.values():
             font = item.font()
             font.setPixelSize(size)
@@ -224,13 +238,13 @@ class Pivot(QWidget):
             item.adjustSize()
 
     def setItemText(self, routeKey: str, text: str):
-        """ set the text of item """
+        """set the text of item"""
         item = self.widget(routeKey)
         item.setText(text)
 
     def _onItemClicked(self):
         item = self.sender()  # type: PivotItem
-        self.setCurrentItem(item.property('routeKey'))
+        self.setCurrentItem(item.property("routeKey"))
 
     def widget(self, routeKey: str):
         if routeKey not in self.items:

@@ -5,10 +5,8 @@ from atklip.controls.pandas_ta._typing import DictLike, Int
 from atklip.controls.pandas_ta.utils import v_offset, v_pos_default, v_series, weights
 
 
-
 def sinwma(
-    close: Series, length: Int = None,
-    offset: Int = None, **kwargs: DictLike
+    close: Series, length: Int = None, offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """Sine Weighted Moving Average (SWMA)
 
@@ -40,13 +38,10 @@ def sinwma(
     offset = v_offset(offset)
 
     # Calculate
-    sines = Series(
-        [sin((i + 1) * pi / (length + 1)) for i in range(0, length)]
-    )
+    sines = Series([sin((i + 1) * pi / (length + 1)) for i in range(0, length)])
     w = sines / sines.sum()
 
-    sinwma = close.rolling(length, min_periods=length) \
-        .apply(weights(w), raw=True)
+    sinwma = close.rolling(length, min_periods=length).apply(weights(w), raw=True)
 
     # Offset
     if offset != 0:

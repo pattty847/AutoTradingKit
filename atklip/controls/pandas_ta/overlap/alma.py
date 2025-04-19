@@ -3,14 +3,21 @@ from numpy import append, arange, array, exp, floor, nan, tensordot
 from numpy.version import version as np_version
 from atklip.controls.pandas_ta._typing import DictLike, Int, IntFloat
 from pandas import Series
-from atklip.controls.pandas_ta.utils import strided_window, v_offset, v_pos_default, v_series
-
+from atklip.controls.pandas_ta.utils import (
+    strided_window,
+    v_offset,
+    v_pos_default,
+    v_series,
+)
 
 
 def alma(
-    close: Series, length: Int = None,
-    sigma: IntFloat = None, dist_offset: IntFloat = None,
-    offset: Int = None, **kwargs: DictLike
+    close: Series,
+    length: Int = None,
+    sigma: IntFloat = None,
+    dist_offset: IntFloat = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Arnaud Legoux Moving Average (ALMA)
 
@@ -63,11 +70,11 @@ def alma(
 
     if np_version >= "1.20.0":
         from numpy.lib.stride_tricks import sliding_window_view
+
         window = sliding_window_view(np_close, length)
     else:
         window = strided_window(np_close, length)
-    result = append(array([nan] * (length - 1)),
-                    tensordot(window, weights, axes=1))
+    result = append(array([nan] * (length - 1)), tensordot(window, weights, axes=1))
     alma = Series(result, index=close.index)
 
     # Offset

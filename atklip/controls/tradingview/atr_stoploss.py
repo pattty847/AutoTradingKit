@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import atklip.controls.pandas_ta as ta
 
+
 def ma_function(source, length, smoothing):
     if smoothing == "RMA":
         return ta.rma(source, length)
@@ -14,9 +15,8 @@ def ma_function(source, length, smoothing):
     else:
         return ta.rma(source, length)  # Default to RMA nếu không có lựa chọn
 
-def atr_stoploss(df:pd.DataFrame,length = 14,
-                    smoothing = "RMA",
-                    multiplier = 1.5):
+
+def atr_stoploss(df: pd.DataFrame, length=14, smoothing="RMA", multiplier=1.5):
     """_summary_
     Args:
         _df (pd.DataFrame): df = {
@@ -32,14 +32,13 @@ def atr_stoploss(df:pd.DataFrame,length = 14,
         _type_: _description_
     """
     # df = _df.copy()
-    src1 = df['high']
-    src2 = df['low']
+    src1 = df["high"]
+    src2 = df["low"]
     # Tính toán ATR (Average True Range)
-    df['tr'] = ta.true_range(df['high'], df['low'], df['close'])
-    df['atr'] = ma_function(df['tr'], length, smoothing)
+    df["tr"] = ta.true_range(df["high"], df["low"], df["close"])
+    df["atr"] = ma_function(df["tr"], length, smoothing)
     # Tính toán các giá trị cho stop loss
-    df['a'] = df['atr'] * multiplier
-    df.loc[:, 'short_stoploss'] = df['a'] + src1  # ATR Short Stop Loss
-    df.loc[:, 'long_stoploss'] = src2 - df['a']  # ATR Long Stop Loss
+    df["a"] = df["atr"] * multiplier
+    df.loc[:, "short_stoploss"] = df["a"] + src1  # ATR Short Stop Loss
+    df.loc[:, "long_stoploss"] = src2 - df["a"]  # ATR Long Stop Loss
     return df
-

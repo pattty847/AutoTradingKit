@@ -7,10 +7,12 @@ from atklip.controls.pandas_ta._typing import DictLike, Int, IntFloat
 from atklip.controls.pandas_ta.utils import v_float, v_offset, v_pos_default, v_series
 
 
-
 def jma(
-    close: Series, length: IntFloat = None, phase: IntFloat = None,
-    offset: Int = None, **kwargs: DictLike
+    close: Series,
+    length: IntFloat = None,
+    phase: IntFloat = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Jurik Moving Average Average (JMA)
 
@@ -72,9 +74,10 @@ def jma(
         volty[i] = max(abs(del1), abs(del2)) if abs(del1) != abs(del2) else 0
 
         # Relative price volatility factor
-        v_sum[i] = v_sum[i - 1] + \
-            (volty[i] - volty[max(i - sum_length, 0)]) / sum_length
-        avg_volty = average(v_sum[max(i - 65, 0):i + 1])
+        v_sum[i] = (
+            v_sum[i - 1] + (volty[i] - volty[max(i - sum_length, 0)]) / sum_length
+        )
+        avg_volty = average(v_sum[max(i - 65, 0) : i + 1])
         d_volty = 0 if avg_volty == 0 else volty[i] / avg_volty
         r_volty = max(1.0, min(np_power(length1, 1 / pow1), d_volty))
         # r_volty = max(1.0, min(length1 **(1 / pow1), d_volty))
@@ -97,12 +100,11 @@ def jma(
         ma2 = ma1 + pr * det0
 
         # 3rd stage - final smoothing by unique Jurik adaptive filter
-        det1 = ((ma2 - jma[i - 1]) * (1 - alpha) * \
-                (1 - alpha)) + (alpha * alpha * det1)
+        det1 = ((ma2 - jma[i - 1]) * (1 - alpha) * (1 - alpha)) + (alpha * alpha * det1)
         jma[i] = jma[i - 1] + det1
 
     jma = Series(jma, index=close.index)
-    jma.iloc[0:_length - 1] = nan
+    jma.iloc[0 : _length - 1] = nan
 
     # Offset
     if offset != 0:

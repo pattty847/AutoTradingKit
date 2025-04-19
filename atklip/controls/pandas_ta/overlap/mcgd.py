@@ -4,16 +4,18 @@ from atklip.controls.pandas_ta._typing import DictLike, Int, IntFloat
 from atklip.controls.pandas_ta.utils import v_offset, v_pos_default, v_series
 
 
-
 def _mcgd(x, n, k):
-    d = (k * n * (x[1] / x[0]) ** 4)
-    x[1] = (x[0] + ((x[1] - x[0]) / d))
+    d = k * n * (x[1] / x[0]) ** 4
+    x[1] = x[0] + ((x[1] - x[0]) / d)
     return x[1]
 
 
 def mcgd(
-    close: Series, length: Int = None, c: IntFloat = None,
-    offset: Int = None, **kwargs: DictLike
+    close: Series,
+    length: Int = None,
+    c: IntFloat = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """McGinley Dynamic Indicator
 
@@ -55,8 +57,11 @@ def mcgd(
     # Calculate
     close = close.copy()
 
-    mcg_ds = close[0:].rolling(2, min_periods=2) \
+    mcg_ds = (
+        close[0:]
+        .rolling(2, min_periods=2)
         .apply(_mcgd, kwargs={"n": length, "k": c}, raw=True)
+    )
 
     # Offset
     if offset != 0:

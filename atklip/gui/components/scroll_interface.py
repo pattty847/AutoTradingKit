@@ -2,12 +2,17 @@
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QWidget, QSizePolicy, QSpacerItem
 
-from atklip.gui.qfluentwidgets.components import SmoothScrollArea,VBoxLayout,HorizontalSeparator,VerticalSeparator
+from atklip.gui.qfluentwidgets.components import (
+    SmoothScrollArea,
+    VBoxLayout,
+    HorizontalSeparator,
+    VerticalSeparator,
+)
 from atklip.gui.qfluentwidgets.common import *
 
 
 class ScrollInterface(SmoothScrollArea):
-    """ Gallery interface """
+    """Gallery interface"""
 
     def __init__(self, parent=None):
         """
@@ -34,50 +39,59 @@ class ScrollInterface(SmoothScrollArea):
         self.vBoxLayout.setSpacing(1)
         self.vBoxLayout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.vBoxLayout.setContentsMargins(0, 0, 0, 0)
-        self.view.setObjectName('view')
+        self.view.setObjectName("view")
         self.setWidget(self.view)
         # self.installEventFilter(self)
         FluentStyleSheet.SCROLLINTERFACE.apply(self)
-    
-    def setSpacing(self,value):
+
+    def setSpacing(self, value):
         self.vBoxLayout.setSpacing(value)
-    def setContentsMargins(self,l,t,r,b):
-        self.vBoxLayout.setContentsMargins(l,t,r,b)
-    def addSeparator(self,_type:str="HORIZONTAL",w: int = 30,h: int = 10):
+
+    def setContentsMargins(self, l, t, r, b):
+        self.vBoxLayout.setContentsMargins(l, t, r, b)
+
+    def addSeparator(self, _type: str = "HORIZONTAL", w: int = 30, h: int = 10):
         if _type == "HORIZONTAL":
-            Separator = HorizontalSeparator(self.parent(),w,h)
+            Separator = HorizontalSeparator(self.parent(), w, h)
         else:
-            Separator = VerticalSeparator(self.parent(),w,h)
+            Separator = VerticalSeparator(self.parent(), w, h)
         self.addWidget(Separator)
 
-    def addSpacer(self,_type:str="HORIZONTAL"):
+    def addSpacer(self, _type: str = "HORIZONTAL"):
         if _type == "HORIZONTAL":
             spacer = QSpacerItem(380, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         else:
             spacer = QSpacerItem(20, 380, QSizePolicy.Minimum, QSizePolicy.Expanding)
-        self.vBoxLayout.addItem(spacer)  
-    def addWidget(self, widget:QWidget, stretch=0, alignment=Qt.AlignmentFlag.AlignTop):
+        self.vBoxLayout.addItem(spacer)
+
+    def addWidget(
+        self, widget: QWidget, stretch=0, alignment=Qt.AlignmentFlag.AlignTop
+    ):
         self.vBoxLayout.addWidget(widget, stretch=stretch, alignment=alignment)
         return widget
-    
-    def insertWidget(self,index, widget:QWidget, stretch=0, alignment=Qt.AlignmentFlag.AlignTop):
-        self.vBoxLayout.insertWidget(index,widget, stretch=stretch, alignment=alignment)
+
+    def insertWidget(
+        self, index, widget: QWidget, stretch=0, alignment=Qt.AlignmentFlag.AlignTop
+    ):
+        self.vBoxLayout.insertWidget(
+            index, widget, stretch=stretch, alignment=alignment
+        )
         return widget
-    
-    def removeWidget(self, widget:QWidget):
+
+    def removeWidget(self, widget: QWidget):
         self.vBoxLayout.removeWidget(widget)
         widget.deleteLater()
 
     def scrollToCard(self, index: int):
-        """ scroll to example card """
+        """scroll to example card"""
         w = self.vBoxLayout.itemAt(index).widget()
         self.verticalScrollBar().setValue(w.y())
-        
+
     def resizeEvent(self, e):
         super().resizeEvent(e)
-    
+
     # def eventFilter(self, obj, e: QEvent):
-        
+
     #     if e.type() == QEvent.Wheel:
     #         print(self.delegate.vScrollBar.val)
     #         _widgets = self.vBoxLayout.get_widgets()
@@ -106,4 +120,3 @@ class ScrollInterface(SmoothScrollArea):
     #         return True
 
     #     return super().eventFilter(obj, e)
-    

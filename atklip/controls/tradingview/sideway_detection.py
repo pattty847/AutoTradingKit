@@ -2,12 +2,14 @@ import numpy as np
 import pandas as pd
 
 # Sample OHLC data (replace with real data)
-data = pd.DataFrame({
-    'open': np.random.random(500),
-    'high': np.random.random(500),
-    'low': np.random.random(500),
-    'close': np.random.random(500)
-})
+data = pd.DataFrame(
+    {
+        "open": np.random.random(500),
+        "high": np.random.random(500),
+        "low": np.random.random(500),
+        "close": np.random.random(500),
+    }
+)
 
 # Inputs
 bars_min_in_sideway = 5  # Minimum bars in Sideway
@@ -46,19 +48,23 @@ sideway_boxes = []
 
 # Loop through data to find sideways zones
 for i in range(bars_min_in_sideway, len(data)):
-    bar_cur_mid_price = abs(data.loc[i, 'open'] - data.loc[i, 'close']) / 2 + min(data.loc[i, 'open'], data.loc[i, 'close'])
+    bar_cur_mid_price = abs(data.loc[i, "open"] - data.loc[i, "close"]) / 2 + min(
+        data.loc[i, "open"], data.loc[i, "close"]
+    )
 
     if is_new_sideway:
         pc = abs(100 - abs(new_sideway_y * 100 / bar_cur_mid_price))
 
         if pc > percent_change_sideway:
             # Save the current sideway box
-            sideway_boxes.append({
-                'start': new_sideway_x,
-                'end': i + bars_ext_for_sideway,
-                'top': new_sideway_y + new_sideway_high,
-                'bottom': new_sideway_y - new_sideway_high
-            })
+            sideway_boxes.append(
+                {
+                    "start": new_sideway_x,
+                    "end": i + bars_ext_for_sideway,
+                    "top": new_sideway_y + new_sideway_high,
+                    "bottom": new_sideway_y - new_sideway_high,
+                }
+            )
 
             # Reset the forming sideway box
             is_new_sideway = False
@@ -71,7 +77,9 @@ for i in range(bars_min_in_sideway, len(data)):
     else:
         is_new_sideway = True
         for j in range(1, bars_min_in_sideway + 1):
-            bar_pre_mid_price = abs(data.loc[i - j, 'open'] - data.loc[i - j, 'close']) / 2 + min(data.loc[i - j, 'open'], data.loc[i - j, 'close'])
+            bar_pre_mid_price = abs(
+                data.loc[i - j, "open"] - data.loc[i - j, "close"]
+            ) / 2 + min(data.loc[i - j, "open"], data.loc[i - j, "close"])
             pc = abs(100 - abs(bar_pre_mid_price * 100 / bar_cur_mid_price))
             if pc > percent_change_sideway:
                 is_new_sideway = False
@@ -85,4 +93,6 @@ for i in range(bars_min_in_sideway, len(data)):
 # Output the detected sideway zones
 print("Detected Sideways Zones:")
 for box in sideway_boxes:
-    print(f"Start: {box['start']}, End: {box['end']}, Top: {box['top']}, Bottom: {box['bottom']}")
+    print(
+        f"Start: {box['start']}, End: {box['end']}, Top: {box['top']}, Bottom: {box['bottom']}"
+    )

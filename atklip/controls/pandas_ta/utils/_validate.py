@@ -11,7 +11,7 @@ from atklip.controls.pandas_ta._typing import (
     Optional,
     SeriesFrame,
     np_floating,
-    np_integer
+    np_integer,
 )
 
 # __all__ = [
@@ -39,7 +39,6 @@ from atklip.controls.pandas_ta._typing import (
 # ]
 
 
-
 def is_percent(x: IntFloat) -> bool:
     if isinstance(x, (float, int, np_floating, np_integer)):
         return x is not None and 0 <= x <= 100
@@ -58,9 +57,7 @@ def v_dataframe(obj: MaybeSeriesFrame) -> None:
         print("[X] Requires a Pandas Series or DataFrame.")
 
 
-def v_float(
-    var: IntFloat, default: IntFloat, ne: Optional[IntFloat] = 0.0
-) -> Float:
+def v_float(var: IntFloat, default: IntFloat, ne: Optional[IntFloat] = 0.0) -> Float:
     """Returns the default if var is not equal to the ne value."""
     _types = (float, int, np_floating, np_integer)
     if isinstance(ne, _types) and isinstance(var, _types):
@@ -81,8 +78,8 @@ def v_int(var: Int, default: Int, ne: Optional[Int] = 0) -> Int:
 def v_str(var: str, default: str) -> str:
     """Returns the default value if var is not an empty str"""
     if isinstance(var, str) and len(var) > 0:
-        return var.encode('utf-8').decode('utf-8')
-    return default.encode('utf-8').decode('utf-8')
+        return var.encode("utf-8").decode("utf-8")
+    return default.encode("utf-8").decode("utf-8")
 
 
 def v_ascending(var: bool) -> bool:
@@ -113,13 +110,18 @@ def v_list(var: List, default: List = []) -> List:
 
 
 def v_lowerbound(
-    var: IntFloat, bound: IntFloat = 0,
-    default: IntFloat = 0, strict: bool = True, complement: bool = False
+    var: IntFloat,
+    bound: IntFloat = 0,
+    default: IntFloat = 0,
+    strict: bool = True,
+    complement: bool = False,
 ) -> IntFloat:
     """Returns the default if var(iable) not greater(equal) than bound."""
     var_type = None
-    if isinstance(var, (float, np_floating)): var_type = float
-    if isinstance(var, (int, np_integer)): var_type = int
+    if isinstance(var, (float, np_floating)):
+        var_type = float
+    if isinstance(var, (int, np_integer)):
+        var_type = int
 
     if var_type is None:
         return default
@@ -130,16 +132,17 @@ def v_lowerbound(
     else:
         valid = var_type(var) >= var_type(bound)
 
-    if complement: valid = not valid
+    if complement:
+        valid = not valid
 
     if valid:
         return var_type(var)
     return default
 
 
-def v_mamode(var: Optional[str|None], default: str) -> str: # Could be an alias.
+def v_mamode(var: Optional[str | None], default: str) -> str:  # Could be an alias.
     if not var:
-        return default.encode('utf-8').decode('utf-8')
+        return default.encode("utf-8").decode("utf-8")
     return v_str(var, default)
 
 
@@ -151,8 +154,9 @@ def v_offset(var: Int) -> Int:
 def v_pos_default(
     var: IntFloat, default: IntFloat = 0, strict: bool = True, complement: bool = False
 ) -> IntFloat:
-    return partial(v_lowerbound, bound=0) \
-        (var=var, default=default, strict=strict, complement=complement)
+    return partial(v_lowerbound, bound=0)(
+        var=var, default=default, strict=strict, complement=complement
+    )
 
 
 def v_scalar(var: IntFloat, default: Optional[IntFloat] = 1) -> Float:
@@ -182,17 +186,20 @@ def v_tradingview(var: bool) -> bool:
 
 
 def v_upperbound(
-    var: IntFloat, bound: IntFloat = 0,
-    default: IntFloat = 0, strict: bool = True
+    var: IntFloat, bound: IntFloat = 0, default: IntFloat = 0, strict: bool = True
 ) -> IntFloat:
-    return partial(v_lowerbound, complement=True)\
-        (var=var, bound=bound, default=default, strict=strict)
+    return partial(v_lowerbound, complement=True)(
+        var=var, bound=bound, default=default, strict=strict
+    )
+
 
 def verify_series(series: Series, min_length: int = None) -> Series:
     """If a Pandas Series and it meets the min_length of the indicator return it."""
     has_length = min_length is not None and isinstance(min_length, int)
     if series is not None and isinstance(series, Series):
         return None if has_length and series.size < min_length else series
+
+
 def get_offset(x: int) -> int:
     """Returns an int, otherwise defaults to zero."""
     return int(x) if isinstance(x, int) else 0

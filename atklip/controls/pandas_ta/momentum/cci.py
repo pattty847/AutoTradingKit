@@ -6,11 +6,15 @@ from atklip.controls.pandas_ta.statistics import mad
 from atklip.controls.pandas_ta.utils import v_offset, v_pos_default, v_series, v_talib
 
 
-
 def cci(
-    high: Series, low: Series, close: Series, length: Int = None,
-    c: IntFloat = None, talib: bool = None,
-    offset: Int = None, **kwargs: DictLike
+    high: Series,
+    low: Series,
+    close: Series,
+    length: Int = None,
+    c: IntFloat = None,
+    talib: bool = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Commodity Channel Index (CCI)
 

@@ -105,7 +105,9 @@ def heikinashi(bars):
     # ha open
     bars.at[0, "ha_open"] = (bars.at[0, "open"] + bars.at[0, "close"]) / 2
     for i in range(1, len(bars)):
-        bars.at[i, "ha_open"] = (bars.at[i - 1, "ha_open"] + bars.at[i - 1, "ha_close"]) / 2
+        bars.at[i, "ha_open"] = (
+            bars.at[i - 1, "ha_open"] + bars.at[i - 1, "ha_close"]
+        ) / 2
 
     bars["ha_high"] = bars.loc[:, ["high", "ha_open", "ha_close"]].max(axis=1)
     bars["ha_low"] = bars.loc[:, ["low", "ha_open", "ha_close"]].min(axis=1)
@@ -124,7 +126,14 @@ def heikinashi(bars):
 # ---------------------------------------------
 
 
-def tdi(series, rsi_lookback=13, rsi_smooth_len=2, rsi_signal_len=7, bb_lookback=34, bb_std=1.6185):
+def tdi(
+    series,
+    rsi_lookback=13,
+    rsi_smooth_len=2,
+    rsi_signal_len=7,
+    bb_lookback=34,
+    bb_std=1.6185,
+):
     rsi_data = rsi(series, rsi_lookback)
     rsi_smooth = sma(rsi_data, rsi_smooth_len)
     rsi_signal = sma(rsi_data, rsi_signal_len)
@@ -260,7 +269,9 @@ def rolling_std(series, window=200, min_periods=None):
         try:
             return series.rolling(window=window, min_periods=min_periods).std()
         except Exception as e:  # noqa: F841
-            return pd.Series(series).rolling(window=window, min_periods=min_periods).std()
+            return (
+                pd.Series(series).rolling(window=window, min_periods=min_periods).std()
+            )
 
 
 # ---------------------------------------------
@@ -274,7 +285,9 @@ def rolling_mean(series, window=200, min_periods=None):
         try:
             return series.rolling(window=window, min_periods=min_periods).mean()
         except Exception as e:  # noqa: F841
-            return pd.Series(series).rolling(window=window, min_periods=min_periods).mean()
+            return (
+                pd.Series(series).rolling(window=window, min_periods=min_periods).mean()
+            )
 
 
 # ---------------------------------------------
@@ -315,9 +328,9 @@ def rolling_weighted_mean(series, window=200, min_periods=None):
 
 def hull_moving_average(series, window=200, min_periods=None):
     min_periods = window if min_periods is None else min_periods
-    ma = (2 * rolling_weighted_mean(series, window / 2, min_periods)) - rolling_weighted_mean(
-        series, window, min_periods
-    )
+    ma = (
+        2 * rolling_weighted_mean(series, window / 2, min_periods)
+    ) - rolling_weighted_mean(series, window, min_periods)
     return rolling_weighted_mean(ma, np.sqrt(window), min_periods)
 
 
@@ -439,7 +452,11 @@ def macd(series, fast=3, slow=10, smooth=16):
     # return macd_line, signal, histogram
     return pd.DataFrame(
         index=series.index,
-        data={"macd": macd_line.values, "signal": signal.values, "histogram": histogram.values},
+        data={
+            "macd": macd_line.values,
+            "signal": signal.values,
+            "histogram": histogram.values,
+        },
     )
 
 
@@ -452,7 +469,9 @@ def bollinger_bands(series, window=20, stds=2):
     upper = ma + std * stds
     lower = ma - std * stds
 
-    return pd.DataFrame(index=series.index, data={"upper": upper, "mid": ma, "lower": lower})
+    return pd.DataFrame(
+        index=series.index, data={"upper": upper, "mid": ma, "lower": lower}
+    )
 
 
 # ---------------------------------------------
@@ -465,7 +484,8 @@ def weighted_bollinger_bands(series, window=20, stds=2):
     lower = ema - std * stds
 
     return pd.DataFrame(
-        index=series.index, data={"upper": upper.values, "mid": ema.values, "lower": lower.values}
+        index=series.index,
+        data={"upper": upper.values, "mid": ema.values, "lower": lower.values},
     )
 
 
@@ -498,7 +518,9 @@ def log_returns(series):
 
 def implied_volatility(series, window=252):
     try:
-        logret = np.log(series / series.shift(1)).replace([np.inf, -np.inf], float("NaN"))
+        logret = np.log(series / series.shift(1)).replace(
+            [np.inf, -np.inf], float("NaN")
+        )
         res = numpy_rolling_std(logret, window) * np.sqrt(window)
     except Exception as e:  # noqa: F841
         res = nans(len(series))
@@ -561,7 +583,9 @@ def stoch(df, window=14, d=3, k=3, fast=False):
     my_df["rolling_min"] = df["low"].rolling(window).min()
 
     my_df["fast_k"] = (
-        100 * (df["close"] - my_df["rolling_min"]) / (my_df["rolling_max"] - my_df["rolling_min"])
+        100
+        * (df["close"] - my_df["rolling_min"])
+        / (my_df["rolling_max"] - my_df["rolling_min"])
     )
     my_df["fast_d"] = my_df["fast_k"].rolling(d).mean()
 
@@ -620,7 +644,9 @@ def zscore(bars, window=20, stds=1, col="close"):
 
 def pvt(bars):
     """Price Volume Trend"""
-    trend = ((bars["close"] - bars["close"].shift(1)) / bars["close"].shift(1)) * bars["volume"]
+    trend = ((bars["close"] - bars["close"].shift(1)) / bars["close"].shift(1)) * bars[
+        "volume"
+    ]
     return trend.cumsum()
 
 

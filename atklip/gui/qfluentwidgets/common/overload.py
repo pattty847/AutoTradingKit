@@ -44,4 +44,4 @@ class singledispatchmethod:
 
     @property
     def __isabstractmethod__(self):
-        return getattr(self.func, '__isabstractmethod__', False)
+        return getattr(self.func, "__isabstractmethod__", False)

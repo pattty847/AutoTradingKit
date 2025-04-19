@@ -8,15 +8,17 @@ from atklip.controls.pandas_ta.utils import (
     v_offset,
     v_pos_default,
     v_series,
-    v_talib
+    v_talib,
 )
 
 
-
 def smma(
-    close: Series, length: Int = None,
-    mamode: str = None, talib: bool = False,
-    offset: Int = None, **kwargs: DictLike
+    close: Series,
+    length: Int = None,
+    mamode: str = None,
+    talib: bool = False,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """SMoothed Moving Average (SMMA)
 
@@ -66,8 +68,10 @@ def smma(
     # Calculate
     m = close.size
     smma = close.copy()
-    smma[:length - 1] = nan
-    smma.iloc[length - 1] = ma(mamode, close[0:length], length=length, talib=mode_tal).iloc[-1]
+    smma[: length - 1] = nan
+    smma.iloc[length - 1] = ma(
+        mamode, close[0:length], length=length, talib=mode_tal
+    ).iloc[-1]
 
     for i in range(length, m):
         smma.iat[i] = ((length - 1) * smma.iat[i - 1] + smma.iat[i]) / length

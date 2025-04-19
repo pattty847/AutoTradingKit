@@ -7,7 +7,12 @@ import numpy as np
 import pandas as pd
 from typing import List
 from atklip.controls.ohlcv import OHLCV
-from atklip.controls.candle import JAPAN_CANDLE, HEIKINASHI, SMOOTH_CANDLE, N_SMOOTH_CANDLE
+from atklip.controls.candle import (
+    JAPAN_CANDLE,
+    HEIKINASHI,
+    SMOOTH_CANDLE,
+    N_SMOOTH_CANDLE,
+)
 from atklip.appmanager import ThreadPoolExecutor_global as ApiThreadPool
 
 from PySide6.QtCore import Signal, QObject
@@ -22,7 +27,9 @@ class AO(QObject):
 
     def __init__(self, _candles, dict_ta_params: dict = {}) -> None:
         super().__init__(parent=None)
-        self._candles: JAPAN_CANDLE | HEIKINASHI | SMOOTH_CANDLE | N_SMOOTH_CANDLE = _candles
+        self._candles: JAPAN_CANDLE | HEIKINASHI | SMOOTH_CANDLE | N_SMOOTH_CANDLE = (
+            _candles
+        )
 
         self.fast: int = dict_ta_params.get("fast", 5)
         self.slow: int = dict_ta_params.get("slow", 34)
@@ -59,7 +66,9 @@ class AO(QObject):
     def change_input(self, candles=None, dict_ta_params: dict = {}):
         if candles is not None:
             self.disconnect_signals()
-            self._candles: JAPAN_CANDLE | HEIKINASHI | SMOOTH_CANDLE | N_SMOOTH_CANDLE = candles
+            self._candles: (
+                JAPAN_CANDLE | HEIKINASHI | SMOOTH_CANDLE | N_SMOOTH_CANDLE
+            ) = candles
             self.connect_signals()
 
         if dict_ta_params != {}:
@@ -96,7 +105,9 @@ class AO(QObject):
         self._candles.signal_delete.connect(self.signal_delete)
         self._candles.sig_add_historic.connect(self.add_historic_worker)
 
-    def change_source(self, _candles: JAPAN_CANDLE | HEIKINASHI | SMOOTH_CANDLE | N_SMOOTH_CANDLE):
+    def change_source(
+        self, _candles: JAPAN_CANDLE | HEIKINASHI | SMOOTH_CANDLE | N_SMOOTH_CANDLE
+    ):
         self.disconnect_signals()
         self._candles = _candles
         self.connect_signals()
@@ -151,16 +162,15 @@ class AO(QObject):
     def calculate(df: pd.DataFrame, fast, slow):
         df = df.copy()
         df = df.reset_index(drop=True)
-        INDICATOR = ao(high=df["high"],
-                       low=df["low"],
-                       fast=fast,
-                       slow=slow).dropna().round(6)
+        INDICATOR = (
+            ao(high=df["high"], low=df["low"], fast=fast, slow=slow).dropna().round(6)
+        )
 
         if isinstance(INDICATOR, pd.Series):
             y_data = INDICATOR
         else:
             column_names = INDICATOR.columns.tolist()
-            ao_name = ''
+            ao_name = ""
             for name in column_names:
                 if name.__contains__("AO_"):
                     ao_name = name
@@ -169,20 +179,21 @@ class AO(QObject):
         _len = len(y_data)
 
         _index = df["index"].tail(_len)
-        return pd.DataFrame({
-            'index': _index,
-            "data": y_data,
-        })
+        return pd.DataFrame(
+            {
+                "index": _index,
+                "data": y_data,
+            }
+        )
 
     def first_gen_data(self):
         self.is_current_update = False
         self.is_genering = True
         self.df = pd.DataFrame([])
         df: pd.DataFrame = self._candles.get_df()
-        process = HeavyProcess(self.calculate,
-                               self.callback_first_gen,
-                               df,
-                               self.fast, self.slow)
+        process = HeavyProcess(
+            self.calculate, self.callback_first_gen, df, self.fast, self.slow
+        )
         process.start()
 
     def add_historic(self, n: int):
@@ -192,21 +203,19 @@ class AO(QObject):
         candle_df = self._candles.get_df()
         df: pd.DataFrame = candle_df.head(-_pre_len)
 
-        process = HeavyProcess(self.calculate,
-                               self.callback_gen_historic_data,
-                               df,
-                               self.fast, self.slow)
+        process = HeavyProcess(
+            self.calculate, self.callback_gen_historic_data, df, self.fast, self.slow
+        )
         process.start()
 
     def add(self, new_candles: List[OHLCV]):
         new_candle: OHLCV = new_candles[-1]
         self.is_current_update = False
         if (self.first_gen == True) and (self.is_genering == False):
-            df: pd.DataFrame = self._candles.get_df((self.fast +self.slow)* 5)
-            process = HeavyProcess(self.calculate,
-                                   self.callback_add,
-                                   df,
-                                   self.fast, self.slow)
+            df: pd.DataFrame = self._candles.get_df((self.fast + self.slow) * 5)
+            process = HeavyProcess(
+                self.calculate, self.callback_add, df, self.fast, self.slow
+            )
             process.start()
         else:
             pass
@@ -215,11 +224,10 @@ class AO(QObject):
         new_candle: OHLCV = new_candles[-1]
         self.is_current_update = False
         if (self.first_gen == True) and (self.is_genering == False):
-            df: pd.DataFrame = self._candles.get_df((self.fast +self.slow)* 5)
-            process = HeavyProcess(self.calculate,
-                                   self.callback_update,
-                                   df,
-                                   self.fast, self.slow)
+            df: pd.DataFrame = self._candles.get_df((self.fast + self.slow) * 5)
+            process = HeavyProcess(
+                self.calculate, self.callback_update, df, self.fast, self.slow
+            )
             process.start()
         else:
             pass
@@ -250,10 +258,7 @@ class AO(QObject):
         df = future.result()
         last_index = df["index"].iloc[-1]
         last_data = df["data"].iloc[-1]
-        new_frame = pd.DataFrame({
-            'index': [last_index],
-            "data": [last_data]
-        })
+        new_frame = pd.DataFrame({"index": [last_index], "data": [last_data]})
 
         self.df = pd.concat([self.df, new_frame], ignore_index=True)
 

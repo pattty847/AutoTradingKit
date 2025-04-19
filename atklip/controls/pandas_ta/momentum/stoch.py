@@ -10,16 +10,21 @@ from atklip.controls.pandas_ta.utils import (
     v_offset,
     v_pos_default,
     v_series,
-    v_talib
+    v_talib,
 )
 
 
-
 def stoch(
-    high: Series, low: Series, close: Series,
-    k: Int = None, d: Int = None, smooth_k: Int = None,
-    mamode: str = None, talib: bool = None,
-    offset: Int = None, **kwargs: DictLike
+    high: Series,
+    low: Series,
+    close: Series,
+    k: Int = None,
+    d: Int = None,
+    smooth_k: Int = None,
+    mamode: str = None,
+    talib: bool = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> DataFrame:
     """Stochastic (STOCH)
 
@@ -77,15 +82,16 @@ def stoch(
 
     stoch = 100 * (close - ll) / non_zero_range(hh, ll)
 
-    if stoch is None: return
+    if stoch is None:
+        return
 
-    stoch_fvi = stoch.loc[stoch.first_valid_index():, ]
+    stoch_fvi = stoch.loc[stoch.first_valid_index() :,]
     if smooth_k == 1:
         stoch_k = stoch
     else:
         stoch_k = ma(mamode, stoch_fvi, length=smooth_k)
 
-    stochk_fvi = stoch_k.loc[stoch_k.first_valid_index():, ]
+    stochk_fvi = stoch_k.loc[stoch_k.first_valid_index() :,]
     stoch_d = ma(mamode, stochk_fvi, length=d)
 
     stoch_h = stoch_k - stoch_d  # Histogram
@@ -110,11 +116,7 @@ def stoch(
     stoch_h.name = f"{_name}h{_props}"
     stoch_k.category = stoch_d.category = stoch_h.category = "momentum"
 
-    data = {
-        stoch_k.name: stoch_k,
-        stoch_d.name: stoch_d,
-        stoch_h.name: stoch_h
-    }
+    data = {stoch_k.name: stoch_k, stoch_d.name: stoch_d, stoch_h.name: stoch_h}
     df = DataFrame(data, index=close.index)
     df.name = f"{_name}{_props}"
     df.category = stoch_k.category

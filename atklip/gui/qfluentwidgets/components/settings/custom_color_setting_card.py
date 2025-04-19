@@ -2,7 +2,14 @@
 from typing import Union
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QIcon, QColor
-from PySide6.QtWidgets import QWidget, QLabel, QButtonGroup, QVBoxLayout, QPushButton, QHBoxLayout
+from PySide6.QtWidgets import (
+    QWidget,
+    QLabel,
+    QButtonGroup,
+    QVBoxLayout,
+    QPushButton,
+    QHBoxLayout,
+)
 
 from ..dialog_box import ColorDialog
 from .expand_setting_card import ExpandGroupSettingCard
@@ -12,12 +19,19 @@ from ...common.icon import FluentIconBase
 
 
 class CustomColorSettingCard(ExpandGroupSettingCard):
-    """ Custom color setting card """
+    """Custom color setting card"""
 
     colorChanged = Signal(QColor)
 
-    def __init__(self, configItem: ColorConfigItem, icon: Union[str, QIcon, FluentIconBase], title: str,
-                 content=None, parent=None, enableAlpha=False):
+    def __init__(
+        self,
+        configItem: ColorConfigItem,
+        icon: Union[str, QIcon, FluentIconBase],
+        title: str,
+        content=None,
+        parent=None,
+        enableAlpha=False,
+    ):
         """
         Parameters
         ----------
@@ -50,17 +64,17 @@ class CustomColorSettingCard(ExpandGroupSettingCard):
         self.radioWidget = QWidget(self.view)
         self.radioLayout = QVBoxLayout(self.radioWidget)
         self.defaultRadioButton = RadioButton(
-            self.tr('Default color'), self.radioWidget)
-        self.customRadioButton = RadioButton(
-            self.tr('Custom color'), self.radioWidget)
+            self.tr("Default color"), self.radioWidget
+        )
+        self.customRadioButton = RadioButton(self.tr("Custom color"), self.radioWidget)
         self.buttonGroup = QButtonGroup(self)
 
         self.customColorWidget = QWidget(self.view)
         self.customColorLayout = QHBoxLayout(self.customColorWidget)
-        self.customLabel = QLabel(
-            self.tr('Custom color'), self.customColorWidget)
+        self.customLabel = QLabel(self.tr("Custom color"), self.customColorWidget)
         self.chooseColorButton = QPushButton(
-            self.tr('Choose color'), self.customColorWidget)
+            self.tr("Choose color"), self.customColorWidget
+        )
 
         self.__initWidget()
 
@@ -79,7 +93,7 @@ class CustomColorSettingCard(ExpandGroupSettingCard):
 
         self.choiceLabel.setObjectName("titleLabel")
         self.customLabel.setObjectName("titleLabel")
-        self.chooseColorButton.setObjectName('chooseColorButton')
+        self.chooseColorButton.setObjectName("chooseColorButton")
 
         self.buttonGroup.buttonClicked.connect(self.__onRadioButtonClicked)
         self.chooseColorButton.clicked.connect(self.__showColorDialog)
@@ -107,7 +121,7 @@ class CustomColorSettingCard(ExpandGroupSettingCard):
         self.addGroupWidget(self.customColorWidget)
 
     def __onRadioButtonClicked(self, button: RadioButton):
-        """ radio button clicked slot """
+        """radio button clicked slot"""
         if button.text() == self.choiceLabel.text():
             return
 
@@ -126,14 +140,18 @@ class CustomColorSettingCard(ExpandGroupSettingCard):
                 self.colorChanged.emit(self.customColor)
 
     def __showColorDialog(self):
-        """ show color dialog """
+        """show color dialog"""
         w = ColorDialog(
-            qconfig.get(self.configItem), self.tr('Choose color'), self.window(), self.enableAlpha)
+            qconfig.get(self.configItem),
+            self.tr("Choose color"),
+            self.window(),
+            self.enableAlpha,
+        )
         w.colorChanged.connect(self.__onCustomColorChanged)
         w.exec()
 
     def __onCustomColorChanged(self, color):
-        """ custom color changed slot """
+        """custom color changed slot"""
         qconfig.set(self.configItem, color)
         self.customColor = QColor(color)
         self.colorChanged.emit(color)

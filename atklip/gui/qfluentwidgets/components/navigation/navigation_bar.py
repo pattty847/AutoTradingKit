@@ -18,7 +18,7 @@ from .navigation_panel import RouteKeyError, NavigationItemPosition
 
 
 class IconSlideAnimation(QPropertyAnimation):
-    """ Icon sliding animation """
+    """Icon sliding animation"""
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -35,13 +35,13 @@ class IconSlideAnimation(QPropertyAnimation):
         self.parent().update()
 
     def slideDown(self):
-        """ slide down """
+        """slide down"""
         self.setEndValue(self.maxOffset)
         self.setDuration(100)
         self.start()
 
     def slideUp(self):
-        """ slide up """
+        """slide up"""
         self.setEndValue(0)
         self.setDuration(100)
         self.start()
@@ -49,11 +49,17 @@ class IconSlideAnimation(QPropertyAnimation):
     offset = Property(float, getOffset, setOffset)
 
 
-
 class NavigationBarPushButton(NavigationPushButton):
-    """ Navigation bar push button """
+    """Navigation bar push button"""
 
-    def __init__(self, icon: Union[str, QIcon, FIF], text: str, isSelectable: bool, selectedIcon=None, parent=None):
+    def __init__(
+        self,
+        icon: Union[str, QIcon, FIF],
+        text: str,
+        isSelectable: bool,
+        selectedIcon=None,
+        parent=None,
+    ):
         super().__init__(icon, text, isSelectable, parent)
         self.iconAni = IconSlideAnimation(self)
         self._selectedIcon = selectedIcon
@@ -78,8 +84,11 @@ class NavigationBarPushButton(NavigationPushButton):
 
     def paintEvent(self, e):
         painter = QPainter(self)
-        painter.setRenderHints(QPainter.Antialiasing |
-                               QPainter.TextAntialiasing | QPainter.SmoothPixmapTransform)
+        painter.setRenderHints(
+            QPainter.Antialiasing
+            | QPainter.TextAntialiasing
+            | QPainter.SmoothPixmapTransform
+        )
         painter.setPen(Qt.NoPen)
 
         self._drawBackground(painter)
@@ -161,7 +170,7 @@ class NavigationBar(QWidget):
         self.bottomLayout = QVBoxLayout()
         self.scrollLayout = QVBoxLayout(self.scrollWidget)
 
-        self.items = {}   # type: Dict[str, NavigationWidget]
+        self.items = {}  # type: Dict[str, NavigationWidget]
         self.history = qrouter
 
         self.__initWidget()
@@ -177,7 +186,7 @@ class NavigationBar(QWidget):
         self.scrollArea.setWidget(self.scrollWidget)
         self.scrollArea.setWidgetResizable(True)
 
-        self.scrollWidget.setObjectName('scrollWidget')
+        self.scrollWidget.setObjectName("scrollWidget")
         FluentStyleSheet.NAVIGATION_INTERFACE.apply(self)
         FluentStyleSheet.NAVIGATION_INTERFACE.apply(self.scrollWidget)
         self.__initLayout()
@@ -207,9 +216,17 @@ class NavigationBar(QWidget):
 
         return self.items[routeKey]
 
-    def addItem(self, routeKey: str, icon: Union[str, QIcon, FluentIconBase], text: str, onClick=None,
-                selectable=True, selectedIcon=None, position=NavigationItemPosition.TOP):
-        """ add navigation item
+    def addItem(
+        self,
+        routeKey: str,
+        icon: Union[str, QIcon, FluentIconBase],
+        text: str,
+        onClick=None,
+        selectable=True,
+        selectedIcon=None,
+        position=NavigationItemPosition.TOP,
+    ):
+        """add navigation item
 
         Parameters
         ----------
@@ -234,10 +251,18 @@ class NavigationBar(QWidget):
         position: NavigationItemPosition
             where the button is added
         """
-        return self.insertItem(-1, routeKey, icon, text, onClick, selectable, selectedIcon, position)
+        return self.insertItem(
+            -1, routeKey, icon, text, onClick, selectable, selectedIcon, position
+        )
 
-    def addWidget(self, routeKey: str, widget: NavigationWidget, onClick=None, position=NavigationItemPosition.TOP):
-        """ add custom widget
+    def addWidget(
+        self,
+        routeKey: str,
+        widget: NavigationWidget,
+        onClick=None,
+        position=NavigationItemPosition.TOP,
+    ):
+        """add custom widget
 
         Parameters
         ----------
@@ -255,9 +280,18 @@ class NavigationBar(QWidget):
         """
         self.insertWidget(-1, routeKey, widget, onClick, position)
 
-    def insertItem(self, index: int, routeKey: str, icon: Union[str, QIcon, FluentIconBase], text: str, onClick=None,
-                   selectable=True, selectedIcon=None, position=NavigationItemPosition.TOP):
-        """ insert navigation tree item
+    def insertItem(
+        self,
+        index: int,
+        routeKey: str,
+        icon: Union[str, QIcon, FluentIconBase],
+        text: str,
+        onClick=None,
+        selectable=True,
+        selectedIcon=None,
+        position=NavigationItemPosition.TOP,
+    ):
+        """insert navigation tree item
 
         Parameters
         ----------
@@ -292,9 +326,15 @@ class NavigationBar(QWidget):
         self.insertWidget(index, routeKey, w, onClick, position)
         return w
 
-    def insertWidget(self, index: int, routeKey: str, widget: NavigationWidget, onClick=None,
-                     position=NavigationItemPosition.TOP):
-        """ insert custom widget
+    def insertWidget(
+        self,
+        index: int,
+        routeKey: str,
+        widget: NavigationWidget,
+        onClick=None,
+        position=NavigationItemPosition.TOP,
+    ):
+        """insert custom widget
 
         Parameters
         ----------
@@ -320,34 +360,37 @@ class NavigationBar(QWidget):
         self._insertWidgetToLayout(index, widget, position)
 
     def _registerWidget(self, routeKey: str, widget: NavigationWidget, onClick):
-        """ register widget """
+        """register widget"""
         widget.clicked.connect(self._onWidgetClicked)
 
         if onClick is not None:
             widget.clicked.connect(onClick)
 
-        widget.setProperty('routeKey', routeKey)
+        widget.setProperty("routeKey", routeKey)
         self.items[routeKey] = widget
 
-    def _insertWidgetToLayout(self, index: int, widget: NavigationWidget, position: NavigationItemPosition):
-        """ insert widget to layout """
+    def _insertWidgetToLayout(
+        self, index: int, widget: NavigationWidget, position: NavigationItemPosition
+    ):
+        """insert widget to layout"""
         if position == NavigationItemPosition.TOP:
             widget.setParent(self)
-            self.topLayout.insertWidget(
-                index, widget, 0, Qt.AlignTop | Qt.AlignHCenter)
+            self.topLayout.insertWidget(index, widget, 0, Qt.AlignTop | Qt.AlignHCenter)
         elif position == NavigationItemPosition.SCROLL:
             widget.setParent(self.scrollWidget)
             self.scrollLayout.insertWidget(
-                index, widget, 0, Qt.AlignTop | Qt.AlignHCenter)
+                index, widget, 0, Qt.AlignTop | Qt.AlignHCenter
+            )
         else:
             widget.setParent(self)
             self.bottomLayout.insertWidget(
-                index, widget, 0, Qt.AlignBottom | Qt.AlignHCenter)
+                index, widget, 0, Qt.AlignBottom | Qt.AlignHCenter
+            )
 
         widget.show()
 
     def removeWidget(self, routeKey: str):
-        """ remove widget
+        """remove widget
 
         Parameters
         ----------
@@ -362,7 +405,7 @@ class NavigationBar(QWidget):
         self.history.remove(routeKey)
 
     def setCurrentItem(self, routeKey: str):
-        """ set current selected item
+        """set current selected item
 
         Parameters
         ----------
@@ -376,14 +419,14 @@ class NavigationBar(QWidget):
             widget.setSelected(k == routeKey)
 
     def setFont(self, font: QFont):
-        """ set the font of navigation item """
+        """set the font of navigation item"""
         super().setFont(font)
 
         for widget in self.buttons():
             widget.setFont(font)
 
     def setSelectedTextVisible(self, isVisible: bool):
-        """ set whether the text is visible when button is selected """
+        """set whether the text is visible when button is selected"""
         for widget in self.buttons():
             widget.setSelectedTextVisible(isVisible)
 
@@ -393,4 +436,4 @@ class NavigationBar(QWidget):
     def _onWidgetClicked(self):
         widget = self.sender()  # type: NavigationWidget
         if widget.isSelectable:
-            self.setCurrentItem(widget.property('routeKey'))
+            self.setCurrentItem(widget.property("routeKey"))

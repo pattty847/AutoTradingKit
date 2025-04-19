@@ -10,16 +10,19 @@ from atklip.controls.pandas_ta.utils import (
     v_pos_default,
     v_scalar,
     v_series,
-    v_talib
+    v_talib,
 )
 from atklip.controls.pandas_ta.utils._numba import nb_roc
 from .mom import mom
 
 
 def roc(
-    close: Series, length: Int = None,
-    scalar: IntFloat = None, talib: bool = None,
-    offset: Int = None, **kwargs: DictLike
+    close: Series,
+    length: Int = None,
+    scalar: IntFloat = None,
+    talib: bool = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Rate of Change (ROC)
 
@@ -58,7 +61,7 @@ def roc(
 
     # Calculate
     # roc = scalar * mom(close=close, length=length, talib=mode_tal) \
-        # / close.shift(length)
+    # / close.shift(length)
     np_close = close.values
     _roc = nb_roc(np_close, length, scalar)
     roc = Series(_roc, index=close.index)

@@ -4,10 +4,12 @@ from atklip.controls.pandas_ta._typing import DictLike, Int, IntFloat
 from atklip.controls.pandas_ta.utils import v_offset, v_pos_default, v_series
 
 
-
 def quantile(
-    close: Series, length: Int = None, q: IntFloat = None,
-    offset: Int = None, **kwargs: DictLike
+    close: Series,
+    length: Int = None,
+    q: IntFloat = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Rolling Quantile
 

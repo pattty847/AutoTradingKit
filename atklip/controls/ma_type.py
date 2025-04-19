@@ -23,7 +23,7 @@ class PD_MAType(Enum):
     ZLMA = "zlma"
     SSF = "ssf"
     SSF3 = "ssf3"
-    
+
 
 class IndicatorType(Enum):
     FWMA = "Fibonacci Weighted Moving Average (FWMA)"
@@ -74,7 +74,7 @@ class IndicatorType(Enum):
     Ichimoku = "Ichimoku Kinko Hyo"
     KAMA = "Kaufman's Adaptive Moving Average (KAMA)"
     KeltnerChannels = "Keltner Channel (KC)"
-    
+
     KST = "Know Sure Thing (KST)"
     KVO = "Klinger Volume Oscillator (KVO)"
     MassIndex = "Mass Index"
@@ -98,7 +98,6 @@ class IndicatorType(Enum):
     EMATrendMetter = "EMA Trend Metter"
     ATRSuperTrend = "ATR Super Trend"
     ZIGZAG = "ZigZag"
-    
 
     TRIX = "TRIX"
     TSI = "True Strength Index (TSI)"
@@ -131,4 +130,3 @@ class IndicatorType(Enum):
     ATKBOT_SUPERTREND = "ATKBOTFollowTrend"
     ATKBOT_CCI = "ATKBOTCCI"
     ATKBOT_SUPERTREND_SSCANDLE = "ATKBOTFollowSMCandle"
-

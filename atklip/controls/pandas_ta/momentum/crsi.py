@@ -23,7 +23,6 @@ from atklip.controls.pandas_ta.utils import (
 )
 
 
-
 def consecutive_streak(x: Array) -> Array:
     """Calculate the streak of consecutive price increases or decreases.
 
@@ -86,7 +85,9 @@ def percent_rank(x: Series, lookback: Int) -> Series:
     """
     daily_returns_np = x.pct_change().to_numpy()
 
-    rolling_windows = sliding_window_view(daily_returns_np, window_shape=(lookback + 1,))
+    rolling_windows = sliding_window_view(
+        daily_returns_np, window_shape=(lookback + 1,)
+    )
     comparison_matrix = rolling_windows[:, :-1] < rolling_windows[:, -1, newaxis]
 
     percent_ranks = nanmean(comparison_matrix, axis=1) * 100
@@ -97,9 +98,15 @@ def percent_rank(x: Series, lookback: Int) -> Series:
 
 
 def crsi(
-    close: Series, length_rsi: Int = None, length_streak: Int = None,
-    length_rank: Int = None, scalar: IntFloat = None, talib: bool = None,
-    drift: Int = None, offset: Int = None, **kwargs: DictLike,
+    close: Series,
+    length_rsi: Int = None,
+    length_streak: Int = None,
+    length_rank: Int = None,
+    scalar: IntFloat = None,
+    talib: bool = None,
+    drift: Int = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Connors Relative Strength Index (RSI)
 
@@ -156,13 +163,23 @@ def crsi(
     # Both TA-lib and Pandas-TA use the Wilder's RSI and its smoothing
     # function.
     close_rsi = rsi(
-        close, length=length_rsi, scalar=scalar, talib=talib,
-        drift=drift, offset=offset, **kwargs
+        close,
+        length=length_rsi,
+        scalar=scalar,
+        talib=talib,
+        drift=drift,
+        offset=offset,
+        **kwargs,
     )
 
     streak_rsi = rsi(
-        streak, length=length_streak, scalar=scalar, talib=talib,
-        drift=drift, offset=offset, **kwargs
+        streak,
+        length=length_streak,
+        scalar=scalar,
+        talib=talib,
+        drift=drift,
+        offset=offset,
+        **kwargs,
     )
 
     pr = percent_rank(close, length_rank)

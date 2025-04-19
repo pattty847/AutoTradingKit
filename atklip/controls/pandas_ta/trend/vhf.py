@@ -7,14 +7,16 @@ from atklip.controls.pandas_ta.utils import (
     v_drift,
     v_offset,
     v_pos_default,
-    v_series
+    v_series,
 )
 
 
-
 def vhf(
-    close: Series, length: Int = None, drift: Int = None,
-    offset: Int = None, **kwargs: DictLike
+    close: Series,
+    length: Int = None,
+    drift: Int = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Vertical Horizontal Filter (VHF)
 

@@ -11,15 +11,20 @@ from atklip.controls.pandas_ta.utils import (
     v_pos_default,
     v_scalar,
     v_series,
-    v_talib
+    v_talib,
 )
 
 
-
 def ppo(
-    close: Series, fast: Int = None, slow: Int = None, signal: Int = None,
-    scalar: IntFloat = None, mamode: str = None, talib: bool = None,
-    offset: Int = None, **kwargs: DictLike
+    close: Series,
+    fast: Int = None,
+    slow: Int = None,
+    signal: Int = None,
+    scalar: IntFloat = None,
+    mamode: str = None,
+    talib: bool = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> DataFrame:
     """Percentage Price Oscillator (PPO)
 
@@ -92,11 +97,7 @@ def ppo(
     signalma.name = f"PPOs{_props}"
     ppo.category = histogram.category = signalma.category = "momentum"
 
-    data = {
-        ppo.name: ppo,
-        histogram.name: histogram,
-        signalma.name: signalma
-    }
+    data = {ppo.name: ppo, histogram.name: histogram, signalma.name: signalma}
     df = DataFrame(data, index=close.index)
     df.name = f"PPO{_props}"
     df.category = ppo.category

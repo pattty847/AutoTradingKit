@@ -35,15 +35,19 @@ def pivots_points(dataframe: pd.DataFrame, timeperiod=30, levels=3) -> pd.DataFr
     data = {}
 
     low = qtpylib.rolling_mean(
-        series=pd.Series(index=dataframe.index, data=dataframe["low"]), window=timeperiod
+        series=pd.Series(index=dataframe.index, data=dataframe["low"]),
+        window=timeperiod,
     )
 
     high = qtpylib.rolling_mean(
-        series=pd.Series(index=dataframe.index, data=dataframe["high"]), window=timeperiod
+        series=pd.Series(index=dataframe.index, data=dataframe["high"]),
+        window=timeperiod,
     )
 
     # Pivot
-    data["pivot"] = qtpylib.rolling_mean(series=qtpylib.typical_price(dataframe), window=timeperiod)
+    data["pivot"] = qtpylib.rolling_mean(
+        series=qtpylib.typical_price(dataframe), window=timeperiod
+    )
 
     # Resistance #1
     data["r1"] = (2 * data["pivot"]) - low

@@ -5,18 +5,25 @@ from PySide6.QtCore import Qt, QEvent, Signal
 from PySide6.QtGui import QResizeEvent, QIcon
 from PySide6.QtWidgets import QWidget
 
-from .navigation_panel import NavigationPanel, NavigationItemPosition, NavigationWidget, NavigationDisplayMode
+from .navigation_panel import (
+    NavigationPanel,
+    NavigationItemPosition,
+    NavigationWidget,
+    NavigationDisplayMode,
+)
 from .navigation_widget import NavigationTreeWidget
 from ...common.style_sheet import FluentStyleSheet
 from ...common.icon import FluentIconBase
 
 
 class NavigationInterface(QWidget):
-    """ Navigation interface """
+    """Navigation interface"""
 
     displayModeChanged = Signal(NavigationDisplayMode)
 
-    def __init__(self, parent=None, showMenuButton=True, showReturnButton=False, collapsible=True):
+    def __init__(
+        self, parent=None, showMenuButton=True, showReturnButton=False, collapsible=True
+    ):
         """
         Parameters
         ----------
@@ -44,10 +51,18 @@ class NavigationInterface(QWidget):
         self.setMinimumWidth(48)
         self.setAttribute(Qt.WA_TranslucentBackground)
 
-    def addItem(self, routeKey: str, icon: Union[str, QIcon, FluentIconBase], text: str, onClick=None,
-                selectable=True, position=NavigationItemPosition.TOP, tooltip: str = None,
-                parentRouteKey: str = None) -> NavigationTreeWidget:
-        """ add navigation item
+    def addItem(
+        self,
+        routeKey: str,
+        icon: Union[str, QIcon, FluentIconBase],
+        text: str,
+        onClick=None,
+        selectable=True,
+        position=NavigationItemPosition.TOP,
+        tooltip: str = None,
+        parentRouteKey: str = None,
+    ) -> NavigationTreeWidget:
+        """add navigation item
 
         Parameters
         ----------
@@ -75,11 +90,28 @@ class NavigationInterface(QWidget):
         parentRouteKey: str
             the route key of parent item, the parent item should be `NavigationTreeWidgetBase`
         """
-        return self.insertItem(-1, routeKey, icon, text, onClick, selectable, position, tooltip, parentRouteKey)
+        return self.insertItem(
+            -1,
+            routeKey,
+            icon,
+            text,
+            onClick,
+            selectable,
+            position,
+            tooltip,
+            parentRouteKey,
+        )
 
-    def addWidget(self, routeKey: str, widget: NavigationWidget, onClick=None, position=NavigationItemPosition.TOP,
-                  tooltip: str = None, parentRouteKey: str = None):
-        """ add custom widget
+    def addWidget(
+        self,
+        routeKey: str,
+        widget: NavigationWidget,
+        onClick=None,
+        position=NavigationItemPosition.TOP,
+        tooltip: str = None,
+        parentRouteKey: str = None,
+    ):
+        """add custom widget
 
         Parameters
         ----------
@@ -101,12 +133,23 @@ class NavigationInterface(QWidget):
         parentRouteKey: str
             the route key of parent item, the parent item should be `NavigationTreeWidgetBase`
         """
-        self.insertWidget(-1, routeKey, widget, onClick, position, tooltip, parentRouteKey)
+        self.insertWidget(
+            -1, routeKey, widget, onClick, position, tooltip, parentRouteKey
+        )
 
-    def insertItem(self, index: int, routeKey: str, icon: Union[str, QIcon, FluentIconBase], text: str,
-                   onClick=None, selectable=True, position=NavigationItemPosition.TOP, tooltip: str = None,
-                   parentRouteKey: str = None) -> NavigationTreeWidget:
-        """ insert navigation item
+    def insertItem(
+        self,
+        index: int,
+        routeKey: str,
+        icon: Union[str, QIcon, FluentIconBase],
+        text: str,
+        onClick=None,
+        selectable=True,
+        position=NavigationItemPosition.TOP,
+        tooltip: str = None,
+        parentRouteKey: str = None,
+    ) -> NavigationTreeWidget:
+        """insert navigation item
 
         Parameters
         ----------
@@ -137,13 +180,31 @@ class NavigationInterface(QWidget):
         parentRouteKey: str
             the route key of parent item, the parent item should be `NavigationTreeWidgetBase`
         """
-        w = self.panel.insertItem(index, routeKey, icon, text, onClick, selectable, position, tooltip, parentRouteKey)
+        w = self.panel.insertItem(
+            index,
+            routeKey,
+            icon,
+            text,
+            onClick,
+            selectable,
+            position,
+            tooltip,
+            parentRouteKey,
+        )
         self.setMinimumHeight(self.panel.layoutMinHeight())
         return w
 
-    def insertWidget(self, index: int, routeKey: str, widget: NavigationWidget, onClick=None,
-                     position=NavigationItemPosition.TOP, tooltip: str = None, parentRouteKey: str = None):
-        """ insert custom widget
+    def insertWidget(
+        self,
+        index: int,
+        routeKey: str,
+        widget: NavigationWidget,
+        onClick=None,
+        position=NavigationItemPosition.TOP,
+        tooltip: str = None,
+        parentRouteKey: str = None,
+    ):
+        """insert custom widget
 
         Parameters
         ----------
@@ -168,11 +229,13 @@ class NavigationInterface(QWidget):
         parentRouteKey: str
             the route key of parent item, the parent item should be `NavigationTreeWidgetBase`
         """
-        self.panel.insertWidget(index, routeKey, widget, onClick, position, tooltip, parentRouteKey)
+        self.panel.insertWidget(
+            index, routeKey, widget, onClick, position, tooltip, parentRouteKey
+        )
         self.setMinimumHeight(self.panel.layoutMinHeight())
 
     def addSeparator(self, position=NavigationItemPosition.TOP):
-        """ add separator
+        """add separator
 
         Parameters
         ----------
@@ -182,7 +245,7 @@ class NavigationInterface(QWidget):
         self.insertSeparator(-1, position)
 
     def insertSeparator(self, index: int, position=NavigationItemPosition.TOP):
-        """ add separator
+        """add separator
 
         Parameters
         ----------
@@ -196,7 +259,7 @@ class NavigationInterface(QWidget):
         self.setMinimumHeight(self.panel.layoutMinHeight())
 
     def removeWidget(self, routeKey: str):
-        """ remove widget
+        """remove widget
 
         Parameters
         ----------
@@ -206,7 +269,7 @@ class NavigationInterface(QWidget):
         self.panel.removeWidget(routeKey)
 
     def setCurrentItem(self, name: str):
-        """ set current selected item
+        """set current selected item
 
         Parameters
         ----------
@@ -216,27 +279,27 @@ class NavigationInterface(QWidget):
         self.panel.setCurrentItem(name)
 
     def expand(self, useAni=True):
-        """ expand navigation panel """
+        """expand navigation panel"""
         self.panel.expand(useAni)
 
     def toggle(self):
-        """ toggle navigation panel """
+        """toggle navigation panel"""
         self.panel.toggle()
 
     def setExpandWidth(self, width: int):
-        """ set the maximum width """
+        """set the maximum width"""
         self.panel.setExpandWidth(width)
 
     def setMinimumExpandWidth(self, width: int):
-        """ Set the minimum window width that allows panel to be expanded """
+        """Set the minimum window width that allows panel to be expanded"""
         self.panel.setMinimumExpandWidth(width)
 
     def setMenuButtonVisible(self, isVisible: bool):
-        """ set whether the menu button is visible """
+        """set whether the menu button is visible"""
         self.panel.setMenuButtonVisible(isVisible)
 
     def setReturnButtonVisible(self, isVisible: bool):
-        """ set whether the return button is visible """
+        """set whether the return button is visible"""
         self.panel.setReturnButtonVisible(isVisible)
 
     def setCollapsible(self, collapsible: bool):
@@ -246,7 +309,7 @@ class NavigationInterface(QWidget):
         return self.panel.isAcrylicEnabled()
 
     def setAcrylicEnabled(self, isEnabled: bool):
-        """ set whether the acrylic background effect is enabled """
+        """set whether the acrylic background effect is enabled"""
         self.panel.setAcrylicEnabled(isEnabled)
 
     def widget(self, routeKey: str):

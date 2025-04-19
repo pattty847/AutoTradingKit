@@ -3,7 +3,13 @@ from datetime import datetime
 from time import localtime, perf_counter
 
 from pandas import DataFrame, Series, Timestamp, to_datetime
-from atklip.controls.pandas_ta._typing import Float, MaybeSeriesFrame, Optional, Tuple, Union
+from atklip.controls.pandas_ta._typing import (
+    Float,
+    MaybeSeriesFrame,
+    Optional,
+    Tuple,
+    Union,
+)
 from atklip.controls.pandas_ta.maps import EXCHANGE_TZ
 
 # __all__ = [
@@ -22,10 +28,7 @@ from atklip.controls.pandas_ta.maps import EXCHANGE_TZ
 # ]
 
 
-
-def df_dates(
-    df: DataFrame, dates: Tuple[str, list] = None
-) -> MaybeSeriesFrame:
+def df_dates(df: DataFrame, dates: Tuple[str, list] = None) -> MaybeSeriesFrame:
     """Yields the DataFrame with the given dates"""
     if dates is None:
         return None
@@ -66,7 +69,7 @@ def final_time(stime: Float) -> str:
     stime and returns a string with microseconds and seconds."""
     time_diff = perf_counter() - stime
     _kq = f"{time_diff * 1000:2.4f} ms ({time_diff:2.4f} s)"
-    return _kq.encode('utf-8').decode('utf-8')
+    return _kq.encode("utf-8").decode("utf-8")
 
 
 def get_time(
@@ -84,7 +87,9 @@ def get_time(
     date = f"{today.day_name()} {today.month_name()} {today.day}, {today.year}"
 
     _today = today.timetuple()
-    exchange_time = f"{(_today.tm_hour + tz) % 24}:{_today.tm_min:02d}:{_today.tm_sec:02d}"
+    exchange_time = (
+        f"{(_today.tm_hour + tz) % 24}:{_today.tm_min:02d}:{_today.tm_sec:02d}"
+    )
 
     if full:
         lt = localtime()
@@ -112,7 +117,7 @@ def total_time(df: DataFrame, tf: str = "years") -> Float:
         "days": time_diff.days,
         "hours": time_diff.days * 24,
         "minutes": time_diff.total_seconds() / 60,
-        "seconds": time_diff.total_seconds()
+        "seconds": time_diff.total_seconds(),
     }
 
     if isinstance(tf, str) and tf in TimeFrame.keys():

@@ -1,13 +1,19 @@
 # coding:utf-8
 from math import floor
 
-from PySide6.QtCore import (QEasingCurve, Qt, QPropertyAnimation, Property,
-                          QParallelAnimationGroup, QSequentialAnimationGroup, QLocale)
+from PySide6.QtCore import (
+    QEasingCurve,
+    Qt,
+    QPropertyAnimation,
+    Property,
+    QParallelAnimationGroup,
+    QSequentialAnimationGroup,
+    QLocale,
+)
 from PySide6.QtGui import QPainter, QColor
 from PySide6.QtWidgets import QProgressBar
 
 from ...common.style_sheet import themeColor, isDarkTheme
-
 
 
 class ProgressBar(QProgressBar):
@@ -22,7 +28,7 @@ class ProgressBar(QProgressBar):
         self.darkBackgroundColor = QColor(255, 255, 255, 155)
         self._lightBarColor = QColor()
         self._darkBarColor = QColor()
-        self.ani = QPropertyAnimation(self, b'val', self)
+        self.ani = QPropertyAnimation(self, b"val", self)
 
         self._isPaused = False
         self._isError = False
@@ -60,7 +66,7 @@ class ProgressBar(QProgressBar):
         return self._darkBarColor if self._darkBarColor.isValid() else themeColor()
 
     def setCustomBarColor(self, light, dark):
-        """ set the custom bar color
+        """set the custom bar color
 
         Parameters
         ----------
@@ -72,7 +78,7 @@ class ProgressBar(QProgressBar):
         self.update()
 
     def setCustomBackgroundColor(self, light, dark):
-        """ set the custom background color
+        """set the custom background color
 
         Parameters
         ----------
@@ -129,8 +135,7 @@ class ProgressBar(QProgressBar):
         total = self.maximum() - self.minimum()
         result = self.format()
         locale = self.locale()
-        locale.setNumberOptions(locale.numberOptions()
-                                | QLocale.OmitGroupSeparator)
+        locale.setNumberOptions(locale.numberOptions() | QLocale.OmitGroupSeparator)
         result = result.replace("%m", locale.toString(total))
         result = result.replace("%v", locale.toString(self.val))
 
@@ -147,7 +152,7 @@ class ProgressBar(QProgressBar):
         # draw background
         bc = self.darkBackgroundColor if isDarkTheme() else self.lightBackgroundColor
         painter.setPen(bc)
-        y =  floor(self.height() / 2)
+        y = floor(self.height() / 2)
         painter.drawLine(0, y, self.width(), y)
 
         if self.minimum() >= self.maximum():
@@ -165,14 +170,14 @@ class ProgressBar(QProgressBar):
 
 
 class IndeterminateProgressBar(QProgressBar):
-    """ Indeterminate progress bar """
+    """Indeterminate progress bar"""
 
     def __init__(self, parent=None, start=True):
         super().__init__(parent=parent)
         self._shortPos = 0
         self._longPos = 0
-        self.shortBarAni = QPropertyAnimation(self, b'shortPos', self)
-        self.longBarAni = QPropertyAnimation(self, b'longPos', self)
+        self.shortBarAni = QPropertyAnimation(self, b"shortPos", self)
+        self.longBarAni = QPropertyAnimation(self, b"longPos", self)
 
         self._lightBarColor = QColor()
         self._darkBarColor = QColor()
@@ -208,7 +213,7 @@ class IndeterminateProgressBar(QProgressBar):
         return self._darkBarColor if self._darkBarColor.isValid() else themeColor()
 
     def setCustomBarColor(self, light, dark):
-        """ set the custom bar color
+        """set the custom bar color
 
         Parameters
         ----------

@@ -5,10 +5,15 @@ from atklip.controls.pandas_ta._typing import DictLike, Int, IntFloat
 from atklip.controls.pandas_ta.utils import v_offset, v_pos_default, v_series, v_talib
 from atklip.controls.pandas_ta.utils._numba import nb_mama
 
+
 def mama(
-    close: Series, fastlimit: IntFloat = None, slowlimit: IntFloat = None,
-    prenan: Int = None, talib: bool = False,
-    offset: Int = None, **kwargs: DictLike
+    close: Series,
+    fastlimit: IntFloat = None,
+    slowlimit: IntFloat = None,
+    prenan: Int = None,
+    talib: bool = False,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Ehler's MESA Adaptive Moving Average (MAMA)
 

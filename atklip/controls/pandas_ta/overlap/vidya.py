@@ -7,15 +7,17 @@ from atklip.controls.pandas_ta.utils import (
     v_offset,
     v_pos_default,
     v_series,
-    v_talib
+    v_talib,
 )
 
 
-
 def vidya(
-    close: Series, length: Int = None,
-    drift: Int = None, offset: Int = None,
-    talib: bool = False, **kwargs: DictLike
+    close: Series,
+    length: Int = None,
+    drift: Int = None,
+    offset: Int = None,
+    talib: bool = False,
+    **kwargs: DictLike,
 ) -> Series:
     """Variable Index Dynamic Average (VIDYA)
 
@@ -60,8 +62,9 @@ def vidya(
 
     vidya = Series(0.0, index=close.index)
     for i in range(length, m):
-        vidya.iloc[i] = alpha * abs_cmo.iloc[i] * close.iloc[i] + \
-            vidya.iloc[i - 1] * (1 - alpha * abs_cmo.iloc[i])
+        vidya.iloc[i] = alpha * abs_cmo.iloc[i] * close.iloc[i] + vidya.iloc[i - 1] * (
+            1 - alpha * abs_cmo.iloc[i]
+        )
     vidya.replace({0: nan}, inplace=True)
 
     # Offset

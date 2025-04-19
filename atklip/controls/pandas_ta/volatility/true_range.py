@@ -9,15 +9,19 @@ from atklip.controls.pandas_ta.utils import (
     v_drift,
     v_offset,
     v_series,
-    v_talib
+    v_talib,
 )
 
 
-
 def true_range(
-    high: Series, low: Series, close: Series,
-    talib: bool = None, prenan: bool = None, drift: Int = None,
-    offset: Int = None, **kwargs: DictLike
+    high: Series,
+    low: Series,
+    close: Series,
+    talib: bool = None,
+    prenan: bool = None,
+    drift: Int = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """True Range
 

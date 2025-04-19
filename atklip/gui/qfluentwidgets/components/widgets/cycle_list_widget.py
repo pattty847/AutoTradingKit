@@ -10,7 +10,7 @@ from ...common.icon import FluentIcon, isDarkTheme
 
 
 class ScrollButton(QToolButton):
-    """ Scroll button """
+    """Scroll button"""
 
     def __init__(self, icon: FluentIcon, parent=None):
         super().__init__(parent=parent)
@@ -49,11 +49,13 @@ class ScrollButton(QToolButton):
 
 
 class CycleListWidget(QListWidget):
-    """ Cycle list widget """
+    """Cycle list widget"""
 
     currentItemChanged = Signal(QListWidgetItem)
 
-    def __init__(self, items: Iterable, itemSize: QSize, align=Qt.AlignCenter, parent=None):
+    def __init__(
+        self, items: Iterable, itemSize: QSize, align=Qt.AlignCenter, parent=None
+    ):
         """
         Parameters
         ----------
@@ -89,8 +91,7 @@ class CycleListWidget(QListWidget):
         self.vScrollBar.setForceHidden(True)
 
         self.setViewportMargins(0, 0, 0, 0)
-        self.setFixedSize(itemSize.width()+8,
-                          itemSize.height()*self.visibleNumber)
+        self.setFixedSize(itemSize.width() + 8, itemSize.height() * self.visibleNumber)
 
         # hide scroll bar
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -105,7 +106,7 @@ class CycleListWidget(QListWidget):
         self.installEventFilter(self)
 
     def setItems(self, items: list):
-        """ set items in the list
+        """set items in the list
 
         Parameters
         ----------
@@ -131,13 +132,15 @@ class CycleListWidget(QListWidget):
 
             self._currentIndex = len(items)
             super().scrollToItem(
-                self.item(self.currentIndex()-self.visibleNumber//2), QListWidget.PositionAtTop)
+                self.item(self.currentIndex() - self.visibleNumber // 2),
+                QListWidget.PositionAtTop,
+            )
         else:
             n = self.visibleNumber // 2  # add empty items to enable scrolling
 
-            self._addColumnItems(['']*n, True)
+            self._addColumnItems([""] * n, True)
             self._addColumnItems(items)
-            self._addColumnItems(['']*n, True)
+            self._addColumnItems([""] * n, True)
 
             self._currentIndex = n
 
@@ -156,7 +159,7 @@ class CycleListWidget(QListWidget):
         self.scrollToItem(self.currentItem())
 
     def setSelectedItem(self, text: str):
-        """ set the selected item """
+        """set the selected item"""
         if text is None:
             return
 
@@ -169,10 +172,14 @@ class CycleListWidget(QListWidget):
         else:
             self.setCurrentIndex(self.row(items[0]))
 
-        super().scrollToItem(self.currentItem(), QListWidget.ScrollHint.PositionAtCenter)
+        super().scrollToItem(
+            self.currentItem(), QListWidget.ScrollHint.PositionAtCenter
+        )
 
-    def scrollToItem(self, item: QListWidgetItem, hint=QListWidget.ScrollHint.PositionAtCenter):
-        """ scroll to item """
+    def scrollToItem(
+        self, item: QListWidgetItem, hint=QListWidget.ScrollHint.PositionAtCenter
+    ):
+        """scroll to item"""
         # scroll to center position
         index = self.row(item)
         y = item.sizeHint().height() * (index - self.visibleNumber // 2)
@@ -191,12 +198,12 @@ class CycleListWidget(QListWidget):
             self.scrollUp()
 
     def scrollDown(self):
-        """ scroll down an item """
+        """scroll down an item"""
         self.setCurrentIndex(self.currentIndex() + 1)
         self.scrollToItem(self.currentItem())
 
     def scrollUp(self):
-        """ scroll up an item """
+        """scroll up an item"""
         self.setCurrentIndex(self.currentIndex() - 1)
         self.scrollToItem(self.currentItem())
 
@@ -235,8 +242,7 @@ class CycleListWidget(QListWidget):
     def setCurrentIndex(self, index: int):
         if not self.isCycle:
             n = self.visibleNumber // 2
-            self._currentIndex = max(
-                n, min(n + len(self.originItems) - 1, index))
+            self._currentIndex = max(n, min(n + len(self.originItems) - 1, index))
         else:
             N = self.count() // 2
             m = (self.visibleNumber + 1) // 2
@@ -245,7 +251,11 @@ class CycleListWidget(QListWidget):
             # scroll to center to achieve circular scrolling
             if index >= self.count() - m:
                 self._currentIndex = N + index - self.count()
-                super().scrollToItem(self.item(self.currentIndex() - 1), self.ScrollHint.PositionAtCenter)
+                super().scrollToItem(
+                    self.item(self.currentIndex() - 1), self.ScrollHint.PositionAtCenter
+                )
             elif index <= m - 1:
                 self._currentIndex = N + index
-                super().scrollToItem(self.item(N + index + 1), self.ScrollHint.PositionAtCenter)
+                super().scrollToItem(
+                    self.item(N + index + 1), self.ScrollHint.PositionAtCenter
+                )

@@ -5,11 +5,14 @@ from atklip.controls.pandas_ta.overlap import ema
 from atklip.controls.pandas_ta.utils import v_offset, v_pos_default, v_scalar, v_series
 
 
-
 def pvo(
-    volume: Series, fast: Int = None, slow: Int = None,
-    signal: Int = None, scalar: IntFloat = None,
-    offset: Int = None, **kwargs: DictLike
+    volume: Series,
+    fast: Int = None,
+    slow: Int = None,
+    signal: Int = None,
+    scalar: IntFloat = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> DataFrame:
     """Percentage Volume Oscillator (PVO)
 

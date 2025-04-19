@@ -7,17 +7,22 @@ from atklip.controls.pandas_ta.utils import (
     v_offset,
     v_pos_default,
     v_series,
-    v_tradingview
+    v_tradingview,
 )
 from atklip.controls.pandas_ta.volatility import atr
 
 
-
 def cksp(
-    high: Series, low: Series, close: Series,
-    p: Int = None, x: IntFloat = None, q: Int = None,
-    tvmode: bool = None, mamode: str = None,
-    offset: Int = None, **kwargs: DictLike
+    high: Series,
+    low: Series,
+    close: Series,
+    p: Int = None,
+    x: IntFloat = None,
+    q: Int = None,
+    tvmode: bool = None,
+    mamode: str = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> DataFrame:
     """Chande Kroll Stop (CKSP)
 

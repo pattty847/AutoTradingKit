@@ -6,10 +6,12 @@ from atklip.controls.pandas_ta.utils import v_offset, v_pos_default, v_series, v
 from .ema import ema
 
 
-
 def dema(
-    close: Series, length: Int = None, talib: bool = False,
-    offset: Int = None, **kwargs: DictLike
+    close: Series,
+    length: Int = None,
+    talib: bool = False,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Double Exponential Moving Average (DEMA)
 
@@ -41,7 +43,6 @@ def dema(
 
     mode_tal = v_talib(talib)
     offset = v_offset(offset)
-
 
     ema1 = ema(close=close, length=length, talib=mode_tal)
     ema2 = ema(close=ema1, length=length, talib=mode_tal)

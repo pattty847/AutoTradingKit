@@ -3,19 +3,17 @@ from statistics import pstdev
 from pandas import Series
 from atklip.controls.pandas_ta._typing import DictLike, Int
 from atklip.controls.pandas_ta.ma import ma
-from atklip.controls.pandas_ta.utils import (
-    v_mamode,
-    v_offset,
-    v_pos_default,
-    v_series
-)
-
+from atklip.controls.pandas_ta.utils import v_mamode, v_offset, v_pos_default, v_series
 
 
 def vhm(
-        volume: Series, length: Int = None, slength = None,
-        mamode: str = None, offset: Int = None, **kwargs: DictLike
-    ) -> Series:
+    volume: Series,
+    length: Int = None,
+    slength=None,
+    mamode: str = None,
+    offset: Int = None,
+    **kwargs: DictLike,
+) -> Series:
     """Volume Heatmap (VHM)
 
     Volume Heatmap is a volume indicator. It is used to indicate market/trend

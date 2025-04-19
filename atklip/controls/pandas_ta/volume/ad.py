@@ -5,11 +5,15 @@ from atklip.controls.pandas_ta.maps import Imports
 from atklip.controls.pandas_ta.utils import non_zero_range, v_offset, v_series, v_talib
 
 
-
 def ad(
-    high: Series, low: Series, close: Series, volume: Series,
-    open_: Series = None, talib: bool = None,
-    offset: Int = None, **kwargs: DictLike
+    high: Series,
+    low: Series,
+    close: Series,
+    volume: Series,
+    open_: Series = None,
+    talib: bool = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Accumulation/Distribution (AD)
 

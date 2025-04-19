@@ -5,11 +5,14 @@ from atklip.controls.pandas_ta.utils import v_drift, v_offset, v_pos_default, v_
 from atklip.controls.pandas_ta.volatility import true_range
 
 
-
 def vortex(
-    high: Series, low: Series, close: Series,
-    length: Int = None, drift: Int = None,
-    offset: Int = None, **kwargs: DictLike
+    high: Series,
+    low: Series,
+    close: Series,
+    length: Int = None,
+    drift: Int = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> DataFrame:
     """Vortex
 

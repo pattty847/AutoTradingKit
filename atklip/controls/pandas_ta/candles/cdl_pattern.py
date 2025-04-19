@@ -6,29 +6,81 @@ from atklip.controls.pandas_ta.utils import v_offset, v_scalar, v_series
 from atklip.controls.pandas_ta.candles import cdl_doji, cdl_inside
 
 
-
 ALL_PATTERNS = [
-    "2crows", "3blackcrows", "3inside", "3linestrike", "3outside",
-    "3starsinsouth", "3whitesoldiers", "abandonedbaby", "advanceblock",
-    "belthold", "breakaway", "closingmarubozu", "concealbabyswall",
-    "counterattack", "darkcloudcover", "doji", "dojistar", "dragonflydoji",
-    "engulfing", "eveningdojistar", "eveningstar", "gapsidesidewhite",
-    "gravestonedoji", "hammer", "hangingman", "harami", "haramicross",
-    "highwave", "hikkake", "hikkakemod", "homingpigeon", "identical3crows",
-    "inneck", "inside", "invertedhammer", "kicking", "kickingbylength",
-    "ladderbottom", "longleggeddoji", "longline", "marubozu", "matchinglow",
-    "mathold", "morningdojistar", "morningstar", "onneck", "piercing",
-    "rickshawman", "risefall3methods", "separatinglines", "shootingstar",
-    "shortline", "spinningtop", "stalledpattern", "sticksandwich", "takuri",
-    "tasukigap", "thrusting", "tristar", "unique3river", "upsidegap2crows",
-    "xsidegap3methods"
+    "2crows",
+    "3blackcrows",
+    "3inside",
+    "3linestrike",
+    "3outside",
+    "3starsinsouth",
+    "3whitesoldiers",
+    "abandonedbaby",
+    "advanceblock",
+    "belthold",
+    "breakaway",
+    "closingmarubozu",
+    "concealbabyswall",
+    "counterattack",
+    "darkcloudcover",
+    "doji",
+    "dojistar",
+    "dragonflydoji",
+    "engulfing",
+    "eveningdojistar",
+    "eveningstar",
+    "gapsidesidewhite",
+    "gravestonedoji",
+    "hammer",
+    "hangingman",
+    "harami",
+    "haramicross",
+    "highwave",
+    "hikkake",
+    "hikkakemod",
+    "homingpigeon",
+    "identical3crows",
+    "inneck",
+    "inside",
+    "invertedhammer",
+    "kicking",
+    "kickingbylength",
+    "ladderbottom",
+    "longleggeddoji",
+    "longline",
+    "marubozu",
+    "matchinglow",
+    "mathold",
+    "morningdojistar",
+    "morningstar",
+    "onneck",
+    "piercing",
+    "rickshawman",
+    "risefall3methods",
+    "separatinglines",
+    "shootingstar",
+    "shortline",
+    "spinningtop",
+    "stalledpattern",
+    "sticksandwich",
+    "takuri",
+    "tasukigap",
+    "thrusting",
+    "tristar",
+    "unique3river",
+    "upsidegap2crows",
+    "xsidegap3methods",
 ]
 
 
 def cdl_pattern(
-    open_: Series, high: Series, low: Series, close: Series,
-    name: Union[str, List[str]] = "all", scalar: IntFloat = None,
-    offset: Int = None, **kwargs: DictLike
+    open_: Series,
+    high: Series,
+    low: Series,
+    close: Series,
+    name: Union[str, List[str]] = "all",
+    scalar: IntFloat = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> DataFrame:
     """TA Lib Candle Patterns
 
@@ -126,5 +178,6 @@ def cdl_pattern(
     df.name = "CDL_PATTERN"
     df.category = "candles"
     return df
+
 
 cdl = cdl_pattern  # Alias

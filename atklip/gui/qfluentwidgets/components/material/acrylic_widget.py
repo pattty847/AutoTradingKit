@@ -6,7 +6,7 @@ from ...common.style_sheet import isDarkTheme
 
 
 class AcrylicWidget:
-    """ Acrylic widget """
+    """Acrylic widget"""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

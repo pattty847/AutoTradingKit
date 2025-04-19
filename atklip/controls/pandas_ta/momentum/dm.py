@@ -10,15 +10,19 @@ from atklip.controls.pandas_ta.utils import (
     v_pos_default,
     v_series,
     v_talib,
-    zero
+    zero,
 )
 
 
-
 def dm(
-    high: Series, low: Series, length: Int = None,
-    mamode: str = None, talib: bool = None, drift: Int = None,
-    offset: Int = None, **kwargs: DictLike
+    high: Series,
+    low: Series,
+    length: Int = None,
+    mamode: str = None,
+    talib: bool = None,
+    drift: Int = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> DataFrame:
     """Directional Movement (DM)
 

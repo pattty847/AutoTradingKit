@@ -25,7 +25,11 @@ from .overlap_studies import sma, vwma
 # Ichimoku Cloud
 #
 def ichimoku(
-    dataframe, conversion_line_period=9, base_line_periods=26, laggin_span=52, displacement=26
+    dataframe,
+    conversion_line_period=9,
+    base_line_periods=26,
+    laggin_span=52,
+    displacement=26,
 ):
     """
     Ichimoku cloud indicator
@@ -774,7 +778,9 @@ def vpci(dataframe, period_short=5, period_long=20):
 
     vpc = vwma(dataframe, period_long) - sma(dataframe, period_long)
     vpr = vwma(dataframe, period_short) / sma(dataframe, period_short)
-    vm = sma(dataframe, period_short, field="volume") / sma(dataframe, period_long, field="volume")
+    vm = sma(dataframe, period_short, field="volume") / sma(
+        dataframe, period_long, field="volume"
+    )
 
     vpci = vpc * vpr * vm
 
@@ -844,10 +850,18 @@ def td_sequential(dataframe):
     cond1 = df["close"] > df["close"].shift(4)
     cond2 = df["close"] < df["close"].shift(4)
 
-    df["cond_tdb_a"] = (df.groupby(((cond1)[condv]).cumsum()).cumcount() % 10 == 0).cumsum()
-    df["cond_tds_a"] = (df.groupby(((cond2)[condv]).cumsum()).cumcount() % 10 == 0).cumsum()
-    df["cond_tdb_b"] = (df.groupby(((cond1)[condv]).cumsum()).cumcount() % 10 != 0).cumsum()
-    df["cond_tds_b"] = (df.groupby(((cond2)[condv]).cumsum()).cumcount() % 10 != 0).cumsum()
+    df["cond_tdb_a"] = (
+        df.groupby(((cond1)[condv]).cumsum()).cumcount() % 10 == 0
+    ).cumsum()
+    df["cond_tds_a"] = (
+        df.groupby(((cond2)[condv]).cumsum()).cumcount() % 10 == 0
+    ).cumsum()
+    df["cond_tdb_b"] = (
+        df.groupby(((cond1)[condv]).cumsum()).cumcount() % 10 != 0
+    ).cumsum()
+    df["cond_tds_b"] = (
+        df.groupby(((cond2)[condv]).cumsum()).cumcount() % 10 != 0
+    ).cumsum()
 
     df["tdb_a"] = df.groupby(df["cond_tdb_a"]).cumcount()
     df["tds_a"] = df.groupby(df["cond_tds_a"]).cumcount()
@@ -856,8 +870,12 @@ def td_sequential(dataframe):
     df["tds_b"] = df.groupby(df["cond_tds_b"]).cumcount()
 
     df["tdc"] = df["tds_a"] - df["tdb_a"]
-    df["tdc"] = df.apply((lambda x: x["tdb_b"] % 9 if x["tdb_b"] > 9 else x["tdc"]), axis=1)
-    df["tdc"] = df.apply((lambda x: (x["tds_b"] % 9) * -1 if x["tds_b"] > 9 else x["tdc"]), axis=1)
+    df["tdc"] = df.apply(
+        (lambda x: x["tdb_b"] % 9 if x["tdb_b"] > 9 else x["tdc"]), axis=1
+    )
+    df["tdc"] = df.apply(
+        (lambda x: (x["tds_b"] % 9) * -1 if x["tds_b"] > 9 else x["tdc"]), axis=1
+    )
     dataframe.loc[:, "TD_count"] = df["tdc"]
     return dataframe
 
@@ -889,7 +907,10 @@ def TKE(dataframe, *, length=14, emaperiod=5):
     df["stoch"] = (
         100
         * (df["close"] - df["low"].rolling(window=length).min())
-        / (df["high"].rolling(window=length).max() - df["low"].rolling(window=length).min())
+        / (
+            df["high"].rolling(window=length).max()
+            - df["low"].rolling(window=length).min()
+        )
     )
 
     df["ultosc"] = ta.ULTOSC(df, timeperiod1=7, timeperiod2=14, timeperiod3=28)
@@ -897,7 +918,9 @@ def TKE(dataframe, *, length=14, emaperiod=5):
     df["willr"] = ta.WILLR(df, timeperiod=length)
     df["mom"] = ta.ROCR100(df, timeperiod=length)
     df["cci"] = ta.CCI(df, timeperiod=length)
-    df["TKE"] = df[["rsi", "stoch", "ultosc", "mfi", "willr", "mom", "cci"]].mean(axis="columns")
+    df["TKE"] = df[["rsi", "stoch", "ultosc", "mfi", "willr", "mom", "cci"]].mean(
+        axis="columns"
+    )
     df["TKEema"] = ta.EMA(df["TKE"], timeperiod=emaperiod)
     return df["TKE"], df["TKEema"]
 
@@ -936,12 +959,12 @@ def vwmacd(dataframe, *, fastperiod=12, slowperiod=26, signalperiod=9):
 
     import talib.abstract as ta
 
-    dataframe["fastMA"] = ta.EMA(dataframe["volume"] * dataframe["close"], fastperiod) / ta.EMA(
-        dataframe["volume"], fastperiod
-    )
-    dataframe["slowMA"] = ta.EMA(dataframe["volume"] * dataframe["close"], slowperiod) / ta.EMA(
-        dataframe["volume"], slowperiod
-    )
+    dataframe["fastMA"] = ta.EMA(
+        dataframe["volume"] * dataframe["close"], fastperiod
+    ) / ta.EMA(dataframe["volume"], fastperiod)
+    dataframe["slowMA"] = ta.EMA(
+        dataframe["volume"] * dataframe["close"], slowperiod
+    ) / ta.EMA(dataframe["volume"], slowperiod)
     dataframe["vwmacd"] = dataframe["fastMA"] - dataframe["slowMA"]
     dataframe["signal"] = ta.EMA(dataframe["vwmacd"], signalperiod)
     dataframe["hist"] = dataframe["vwmacd"] - dataframe["signal"]
@@ -968,7 +991,9 @@ def RMI(dataframe, *, length=20, mom=5):
     df["emaInc"] = ta.EMA(df, price="maxup", timeperiod=length)
     df["emaDec"] = ta.EMA(df, price="maxdown", timeperiod=length)
 
-    df["RMI"] = np.where(df["emaDec"] == 0, 0, 100 - 100 / (1 + df["emaInc"] / df["emaDec"]))
+    df["RMI"] = np.where(
+        df["emaDec"] == 0, 0, 100 - 100 / (1 + df["emaInc"] / df["emaDec"])
+    )
     return df["RMI"]
 
 
@@ -1110,7 +1135,9 @@ def SSLChannels(dataframe, length=10, mode="sma"):
         ma_high = ta.EMA(df["high"], length)
         ma_low = ta.EMA(df["low"], length)
 
-    df["hlv"] = np.where(df["close"] > ma_high, 1, np.where(df["close"] < ma_low, -1, np.nan))
+    df["hlv"] = np.where(
+        df["close"] > ma_high, 1, np.where(df["close"] < ma_low, -1, np.nan)
+    )
     df["hlv"] = df["hlv"].ffill()
 
     df["sslDown"] = np.where(df["hlv"] < 0, ma_high, ma_low)
@@ -1144,8 +1171,26 @@ def PMAX(dataframe, period=10, multiplier=3, length=12, MAtype=1, src=1):  # noq
     mavalue = "MA_" + str(MAtype) + "_" + str(length)
     atr = "ATR_" + str(period)
     df[atr] = ta.ATR(df, timeperiod=period)
-    pm = "pm_" + str(period) + "_" + str(multiplier) + "_" + str(length) + "_" + str(MAtype)
-    pmx = "pmX_" + str(period) + "_" + str(multiplier) + "_" + str(length) + "_" + str(MAtype)
+    pm = (
+        "pm_"
+        + str(period)
+        + "_"
+        + str(multiplier)
+        + "_"
+        + str(length)
+        + "_"
+        + str(MAtype)
+    )
+    pmx = (
+        "pmX_"
+        + str(period)
+        + "_"
+        + str(multiplier)
+        + "_"
+        + str(length)
+        + "_"
+        + str(MAtype)
+    )
     # MAtype==1 --> EMA
     # MAtype==2 --> DEMA
     # MAtype==3 --> T3
@@ -1243,7 +1288,9 @@ def PMAX(dataframe, period=10, multiplier=3, length=12, MAtype=1, src=1):  # noq
         "nan",
     )
     # Remove basic and final bands from the columns
-    df.drop(["basic_ub", "basic_lb", "final_ub", "final_lb", mavalue], inplace=True, axis=1)
+    df.drop(
+        ["basic_ub", "basic_lb", "final_ub", "final_lb", mavalue], inplace=True, axis=1
+    )
 
     cols = [pm, pmx, atr]
     df.loc[:, cols] = df.loc[:, cols].fillna(0.0)
@@ -1309,7 +1356,11 @@ def tv_hma(dataframe: DataFrame, length: int = 9, field="close") -> Series:
 
 
 def tv_alma(
-    dataframe: DataFrame, length: int = 8, offset: int = 0, sigma: int = 0, field="close"
+    dataframe: DataFrame,
+    length: int = 8,
+    offset: int = 0,
+    sigma: int = 0,
+    field="close",
 ) -> Series:
     """
     Source: Tradingview "Arnaud Legoux Moving Average"
@@ -1356,7 +1407,9 @@ def tv_alma(
     weights /= weights.sum()  # Normalize the weights
 
     alma = np.convolve(dataframe[field], weights[::-1], mode="valid")
-    return Series(np.pad(alma, (length - 1, 0), mode="constant", constant_values=np.nan))
+    return Series(
+        np.pad(alma, (length - 1, 0), mode="constant", constant_values=np.nan)
+    )
 
 
 def tv_trama(dataframe: DataFrame, length: int = 99, field="close") -> Series:

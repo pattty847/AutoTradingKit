@@ -54,7 +54,8 @@ class CandlestickFinder(object):
                         results.append([idxs[row], None])
 
             candles_df = candles_df.join(
-                pd.DataFrame(results, columns=["row", self.target]).set_index("row"), how="outer"
+                pd.DataFrame(results, columns=["row", self.target]).set_index("row"),
+                how="outer",
             )
 
             return candles_df
@@ -68,7 +69,9 @@ class CandlestickFinder(object):
             if len(candles_df) >= self.required_count:
                 if ohlc and len(ohlc) == 4:
                     if not set(ohlc).issubset(candles_df.columns):
-                        raise Exception("Provided columns does not exist in given data frame")
+                        raise Exception(
+                            "Provided columns does not exist in given data frame"
+                        )
 
                     self.open_column = ohlc[0]
                     self.high_column = ohlc[1]
@@ -83,19 +86,31 @@ class CandlestickFinder(object):
                 self.data = candles_df.copy()
 
                 if not is_numeric_dtype(self.data[self.close_column]):
-                    self.data[self.close_column] = pd.to_numeric(self.data[self.close_column])
+                    self.data[self.close_column] = pd.to_numeric(
+                        self.data[self.close_column]
+                    )
 
                 if not is_numeric_dtype(self.data[self.open_column]):
-                    self.data[self.open_column] = pd.to_numeric(self.data[self.open_column])
+                    self.data[self.open_column] = pd.to_numeric(
+                        self.data[self.open_column]
+                    )
 
                 if not is_numeric_dtype(self.data[self.low_column]):
-                    self.data[self.low_column] = pd.to_numeric(self.data[self.low_column])
+                    self.data[self.low_column] = pd.to_numeric(
+                        self.data[self.low_column]
+                    )
 
                 if not is_numeric_dtype(self.data[self.high_column]):
-                    self.data[self.high_column] = pd.to_numeric(candles_df[self.high_column])
+                    self.data[self.high_column] = pd.to_numeric(
+                        candles_df[self.high_column]
+                    )
 
                 self.is_data_prepared = True
             else:
-                raise Exception("{0} requires at least {1} data".format(self.name, self.required_count))
+                raise Exception(
+                    "{0} requires at least {1} data".format(
+                        self.name, self.required_count
+                    )
+                )
         else:
             raise Exception("Candles must be in Panda data frame type")

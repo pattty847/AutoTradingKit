@@ -10,9 +10,8 @@ from atklip.controls.pandas_ta.utils import (
     v_mamode,
     v_offset,
     v_pos_default,
-    v_series
+    v_series,
 )
-
 
 
 def sum_signed_rolling_deltas(
@@ -72,10 +71,17 @@ def sum_signed_rolling_deltas(
 
 
 def tmo(
-    open_: Series, close: Series,
-    tmo_length: Int = None, calc_length: Int = None, smooth_length: Int = None,
-    momentum: bool = False, normalize: bool = False, exclusive: bool = True,
-    mamode: str = None, offset: Int = None, **kwargs: DictLike,
+    open_: Series,
+    close: Series,
+    tmo_length: Int = None,
+    calc_length: Int = None,
+    smooth_length: Int = None,
+    momentum: bool = False,
+    normalize: bool = False,
+    exclusive: bool = True,
+    mamode: str = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> DataFrame:
     """True Momentum Oscillator (TMO)
 

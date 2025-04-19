@@ -7,12 +7,17 @@ from atklip.controls.pandas_ta.utils import real_body, v_offset, v_pos_default
 from atklip.controls.pandas_ta.utils import v_scalar, v_series
 
 
-
 def cdl_doji(
-    open_: Series, high: Series, low: Series, close: Series,
-    length: Int = None, factor: IntFloat = None, scalar: IntFloat = None,
+    open_: Series,
+    high: Series,
+    low: Series,
+    close: Series,
+    length: Int = None,
+    factor: IntFloat = None,
+    scalar: IntFloat = None,
     asint: bool = True,
-    offset: Int = None, **kwargs: DictLike
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Candle Type: Doji
 

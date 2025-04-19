@@ -1,13 +1,15 @@
-from atklip.graphics.pyqtgraph import InfiniteLine
-from atklip.graphics.pyqtgraph import functions as fn
+from pyqtgraph import InfiniteLine
+from pyqtgraph import functions as fn
 from PySide6 import QtCore
 from PySide6.QtGui import QColor
-from PySide6.QtCore import Signal,QObject,Qt,QPointF
+from PySide6.QtCore import Signal, QObject, Qt, QPointF
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from atklip.graphics.chart_component.viewchart import Chart
     from atklip.graphics.chart_component.draw_tools.drawtools import DrawTool
+
 
 class Vertical_line(InfiniteLine):
     on_click = Signal(object)
@@ -15,49 +17,72 @@ class Vertical_line(InfiniteLine):
     signal_visible = Signal(bool)
     signal_delete = Signal()
 
-    
-    def __init__(self, drawtool=None, id=None, pos=None, angle=90, pen=None, movable=False, bounds=None,
-                 hoverPen=None, label=None, labelOpts=None, span=(0, 1), markers=None, 
-                 name=None):
-        super(Vertical_line,self).__init__(pos, angle, pen, movable, bounds, hoverPen, label, labelOpts, span, markers, name)
-        self.drawtool:DrawTool = drawtool
-        self.chart:Chart = self.drawtool.chart  
+    def __init__(
+        self,
+        drawtool=None,
+        id=None,
+        pos=None,
+        angle=90,
+        pen=None,
+        movable=False,
+        bounds=None,
+        hoverPen=None,
+        label=None,
+        labelOpts=None,
+        span=(0, 1),
+        markers=None,
+        name=None,
+    ):
+        super(Vertical_line, self).__init__(
+            pos,
+            angle,
+            pen,
+            movable,
+            bounds,
+            hoverPen,
+            label,
+            labelOpts,
+            span,
+            markers,
+            name,
+        )
+        self.drawtool: DrawTool = drawtool
+        self.chart: Chart = self.drawtool.chart
         self.vb = self.chart.vb
         self.id = id
         self.popup_setting_tool = None
         self.isSelected = False
         self.has: dict = {
-            "x_axis_show":True,
+            "x_axis_show": True,
             "name": "rectangle",
             "type": "drawtool",
             "id": id,
-            "inputs":{
-                    },
-            "styles":{
-                    'pen': pen,
-                    'width': 1,
-                    'style': Qt.PenStyle.SolidLine,
-                    "lock":True,
-                    "setting": False,
-                    "delete":True,}
+            "inputs": {},
+            "styles": {
+                "pen": pen,
+                "width": 1,
+                "style": Qt.PenStyle.SolidLine,
+                "lock": True,
+                "setting": False,
+                "delete": True,
+            },
         }
         self.change_pen_signal.connect(self.chart.xAxis.change_value)
         self.yoff = False
-        self.xoff =False
+        self.xoff = False
         self.locked = False
         self.color = "#2962ff"
         self.width = 1
         self.style = Qt.SolidLine
-        self.addMarker('o', size=6)
-        self.change_pen_signal.emit(("#363a45",pos))
+        self.addMarker("o", size=6)
+        self.change_pen_signal.emit(("#363a45", pos))
         self.signal_visible.connect(self.setVisible)
         self.signal_delete.connect(self.delete)
- 
 
     def selectedHandler(self, is_selected):
         if is_selected:
             self.isSelected = True
-            self.addMarker('o', size=6)
+            self.addMarker("o", size=6)
         else:
             self.isSelected = False
             self.clearMarkers()
@@ -67,29 +92,33 @@ class Vertical_line(InfiniteLine):
 
     def objectName(self):
         return self.name
-    
+
     def get_inputs(self):
-        inputs =  {}
+        inputs = {}
         return inputs
-    
+
     def get_styles(self):
-        styles =  {"pen":self.has["styles"]["pen"],
-                    "width":self.has["styles"]["width"],
-                    "style":self.has["styles"]["style"],
-                    
-                    "lock":self.has["styles"]["lock"],
-                    "delete":self.has["styles"]["delete"],
-                    "setting":self.has["styles"]["setting"],}
+        styles = {
+            "pen": self.has["styles"]["pen"],
+            "width": self.has["styles"]["width"],
+            "style": self.has["styles"]["style"],
+            "lock": self.has["styles"]["lock"],
+            "delete": self.has["styles"]["delete"],
+            "setting": self.has["styles"]["setting"],
+        }
         return styles
-    
-    def update_inputs(self,_input,_source):
+
+    def update_inputs(self, _input, _source):
         is_update = False
-    
+
     def update_styles(self, _input):
         _style = self.has["styles"][_input]
         if _input == "pen" or _input == "width" or _input == "style":
-            self.setPen(color=self.has["styles"]["pen"], width=self.has["styles"]["width"],style=self.has["styles"]["style"])
-
+            self.setPen(
+                color=self.has["styles"]["pen"],
+                width=self.has["styles"]["width"],
+                style=self.has["styles"]["style"],
+            )
 
     def setVisible(self, visible):
         if visible:
@@ -100,13 +129,13 @@ class Vertical_line(InfiniteLine):
 
     def get_pos_point(self):
         print(self.getYPos())
-    
+
     def get_pen_color(self):
         return self.currentPen.color().name()
-    
+
     def get_pen_style(self):
         return self.currentPen.style().name
-    
+
     def delete(self):
         "xoa hien thi gia truc y"
         self.price_axis.kwargs["horizontal_ray"].remove(self.id)
@@ -121,7 +150,7 @@ class Vertical_line(InfiniteLine):
             self.width = kwargs["width"]
         if "style" in kwargs.keys():
             self.style = kwargs["style"]
-        
+
         self.pen = fn.mkPen(*args, **kwargs)
         if not self.mouseHovering:
             self.currentPen = self.pen
@@ -137,9 +166,13 @@ class Vertical_line(InfiniteLine):
             self.sigPositionChangeFinished.emit(self)
         elif ev.button() == Qt.MouseButton.LeftButton:
             self.on_click.emit(self)
-            
+
     def mouseDragEvent(self, ev):
-        if self.movable and not self.locked and ev.button() == QtCore.Qt.MouseButton.LeftButton:
+        if (
+            self.movable
+            and not self.locked
+            and ev.button() == QtCore.Qt.MouseButton.LeftButton
+        ):
             if ev.isStart():
                 self.moving = True
                 self.cursorOffset = self.pos() - self.mapToParent(ev.buttonDownPos())
@@ -150,31 +183,38 @@ class Vertical_line(InfiniteLine):
                 return
             if self.chart.magnet_on:
                 pos_y = self.chart.vLine.getYPos()
-                self.setPos(QPointF((self.cursorOffset + self.mapToParent(ev.pos())).x(), pos_y))
+                self.setPos(
+                    QPointF((self.cursorOffset + self.mapToParent(ev.pos())).x(), pos_y)
+                )
             else:
                 self.setPos(self.cursorOffset + self.mapToParent(ev.pos()))
             self.sigDragged.emit(self)
             if ev.isFinish():
                 self.moving = False
                 self.sigPositionChangeFinished.emit(self)
-        self.change_pen_signal.emit(("#363a45",float(self.getXPos())))
+        self.change_pen_signal.emit(("#363a45", float(self.getXPos())))
 
     def hoverEvent(self, ev):
         if not self.isSelected:
-            if (not ev.isExit()) and self.movable and ev.acceptDrags(QtCore.Qt.MouseButton.LeftButton):
+            if (
+                (not ev.isExit())
+                and self.movable
+                and ev.acceptDrags(QtCore.Qt.MouseButton.LeftButton)
+            ):
                 self.setMouseHover(True)
-                self.addMarker('o', size=6)
+                self.addMarker("o", size=6)
             else:
                 if not self.moving:
                     self.setMouseHover(False)
                     self.clearMarkers()
-    def set_lock(self,btn):
-        print(btn,btn.isChecked())
+
+    def set_lock(self, btn):
+        print(btn, btn.isChecked())
         if btn.isChecked():
             self.locked_handle()
         else:
             self.unlocked_handle()
-    
+
     def locked_handle(self):
         self.yoff = True
         self.xoff = True
@@ -182,9 +222,9 @@ class Vertical_line(InfiniteLine):
 
     def unlocked_handle(self):
         self.yoff = False
-        self.xoff =False
+        self.xoff = False
         self.locked = False
-    
+
     def setMouseHover(self, hover):
         ## Inform the item that the mouse is (not) hovering over it
         if self.mouseHovering == hover:

@@ -5,15 +5,13 @@ from atklip.controls.pandas_ta._typing import DictLike, Int
 from atklip.controls.pandas_ta.utils import v_offset, v_pos_default, v_series
 
 
-
 def mad_(series: Series):
     """Mean Absolute Deviation"""
     return fabs(series - series.mean()).mean()
 
 
 def mad(
-    close: Series, length: Int = None,
-    offset: Int = None, **kwargs: DictLike
+    close: Series, length: Int = None, offset: Int = None, **kwargs: DictLike
 ) -> Series:
     """Rolling Mean Absolute Deviation
 

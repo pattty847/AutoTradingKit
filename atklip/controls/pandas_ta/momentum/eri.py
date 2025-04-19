@@ -5,10 +5,13 @@ from atklip.controls.pandas_ta.overlap import ema
 from atklip.controls.pandas_ta.utils import v_offset, v_pos_default, v_series
 
 
-
 def eri(
-    high: Series, low: Series, close: Series, length: Int = None,
-    offset: Int = None, **kwargs: DictLike
+    high: Series,
+    low: Series,
+    close: Series,
+    length: Int = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> DataFrame:
     """Elder Ray Index (ERI)
 

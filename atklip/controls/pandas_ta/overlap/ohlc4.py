@@ -4,10 +4,13 @@ from atklip.controls.pandas_ta._typing import DictLike, Int
 from atklip.controls.pandas_ta.utils import v_offset, v_series
 
 
-
 def ohlc4(
-    open_: Series, high: Series, low: Series, close: Series,
-    offset: Int = None, **kwargs: DictLike
+    open_: Series,
+    high: Series,
+    low: Series,
+    close: Series,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """OHLC4
 
@@ -35,7 +38,9 @@ def ohlc4(
     offset = v_offset(offset)
 
     # Calculate
-    avg = 0.25 * (open_.to_numpy() + high.to_numpy() + low.to_numpy() + close.to_numpy())
+    avg = 0.25 * (
+        open_.to_numpy() + high.to_numpy() + low.to_numpy() + close.to_numpy()
+    )
     ohlc4 = Series(avg, index=close.index)
 
     # Offset

@@ -1,13 +1,27 @@
 # type: ignore # coding:utf-8
-import sys,asyncio
+import sys, asyncio
 from typing import Union, TYPE_CHECKING
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon, QColor, QPainter
-from PySide6.QtWidgets import QMainWindow, QVBoxLayout,QApplication, QStackedWidget,QWidget
+from PySide6.QtWidgets import (
+    QMainWindow,
+    QVBoxLayout,
+    QApplication,
+    QStackedWidget,
+    QWidget,
+)
 
 from atklip.gui.qfluentwidgets import StackedWidget
 from atklip.gui.qfluentwidgets.common import CryptoIcon as CI
-from atklip.gui.qfluentwidgets.common import screen,FluentIconBase,qconfig, qrouter, FluentStyleSheet, isDarkTheme, BackgroundAnimationWidget
+from atklip.gui.qfluentwidgets.common import (
+    screen,
+    FluentIconBase,
+    qconfig,
+    qrouter,
+    FluentStyleSheet,
+    isDarkTheme,
+    BackgroundAnimationWidget,
+)
 from atklip.gui.qfluentwidgets.common.icon import *
 
 
@@ -15,18 +29,24 @@ from .titlebar import TitleBar
 from .mainlayout import MainWidget
 from atklip.app_utils import *
 from atklip.appmanager.setting import AppConfig
-from atklip.appmanager.worker.threadpool import ThreadPoolExecutor_global,Heavy_ProcessPoolExecutor_global,num_threads
+from atklip.appmanager.worker.threadpool import (
+    ThreadPoolExecutor_global,
+    Heavy_ProcessPoolExecutor_global,
+    num_threads,
+)
 
 from .framelesswindow import FramelessMainWindow
 
+
 class WindowBase(BackgroundAnimationWidget, FramelessMainWindow):
-    """ Fluent window base class """
-    #currentInterface = Signal(object)
+    """Fluent window base class"""
+
+    # currentInterface = Signal(object)
     def __init__(self, parent=None):
         self._isMicaEnabled = False
         super().__init__(parent=parent)
         self._parent = parent
-        for i in range(int(num_threads/2)):
+        for i in range(int(num_threads / 2)):
             Heavy_ProcessPoolExecutor_global.submit(self.start_worker)
 
         self.setWindowFlag(Qt.WindowMaximizeButtonHint, True)
@@ -35,12 +55,11 @@ class WindowBase(BackgroundAnimationWidget, FramelessMainWindow):
         self.setWindowFlag(Qt.WindowTitleHint, True)
         self.setWindowFlag(Qt.FramelessWindowHint, True)
 
-
         self.setContentsMargins(0, 0, 0, 0)
 
         self.stackedWidget = QStackedWidget(self)
 
-        self.stackedWidget.setContentsMargins(0,0,0,0)
+        self.stackedWidget.setContentsMargins(0, 0, 0, 0)
         self.setCentralWidget(self.stackedWidget)
 
         self.titleBar = TitleBar(self)
@@ -55,7 +74,7 @@ class WindowBase(BackgroundAnimationWidget, FramelessMainWindow):
         self.tabBar.tabCloseRequested.connect(self.onTabCloseRequested)
         qconfig.themeChangedFinished.connect(self._onThemeChangedFinished)
         FluentStyleSheet.FLUENT_WINDOW.apply(self)
-        
+
         self.initWindow()
         self.onTabAddRequested()
         self.show()
@@ -72,84 +91,98 @@ class WindowBase(BackgroundAnimationWidget, FramelessMainWindow):
         # self.setMinimumHeight(h//2)
         # self.resize(w//2, h//2)
         if w > 1000:
-            self.move(w//2 - 500, h//8)
-            self.resize(1000 , 4*(h//5) )
+            self.move(w // 2 - 500, h // 8)
+            self.resize(1000, 4 * (h // 5))
         else:
-            self.move(w//2 - 400, h//8)
-            self.resize(800, 4*(h//5) )
-            
+            self.move(w // 2 - 400, h // 8)
+            self.resize(800, 4 * (h // 5))
 
     def load_pre_config(self):
         curent_tab = AppConfig.get_config_value("profiles.current_tab")
         if curent_tab == None:
-            AppConfig.sig_set_single_data.emit(("profiles.current_tab", {"exchangeID":"binanceusdm","symbol":"BTC/USDT"}))
+            AppConfig.sig_set_single_data.emit(
+                (
+                    "profiles.current_tab",
+                    {"exchangeID": "binanceusdm", "symbol": "BTC/USDT"},
+                )
+            )
             curent_tab = AppConfig.get_config_value("profiles.current_tab")
-        
+
         current_ex = curent_tab["exchangeID"]
         current_symbol = curent_tab["symbol"]
 
         curent_interval = AppConfig.get_config_value(f"topbar.interval.acticebtn")
         if curent_interval == None:
-            AppConfig.sig_set_single_data.emit((f"topbar.interval.acticebtn","1m"))
+            AppConfig.sig_set_single_data.emit((f"topbar.interval.acticebtn", "1m"))
             curent_interval = AppConfig.get_config_value(f"topbar.interval.acticebtn")
-        
-        return current_ex,current_symbol,curent_interval
+
+        return current_ex, current_symbol, curent_interval
+
     def resizeEvent(self, e):
         super().resizeEvent(e)
         interface = self.stackedWidget.currentWidget()
-        if isinstance(interface,MainWidget):
+        if isinstance(interface, MainWidget):
             interface.progress.update_pos()
 
     def removeInterface(self, interface: MainWidget) -> None:
-        """ add sub interface """
+        """add sub interface"""
         self.stackedWidget.removeWidget(interface)
         asyncio.run(interface.chartbox_splitter.chart.close())
         interface.deleteLater()
-        
+
     def onTabCloseRequested(self, index):
         # print(index,self.tabBar.tab)
         self.tabBar.removeTab(index)
         self.removeInterface(self.stackedWidget.widget(index))
+
     def close_window(self):
         interfaces = self.stackedWidget.children()
         if interfaces != []:
             for interface in interfaces:
-                if isinstance(interface,MainWidget):
+                if isinstance(interface, MainWidget):
                     asyncio.run(interface.chartbox_splitter.chart.close())
         self.hide()
         ThreadPoolExecutor_global.shutdown(wait=True)
         Heavy_ProcessPoolExecutor_global.shutdown(wait=True)
         self.deleteLater()
-    
+
     def onTabChanged(self, index: int):
         # print("index--",index)
         objectName = self.tabBar.currentTab().routeKey()
         TabInterface = self.findChild(MainWidget, objectName)
         old_interface = self.stackedWidget.currentWidget()
         old_interface.hide()
-        TabInterface.resize(old_interface.width(),old_interface.height())
+        TabInterface.resize(old_interface.width(), old_interface.height())
         self.switchTo(TabInterface)
-        
-        
+
     def onTabAddRequested(self):
-        current_ex,current_symbol,curent_interval = self.load_pre_config()
+        current_ex, current_symbol, curent_interval = self.load_pre_config()
         _is_icon_exist = check_icon_exist(current_symbol)
         if _is_icon_exist:
             icon_path = CI.crypto_url(current_symbol)
-        else :
+        else:
             icon_path = CI.BTC.path()
-        routeKey = f'{current_symbol}-{curent_interval}-{self.tabBar.count()}'
-        self.addTab(routeKey, f"{current_symbol} {curent_interval}", icon_path,current_ex,current_symbol,curent_interval)
-        
-    def addTab(self, routeKey, text, icon,current_ex,current_symbol,curent_interval):
+        routeKey = f"{current_symbol}-{curent_interval}-{self.tabBar.count()}"
+        self.addTab(
+            routeKey,
+            f"{current_symbol} {curent_interval}",
+            icon_path,
+            current_ex,
+            current_symbol,
+            curent_interval,
+        )
+
+    def addTab(self, routeKey, text, icon, current_ex, current_symbol, curent_interval):
         tabItem = self.tabBar.addTab(routeKey, text, icon)
         self.tabBar.setCurrentTab(routeKey)
-        TabInterface = MainWidget(self,tabItem,routeKey,current_ex,current_symbol,curent_interval)
-                
+        TabInterface = MainWidget(
+            self, tabItem, routeKey, current_ex, current_symbol, curent_interval
+        )
+
         old_interface = self.stackedWidget.currentWidget()
-        if isinstance(old_interface,MainWidget):
+        if isinstance(old_interface, MainWidget):
             old_interface.hide()
-            TabInterface.resize(old_interface.width(),old_interface.height())
+            TabInterface.resize(old_interface.width(), old_interface.height())
         else:
             TabInterface.resize(self.width(), self.height())
         self.stackedWidget.addWidget(TabInterface)
@@ -157,20 +190,22 @@ class WindowBase(BackgroundAnimationWidget, FramelessMainWindow):
         TabInterface.progress.run_process(True)
 
     def setTabIcon(self, index: int, icon: Union[QIcon, FluentIconBase, str]):
-        """ set tab icon """
+        """set tab icon"""
         self.tabBar.tabItem(index).setIcon(icon)
 
     def setTabText(self, index: int, text: str):
-        """ set tab text """
+        """set tab text"""
         self.tabBar.tabItem(index).setText(text)
+
     def switchTo(self, interface: MainWidget):
         if not interface.isVisible():
             interface.show()
         self.stackedWidget.setCurrentWidget(interface)
-        
-        
+
     def _updateStackedBackground(self):
-        isTransparent = self.stackedWidget.currentWidget().property("isStackedTransparent")
+        isTransparent = self.stackedWidget.currentWidget().property(
+            "isStackedTransparent"
+        )
         if bool(self.stackedWidget.property("isTransparent")) == isTransparent:
             return
         self.stackedWidget.setProperty("isTransparent", isTransparent)
@@ -195,8 +230,8 @@ class WindowBase(BackgroundAnimationWidget, FramelessMainWindow):
         painter.drawRect(self.rect())
 
     def setMicaEffectEnabled(self, isEnabled: bool):
-        """ set whether the mica effect is enabled, only available on Win11 """
-        if sys.platform != 'win32' or sys.getwindowsversion().build < 22000:
+        """set whether the mica effect is enabled, only available on Win11"""
+        if sys.platform != "win32" or sys.getwindowsversion().build < 22000:
             return
         self._isMicaEnabled = isEnabled
         if isEnabled:
@@ -204,5 +239,6 @@ class WindowBase(BackgroundAnimationWidget, FramelessMainWindow):
         else:
             self.windowEffect.removeBackgroundEffect(self.winId())
         self.setBackgroundColor(self._normalBackgroundColor())
+
     def isMicaEffectEnabled(self):
         return self._isMicaEnabled

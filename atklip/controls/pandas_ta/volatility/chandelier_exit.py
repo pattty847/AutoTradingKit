@@ -10,17 +10,24 @@ from atklip.controls.pandas_ta.utils import (
     v_pos_default,
     v_offset,
     v_series,
-    v_talib
+    v_talib,
 )
 
 
-
 def chandelier_exit(
-    high: Series, low: Series, close: Series,
-    high_length: Int = None, low_length: Int = None,
-    atr_length: Int = None, multiplier: IntFloat = None,
-    mamode: str = None, talib: bool = None, use_close: bool = None,
-    drift: Int = None, offset: Int = None, **kwargs: DictLike
+    high: Series,
+    low: Series,
+    close: Series,
+    high_length: Int = None,
+    low_length: Int = None,
+    atr_length: Int = None,
+    multiplier: IntFloat = None,
+    mamode: str = None,
+    talib: bool = None,
+    use_close: bool = None,
+    drift: Int = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ):
     """Chandelier Exit (CHDLREXT)
 
@@ -78,8 +85,14 @@ def chandelier_exit(
 
     # Calculate
     atr_ = atr(
-        high=high, low=low, close=close, length=atr_length,
-        mamode=mamode, talib=mode_tal, drift=drift, offset=offset
+        high=high,
+        low=low,
+        close=close,
+        length=atr_length,
+        mamode=mamode,
+        talib=mode_tal,
+        drift=drift,
+        offset=offset,
     )
     if atr_ is None or all(isnan(atr_)):
         return
@@ -123,7 +136,7 @@ def chandelier_exit(
     data = {
         f"{_name}l{_props}": long,
         f"{_name}s{_props}": short,
-        f"{_name}d{_props}": direction
+        f"{_name}d{_props}": direction,
     }
     df = DataFrame(data, index=close.index)
     df.name = f"{_name}{_props}"

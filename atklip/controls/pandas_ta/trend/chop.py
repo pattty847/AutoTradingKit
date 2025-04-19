@@ -8,17 +8,22 @@ from atklip.controls.pandas_ta.utils import (
     v_offset,
     v_pos_default,
     v_scalar,
-    v_series
+    v_series,
 )
 from atklip.controls.pandas_ta.volatility import atr
 
 
-
 def chop(
-    high: Series, low: Series, close: Series,
-    length: Int = None, atr_length: Int = None,
-    ln: bool = None, scalar: IntFloat = None, drift: Int = None,
-    offset: Int = None, **kwargs: DictLike
+    high: Series,
+    low: Series,
+    close: Series,
+    length: Int = None,
+    atr_length: Int = None,
+    ln: bool = None,
+    scalar: IntFloat = None,
+    drift: Int = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Choppiness Index (CHOP)
 

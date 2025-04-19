@@ -2,12 +2,17 @@ from functools import lru_cache
 from typing import Union
 from psygnal import Signal
 import numpy as np
-from atklip.app_utils.calculate import cal_pnl_with_fee, calculate_recommended_capital_base_on_loss_capital,calculate_stoploss
+from atklip.app_utils.calculate import (
+    cal_pnl_with_fee,
+    calculate_recommended_capital_base_on_loss_capital,
+    calculate_stoploss,
+)
 
 
 class Position:
     sig_change_data = Signal(tuple)
-    def __init__(self,_type:str="long") -> None:
+
+    def __init__(self, _type: str = "long") -> None:
         self.entry_price = None
         self.exit_price = None
         self.current_price = None
@@ -22,26 +27,27 @@ class Position:
     @property
     def data(self):
         return {
-            'entry_price': self.entry_price,
-            'qty': self.qty,
-            'current_price': self.current_price,
-            'cost': self.cost,
-            'type': self.type,
-            'pnl': self.pnl,
-            'pnl_percentage': self.pnl_percentage,
-            'leverage': self.leverage,
-            'liquidation_price': self.liquidation_price,
+            "entry_price": self.entry_price,
+            "qty": self.qty,
+            "current_price": self.current_price,
+            "cost": self.cost,
+            "type": self.type,
+            "pnl": self.pnl,
+            "pnl_percentage": self.pnl_percentage,
+            "leverage": self.leverage,
+            "liquidation_price": self.liquidation_price,
         }
-    
+
     @property
     def fee(self):
         if self.side == "limit":
             return 0.002
         else:
             return 0.005
+
     @property
     def mark_price(self) -> float:
-        if self.exchange_type == 'spot':
+        if self.exchange_type == "spot":
             return self.current_price
 
         return self._mark_price
@@ -102,7 +108,7 @@ class Position:
 
     @property
     def leverage(self) -> Union[int, np.float64]:
-        if self.exchange_type == 'spot':
+        if self.exchange_type == "spot":
             return 1
         return self.leverage
 
@@ -132,11 +138,22 @@ class Position:
 
         if self.cost is None:
             return 0
-        pnl = cal_pnl_with_fee(self.entry_price,self.current_price,self.cost,1,self.leverage,0.005,0.002,"market",self.side,False)
+        pnl = cal_pnl_with_fee(
+            self.entry_price,
+            self.current_price,
+            self.cost,
+            1,
+            self.leverage,
+            0.005,
+            0.002,
+            "market",
+            self.side,
+            False,
+        )
         return pnl
-    
+
         diff = self.cost - abs(self.entry_price * self.qty)
-        return -diff if self.type == 'short' else diff
+        return -diff if self.type == "short" else diff
 
     @property
     def is_open(self) -> bool:
@@ -145,7 +162,7 @@ class Position:
 
         :return: bool
         """
-        return self.type in ['long', 'short']
+        return self.type in ["long", "short"]
 
     @property
     def is_close(self) -> bool:
@@ -153,8 +170,7 @@ class Position:
         Is the current position close?
         :return: bool
         """
-        return self.type == 'close'
-
+        return self.type == "close"
 
     @property
     def mode(self) -> str:
@@ -170,13 +186,13 @@ class Position:
         if self.is_close:
             return np.nan
 
-        if self.mode in ['cross', 'spot']:
+        if self.mode in ["cross", "spot"]:
             return np.nan
 
-        elif self.mode == 'isolated':
-            if self.type == 'long':
-                return self.entry_price * (1 - self._initial_margin_rate +self.fee)
-            elif self.type == 'short':
+        elif self.mode == "isolated":
+            if self.type == "long":
+                return self.entry_price * (1 - self._initial_margin_rate + self.fee)
+            elif self.type == "short":
                 return self.entry_price * (1 + self._initial_margin_rate - self.fee)
             else:
                 return np.nan
@@ -190,9 +206,9 @@ class Position:
 
     @property
     def bankruptcy_price(self) -> Union[float, np.float64]:
-        if self.type == 'long':
+        if self.type == "long":
             return self.entry_price * (1 - self._initial_margin_rate)
-        elif self.type == 'short':
+        elif self.type == "short":
             return self.entry_price * (1 + self._initial_margin_rate)
         else:
             return np.nan
@@ -200,7 +216,7 @@ class Position:
     def _close(self):
         pass
 
-    def _update_qty(self, qty: float, operation='set'):
+    def _update_qty(self, qty: float, operation="set"):
         pass
 
     def _open(self):

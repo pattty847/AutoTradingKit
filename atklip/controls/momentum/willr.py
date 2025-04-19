@@ -5,11 +5,14 @@ from atklip.controls.pandas_ta.maps import Imports
 from atklip.controls.pandas_ta.utils import v_offset, v_pos_default, v_series, v_talib
 
 
-
 def willr(
-    high: Series, low: Series, close: Series,
-    length: Int = None, talib: bool = False,
-    offset: Int = None, **kwargs: DictLike
+    high: Series,
+    low: Series,
+    close: Series,
+    length: Int = None,
+    talib: bool = False,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """William's Percent R (WILLR)
 
@@ -54,6 +57,7 @@ def willr(
     # Calculate
     if Imports["talib"] and mode_tal:
         from atklip.controls.talib import WILLR
+
         willr = WILLR(high, low, close, length)
     else:
         lowest_low = low.rolling(length, min_periods=min_periods).min()

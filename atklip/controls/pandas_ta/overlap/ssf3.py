@@ -6,9 +6,12 @@ from atklip.controls.pandas_ta.utils._numba import nb_ssf3
 
 
 def ssf3(
-    close: Series, length: Int = None,
-    pi: IntFloat = None, sqrt3: IntFloat = None,
-    offset: Int = None, **kwargs: DictLike
+    close: Series,
+    length: Int = None,
+    pi: IntFloat = None,
+    sqrt3: IntFloat = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ):
     """Ehler's 3 Pole Super Smoother Filter (SSF) © 2013
 

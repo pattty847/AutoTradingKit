@@ -1,7 +1,7 @@
 # coding:utf-8
 from enum import Enum
 from typing import Union
-import os,re
+import os, re
 from PySide6.QtXml import QDomDocument
 from PySide6.QtCore import QRectF, Qt, QFile, QObject, QRect
 from PySide6.QtGui import QIcon, QIconEngine, QColor, QPixmap, QImage, QPainter, QAction
@@ -12,16 +12,18 @@ from .overload import singledispatchmethod
 from typing import Optional, Dict
 import xml.etree.ElementTree as ET
 
-@lru_cache(maxsize=128) 
-def get_real_path(path_icon = "atklip/gui/qfluentwidgets/_rc/images/crypto"):
+
+@lru_cache(maxsize=128)
+def get_real_path(path_icon="atklip/gui/qfluentwidgets/_rc/images/crypto"):
     path_icon_build = f"_internal/{path_icon}"
     if os.path.exists(path_icon):
         return path_icon
     else:
         return path_icon_build
 
-@lru_cache(maxsize=128) 
-def check_icon_exist(_icon:str):
+
+@lru_cache(maxsize=128)
+def check_icon_exist(_icon: str):
     icon_path = f"{get_real_path()}/{_icon.lower()}.svg"
     if os.path.exists(icon_path):
         return True
@@ -31,55 +33,66 @@ def check_icon_exist(_icon:str):
 
 "https://s3-symbol-logo.tradingview.com/provider/binance.svg"
 "https://s3-symbol-logo.tradingview.com/crypto/XTVCETH.svg"
-@lru_cache(maxsize=128) 
-def change_svg_color(value:str, new_color):
+
+
+@lru_cache(maxsize=128)
+def change_svg_color(value: str, new_color):
     _ion_path = "atklip/gui/qfluentwidgets/_rc/images/icons"
-    path = f'{get_real_path(_ion_path)}/{value.lower()}_white.svg'
-    new_path = f'{get_real_path(_ion_path)}/{value.lower()}_tradingview.svg'
+    path = f"{get_real_path(_ion_path)}/{value.lower()}_white.svg"
+    new_path = f"{get_real_path(_ion_path)}/{value.lower()}_tradingview.svg"
     if os.path.exists(new_path):
         return new_path
-    file = open(path,"r")
+    file = open(path, "r")
     text = file.read()
     file.close()
-    file = open(new_path,'w')
-    new_text = text.replace("rgb(255,255,255)",new_color).replace("rgb(0,0,0)",new_color).replace("white",new_color).replace("rgb(247,245,245)",new_color) 
+    file = open(new_path, "w")
+    new_text = (
+        text.replace("rgb(255,255,255)", new_color)
+        .replace("rgb(0,0,0)", new_color)
+        .replace("white", new_color)
+        .replace("rgb(247,245,245)", new_color)
+    )
     file.write(new_text)
     file.close()
     return new_path
 
-@lru_cache(maxsize=128) 
-def change_svg(value:str):
-    path = f'atklip/gui/qfluentwidgets/_rc/images/icons/{value}'
-    new_path = f'atklip/gui/qfluentwidgets/_rc/images/icons/{value.lower()}'
+
+@lru_cache(maxsize=128)
+def change_svg(value: str):
+    path = f"atklip/gui/qfluentwidgets/_rc/images/icons/{value}"
+    new_path = f"atklip/gui/qfluentwidgets/_rc/images/icons/{value.lower()}"
     # if os.path.exists(new_path):
     #     return new_path
-    file = open(path,"r",encoding="utf-8")
+    file = open(path, "r", encoding="utf-8")
     text = file.read()
     file.close()
     os.remove(path)
-    file = open(new_path,'w',encoding="utf-8")
-    #new_text = text.replace("rgb(255,255,255)",new_color).replace("rgb(0,0,0)",new_color).replace("white",new_color).replace("rgb(247,245,245)",new_color) 
+    file = open(new_path, "w", encoding="utf-8")
+    # new_text = text.replace("rgb(255,255,255)",new_color).replace("rgb(0,0,0)",new_color).replace("white",new_color).replace("rgb(247,245,245)",new_color)
     file.write(text)
     file.close()
-    
+
     return new_path
 
-@lru_cache(maxsize=128) 
-def svg_to_pixmap(self, svg_filename: str, width: int, height: int, color: QColor) -> QPixmap:
+
+@lru_cache(maxsize=128)
+def svg_to_pixmap(
+    self, svg_filename: str, width: int, height: int, color: QColor
+) -> QPixmap:
     renderer = QSvgRenderer(svg_filename)
     pixmap = QPixmap(width, height)
     pixmap.fill(Qt.GlobalColor.transparent)
     painter = QPainter(pixmap)
     renderer.render(painter)  # this is the destination, and only its alpha is used!
-    painter.setCompositionMode(
-        painter.CompositionMode.CompositionMode_SourceIn)
+    painter.setCompositionMode(painter.CompositionMode.CompositionMode_SourceIn)
     painter.fillRect(pixmap.rect(), color)
     painter.end()
     return pixmap
 
-@lru_cache(maxsize=128) 
+
+@lru_cache(maxsize=128)
 def getIconColor(theme=Theme.AUTO, reverse=False):
-    """ get the color of icon based on theme """
+    """get the color of icon based on theme"""
     if not reverse:
         lc, dc = "black", "white"
     else:
@@ -92,8 +105,9 @@ def getIconColor(theme=Theme.AUTO, reverse=False):
 
     return color
 
+
 def drawSvgIcon(icon, painter, rect):
-    """ draw svg icon
+    """draw svg icon
 
     Parameters
     ----------
@@ -109,11 +123,12 @@ def drawSvgIcon(icon, painter, rect):
     renderer = QSvgRenderer(icon)
     renderer.render(painter, QRectF(rect))
 
+
 def paireSVG(
     svg_content: str,
     target_id: Optional[str] = "path1",
     attributes: Optional[Dict[str, str]] = None,
-    verbose: bool = True
+    verbose: bool = True,
 ) -> str:
     """
     Chỉnh sửa thuộc tính của phần tử SVG theo ID và trả về SVG đã sửa đổi.
@@ -136,13 +151,13 @@ def paireSVG(
     """
     # Khởi tạo giá trị mặc định cho attributes
     if attributes is None:
-        attributes = {'fill': '#FF0000'}  # Giá trị mặc định nếu không cung cấp
+        attributes = {"fill": "#FF0000"}  # Giá trị mặc định nếu không cung cấp
 
     try:
         # Parse SVG và xử lý namespace
-        namespaces = {'svg': 'http://www.w3.org/2000/svg'}
+        namespaces = {"svg": "http://www.w3.org/2000/svg"}
         root = ET.fromstring(svg_content)
-        
+
         # Tìm phần tử target theo ID
         xpath_query = f'.//svg:path[@id="{target_id}"]'
         target_element = root.find(xpath_query, namespaces)
@@ -158,7 +173,7 @@ def paireSVG(
                 print(f"Không tìm thấy phần tử với ID '{target_id}'")
 
         # Xuất kết quả với định dạng đúng
-        return ET.tostring(root, encoding='utf-8', method='xml').decode()
+        return ET.tostring(root, encoding="utf-8", method="xml").decode()
 
     except ET.ParseError as e:
         print(f"Lỗi parse SVG: {str(e)}")
@@ -167,9 +182,10 @@ def paireSVG(
         print(f"Lỗi không xác định: {str(e)}")
         return svg_content
 
-@lru_cache(maxsize=128) 
+
+@lru_cache(maxsize=128)
 def writeSvg(iconPath: str, indexes=None, **attributes):
-    """ write svg with specified attributes
+    """write svg with specified attributes
 
     Parameters
     ----------
@@ -187,15 +203,15 @@ def writeSvg(iconPath: str, indexes=None, **attributes):
     svg: str
         svg code
     """
-    if not iconPath.lower().endswith('.svg'):
+    if not iconPath.lower().endswith(".svg"):
         return ""
     f = QFile(iconPath)
     f.open(QFile.ReadOnly)
-    return paireSVG(svg_content=f.readAll().toStdString(),attributes=attributes)
-    
+    return paireSVG(svg_content=f.readAll().toStdString(), attributes=attributes)
+
 
 def drawIcon(icon, painter, rect, state=QIcon.Off, **attributes):
-    """ draw icon
+    """draw icon
 
     Parameters
     ----------
@@ -219,66 +235,69 @@ def drawIcon(icon, painter, rect, state=QIcon.Off, **attributes):
         icon = QIcon(icon)
         icon.paint(painter, QRectF(rect).toRect(), Qt.AlignCenter, state=state)
 
-@lru_cache(maxsize=128) 
-def get_exchange_icon(exchange):
-        if exchange == "coinbaseexchange":
-            return EchangeIcon.COINBASE_PRO.path(), "Coinbase Exchange", "SPOT & FUTURES"
-        if exchange == "coinbase":
-            return EchangeIcon.COINBASE_PRO.path(), "Coinbase Advanced", "SPOT & FUTURES"
-        elif exchange == "okx":
-            return EchangeIcon.OKEX.path(), "OKX", "SPOT & FUTURES"
-        elif exchange == "huobi":
-            return EchangeIcon.HUOBI.path(), "HuoBi", "SPOT & FUTURES"
-        # elif exchange == "hitbtc":
-        #     return  EI.HITBTC.path(), "HitBtc", "SPOT & FUTURES"
-        elif exchange == "gate":
-            return  EchangeIcon.GATE.path(), "Gate", "SPOT & FUTURES"
-        elif exchange == "deribit":
-            return  EchangeIcon.DERIBIT.path(), "Deribit", "SPOT & FUTURES"
-        elif exchange == "coinex":
-            return  EchangeIcon.COINEX.path(), "CoinEx", "SPOT & FUTURES"
-        elif exchange == "kraken":
-            return  EchangeIcon.KRAKEN_SPOT.path(), "Kraken", "SPOT"
-        elif exchange == "krakenfutures":
-            return  EchangeIcon.KRAKEN_FUTURES.path(), "Kraken", "FUTURES"
-        elif exchange == "kucoin":
-            return  EchangeIcon.KUCOIN.path(), "Kucoin", "SPOT"
-        elif exchange == "kucoinfutures":
-            return  EchangeIcon.KUCOIN_FUTURES.path(), "Kucoin", "FUTURES"
-        elif exchange == "mexc":
-            return  EchangeIcon.MEXC.path(), "MEXC", "SPOT & FUTURES"
-        elif exchange == "binance":
-            return  EchangeIcon.BINANCE_ICON.path(), "Binance", "SPOT"
-        elif exchange == "binanceusdm":
-            return  EchangeIcon.BINANCE_ICON.path(), "Binance Perpetual", "FUTURES"
-        elif exchange == "binancecoinm":
-            return  EchangeIcon.BINANCE_ICON.path(), "Binance Coin", "FUTURES"
-        elif exchange == "bybit":
-            return  EchangeIcon.BYBIT.path(), "ByBit", "SPOT & FUTURES"
-        # elif exchange == "bitvavo":
-        #     return  EI.BITVAVO.path(), "Bitvavo", "SPOT & FUTURES"
-        elif exchange == "bittrex":
-            return  EchangeIcon.BITTREX.path(), "Bittrex", "SPOT & FUTURES"
-        elif exchange == "bitmex":
-            return  EchangeIcon.BITMEX.path(), "BitMex", "SPOT & FUTURES"
-        elif exchange == "bitmart":
-            return  EchangeIcon.BITMART.path(), "BitMart", "SPOT & FUTURES"
-        elif exchange == "bitget":
-            return  EchangeIcon.BITGET.path(), "BitGet", "SPOT & FUTURES"
-        elif exchange == "bitfinex2":
-            return  EchangeIcon.BITFINEX2.path(), "BitFinex", "SPOT & FUTURES"
-        elif exchange == "bingx":
-            return  EchangeIcon.BINGX.path(), "BingX", "SPOT & FUTURES"
-        return EchangeIcon.BINANCE_ICON.path(), "Binance Perpetual", "FUTURES"
 
-@lru_cache(maxsize=128) 
-def get_symbol_icon(symbol:str):
-        _symbol = symbol.lower()
-        re_symbol = re.findall(r'(.*?)/', _symbol)
-        return re_symbol[0]
+@lru_cache(maxsize=128)
+def get_exchange_icon(exchange):
+    if exchange == "coinbaseexchange":
+        return EchangeIcon.COINBASE_PRO.path(), "Coinbase Exchange", "SPOT & FUTURES"
+    if exchange == "coinbase":
+        return EchangeIcon.COINBASE_PRO.path(), "Coinbase Advanced", "SPOT & FUTURES"
+    elif exchange == "okx":
+        return EchangeIcon.OKEX.path(), "OKX", "SPOT & FUTURES"
+    elif exchange == "huobi":
+        return EchangeIcon.HUOBI.path(), "HuoBi", "SPOT & FUTURES"
+    # elif exchange == "hitbtc":
+    #     return  EI.HITBTC.path(), "HitBtc", "SPOT & FUTURES"
+    elif exchange == "gate":
+        return EchangeIcon.GATE.path(), "Gate", "SPOT & FUTURES"
+    elif exchange == "deribit":
+        return EchangeIcon.DERIBIT.path(), "Deribit", "SPOT & FUTURES"
+    elif exchange == "coinex":
+        return EchangeIcon.COINEX.path(), "CoinEx", "SPOT & FUTURES"
+    elif exchange == "kraken":
+        return EchangeIcon.KRAKEN_SPOT.path(), "Kraken", "SPOT"
+    elif exchange == "krakenfutures":
+        return EchangeIcon.KRAKEN_FUTURES.path(), "Kraken", "FUTURES"
+    elif exchange == "kucoin":
+        return EchangeIcon.KUCOIN.path(), "Kucoin", "SPOT"
+    elif exchange == "kucoinfutures":
+        return EchangeIcon.KUCOIN_FUTURES.path(), "Kucoin", "FUTURES"
+    elif exchange == "mexc":
+        return EchangeIcon.MEXC.path(), "MEXC", "SPOT & FUTURES"
+    elif exchange == "binance":
+        return EchangeIcon.BINANCE_ICON.path(), "Binance", "SPOT"
+    elif exchange == "binanceusdm":
+        return EchangeIcon.BINANCE_ICON.path(), "Binance Perpetual", "FUTURES"
+    elif exchange == "binancecoinm":
+        return EchangeIcon.BINANCE_ICON.path(), "Binance Coin", "FUTURES"
+    elif exchange == "bybit":
+        return EchangeIcon.BYBIT.path(), "ByBit", "SPOT & FUTURES"
+    # elif exchange == "bitvavo":
+    #     return  EI.BITVAVO.path(), "Bitvavo", "SPOT & FUTURES"
+    elif exchange == "bittrex":
+        return EchangeIcon.BITTREX.path(), "Bittrex", "SPOT & FUTURES"
+    elif exchange == "bitmex":
+        return EchangeIcon.BITMEX.path(), "BitMex", "SPOT & FUTURES"
+    elif exchange == "bitmart":
+        return EchangeIcon.BITMART.path(), "BitMart", "SPOT & FUTURES"
+    elif exchange == "bitget":
+        return EchangeIcon.BITGET.path(), "BitGet", "SPOT & FUTURES"
+    elif exchange == "bitfinex2":
+        return EchangeIcon.BITFINEX2.path(), "BitFinex", "SPOT & FUTURES"
+    elif exchange == "bingx":
+        return EchangeIcon.BINGX.path(), "BingX", "SPOT & FUTURES"
+    return EchangeIcon.BINANCE_ICON.path(), "Binance Perpetual", "FUTURES"
+
+
+@lru_cache(maxsize=128)
+def get_symbol_icon(symbol: str):
+    _symbol = symbol.lower()
+    re_symbol = re.findall(r"(.*?)/", _symbol)
+    return re_symbol[0]
+
 
 class FluentIconEngine(QIconEngine):
-    """ Fluent icon engine """
+    """Fluent icon engine"""
 
     def __init__(self, icon, reverse=False):
         """
@@ -293,6 +312,7 @@ class FluentIconEngine(QIconEngine):
         super().__init__()
         self.icon = icon
         self.isThemeReversed = reverse
+
     def paint(self, painter, rect, mode, state):
         painter.save()
 
@@ -322,7 +342,7 @@ class FluentIconEngine(QIconEngine):
 
 
 class SvgIconEngine(QIconEngine):
-    """ Svg icon engine """
+    """Svg icon engine"""
 
     def __init__(self, svg: str):
         super().__init__()
@@ -346,10 +366,10 @@ class SvgIconEngine(QIconEngine):
 
 
 class FluentIconBase:
-    """ Fluent icon base class """
+    """Fluent icon base class"""
 
     def path(self, theme=Theme.AUTO) -> str:
-        """ get the path of icon
+        """get the path of icon
 
         Parameters
         ----------
@@ -362,7 +382,7 @@ class FluentIconBase:
         raise NotImplementedError
 
     def icon(self, theme=Theme.AUTO, color: QColor = None) -> QIcon:
-        """ create a fluent icon
+        """create a fluent icon
 
         Parameters
         ----------
@@ -377,14 +397,14 @@ class FluentIconBase:
         """
         path = self.path(theme)
 
-        if not (path.endswith('.svg') and color):
+        if not (path.endswith(".svg") and color):
             return QIcon(self.path(theme))
 
         color = QColor(color).name()
         return QIcon(SvgIconEngine(writeSvg(path, fill=color)))
-    
+
     def colored(self, lightColor: QColor, darkColor: QColor) -> "ColoredFluentIcon":
-        """ create a colored fluent icon
+        """create a colored fluent icon
         Parameters
         ----------
         lightColor: str | QColor | Qt.GlobalColor
@@ -393,8 +413,9 @@ class FluentIconBase:
             icon color in dark mode
         """
         return ColoredFluentIcon(self, lightColor, darkColor)
+
     def qicon(self, reverse=False) -> QIcon:
-        """ convert to QIcon, the theme of icon will be updated synchronously with app
+        """convert to QIcon, the theme of icon will be updated synchronously with app
 
         Parameters
         ----------
@@ -404,7 +425,7 @@ class FluentIconBase:
         return QIcon(FluentIconEngine(self, reverse))
 
     def render(self, painter, rect, theme=Theme.AUTO, indexes=None, **attributes):
-        """ draw svg icon
+        """draw svg icon
 
         Parameters
         ----------
@@ -428,7 +449,7 @@ class FluentIconBase:
         """
         icon = self.path(theme)
 
-        if icon.endswith('.svg'):
+        if icon.endswith(".svg"):
             if attributes:
                 icon = writeSvg(icon, indexes, **attributes).encode()
 
@@ -438,39 +459,47 @@ class FluentIconBase:
             rect = QRectF(rect).toRect()
             painter.drawPixmap(rect, icon.pixmap(QRectF(rect).toRect().size()))
 
-@lru_cache(maxsize=128) 
+
+@lru_cache(maxsize=128)
 def toQIcon(icon: Union[QIcon, FluentIconBase, str]) -> QIcon:
-    """ convet `icon` to `QIcon` """
+    """convet `icon` to `QIcon`"""
     if isinstance(icon, str):
         return QIcon(icon)
     if isinstance(icon, FluentIconBase):
         return icon.icon()
     return icon
 
+
 class CurrencyIcon(FluentIconBase, Enum):
-    """ Currency icon """
+    """Currency icon"""
+
     USD = "usd"
     VND = "vnd"
+
     def path(self, theme=Theme.AUTO):
-        return f':/qfluentwidgets/images/crypto/{self.value}.svg'
+        return f":/qfluentwidgets/images/crypto/{self.value}.svg"
+
 
 class CryptoIcon(FluentIconBase, Enum):
-    """ Crypto icon """
+    """Crypto icon"""
+
     BTC = "btc"
     ETH = "eth"
 
     def path(self, theme=Theme.AUTO):
-        return f':/qfluentwidgets/images/crypto/{self.value}.svg'
+        return f":/qfluentwidgets/images/crypto/{self.value}.svg"
+
     @staticmethod
     def crypto_url(symbol):
-        return f':/qfluentwidgets/images/crypto/{symbol}.svg'
+        return f":/qfluentwidgets/images/crypto/{symbol}.svg"
+
     @staticmethod
-    def render(painter, rect, symbol:str, indexes=None, **attributes):
+    def render(painter, rect, symbol: str, indexes=None, **attributes):
         if symbol.endswith("svg"):
             icon = symbol
         else:
             icon = CryptoIcon.crypto_url(symbol)
-        if icon.endswith('.svg'):
+        if icon.endswith(".svg"):
             if attributes:
                 icon = writeSvg(icon, indexes, **attributes).encode()
             drawSvgIcon(icon, painter, rect)
@@ -478,49 +507,51 @@ class CryptoIcon(FluentIconBase, Enum):
             icon = QIcon(icon)
             rect = QRectF(rect).toRect()
             painter.drawPixmap(rect, icon.pixmap(QRectF(rect).toRect().size()))
-    
+
 
 class EchangeIcon(FluentIconBase, Enum):
-    """ Echange icon """
+    """Echange icon"""
+
     FAVORITE = "favorite"
-    COINBASE_PRO = 'coinbase'
-    OKEX = "okex"  #có futures
+    COINBASE_PRO = "coinbase"
+    OKEX = "okex"  # có futures
     HUOBI = "huobi"
     HITBTC = "hitbtc"
     # GATE = "gate"
     DERIBIT = "deribit"
-    COINEX = "coinex"   #có futures
+    COINEX = "coinex"  # có futures
     KRAKEN_SPOT = "kraken"  # Kraken Spot
-    KRAKEN_FUTURES = "kraken"  #có futures
-    KUCOIN = 'kucoin'
-    KUCOIN_FUTURES = 'kucoin'   #có futures
+    KRAKEN_FUTURES = "kraken"  # có futures
+    KUCOIN = "kucoin"
+    KUCOIN_FUTURES = "kucoin"  # có futures
     MEXC = "mexc"
-    BINANCE_ICON = 'binance'
-    BINANCE_TEXT = 'binance'
+    BINANCE_ICON = "binance"
+    BINANCE_TEXT = "binance"
     # BYBIT_USDT_PERPETUAL = ''
-    BYBIT = 'bybit'  #có futures
+    BYBIT = "bybit"  # có futures
     BITVAVO = "bitvavo"
     BITTREX = "bittrex"
-    BITMEX = 'bitmex'
+    BITMEX = "bitmex"
     BITMART = "bitmart"
-    BITGET = "bitget"  #có futures
+    BITGET = "bitget"  # có futures
     BITFINEX2 = "bitfinex"
     BINGX = "bingx"
     # WOO = "woo"
 
     def path(self, theme=Theme.AUTO):
-        return f':/qfluentwidgets/images/exchange/{self.value}.svg'
-    @staticmethod
-    def exchange_url(exchange):
-        return f':/qfluentwidgets/images/exchange/{exchange}.svg'
+        return f":/qfluentwidgets/images/exchange/{self.value}.svg"
 
     @staticmethod
-    def render(painter, rect, exchange:str, indexes=None, **attributes):
+    def exchange_url(exchange):
+        return f":/qfluentwidgets/images/exchange/{exchange}.svg"
+
+    @staticmethod
+    def render(painter, rect, exchange: str, indexes=None, **attributes):
         if exchange.endswith("svg"):
             icon = exchange
         else:
             icon = EchangeIcon.exchange_url(exchange)
-        if icon.endswith('.svg'):
+        if icon.endswith(".svg"):
             if attributes:
                 icon = writeSvg(icon, indexes, **attributes).encode()
             drawSvgIcon(icon, painter, rect)
@@ -528,9 +559,10 @@ class EchangeIcon(FluentIconBase, Enum):
             icon = QIcon(icon)
             rect = QRectF(rect).toRect()
             painter.drawPixmap(rect, icon.pixmap(QRectF(rect).toRect().size()))
-    
+
+
 class ColoredFluentIcon(FluentIconBase):
-    """ Colored fluent icon """
+    """Colored fluent icon"""
 
     def __init__(self, icon: FluentIconBase, lightColor, darkColor):
         """
@@ -554,7 +586,7 @@ class ColoredFluentIcon(FluentIconBase):
     def render(self, painter, rect, theme=Theme.AUTO, indexes=None, **attributes):
         icon = self.path(theme)
 
-        if not icon.endswith('.svg'):
+        if not icon.endswith(".svg"):
             return self.fluentIcon.render(painter, rect, theme, indexes, attributes)
 
         if theme == Theme.AUTO:
@@ -566,8 +598,9 @@ class ColoredFluentIcon(FluentIconBase):
         icon = writeSvg(icon, indexes, **attributes).encode()
         drawSvgIcon(icon, painter, rect)
 
+
 class FluentIcon(FluentIconBase, Enum):
-    """ Fluent icon """
+    """Fluent icon"""
 
     UP = "Up"
     ADD = "Add"
@@ -730,7 +763,7 @@ class FluentIcon(FluentIconBase, Enum):
     UNPIN = "Unpin"
     VIDEO = "Video"
     TRAIN = "Train"
-    ADD_TO  ="AddTo"
+    ADD_TO = "AddTo"
     ACCEPT = "Accept"
     CAMERA = "Camera"
     CANCEL = "Cancel"
@@ -750,10 +783,10 @@ class FluentIcon(FluentIconBase, Enum):
     ROTATE = "Rotate"
     SEARCH = "Search"
     VOLUME = "Volume"
-    FRIGID  = "Frigid"
+    FRIGID = "Frigid"
     SAVE_AS = "SaveAs"
     ZOOM_IN = "ZoomIn"
-    CONNECT  ="Connect"
+    CONNECT = "Connect"
     HISTORY = "History"
     SETTING = "Setting"
     PALETTE = "Palette"
@@ -814,7 +847,7 @@ class FluentIcon(FluentIconBase, Enum):
     MIX_VOLUMES = "MixVolumes"
     REMOVE_FROM = "RemoveFrom"
     RIGHT_ARROW = "RightArrow"
-    QUIET_HOURS  ="QuietHours"
+    QUIET_HOURS = "QuietHours"
     FINGERPRINT = "Fingerprint"
     APPLICATION = "Application"
     CERTIFICATE = "Certificate"
@@ -859,10 +892,10 @@ class FluentIcon(FluentIconBase, Enum):
     JUMP_TO_NOW = "jump_to_now"
 
     def path(self, theme=Theme.AUTO):
-        return f':/qfluentwidgets/images/icons/{self.value}_{getIconColor(theme)}.svg'
-    def icon_path(self):
-        return f':/qfluentwidgets/images/icons/{self.value}.svg'
+        return f":/qfluentwidgets/images/icons/{self.value}_{getIconColor(theme)}.svg"
 
+    def icon_path(self):
+        return f":/qfluentwidgets/images/icons/{self.value}.svg"
 
 
 class Icon(QIcon):
@@ -872,9 +905,8 @@ class Icon(QIcon):
         self.fluentIcon = fluentIcon
 
 
-
 class Action(QAction):
-    """ Fluent action
+    """Fluent action
 
     Constructors
     ------------

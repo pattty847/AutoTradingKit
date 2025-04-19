@@ -10,16 +10,20 @@ from atklip.controls.pandas_ta.utils import (
     v_offset,
     v_pos_default,
     v_scalar,
-    v_series
+    v_series,
 )
 
 
-
 def tsi(
-    close: Series, fast: Int = None, slow: Int = None,
-    signal: Int = None, scalar: IntFloat = None,
-    mamode: str = None, drift: Int = None,
-    offset: Int = None, **kwargs: DictLike
+    close: Series,
+    fast: Int = None,
+    slow: Int = None,
+    signal: Int = None,
+    scalar: IntFloat = None,
+    mamode: str = None,
+    drift: Int = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> DataFrame:
     """True Strength Index (TSI)
 

@@ -5,10 +5,12 @@ from atklip.controls.pandas_ta.ma import ma
 from atklip.controls.pandas_ta.utils import v_mamode, v_offset, v_pos_default, v_series
 
 
-
 def bias(
-    close: Series, length: Int = None, mamode: str = None,
-    offset: Int = None, **kwargs: DictLike
+    close: Series,
+    length: Int = None,
+    mamode: str = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Bias (BIAS)
 

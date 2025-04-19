@@ -6,7 +6,8 @@ import sys
 FramelessMainWindow = None
 
 if sys.platform == "darwin":
-    from PySide6.QtWidgets import QMainWindow 
+    from PySide6.QtWidgets import QMainWindow
+
     FramelessMainWindow = QMainWindow
 elif sys.platform == "linux":
     # "LINUX"
@@ -17,7 +18,7 @@ elif sys.platform == "linux":
     from qframelesswindow.linux.window_effect import LinuxWindowEffect
 
     class LinuxFramelessWindowBase:
-        """ Frameless window base class for Linux system """
+        """Frameless window base class for Linux system"""
 
         BORDER_WIDTH = 5
 
@@ -32,25 +33,23 @@ elif sys.platform == "linux":
             self.updateFrameless()
             QCoreApplication.instance().installEventFilter(self)
 
-
         def updateFrameless(self):
             self.setWindowFlags(self.windowFlags() | Qt.FramelessWindowHint)
 
-
         def setResizeEnabled(self, isEnabled: bool):
-            """ set whether resizing is enabled """
+            """set whether resizing is enabled"""
             self._isResizeEnabled = isEnabled
 
         def isSystemButtonVisible(self):
-            """ Returns whether the system title bar button is visible """
+            """Returns whether the system title bar button is visible"""
             return self._isSystemButtonVisible
 
         def setSystemTitleBarButtonVisible(self, isVisible):
-            """ set the visibility of system title bar button, only works for macOS """
+            """set the visibility of system title bar button, only works for macOS"""
             pass
 
         def systemTitleBarRect(self, size: QSize) -> QRect:
-            """ Returns the system title bar rect, only works for macOS
+            """Returns the system title bar rect, only works for macOS
 
             Parameters
             ----------
@@ -61,18 +60,22 @@ elif sys.platform == "linux":
 
         def eventFilter(self, obj, event):
             et = event.type()
-            if et != QEvent.MouseButtonPress and et != QEvent.MouseMove or not self._isResizeEnabled:
+            if (
+                et != QEvent.MouseButtonPress
+                and et != QEvent.MouseMove
+                or not self._isResizeEnabled
+            ):
                 return False
 
             edges = Qt.Edge(0)
             pos = event.globalPos() - self.pos()
             if pos.x() < self.BORDER_WIDTH:
                 edges |= Qt.LeftEdge
-            if pos.x() >= self.width()-self.BORDER_WIDTH:
+            if pos.x() >= self.width() - self.BORDER_WIDTH:
                 edges |= Qt.RightEdge
             if pos.y() < self.BORDER_WIDTH:
                 edges |= Qt.TopEdge
-            if pos.y() >= self.height()-self.BORDER_WIDTH:
+            if pos.y() >= self.height() - self.BORDER_WIDTH:
                 edges |= Qt.BottomEdge
 
             # change cursor
@@ -88,17 +91,20 @@ elif sys.platform == "linux":
                 else:
                     self.setCursor(Qt.ArrowCursor)
 
-            elif obj in (self, self.titleBar) and et == QEvent.MouseButtonPress and edges:
+            elif (
+                obj in (self, self.titleBar) and et == QEvent.MouseButtonPress and edges
+            ):
                 LinuxMoveResize.starSystemResize(self, event.globalPos(), edges)
 
             return False
 
     class LinuxFramelessMainWindow(LinuxFramelessWindowBase, QMainWindow):
-        """ Frameless main window for Linux system """
+        """Frameless main window for Linux system"""
 
         def __init__(self, parent=None):
             super().__init__(parent=parent)
             self._initFrameless()
+
     FramelessMainWindow = LinuxFramelessMainWindow
 
 else:
@@ -114,7 +120,7 @@ else:
     from qframelesswindow.windows.window_effect import WindowsWindowEffect
 
     class WindowsFramelessWindowBase:
-        """ Frameless window base class for Windows system """
+        """Frameless window base class for Windows system"""
 
         BORDER_WIDTH = 5
 
@@ -129,27 +135,26 @@ else:
             # solve issue #5
             self.windowHandle().screenChanged.connect(self.__onScreenChanged)
 
-
         def updateFrameless(self):
-            """ update frameless window """
+            """update frameless window"""
             self.setWindowFlags(self.windowFlags() | Qt.FramelessWindowHint)
             # add DWM shadow and window animation
             self.windowEffect.addWindowAnimation(self.winId())
 
         def setResizeEnabled(self, isEnabled: bool):
-            """ set whether resizing is enabled """
+            """set whether resizing is enabled"""
             self._isResizeEnabled = isEnabled
 
         def isSystemButtonVisible(self):
-            """ Returns whether the system title bar button is visible """
+            """Returns whether the system title bar button is visible"""
             return self._isSystemButtonVisible
 
         def setSystemTitleBarButtonVisible(self, isVisible):
-            """ set the visibility of system title bar button, only works for macOS """
+            """set the visibility of system title bar button, only works for macOS"""
             pass
 
         def systemTitleBarRect(self, size: QSize) -> QRect:
-            """ Returns the system title bar rect, only works for macOS
+            """Returns the system title bar rect, only works for macOS
 
             Parameters
             ----------
@@ -159,7 +164,7 @@ else:
             return QRect(0, 0, size.width(), size.height())
 
         def nativeEvent(self, eventType, message):
-            """ Handle the Windows message """
+            """Handle the Windows message"""
             msg = MSG.from_address(message.__int__())
             if not msg.hWnd:
                 return False, 0
@@ -172,7 +177,12 @@ else:
                 h = self.frameGeometry().height()
 
                 # fixes https://github.com/zhiyiYo/PyQt-Frameless-Window/issues/98
-                bw = 0 if win_utils.isMaximized(msg.hWnd) or win_utils.isFullScreen(msg.hWnd) else self.BORDER_WIDTH
+                bw = (
+                    0
+                    if win_utils.isMaximized(msg.hWnd)
+                    or win_utils.isFullScreen(msg.hWnd)
+                    else self.BORDER_WIDTH
+                )
                 lx = xPos < bw
                 rx = xPos > w - bw
                 ty = yPos < bw
@@ -231,15 +241,21 @@ else:
 
         def __onScreenChanged(self):
             hWnd = int(self.windowHandle().winId())
-            win32gui.SetWindowPos(hWnd, None, 0, 0, 0, 0, win32con.SWP_NOMOVE |
-                                win32con.SWP_NOSIZE | win32con.SWP_FRAMECHANGED)
-
+            win32gui.SetWindowPos(
+                hWnd,
+                None,
+                0,
+                0,
+                0,
+                0,
+                win32con.SWP_NOMOVE | win32con.SWP_NOSIZE | win32con.SWP_FRAMECHANGED,
+            )
 
     class WindowsFramelessMainWindow(WindowsFramelessWindowBase, QMainWindow):
-        """ Frameless main window for Windows system """
+        """Frameless main window for Windows system"""
 
         def __init__(self, parent=None):
             super().__init__(parent=parent)
             self._initFrameless()
-    FramelessMainWindow = WindowsFramelessMainWindow
 
+    FramelessMainWindow = WindowsFramelessMainWindow

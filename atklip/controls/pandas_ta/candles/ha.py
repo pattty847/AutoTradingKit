@@ -4,9 +4,14 @@ from atklip.controls.pandas_ta._typing import Array, DictLike, Int
 from atklip.controls.pandas_ta.utils import v_offset, v_series
 from atklip.controls.pandas_ta.utils._numba import np_ha
 
+
 def ha(
-    open_: Series, high: Series, low: Series, close: Series,
-    offset: Int = None, **kwargs: DictLike
+    open_: Series,
+    high: Series,
+    low: Series,
+    close: Series,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> DataFrame:
     """Heikin Ashi Candles (HA)
 
@@ -49,12 +54,15 @@ def ha(
     np_open, np_high = open_.to_numpy(), high.to_numpy()
     np_low, np_close = low.to_numpy(), close.to_numpy()
     ha_open, ha_high, ha_low, ha_close = np_ha(np_open, np_high, np_low, np_close)
-    df = DataFrame({
-        "HA_open": ha_open,
-        "HA_high": ha_high,
-        "HA_low": ha_low,
-        "HA_close": ha_close,
-    }, index=close.index)
+    df = DataFrame(
+        {
+            "HA_open": ha_open,
+            "HA_high": ha_high,
+            "HA_low": ha_low,
+            "HA_close": ha_close,
+        },
+        index=close.index,
+    )
 
     # Offset
     if offset != 0:

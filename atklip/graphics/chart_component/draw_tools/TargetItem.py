@@ -1,15 +1,21 @@
 import string
 from math import atan2
-from PySide6 import QtGui,QtCore
-from PySide6.QtCore import Signal,Qt,QRectF
-from PySide6.QtGui import QColor,QPicture,QBrush
+from PySide6 import QtGui, QtCore
+from PySide6.QtCore import Signal, Qt, QRectF
+from PySide6.QtGui import QColor, QPicture, QBrush
 
-from atklip.graphics.pyqtgraph.graphicsItems.GraphicsObject import GraphicsObject
-from atklip.graphics.pyqtgraph import TextItem,UIGraphicsItem,ViewBox,Point,functions as fn
-from atklip.graphics.pyqtgraph.graphicsItems.ScatterPlotItem import Symbols
+from pyqtgraph.graphicsItems.GraphicsObject import GraphicsObject
+from pyqtgraph import (
+    TextItem,
+    UIGraphicsItem,
+    ViewBox,
+    Point,
+    functions as fn,
+)
+from pyqtgraph.graphicsItems.ScatterPlotItem import Symbols
 
 
-__all__ = ['TargetItem', 'TargetLabel']
+__all__ = ["TargetItem", "TargetLabel"]
 
 
 class TargetItem(UIGraphicsItem):
@@ -259,7 +265,11 @@ class TargetItem(UIGraphicsItem):
         self.update()
 
     def hoverEvent(self, ev):
-        if self.movable and (not ev.isExit()) and ev.acceptDrags(QtCore.Qt.MouseButton.LeftButton):
+        if (
+            self.movable
+            and (not ev.isExit())
+            and ev.acceptDrags(QtCore.Qt.MouseButton.LeftButton)
+        ):
             self.setMouseHover(True)
         else:
             self.setMouseHover(False)
@@ -345,7 +355,7 @@ class TargetLabel(TextItem):
     anchor : tuple or list or QPointF or QPoint
         Position to rotate the TargetLabel about, and position to set the
         offset value to see :class:`~pyqtgraph.TextItem` for more information.
-    kwargs : dict 
+    kwargs : dict
         kwargs contains arguments that are passed onto
         :class:`~pyqtgraph.TextItem` constructor, excluding text parameter
     """
@@ -379,13 +389,13 @@ class TargetLabel(TextItem):
         return self._format
 
     def hoverEvent(self, ev):
-        if not ev.exit: # and not self.boundingRect().contains(ev.pos()):
+        if not ev.exit:  # and not self.boundingRect().contains(ev.pos()):
             hover = True
             self.setCursor(Qt.CursorShape.PointingHandCursor)
         else:
             hover = False
             self.setCursor(Qt.CursorShape.CrossCursor)
-    
+
     def setFormat(self, text):
         """Method to set how the TargetLabel should display the text.  This
         method should be called from TargetItem.setLabel directly.
@@ -450,11 +460,12 @@ class TargetLabel(TextItem):
             targetItem.moving = False
             targetItem.sigPositionChangeFinished.emit(self)
 
+
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from atklip.graphics.chart_component.viewchart import Chart
     from atklip.graphics.chart_component.draw_tools.drawtools import DrawTool
-
 
 
 class TextBoxROI(UIGraphicsItem):
@@ -463,19 +474,28 @@ class TextBoxROI(UIGraphicsItem):
     The size of TargetItem will remain fixed on screen even as the view is zoomed.
     Includes an optional text label.
     """
+
     on_click = Signal(object)
     draw_rec = Signal()
 
     signal_change_font_size = Signal(int)
     sigPositionChanged = QtCore.Signal(object)
     sigPositionChangeFinished = QtCore.Signal(object)
-    
+
     def __init__(
         self,
-        pos=None, size=10,id=None, symbol= "o", 
-        pen=None, hoverPen=None, brush=None, 
-        hoverBrush=None, movable=True, label=None, 
-        labelOpts=None,drawtool=None
+        pos=None,
+        size=10,
+        id=None,
+        symbol="o",
+        pen=None,
+        hoverPen=None,
+        brush=None,
+        hoverBrush=None,
+        movable=True,
+        label=None,
+        labelOpts=None,
+        drawtool=None,
     ):
         r"""
         Parameters
@@ -561,47 +581,50 @@ class TextBoxROI(UIGraphicsItem):
         self.scale = size
         # self.setPath(self._path)
         # self.setLabel(label, labelOpts)
-        
+
         self.id = id
         self.locked = False
-        self.drawtool:DrawTool = drawtool
-        self.chart:Chart= self.drawtool.chart
+        self.drawtool: DrawTool = drawtool
+        self.chart: Chart = self.drawtool.chart
         self.is_selected = False
         # self.on_click.connect(self.chart.show_popup_setting_tool)
         # self.on_click.connect(self.get_pos_point)
-        self.picture:QPicture = QPicture()
+        self.picture: QPicture = QPicture()
         self.signal_change_font_size.connect(self.change_font_size)
-        self.color =  "#F4511E"
+        self.color = "#F4511E"
         self.font_size = 10
-        self.name = ''
-        self.setLabel("Text",
-                        {
-                            "anchor": QtCore.QPointF(0.5, 0.5),
-                            "offset": QtCore.QPointF(0, 30),
-                            "color": self.color,
-                        }
-                        )
-        
+        self.name = ""
+        self.setLabel(
+            "Text",
+            {
+                "anchor": QtCore.QPointF(0.5, 0.5),
+                "offset": QtCore.QPointF(0, 30),
+                "color": self.color,
+            },
+        )
+
         self.update_html(self.color, self.font_size)
         self.setBrush(QColor("#1ec2f4"))
-        
+
         self.has: dict = {
-            "x_axis_show":False,
+            "x_axis_show": False,
             "name": "rectangle",
             "type": "drawtool",
             "id": id,
-            "inputs":{
-                    },
-            "styles":{
-                    "lock":True,
-                    "setting": False,
-                    "delete":True,}
-                    }
-        
+            "inputs": {},
+            "styles": {
+                "lock": True,
+                "setting": False,
+                "delete": True,
+            },
+        }
+
     def get_styles(self):
-        styles =  {"lock":self.has["styles"]["lock"],
-                    "delete":self.has["styles"]["delete"],
-                    "setting":self.has["styles"]["setting"],}
+        styles = {
+            "lock": self.has["styles"]["lock"],
+            "delete": self.has["styles"]["delete"],
+            "setting": self.has["styles"]["setting"],
+        }
         return styles
 
     def setPos(self, *args):
@@ -668,8 +691,8 @@ class TextBoxROI(UIGraphicsItem):
     def boundingRect(self):
         if self._label:
             return self._label.boundingRect()
-        return QRectF(0,0,0,0)
-        
+        return QRectF(0, 0, 0, 0)
+
         # return self.shape().boundingRect()
 
     def paint(self, p, *_):
@@ -749,7 +772,11 @@ class TextBoxROI(UIGraphicsItem):
         self.update()
 
     def hoverEvent(self, ev):
-        if self.movable and (not ev.isExit()) and ev.acceptDrags(QtCore.Qt.MouseButton.LeftButton):
+        if (
+            self.movable
+            and (not ev.isExit())
+            and ev.acceptDrags(QtCore.Qt.MouseButton.LeftButton)
+        ):
             self.setMouseHover(True)
         else:
             self.setMouseHover(False)
@@ -796,11 +823,11 @@ class TextBoxROI(UIGraphicsItem):
         labelOpts : dict, optional
             These arguments are passed on to :class:`~pyqtgraph.TextItem`
         """
-        
+
         if self._label:
-            self.update_html(self.color,self.font_size, text)
+            self.update_html(self.color, self.font_size, text)
             return
-        
+
         if not text:
             if self._label is not None and self._label.scene() is not None:
                 # remove the label if it's already added
@@ -817,7 +844,6 @@ class TextBoxROI(UIGraphicsItem):
                 self._label.scene().removeItem(self._label)
             self._label = TargetLabel(self, text=text, **labelOpts)
 
-    
     def selectedHandler(self, is_selected):
         if is_selected:
             self.isSelected = True
@@ -838,9 +864,9 @@ class TextBoxROI(UIGraphicsItem):
         updated_text = setting_menu.plain_textedit.toPlainText()
         self.update_html(text=updated_text)
         self.draw_rec.emit()
-    
-    def update_html(self, color="#F4511E",font_size=14, text="Text"):
-        self.color =  color
+
+    def update_html(self, color="#F4511E", font_size=14, text="Text"):
+        self.color = color
         self.font_size = font_size
         self.html = f"""<div style="text-align: center">
     <span style="color: {color}; font-size: {font_size}pt;">{text}</span>"""
@@ -848,20 +874,20 @@ class TextBoxROI(UIGraphicsItem):
 
     def getText(self):
         return self.label().toPlainText()
-    
+
     def get_pos_point(self):
         return self.pos()
-    def set_lock(self,btn):
-        print(btn,btn.isChecked())
+
+    def set_lock(self, btn):
+        print(btn, btn.isChecked())
         if btn.isChecked():
             self.locked_handle()
         else:
             self.unlocked_handle()
-            
+
     def locked_handle(self):
         self.movable = False
         self.locked = True
-        
 
     def unlocked_handle(self):
         self.movable = True
@@ -877,11 +903,10 @@ class TextBoxROI(UIGraphicsItem):
         text = self.getText()
         self.update_html(color=self.color, text=text, font_size=size)
 
-
     def mouseDoubleClickEvent(self, event) -> None:
         # print(325, "mouseDoubleClickEvent", event)
         return super().mouseDoubleClickEvent(event)
-    
+
     def mouseClickEvent(self, ev):
         if ev.button() == Qt.MouseButton.LeftButton:
             # widget = self.childAt(ev.position().toPoint())
@@ -889,9 +914,11 @@ class TextBoxROI(UIGraphicsItem):
             self.on_click.emit(self)
         # print(647, self.pos(), self.state)
         ev.ignore()
-        #return super().mouseClickEvent(event)
-    
-from PySide6.QtGui import QTransform,QPainter
+        # return super().mouseClickEvent(event)
+
+
+from PySide6.QtGui import QTransform, QPainter
+
 
 class ArrowItem(UIGraphicsItem):
     """Draws a draggable target symbol (circle plus crosshair).
@@ -899,6 +926,7 @@ class ArrowItem(UIGraphicsItem):
     The size of TargetItem will remain fixed on screen even as the view is zoomed.
     Includes an optional text label.
     """
+
     on_click = Signal(object)
     sigPositionChanged = QtCore.Signal(object)
     sigPositionChangeFinished = QtCore.Signal(object)
@@ -908,7 +936,7 @@ class ArrowItem(UIGraphicsItem):
         drawtool=None,
         size=10,
         symbol="arrow_up",
-        angle:int=90,
+        angle: int = 90,
         pen=None,
         hoverPen=None,
         brush=None,
@@ -957,17 +985,15 @@ class ArrowItem(UIGraphicsItem):
             label. See :class:`TargetLabel` and :class:`~pyqtgraph.TextItem`
         """
         super().__init__()
-        
-        self.drawtool:DrawTool = drawtool
-        self.chart:Chart = self.drawtool.chart
-        
-        
+
+        self.drawtool: DrawTool = drawtool
+        self.chart: Chart = self.drawtool.chart
+
         self.movable = movable
         self.moving = False
         self._label = None
         self.mouseHovering = False
-        
-        
+
         self.moving = False
         self.yoff = False
         self.xoff = False
@@ -996,30 +1022,37 @@ class ArrowItem(UIGraphicsItem):
 
         self._shape = None
 
-        self._pos:Point = None
-        
+        self._pos: Point = None
+
         self.has: dict = {
-            "x_axis_show":True,
+            "x_axis_show": True,
             "name": "rectangle",
             "type": "drawtool",
             "id": id,
-            "inputs":{
-                    },
-            "styles":{
-                    'brush': pen,
-                    "lock":True,
-                    "setting": False,
-                    "delete":True,}
+            "inputs": {},
+            "styles": {
+                "brush": pen,
+                "lock": True,
+                "setting": False,
+                "delete": True,
+            },
         }
-        
-        ops = {'headLen': 10, 'tipAngle': 60, 'baseAngle': 0, 'tailLen': 10, 'tailWidth': 5, 'headWidth': None}
-        
+
+        ops = {
+            "headLen": 10,
+            "tipAngle": 60,
+            "baseAngle": 0,
+            "tailLen": 10,
+            "tailWidth": 5,
+            "headWidth": None,
+        }
+
         tr = QTransform()
         tr.rotate(angle)
         self._path = tr.map(fn.makeArrowPath(**ops))
         self.scale = 1
         self.setPath(self._path)
-        
+
         # self.setFlags(self.flags() | self.GraphicsItemFlag.ItemIgnoresTransformations)
         # self.setLabel(label, labelOpts)
 
@@ -1087,7 +1120,7 @@ class ArrowItem(UIGraphicsItem):
     def boundingRect(self):
         return self.shape().boundingRect()
 
-    def paint(self, p:QPainter, *_):
+    def paint(self, p: QPainter, *_):
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
         p.setPen(self.currentPen)
         p.setBrush(self.currentBrush)
@@ -1155,22 +1188,21 @@ class ArrowItem(UIGraphicsItem):
         """
         return self._pos
 
-            
     def hoverEvent(self, ev):
-        if not ev.exit: # and not self.boundingRect().contains(ev.pos()):
+        if not ev.exit:  # and not self.boundingRect().contains(ev.pos()):
             hover = True
             self.setCursor(Qt.CursorShape.PointingHandCursor)
         else:
             hover = False
             self.setCursor(Qt.CursorShape.CrossCursor)
-    
-    def set_lock(self,btn):
-        print(btn,btn.isChecked())
+
+    def set_lock(self, btn):
+        print(btn, btn.isChecked())
         if btn.isChecked():
             self.locked_handle()
         else:
             self.unlocked_handle()
-            
+
     def locked_handle(self):
         self.yoff = True
         self.xoff = True
@@ -1178,34 +1210,36 @@ class ArrowItem(UIGraphicsItem):
 
     def unlocked_handle(self):
         self.yoff = False
-        self.xoff =False
-        self.locked = False          
-            
-    def setObjectName(self,name):
+        self.xoff = False
+        self.locked = False
+
+    def setObjectName(self, name):
         """Set the object name of the item."""
         self._objectName = name
-    
+
     def objectName(self):
         return self._objectName
-    
+
     def get_inputs(self):
-        inputs =  {}
+        inputs = {}
         return inputs
-    
+
     def get_styles(self):
-        styles =  {"brush":self.has["styles"]["brush"],
-                    "lock":self.has["styles"]["lock"],
-                    "delete":self.has["styles"]["delete"],
-                    "setting":self.has["styles"]["setting"],}
+        styles = {
+            "brush": self.has["styles"]["brush"],
+            "lock": self.has["styles"]["lock"],
+            "delete": self.has["styles"]["delete"],
+            "setting": self.has["styles"]["setting"],
+        }
         return styles
-    
-    def update_inputs(self,_input,_source):
+
+    def update_inputs(self, _input, _source):
         is_update = False
-    
+
     def update_styles(self, _input):
         _style = self.has["styles"][_input]
         if _input == "brush" or _input == "pen":
-            if isinstance(_style,QBrush):
+            if isinstance(_style, QBrush):
                 self.brush = _style
                 self.currentBrush = self.brush
                 color = _style.color()
@@ -1215,7 +1249,7 @@ class ArrowItem(UIGraphicsItem):
                 self.currentBrush = self.brush
                 self.currentPen = self.pen = fn.mkPen(_style)
             self.update()
-            
+
     def mouseClickEvent(self, ev):
         if ev.button() == Qt.MouseButton.LeftButton:
             self.on_click.emit(self)

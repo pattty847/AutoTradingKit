@@ -11,17 +11,22 @@ from atklip.controls.pandas_ta.utils import (
     v_offset,
     v_pos_default,
     v_series,
-    v_talib
+    v_talib,
 )
 from .true_range import true_range
 
 
-
 def atr(
-    high: Series, low: Series, close: Series, length: Int = None,
-    mamode: str = None, talib: bool = None,
-    prenan: bool = None, drift: Int = None,
-    offset: Int = None, **kwargs: DictLike
+    high: Series,
+    low: Series,
+    close: Series,
+    length: Int = None,
+    mamode: str = None,
+    talib: bool = None,
+    prenan: bool = None,
+    drift: Int = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Average True Range (ATR)
 
@@ -69,8 +74,7 @@ def atr(
 
     # Calculate
     tr = true_range(
-        high=high, low=low, close=close,
-        talib=mode_tal, prenan=prenan, drift=drift
+        high=high, low=low, close=close, talib=mode_tal, prenan=prenan, drift=drift
     )
     if all(isnan(tr)):
         return  # Emergency Break
@@ -78,7 +82,7 @@ def atr(
     presma = kwargs.pop("presma", True)
     if presma:
         sma_nth = tr[0:length].mean()
-        tr[:length - 1] = nan
+        tr[: length - 1] = nan
         tr.iloc[length - 1] = sma_nth
     atr = ma(mamode, tr, length=length, talib=mode_tal)
 

@@ -6,14 +6,17 @@ from atklip.controls.pandas_ta.trend import tsignals
 from atklip.controls.pandas_ta.utils import cross_value, v_offset, v_series
 
 
-
 def xsignals(
     signal: Series,
     xa: Union[IntFloat, Series],
     xb: Union[IntFloat, Series],
-    above: bool = True, long: bool = True, asbool: bool = None,
-    trend_reset: Int = 0, trade_offset: Int = None,
-    offset: Int = None, **kwargs: DictLike
+    above: bool = True,
+    long: bool = True,
+    asbool: bool = None,
+    trend_reset: Int = 0,
+    trade_offset: Int = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> DataFrame:
     """Cross Signals (XSIGNALS)
 
@@ -93,7 +96,9 @@ def xsignals(
 
     # Modify trades to fill gaps for trends
     trades.replace({0: nan}, inplace=True)
-    trades.ffill(limit_area="inside", inplace=True) # or trades.bfill(limit_area="inside", inplace=True)
+    trades.ffill(
+        limit_area="inside", inplace=True
+    )  # or trades.bfill(limit_area="inside", inplace=True)
     trades.fillna(0, inplace=True)
 
     trends = (trades > 0).astype(int)
@@ -104,15 +109,12 @@ def xsignals(
         "asbool": asbool,
         "trade_offset": trade_offset,
         "trend_reset": trend_reset,
-        "offset": offset
+        "offset": offset,
     }
     df = tsignals(trends, **tskwargs)
 
     # Offset handled by tsignals
-    DataFrame({
-        f"XS_LONG": df.TS_Trends,
-        f"XS_SHORT": 1 - df.TS_Trends
-    })
+    DataFrame({f"XS_LONG": df.TS_Trends, f"XS_SHORT": 1 - df.TS_Trends})
 
     # Fill
     if "fillna" in kwargs:

@@ -8,15 +8,20 @@ from atklip.controls.pandas_ta.utils import (
     v_mamode,
     v_offset,
     v_pos_default,
-    v_series
+    v_series,
 )
 
 
-
 def accbands(
-    high: Series, low: Series, close: Series, length: Int = None,
-    c: IntFloat = None, drift: Int = None, mamode: str = None,
-    offset: Int = None, **kwargs: DictLike
+    high: Series,
+    low: Series,
+    close: Series,
+    length: Int = None,
+    c: IntFloat = None,
+    drift: Int = None,
+    mamode: str = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> DataFrame:
     """Acceleration Bands (ACCBANDS)
 

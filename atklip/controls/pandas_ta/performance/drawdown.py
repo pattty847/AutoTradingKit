@@ -5,10 +5,7 @@ from atklip.controls.pandas_ta._typing import DictLike, Int
 from atklip.controls.pandas_ta.utils import v_offset, v_series
 
 
-
-def drawdown(
-    close: Series, offset: Int = None, **kwargs: DictLike
-) -> DataFrame:
+def drawdown(close: Series, offset: Int = None, **kwargs: DictLike) -> DataFrame:
     """Drawdown (DD)
 
     Drawdown is a peak-to-trough decline during a specific period for an

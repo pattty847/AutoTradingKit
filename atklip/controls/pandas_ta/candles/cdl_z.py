@@ -5,11 +5,16 @@ from atklip.controls.pandas_ta.statistics import zscore
 from atklip.controls.pandas_ta.utils import v_bool, v_offset, v_pos_default, v_series
 
 
-
 def cdl_z(
-    open_: Series, high: Series, low: Series, close: Series,
-    length: Int = None, full: bool = None, ddof: Int = None,
-    offset: Int = None, **kwargs: DictLike
+    open_: Series,
+    high: Series,
+    low: Series,
+    close: Series,
+    length: Int = None,
+    full: bool = None,
+    ddof: Int = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> DataFrame:
     """Candle Type: Z
 

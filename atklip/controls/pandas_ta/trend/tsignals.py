@@ -4,11 +4,14 @@ from atklip.controls.pandas_ta._typing import DictLike, Int
 from atklip.controls.pandas_ta.utils import v_bool, v_drift, v_int, v_offset, v_series
 
 
-
 def tsignals(
-    trend: Series, asbool: bool = None,
-    trend_reset: Int = None, trade_offset: Int = None, drift: Int = None,
-    offset: Int = None, **kwargs: DictLike
+    trend: Series,
+    asbool: bool = None,
+    trend_reset: Int = None,
+    trade_offset: Int = None,
+    drift: Int = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> DataFrame:
     """Trend Signals
 

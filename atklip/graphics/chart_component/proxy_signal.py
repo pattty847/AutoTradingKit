@@ -1,32 +1,39 @@
 import weakref
 from time import perf_counter
 
-from atklip.graphics.pyqtgraph.functions import SignalBlock
+from pyqtgraph.functions import SignalBlock
 
-from atklip.graphics.pyqtgraph.ThreadsafeTimer import ThreadsafeTimer
+from pyqtgraph.ThreadsafeTimer import ThreadsafeTimer
 
 from PySide6 import QtCore
-from PySide6.QtCore import QObject, Signal, Qt,QTimer
+from PySide6.QtCore import QObject, Signal, Qt, QTimer
 
 
 class Signal_Proxy(QObject):
     sigDelayed = Signal(object)
-    def __init__(self, signal, slot,connect_type:Qt.ConnectionType=Qt.ConnectionType.AutoConnection):
+
+    def __init__(
+        self,
+        signal,
+        slot,
+        connect_type: Qt.ConnectionType = Qt.ConnectionType.AutoConnection,
+    ):
         QObject.__init__(self)
         self.connect_type = connect_type
         self.signal = signal
         self.slot = slot
         self.moveToThread(QtCore.QCoreApplication.instance().thread())
-        self.signal.connect(self.slot,self.connect_type)
-    
+        self.signal.connect(self.slot, self.connect_type)
+
     def disconnect(self):
         try:
             self.signal.disconnect(self.slot)
         except:
             pass
         # self.deleteLater()
+
     def connectSlot(self, slot):
-        self.signal.connect(slot,self.connect_type)
+        self.signal.connect(slot, self.connect_type)
 
     def block(self):
         return SignalBlock(self.signal, self.slot)
@@ -34,16 +41,22 @@ class Signal_Proxy(QObject):
 
 class Safe_Proxy_Signal(QObject):
     sigDelayed = Signal(object)
-    def __init__(self, signal, slot,connect_type:Qt.ConnectionType=Qt.ConnectionType.AutoConnection):
+
+    def __init__(
+        self,
+        signal,
+        slot,
+        connect_type: Qt.ConnectionType = Qt.ConnectionType.AutoConnection,
+    ):
         QObject.__init__(self)
         self.connect_type = connect_type
         self.signal = signal
         self.slot = slot
         self.moveToThread(QtCore.QCoreApplication.instance().thread())
-        self.signal.connect(self.signalReceived,self.connect_type)
-        self.sigDelayed.connect(self.slot,self.connect_type)
-    
-    def signalReceived(self, _object:QObject|object=None):
+        self.signal.connect(self.signalReceived, self.connect_type)
+        self.sigDelayed.connect(self.slot, self.connect_type)
+
+    def signalReceived(self, _object: QObject | object = None):
         """Received signal. Cancel previous timer and store args to be
         forwarded later."""
         if _object is not None:
@@ -56,13 +69,12 @@ class Safe_Proxy_Signal(QObject):
         except:
             pass
         # self.deleteLater()
+
     def connectSlot(self, slot):
-        self.signal.connect(slot,self.connect_type)
+        self.signal.connect(slot, self.connect_type)
 
     def block(self):
         return SignalBlock(self.signal, self.slot)
-
-
 
 
 class SafeSignalUpdateGraph(QObject):

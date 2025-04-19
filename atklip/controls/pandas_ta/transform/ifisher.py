@@ -6,11 +6,12 @@ from atklip.controls.pandas_ta.utils import v_int, v_offset, v_scalar, v_series
 from .remap import remap
 
 
-
 def ifisher(
     close: Series,
-    amp: IntFloat = None, signal_offset: Int = None,
-    offset: Int = None, **kwargs: DictLike
+    amp: IntFloat = None,
+    signal_offset: Int = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> DataFrame:
     """
     Indicator: Inverse Fisher Transform

@@ -6,9 +6,15 @@ from atklip.controls.pandas_ta.utils import v_offset, v_pos_default, v_series, z
 
 
 def psar(
-    high: Series, low: Series, close: Series = None,
-    af0: IntFloat = None, af: IntFloat = None, max_af: IntFloat = None, tv=False,
-    offset: Int = None, **kwargs: DictLike
+    high: Series,
+    low: Series,
+    close: Series = None,
+    af0: IntFloat = None,
+    af: IntFloat = None,
+    max_af: IntFloat = None,
+    tv=False,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> DataFrame:
     """Parabolic Stop and Reverse (psar)
 
@@ -55,7 +61,7 @@ def psar(
     # Numpy arrays offer some performance improvements
     high, low = high.values, low.values
 
-    paf = v_pos_default(af, 0.02) # paf is used to keep af from parameters
+    paf = v_pos_default(af, 0.02)  # paf is used to keep af from parameters
     af0 = v_pos_default(af0, paf)
     af = af0
 
@@ -134,7 +140,7 @@ def psar(
         f"PSARl{_props}": long,
         f"PSARs{_props}": short,
         f"PSARaf{_props}": _af,
-        f"PSARr{_props}": reversal
+        f"PSARr{_props}": reversal,
     }
     df = DataFrame(data, index=orig_high.index)
     df.name = f"PSAR{_props}"

@@ -11,21 +11,27 @@ from atklip.controls.pandas_ta.utils import (
     v_mamode,
     v_offset,
     v_pos_default,
-    v_series
+    v_series,
 )
 from atklip.controls.pandas_ta.volatility import bbands, kc
 from .mom import mom
 
 
-
 def squeeze(
-    high: Series, low: Series, close: Series,
-    bb_length: Int = None, bb_std: IntFloat = None,
-    kc_length: Int = None, kc_scalar: IntFloat = None,
-    mom_length: Int = None, mom_smooth: Int = None,
-    use_tr: bool = None, mamode: str = None,
+    high: Series,
+    low: Series,
+    close: Series,
+    bb_length: Int = None,
+    bb_std: IntFloat = None,
+    kc_length: Int = None,
+    kc_scalar: IntFloat = None,
+    mom_length: Int = None,
+    mom_smooth: Int = None,
+    use_tr: bool = None,
+    mamode: str = None,
     prenan: bool = None,
-    offset: Int = None, **kwargs: DictLike
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> DataFrame:
     """Squeeze (SQZ)
 
@@ -99,8 +105,7 @@ def squeeze(
     # Calculate
     bbd = bbands(close, length=bb_length, std=bb_std, mamode=mamode)
     kch = kc(
-        high, low, close, length=kc_length, scalar=kc_scalar,
-        mamode=mamode, tr=use_tr
+        high, low, close, length=kc_length, scalar=kc_scalar, mamode=mamode, tr=use_tr
     )
 
     # Simplify KC and BBAND column names for dynamic access
@@ -161,7 +166,7 @@ def squeeze(
         squeeze.name: squeeze,
         f"SQZ_ON": squeeze_on,
         f"SQZ_OFF": squeeze_off,
-        f"SQZ_NO": no_squeeze
+        f"SQZ_NO": no_squeeze,
     }
     df = DataFrame(data, index=close.index)
     df.name = squeeze.name

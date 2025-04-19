@@ -6,10 +6,13 @@ from atklip.controls.pandas_ta.utils import v_offset, v_pos_default, v_series
 from atklip.controls.pandas_ta.volatility import atr
 
 
-
 def pgo(
-    high: Series, low: Series, close: Series, length: Int = None,
-    offset: Int = None, **kwargs: DictLike
+    high: Series,
+    low: Series,
+    close: Series,
+    length: Int = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Pretty Good Oscillator (PGO)
 
@@ -48,8 +51,7 @@ def pgo(
     offset = v_offset(offset)
 
     # Calculate
-    pgo = (close - sma(close, length)) \
-        / ema(atr(high, low, close, length), length)
+    pgo = (close - sma(close, length)) / ema(atr(high, low, close, length), length)
 
     # Offset
     if offset != 0:

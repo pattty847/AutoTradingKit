@@ -6,15 +6,18 @@ from atklip.controls.pandas_ta.utils import (
     rma_pandas,
     v_offset,
     v_pos_default,
-    v_series
+    v_series,
 )
 
 
-
 def kdj(
-    high: Series, low: Series, close: Series,
-    length: Int = None, signal: Int = None,
-    offset: Int = None, **kwargs: DictLike
+    high: Series,
+    low: Series,
+    close: Series,
+    length: Int = None,
+    signal: Int = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """KDJ (KDJ)
 
@@ -59,8 +62,7 @@ def kdj(
     highest_high = high.rolling(length).max()
     lowest_low = low.rolling(length).min()
 
-    fastk = 100 * (close - lowest_low) / \
-        non_zero_range(highest_high, lowest_low)
+    fastk = 100 * (close - lowest_low) / non_zero_range(highest_high, lowest_low)
 
     k = rma_pandas(fastk, length=signal)
     d = rma_pandas(k, length=signal)

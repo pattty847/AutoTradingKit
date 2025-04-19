@@ -1,14 +1,25 @@
 # -*- coding: utf-8 -*
 from pandas import Series
 from atklip.controls.pandas_ta._typing import Array, DictLike, Int, IntFloat
-from atklip.controls.pandas_ta.utils import v_bool, v_offset, v_offset, v_scalar, v_series
+from atklip.controls.pandas_ta.utils import (
+    v_bool,
+    v_offset,
+    v_offset,
+    v_scalar,
+    v_series,
+)
 from atklip.controls.pandas_ta.utils._numba import np_cdl_inside
 
 
 def cdl_inside(
-    open_: Series, high: Series, low: Series, close: Series,
-    asbool: bool = None, scalar: IntFloat = None,
-    offset: Int = None, **kwargs: DictLike
+    open_: Series,
+    high: Series,
+    low: Series,
+    close: Series,
+    asbool: bool = None,
+    scalar: IntFloat = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Candle Type: Inside Bar
 

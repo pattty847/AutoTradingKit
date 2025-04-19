@@ -7,15 +7,19 @@ from atklip.controls.pandas_ta.utils import (
     v_drift,
     v_offset,
     v_pos_default,
-    v_series
+    v_series,
 )
 
 
-
 def decreasing(
-    close: Series, length: Int = None, strict: bool = None,
-    asint: bool = None, percent: IntFloat = None, drift: Int = None,
-    offset: Int = None, **kwargs: DictLike
+    close: Series,
+    length: Int = None,
+    strict: bool = None,
+    asint: bool = None,
+    percent: IntFloat = None,
+    drift: Int = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Decreasing
 
@@ -59,7 +63,7 @@ def decreasing(
         # Returns value as float64? Have to cast to bool
         decreasing = close < close_.shift(drift)
         for x in range(3, length + 1):
-            decreasing &= (close.shift(x - (drift + 1)) < close_.shift(x - drift))
+            decreasing &= close.shift(x - (drift + 1)) < close_.shift(x - drift)
 
         decreasing.fillna(0, inplace=True)
         decreasing = decreasing.astype(bool)
@@ -78,7 +82,7 @@ def decreasing(
         decreasing.fillna(kwargs["fillna"], inplace=True)
 
     # Name and Category
-    _percent = f"_{0.01 * percent}" if percent else ''
+    _percent = f"_{0.01 * percent}" if percent else ""
     _props = f"{'S' if strict else ''}DEC{'p' if percent else ''}"
     decreasing.name = f"{_props}_{length}{_percent}"
     decreasing.category = "trend"

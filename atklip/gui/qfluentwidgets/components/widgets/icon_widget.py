@@ -1,8 +1,8 @@
 # coding:utf-8
 from typing import Union
 
-from PySide6.QtCore import Property,QRectF,Qt,QPoint
-from PySide6.QtGui import QIcon, QPainter,QColor
+from PySide6.QtCore import Property, QRectF, Qt, QPoint
+from PySide6.QtGui import QIcon, QPainter, QColor
 from PySide6.QtWidgets import QWidget
 from PySide6.QtSvg import QSvgRenderer
 
@@ -11,7 +11,7 @@ from ...common.overload import singledispatchmethod
 
 
 class IconWidget(QWidget):
-    """ Icon widget
+    """Icon widget
 
     Constructors
     ------------
@@ -58,6 +58,5 @@ class IconWidget(QWidget):
         #     # painter.drawEllipse(QPoint(35 // 2, 35 // 2), 35 // 2, 35 // 2)
         #     renderer = QSvgRenderer(self._icon)
         #     renderer.render(painter, QRectF(self.rect()))
-        
 
     icon = Property(QIcon, getIcon, setIcon)

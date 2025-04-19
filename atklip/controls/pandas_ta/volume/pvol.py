@@ -4,10 +4,12 @@ from atklip.controls.pandas_ta._typing import DictLike, Int
 from atklip.controls.pandas_ta.utils import signed_series, v_bool, v_offset, v_series
 
 
-
 def pvol(
-    close: Series, volume: Series, signed: bool = None,
-    offset: Int = None, **kwargs: DictLike
+    close: Series,
+    volume: Series,
+    signed: bool = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Price-Volume (PVOL)
 

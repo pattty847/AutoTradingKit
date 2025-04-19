@@ -1,6 +1,7 @@
 """
 .. moduleauthor:: Kevin Johnson
 """
+
 name = "pandas_ta"
 
 # Dictionaries and version

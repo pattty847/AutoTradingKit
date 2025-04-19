@@ -6,11 +6,14 @@ from atklip.controls.pandas_ta.utils import v_offset, v_pos_default, v_scalar, v
 from .tsi import tsi
 
 
-
 def smi(
-    close: Series, fast: Int = None, slow: Int = None,
-    signal: Int = None, scalar: IntFloat = None,
-    offset: Int = None, **kwargs: DictLike
+    close: Series,
+    fast: Int = None,
+    slow: Int = None,
+    signal: Int = None,
+    scalar: IntFloat = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> DataFrame:
     """SMI Ergodic Indicator (SMI)
 

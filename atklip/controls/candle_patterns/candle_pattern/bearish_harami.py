@@ -20,5 +20,7 @@ class BearishHarami(CandlestickFinder):
         prev_low = prev_candle[self.low_column]
 
         return (
-            prev_close > prev_open and prev_open <= close < open <= prev_close and open - close < prev_close - prev_open
+            prev_close > prev_open
+            and prev_open <= close < open <= prev_close
+            and open - close < prev_close - prev_open
         )

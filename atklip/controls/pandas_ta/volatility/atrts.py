@@ -9,16 +9,24 @@ from atklip.controls.pandas_ta.utils import (
     v_offset,
     v_pos_default,
     v_series,
-    v_talib
+    v_talib,
 )
 from atklip.controls.pandas_ta.volatility import atr
 from atklip.controls.pandas_ta.utils._numba import nb_atrts
 
+
 def atrts(
-    high: Series, low: Series, close: Series, length: Int = None,
-    ma_length: Int = None, multiplier: IntFloat = None,
-    mamode: str = None, talib: bool = None, drift: Int = None,
-    offset: Int = None, **kwargs: DictLike
+    high: Series,
+    low: Series,
+    close: Series,
+    length: Int = None,
+    ma_length: Int = None,
+    multiplier: IntFloat = None,
+    mamode: str = None,
+    talib: bool = None,
+    drift: Int = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """ATR Trailing Stop (ATRTS)
 
@@ -73,9 +81,15 @@ def atrts(
 
     # Calculate
     atr_ = atr(
-        high=high, low=low, close=close, length=length,
-        mamode=mamode, drift=drift, talib=mode_tal,
-        offset=offset, **kwargs
+        high=high,
+        low=low,
+        close=close,
+        length=length,
+        mamode=mamode,
+        drift=drift,
+        talib=mode_tal,
+        offset=offset,
+        **kwargs,
     )
 
     if all(isnan(atr_)):

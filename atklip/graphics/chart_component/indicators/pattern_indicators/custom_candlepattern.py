@@ -1,18 +1,19 @@
 import time
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import Signal, Qt,QRectF
-from PySide6.QtGui import QPainter,QPicture
+from PySide6.QtCore import Signal, Qt, QRectF
+from PySide6.QtGui import QPainter, QPicture
 import pandas as pd
 
-from atklip.graphics.pyqtgraph.Point import Point
-from atklip.graphics.pyqtgraph.graphicsItems.TextItem import TextItem
+from pyqtgraph.Point import Point
+from pyqtgraph.graphicsItems.TextItem import TextItem
+
 # from atklip.graphics.chart_component.graph_items.CustomTextItem import TextItem
 
-from atklip.graphics.pyqtgraph import GraphicsObject
+from pyqtgraph import GraphicsObject
 
 
-from atklip.controls import PD_MAType,IndicatorType,ProCandlePattern
+from atklip.controls import PD_MAType, IndicatorType, ProCandlePattern
 from atklip.controls.tradingview import SuperTrendWithStopLoss
 from atklip.controls.models import SuperWithSlModel
 
@@ -32,73 +33,75 @@ class CustomCandlePattern(GraphicsObject):
     signal_change_width = Signal(int)
     signal_change_type = Signal(str)
     sig_change_indicator_name = Signal(str)
-    def __init__(self,chart) -> None:
+
+    def __init__(self, chart) -> None:
         GraphicsObject.__init__(self)
         # super().__init__()
         # self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemClipsChildrenToShape, True)
         # self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemClipsToShape, True)
-        self.setFlag(self.GraphicsItemFlag.ItemUsesExtendedStyleOption,True)
-        
-        self.chart:Chart = chart
+        self.setFlag(self.GraphicsItemFlag.ItemUsesExtendedStyleOption, True)
+
+        self.chart: Chart = chart
         self.has: dict = {
             "name": f"BB 20 2",
-            "y_axis_show":False,
-            "inputs":{
-                    "source":self.chart.jp_candle,
-                    "source_name": self.chart.jp_candle.source_name,
-                    "indicator_type":IndicatorType.CUSTOM_CANDLE_PATTERN,
-                    
-                     #Super Trend ATR
-                    "supertrend_length" :14,
-                    "supertrend_atr_length":14,
-                    "supertrend_multiplier" :3.0,
-                    "supertrend_atr_mamode" :PD_MAType.RMA, 
-                    "atr_length" : 14,
-                    "atr_mamode" :PD_MAType.RMA, 
-                    "atr_multiplier" : 1,
-                    
-                    "show":False},
-
-            "styles":{
-                    }
-                    }
+            "y_axis_show": False,
+            "inputs": {
+                "source": self.chart.jp_candle,
+                "source_name": self.chart.jp_candle.source_name,
+                "indicator_type": IndicatorType.CUSTOM_CANDLE_PATTERN,
+                # Super Trend ATR
+                "supertrend_length": 14,
+                "supertrend_atr_length": 14,
+                "supertrend_multiplier": 3.0,
+                "supertrend_atr_mamode": PD_MAType.RMA,
+                "atr_length": 14,
+                "atr_mamode": PD_MAType.RMA,
+                "atr_multiplier": 1,
+                "show": False,
+            },
+            "styles": {},
+        }
         self.id = self.chart.objmanager.add(self)
-       
-        self.list_patterns:dict = {}
-     
+
+        self.list_patterns: dict = {}
+
         self.picture: QPicture = QPicture()
-                
-        self.INDICATOR  = ProCandlePattern(self.has["inputs"]["source"])
-        
-        
-        self.chart.sig_update_source.connect(self.change_source,Qt.ConnectionType.AutoConnection)   
+
+        self.INDICATOR = ProCandlePattern(self.has["inputs"]["source"])
+
+        self.chart.sig_update_source.connect(
+            self.change_source, Qt.ConnectionType.AutoConnection
+        )
         self.signal_delete.connect(self.delete)
-        
+
     @property
     def is_all_updated(self):
         is_updated = self.INDICATOR.is_current_update
         return is_updated
-    
+
     @property
     def id(self):
         return self.chart_id
-    
+
     @id.setter
-    def id(self,_chart_id):
+    def id(self, _chart_id):
         self.chart_id = _chart_id
-    
+
     @property
     def supertmodel(self) -> dict:
-        return SuperWithSlModel(self.id,"SuperTrend",self.chart.jp_candle.source_name,
-                    self.has["inputs"]["supertrend_length"],
-                    self.has["inputs"]["supertrend_atr_length"],
-                    self.has["inputs"]["supertrend_multiplier"],
-                    self.has["inputs"]["supertrend_atr_mamode"].name.lower(),
-                    self.has["inputs"]["atr_length"],
-                    self.has["inputs"]["atr_mamode"].name.lower(),
-                    self.has["inputs"]["atr_multiplier"])
-    
-    
+        return SuperWithSlModel(
+            self.id,
+            "SuperTrend",
+            self.chart.jp_candle.source_name,
+            self.has["inputs"]["supertrend_length"],
+            self.has["inputs"]["supertrend_atr_length"],
+            self.has["inputs"]["supertrend_multiplier"],
+            self.has["inputs"]["supertrend_atr_mamode"].name.lower(),
+            self.has["inputs"]["atr_length"],
+            self.has["inputs"]["atr_mamode"].name.lower(),
+            self.has["inputs"]["atr_multiplier"],
+        )
+
     def disconnect_signals(self):
         try:
             self.INDICATOR.sig_reset_all.disconnect(self.reset_threadpool_asyncworker)
@@ -107,70 +110,81 @@ class CustomCandlePattern(GraphicsObject):
             self.INDICATOR.signal_delete.disconnect(self.replace_source)
             self.INDICATOR.sig_add_historic.disconnect(self.add_historic_worker)
         except RuntimeError:
-                    pass
-    
+            pass
+
     def connect_signals(self):
-        self.INDICATOR.sig_reset_all.connect(self.reset_threadpool_asyncworker,Qt.ConnectionType.AutoConnection)
-        self.INDICATOR.sig_update_candle.connect(self.setdata_worker,Qt.ConnectionType.AutoConnection)
-        self.INDICATOR.sig_add_candle.connect(self.add_worker,Qt.ConnectionType.AutoConnection)
-        self.INDICATOR.sig_add_historic.connect(self.add_historic_worker,Qt.ConnectionType.AutoConnection)
-        self.INDICATOR.signal_delete.connect(self.replace_source,Qt.ConnectionType.AutoConnection)
-    
+        self.INDICATOR.sig_reset_all.connect(
+            self.reset_threadpool_asyncworker, Qt.ConnectionType.AutoConnection
+        )
+        self.INDICATOR.sig_update_candle.connect(
+            self.setdata_worker, Qt.ConnectionType.AutoConnection
+        )
+        self.INDICATOR.sig_add_candle.connect(
+            self.add_worker, Qt.ConnectionType.AutoConnection
+        )
+        self.INDICATOR.sig_add_historic.connect(
+            self.add_historic_worker, Qt.ConnectionType.AutoConnection
+        )
+        self.INDICATOR.signal_delete.connect(
+            self.replace_source, Qt.ConnectionType.AutoConnection
+        )
+
     def first_gen_data(self):
         self.connect_signals()
         self.INDICATOR.first_gen_data()
-       
+
     def delete(self):
         self.INDICATOR.deleteLater()
         self.chart.sig_remove_item.emit(self)
-    
+
     def reset_indicator(self):
         self.worker = None
         self.worker = FastWorker(self.regen_indicator)
-        self.worker.signals.setdata.connect(self.set_Data,Qt.ConnectionType.AutoConnection)
+        self.worker.signals.setdata.connect(
+            self.set_Data, Qt.ConnectionType.AutoConnection
+        )
         self.worker.start()
 
-    def regen_indicator(self,setdata):
-        df= self.INDICATOR.get_data()
+    def regen_indicator(self, setdata):
+        df = self.INDICATOR.get_data()
         setdata.emit(df)
         self.sig_change_yaxis_range.emit()
         self.has["name"] = f"ALL CDL PATTERNS"
         self.sig_change_indicator_name.emit(self.has["name"])
-    
+
     def replace_source(self):
-        self.update_inputs( "source",self.chart.jp_candle.source_name)
-        
+        self.update_inputs("source", self.chart.jp_candle.source_name)
+
     def reset_threadpool_asyncworker(self):
         self.reset_indicator()
-        
-    def change_source(self,source):   
+
+    def change_source(self, source):
         if self.has["inputs"]["source_name"] == source.source_name:
-            self.update_inputs("source",source.source_name)
-      
+            self.update_inputs("source", source.source_name)
+
     def get_inputs(self):
-        inputs =  {"source":self.has["inputs"]["source"]}
+        inputs = {"source": self.has["inputs"]["source"]}
         return inputs
-    
+
     def get_styles(self):
-        styles =  {
-                    }
+        styles = {}
         return styles
-    
-    def update_inputs(self,_input,_source):
+
+    def update_inputs(self, _input, _source):
         is_update = False
         if _input == "source":
             if self.chart.sources[_source] != self.has["inputs"][_input]:
                 self.has["inputs"]["source"] = self.chart.sources[_source]
-                self.has["inputs"]["source_name"] = self.chart.sources[_source].source_name
+                self.has["inputs"]["source_name"] = self.chart.sources[
+                    _source
+                ].source_name
                 self.INDICATOR.change_input(self.has["inputs"]["source"])
 
     def update_styles(self, _input):
         _style = self.has["styles"][_input]
 
-    
     def get_xaxis_param(self):
-        return None,"#363a45"
-
+        return None, "#363a45"
 
     def setVisible(self, visible):
         if visible:
@@ -178,9 +192,8 @@ class CustomCandlePattern(GraphicsObject):
         else:
             self.hide()
 
-    
-    def set_Data(self,df:pd.DataFrame):
-        
+    def set_Data(self, df: pd.DataFrame):
+
         if self.list_patterns:
             for obj in self.list_patterns.values():
                 if self.scene() is not None:
@@ -190,251 +203,253 @@ class CustomCandlePattern(GraphicsObject):
                         obj["cdl_pattern"].deleteLater()
                     # if hasattr(obj["entry"], "deleteLater"):
                     #     obj["entry"].deleteLater()
-                    # 
-        self.list_patterns.clear()   
+                    #
+        self.list_patterns.clear()
         "CDL_DOJISTAR  CDL_EVENINGDOJISTAR  CDL_ENGULFING  CDL_EVENINGSTAR  CDL_MORNINGDOJISTAR  CDL_MORNINGSTAR  CDL_SHOOTINGSTAR  CDL_HARAMI  CDL_HARAMICROSS  CDL_KICKING  CDL_KICKINGBYLENGTH"
         # print(df)
-        # sells = df.loc[(df['evening_star'] == True)|(df['shooting_star'] == True)|(df['bearish_harami'] == True)|(df['bearish_engulfing'] == True)|(df['bearish_kicker'] == True)] 
-        # buys = df.loc[(df['morning_star'] == True)|(df['bullish_harami'] == True)|(df['bullish_engulfing'] == True)|(df['bullish_kicker'] == True)] 
-        
-        for i in range(1,len(df)):
+        # sells = df.loc[(df['evening_star'] == True)|(df['shooting_star'] == True)|(df['bearish_harami'] == True)|(df['bearish_engulfing'] == True)|(df['bearish_kicker'] == True)]
+        # buys = df.loc[(df['morning_star'] == True)|(df['bullish_harami'] == True)|(df['bullish_engulfing'] == True)|(df['bullish_kicker'] == True)]
+
+        for i in range(1, len(df)):
             text = None
-            row = df.iloc[i-1]
-            index = row['index']
-            
-            if row['bearish_ziad_francis'] == True:
-                text = 'bearish_ziadfrancis'
-            elif row['bearish_miharris'] == True:
-                text = 'bearish_miharris'
-            elif row['bearish_miharris2'] == True:
-                text = 'bearish_miharris2'
-                
+            row = df.iloc[i - 1]
+            index = row["index"]
+
+            if row["bearish_ziad_francis"] == True:
+                text = "bearish_ziadfrancis"
+            elif row["bearish_miharris"] == True:
+                text = "bearish_miharris"
+            elif row["bearish_miharris2"] == True:
+                text = "bearish_miharris2"
+
             if index and text:
-                ohlc =  self.chart.jp_candle.map_index_ohlcv.get(index)
+                ohlc = self.chart.jp_candle.map_index_ohlcv.get(index)
                 if ohlc:
-                    obj = TextItem("",color="red")
+                    obj = TextItem("", color="red")
                     obj.setParentItem(self)
-                    obj.setAnchor((0.5,1))
+                    obj.setAnchor((0.5, 1))
                     txt = text.split("_")
-                    txt1,txt2 = txt[0],txt[1]
+                    txt1, txt2 = txt[0], txt[1]
                     html = f"""<div style="text-align: center">
                 <span style="color: red; font-size: {10}pt;">{txt1}</span><br><span style="color: red; font-size: {10}pt;">{txt2}</span>"""
                     obj.setHtml(html)
                     obj.setPos(Point(index, ohlc.high))
                     obj.hide()
-                    self.list_patterns[index] = {"cdl_pattern":obj}
+                    self.list_patterns[index] = {"cdl_pattern": obj}
 
             text = None
-           
-            if row['bull_ziad_francis'] == True:
-                text = 'bull_ziadfrancis'
-            elif row['bull_miharris'] == True:
-                text = 'bull_miharris'
-            elif row['bull_miharris2'] == True:
-                text = 'bull_miharris2'
-            
-            
+
+            if row["bull_ziad_francis"] == True:
+                text = "bull_ziadfrancis"
+            elif row["bull_miharris"] == True:
+                text = "bull_miharris"
+            elif row["bull_miharris2"] == True:
+                text = "bull_miharris2"
+
             if index and text:
-                ohlc =  self.chart.jp_candle.map_index_ohlcv.get(index)
+                ohlc = self.chart.jp_candle.map_index_ohlcv.get(index)
                 if ohlc:
                     # obj = TextBoxROI(size=5,symbol="o",pen="green",brush = "green", drawtool=self.chart.drawtool)
-                    obj = TextItem("",color="green")
+                    obj = TextItem("", color="green")
                     obj.setParentItem(self)
 
                     txt = text.split("_")
-                    txt1,txt2 = txt[0],txt[1]
+                    txt1, txt2 = txt[0], txt[1]
                     html = f"""<div style="text-align: center">
                 <span style="color: green; font-size: {10}pt;">{txt1}</span><br><span style="color: green; font-size: {10}pt;">{txt2}</span>"""
                     obj.setHtml(html)
-                    
-                    obj.setAnchor((0.5,0))
-                    
+
+                    obj.setAnchor((0.5, 0))
+
                     r = obj.textItem.boundingRect()
                     tl = obj.textItem.mapToParent(r.topLeft())
                     br = obj.textItem.mapToParent(r.bottomRight())
                     offset = (br - tl) * obj.anchor
 
-                    _y = ohlc.low-offset.y()/2
+                    _y = ohlc.low - offset.y() / 2
 
-                    obj.setPos(Point(index,_y))
-                    self.list_patterns[index] = {"cdl_pattern":obj}
-                    
+                    obj.setPos(Point(index, _y))
+                    self.list_patterns[index] = {"cdl_pattern": obj}
+
                     obj.hide()
-                    
 
-    def add_historic_Data(self,df):
+    def add_historic_Data(self, df):
         for i in range(len(df)):
             text = None
-            row = df.iloc[i-1]
+            row = df.iloc[i - 1]
 
-            index = row['index']
-            
-            
-            if row['bearish_ziad_francis'] == True:
-                text = 'bearish_ziadfrancis'
-            elif row['bearish_miharris'] == True:
-                text = 'bearish_miharris'
-            elif row['bearish_miharris2'] == True:
-                text = 'bearish_miharris2'
-            
-            if index and text and SUPERTd<0:
+            index = row["index"]
+
+            if row["bearish_ziad_francis"] == True:
+                text = "bearish_ziadfrancis"
+            elif row["bearish_miharris"] == True:
+                text = "bearish_miharris"
+            elif row["bearish_miharris2"] == True:
+                text = "bearish_miharris2"
+
+            if index and text and SUPERTd < 0:
                 if self.list_patterns.get(index):
                     continue
-                ohlc =  self.chart.jp_candle.map_index_ohlcv.get(index)
+                ohlc = self.chart.jp_candle.map_index_ohlcv.get(index)
                 if ohlc:
-                    obj = TextItem("",color="red")
+                    obj = TextItem("", color="red")
                     obj.setParentItem(self)
-                    obj.setAnchor((0.5,1))
+                    obj.setAnchor((0.5, 1))
                     txt = text.split("_")
-                    txt1,txt2 = txt[0],txt[1]
+                    txt1, txt2 = txt[0], txt[1]
                     html = f"""<div style="text-align: center">
                 <span style="color: red; font-size: {10}pt;">{txt1}</span><br><span style="color: red; font-size: {10}pt;">{txt2}</span>"""
                     obj.setHtml(html)
                     obj.setPos(Point(index, ohlc.high))
                     obj.hide()
-                    self.list_patterns[index] = {"cdl_pattern":obj}
+                    self.list_patterns[index] = {"cdl_pattern": obj}
 
             text = None
 
-            if row['bull_ziad_francis'] == True:
-                text = 'bull_ziadfrancis'
-            elif row['bull_miharris'] == True:
-                text = 'bull_miharris'
-            elif row['bull_miharris2'] == True:
-                text = 'bull_miharris2'
-                
-            if index and text and SUPERTd>0:
+            if row["bull_ziad_francis"] == True:
+                text = "bull_ziadfrancis"
+            elif row["bull_miharris"] == True:
+                text = "bull_miharris"
+            elif row["bull_miharris2"] == True:
+                text = "bull_miharris2"
+
+            if index and text and SUPERTd > 0:
                 if self.list_patterns.get(index):
                     continue
-                ohlc =  self.chart.jp_candle.map_index_ohlcv.get(index)
+                ohlc = self.chart.jp_candle.map_index_ohlcv.get(index)
                 if ohlc:
                     # obj = TextBoxROI(size=5,symbol="o",pen="green",brush = "green", drawtool=self.chart.drawtool)
-                    obj = TextItem("",color="green")
+                    obj = TextItem("", color="green")
                     obj.setParentItem(self)
 
                     txt = text.split("_")
-                    txt1,txt2 = txt[0],txt[1]
+                    txt1, txt2 = txt[0], txt[1]
                     html = f"""<div style="text-align: center">
                 <span style="color: green; font-size: {10}pt;">{txt1}</span><br><span style="color: green; font-size: {10}pt;">{txt2}</span>"""
                     obj.setHtml(html)
-                    
-                    obj.setAnchor((0.5,0))
-                    
+
+                    obj.setAnchor((0.5, 0))
+
                     r = obj.textItem.boundingRect()
                     tl = obj.textItem.mapToParent(r.topLeft())
                     br = obj.textItem.mapToParent(r.bottomRight())
                     offset = (br - tl) * obj.anchor
 
-                    _y = ohlc.low-offset.y()/2
+                    _y = ohlc.low - offset.y() / 2
 
-                    obj.setPos(Point(index,_y))
-                    self.list_patterns[index] = {"cdl_pattern":obj}
-                    
+                    obj.setPos(Point(index, _y))
+                    self.list_patterns[index] = {"cdl_pattern": obj}
+
                     obj.hide()
 
-        
-    def update_Data(self,df):
-        index, text = None,None
+    def update_Data(self, df):
+        index, text = None, None
         row = df.iloc[0]
-        index = row['index']
-        
+        index = row["index"]
+
         if self.list_patterns.get(index):
             return
 
-            
-        
-        if row['bearish_ziad_francis'] == True:
-            text = 'bearish_ziadfrancis'
-        elif row['bearish_miharris'] == True:
-            text = 'bearish_miharris'
-        elif row['bearish_miharris2'] == True:
-            text = 'bearish_miharris2'
-    
+        if row["bearish_ziad_francis"] == True:
+            text = "bearish_ziadfrancis"
+        elif row["bearish_miharris"] == True:
+            text = "bearish_miharris"
+        elif row["bearish_miharris2"] == True:
+            text = "bearish_miharris2"
+
         if index and text:
             if self.list_patterns.get(index):
                 return
-            ohlc =  self.chart.jp_candle.map_index_ohlcv.get(index)
+            ohlc = self.chart.jp_candle.map_index_ohlcv.get(index)
             if ohlc:
-                obj = TextItem("",color="red")
+                obj = TextItem("", color="red")
                 obj.setParentItem(self)
-                obj.setAnchor((0.5,1))
+                obj.setAnchor((0.5, 1))
                 txt = text.split("_")
-                txt1,txt2 = txt[0],txt[1]
+                txt1, txt2 = txt[0], txt[1]
                 html = f"""<div style="text-align: center">
             <span style="color: red; font-size: {10}pt;">{txt1}</span><br><span style="color: red; font-size: {10}pt;">{txt2}</span>"""
                 obj.setHtml(html)
                 obj.setPos(Point(index, ohlc.high))
-                self.list_patterns[index] = {"cdl_pattern":obj}
+                self.list_patterns[index] = {"cdl_pattern": obj}
 
-        index, text = None,None
+        index, text = None, None
 
-        if row['bull_ziad_francis'] == True:
-            text = 'bull_ziadfrancis'
-        elif row['bull_miharris'] == True:
-            text = 'bull_miharris'
-        elif row['bull_miharris2'] == True:
-            text = 'bull_miharris2'
-            
+        if row["bull_ziad_francis"] == True:
+            text = "bull_ziadfrancis"
+        elif row["bull_miharris"] == True:
+            text = "bull_miharris"
+        elif row["bull_miharris2"] == True:
+            text = "bull_miharris2"
+
         if index and text:
             if self.list_patterns.get(index):
                 return
-            ohlc =  self.chart.jp_candle.map_index_ohlcv.get(index)
+            ohlc = self.chart.jp_candle.map_index_ohlcv.get(index)
             if ohlc:
                 # obj = TextBoxROI(size=5,symbol="o",pen="green",brush = "green", drawtool=self.chart.drawtool)
-                obj = TextItem("",color="green")
+                obj = TextItem("", color="green")
                 obj.setParentItem(self)
 
                 txt = text.split("_")
-                txt1,txt2 = txt[0],txt[1]
+                txt1, txt2 = txt[0], txt[1]
                 html = f"""<div style="text-align: center">
             <span style="color: green; font-size: {10}pt;">{txt1}</span><br><span style="color: green; font-size: {10}pt;">{txt2}</span>"""
                 obj.setHtml(html)
-                
-                obj.setAnchor((0.5,0))
-                
+
+                obj.setAnchor((0.5, 0))
+
                 r = obj.textItem.boundingRect()
                 tl = obj.textItem.mapToParent(r.topLeft())
                 br = obj.textItem.mapToParent(r.bottomRight())
                 offset = (br - tl) * obj.anchor
 
-                _y = ohlc.low-offset.y()/2
+                _y = ohlc.low - offset.y() / 2
 
-                obj.setPos(Point(index,_y))
-                self.list_patterns[index] = {"cdl_pattern":obj}
-                
-    
+                obj.setPos(Point(index, _y))
+                self.list_patterns[index] = {"cdl_pattern": obj}
+
     def setdata_worker(self):
         self.worker = None
         self.worker = FastWorker(self.update_data)
-        self.worker.signals.setdata.connect(self.update_Data,Qt.ConnectionType.AutoConnection)
-        self.worker.start()    
-        
-    def add_historic_worker(self,_len):
+        self.worker.signals.setdata.connect(
+            self.update_Data, Qt.ConnectionType.AutoConnection
+        )
+        self.worker.start()
+
+    def add_historic_worker(self, _len):
         self.worker = None
-        self.worker = FastWorker(self.load_historic_data,_len)
-        self.worker.signals.setdata.connect(self.add_historic_Data,Qt.ConnectionType.AutoConnection)
-        self.worker.start() 
+        self.worker = FastWorker(self.load_historic_data, _len)
+        self.worker.signals.setdata.connect(
+            self.add_historic_Data, Qt.ConnectionType.AutoConnection
+        )
+        self.worker.start()
+
     def add_worker(self):
         self.worker = None
         self.worker = FastWorker(self.add_data)
-        self.worker.signals.setdata.connect(self.update_Data,Qt.ConnectionType.AutoConnection)
+        self.worker.signals.setdata.connect(
+            self.update_Data, Qt.ConnectionType.AutoConnection
+        )
         self.worker.start()
-    
-    def load_historic_data(self,_len,setdata):
+
+    def load_historic_data(self, _len, setdata):
         data = self.INDICATOR.get_data(stop=_len)
-        setdata.emit(data)  
-    def add_data(self,setdata):
-        data = self.INDICATOR.get_data(start=-2)
-        setdata.emit(data)   
-    
-    def update_data(self,setdata):
+        setdata.emit(data)
+
+    def add_data(self, setdata):
         data = self.INDICATOR.get_data(start=-2)
         setdata.emit(data)
 
-       
+    def update_data(self, setdata):
+        data = self.INDICATOR.get_data(start=-2)
+        setdata.emit(data)
+
     def boundingRect(self) -> QRectF:
         if self.list_patterns:
-            x_left,x_right = int(self.chart.xAxis.range[0]),int(self.chart.xAxis.range[1])
+            x_left, x_right = int(self.chart.xAxis.range[0]), int(
+                self.chart.xAxis.range[1]
+            )
             for _x in list(self.list_patterns.keys()):
                 obj = self.list_patterns.get(_x)
                 if obj:
@@ -444,32 +459,31 @@ class CustomCandlePattern(GraphicsObject):
                         obj["cdl_pattern"].hide()
 
         return self.picture.boundingRect()
-    
-    def paint(self, p:QPainter, *args):
+
+    def paint(self, p: QPainter, *args):
         self.picture.play(p)
-    
+
     def get_yaxis_param(self):
         _value = None
         try:
-            _time,_value = self.get_last_point()
+            _time, _value = self.get_last_point()
         except:
             pass
-        return _value,"#363a45"
-    
-    
+        return _value, "#363a45"
+
     def get_last_point(self):
-        return None,None
-    
+        return None, None
+
     def get_min_max(self):
         try:
-            return None,None
+            return None, None
         except Exception as e:
             pass
         time.sleep(0.1)
-        return None,None
+        return None, None
 
     def on_click_event(self):
-        #print("zooo day__________________")
+        # print("zooo day__________________")
         pass
 
     def mousePressEvent(self, ev):
@@ -482,4 +496,3 @@ class CustomCandlePattern(GraphicsObject):
 
     def objectName(self):
         return self.name
-    

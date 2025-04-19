@@ -8,12 +8,17 @@ from atklip.controls.pandas_ta.utils import v_mamode, v_offset, v_pos_default, v
 from .obv import obv
 
 
-
 def aobv(
-    close: Series, volume: Series, fast: Int = None, slow: Int = None,
-    max_lookback: Int = None, min_lookback: Int = None,
-    mamode: str = None, run_length: Int = None,
-    offset: Int = None, **kwargs: DictLike
+    close: Series,
+    volume: Series,
+    fast: Int = None,
+    slow: Int = None,
+    max_lookback: Int = None,
+    min_lookback: Int = None,
+    mamode: str = None,
+    run_length: Int = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> DataFrame:
     """Archer On Balance Volume (AOBV)
 
@@ -98,7 +103,7 @@ def aobv(
         f"OBV{_mode}_{fast}": maf,
         f"OBV{_mode}_{slow}": mas,
         f"AOBV_LR_{run_length}": obv_long,
-        f"AOBV_SR_{run_length}": obv_short
+        f"AOBV_SR_{run_length}": obv_short,
     }
     df = DataFrame(data, index=close.index)
 

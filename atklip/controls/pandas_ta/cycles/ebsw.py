@@ -5,11 +5,13 @@ from atklip.controls.pandas_ta._typing import DictLike, Int
 from atklip.controls.pandas_ta.utils import v_offset, v_pos_default, v_series
 
 
-
 def ebsw(
-    close: Series, length: Int = None, bars: Int = None,
+    close: Series,
+    length: Int = None,
+    bars: Int = None,
     initial_version: bool = False,
-    offset: Int = None, **kwargs: DictLike
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Even Better SineWave (EBSW)
 
@@ -69,7 +71,7 @@ def ebsw(
         a1 = b1 = c1 = c2 = c3 = 0
         filter_ = power_ = wave = 0
         lastClose = lastHP = 0
-        filtHist = [0, 0]   # Filter history
+        filtHist = [0, 0]  # Filter history
 
         result = [nan for _ in range(0, length - 1)] + [0]
         for i in range(length, m):
@@ -84,15 +86,17 @@ def ebsw(
             c2 = b1
             c3 = -1 * a1 * a1
             c1 = 1 - c2 - c3
-            filter_ = 0.5 * c1 * (hp + lastHP) + c2 * \
-                filtHist[1] + c3 * filtHist[0]
+            filter_ = 0.5 * c1 * (hp + lastHP) + c2 * filtHist[1] + c3 * filtHist[0]
             # filter_ = float("{:.8f}".format(float(filter_))) # to fix for
             # small scientific notations, the big ones fail
 
             # 3 Bar average of wave amplitude and power
             wave = (filter_ + filtHist[1] + filtHist[0]) / 3
-            power_ = (filter_ * filter_ + filtHist[1] * filtHist[1] \
-                + filtHist[0] * filtHist[0]) / 3
+            power_ = (
+                filter_ * filter_
+                + filtHist[1] * filtHist[1]
+                + filtHist[0] * filtHist[0]
+            ) / 3
             # Normalize the Average Wave to Square Root of the Average Power
             wave = wave / sqrt(power_)
 
@@ -112,10 +116,10 @@ def ebsw(
 
         angle = 2 * pi / length
         alpha1 = (1 - sin(angle)) / cos(angle)
-        ang = 2 ** .5 * pi / bars
+        ang = 2**0.5 * pi / bars
         a1 = exp(-ang)
         c2 = 2 * a1 * cos(ang)
-        c3 = -a1 ** 2
+        c3 = -(a1**2)
         c1 = 1 - c2 - c3
 
         for i in range(length, m):
@@ -123,12 +127,13 @@ def ebsw(
 
             # Rotate filters to overwrite oldest value
             filtHist = roll(filtHist, -1)
-            filtHist[-1] = 0.5 * c1 * \
-                (hp + lastHP) + c2 * filtHist[1] + c3 * filtHist[0]
+            filtHist[-1] = (
+                0.5 * c1 * (hp + lastHP) + c2 * filtHist[1] + c3 * filtHist[0]
+            )
 
             # Wave calculation
             wave = mean(filtHist)
-            rms = sqrt(mean(filtHist ** 2))
+            rms = sqrt(mean(filtHist**2))
             wave = wave / rms
 
             # Update past values

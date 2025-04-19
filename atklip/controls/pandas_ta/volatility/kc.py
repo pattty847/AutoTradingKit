@@ -8,17 +8,21 @@ from atklip.controls.pandas_ta.utils import (
     v_mamode,
     v_offset,
     v_pos_default,
-    v_series
+    v_series,
 )
 from .true_range import true_range
 
 
-
 def kc(
-    high: Series, low: Series, close: Series,
-    length: Int = None, scalar: IntFloat = None,
-    tr: bool = None, mamode: str = None,
-    offset: Int = None, **kwargs: DictLike
+    high: Series,
+    low: Series,
+    close: Series,
+    length: Int = None,
+    scalar: IntFloat = None,
+    tr: bool = None,
+    mamode: str = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> DataFrame:
     """Keltner Channels (KC)
 

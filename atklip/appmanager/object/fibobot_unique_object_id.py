@@ -1,5 +1,6 @@
 import uuid
 
+
 class UniqueIDManager:
     def __init__(self):
         self.list_id = []
@@ -8,7 +9,7 @@ class UniqueIDManager:
     def reset(self):
         self.list_id = []
         self._objects = {}
-    
+
     def __repr__(self):
         return self._objects
 
@@ -36,7 +37,7 @@ class UniqueIDManager:
         unique_id = self.generate_id()
         self._objects[unique_id] = obj
         return unique_id
-    
+
     def set(self, obj, unique_id):
         self.list_id.append(unique_id)
         self._objects[unique_id] = obj

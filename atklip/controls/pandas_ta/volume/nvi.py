@@ -2,13 +2,21 @@
 from pandas import Series
 from atklip.controls.pandas_ta._typing import DictLike, Int
 from atklip.controls.pandas_ta.momentum import roc
-from atklip.controls.pandas_ta.utils import signed_series, v_offset, v_pos_default, v_series
-
+from atklip.controls.pandas_ta.utils import (
+    signed_series,
+    v_offset,
+    v_pos_default,
+    v_series,
+)
 
 
 def nvi(
-    close: Series, volume: Series, length: Int = None, initial: Int = None,
-    offset: Int = None, **kwargs: DictLike
+    close: Series,
+    volume: Series,
+    length: Int = None,
+    initial: Int = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Negative Volume Index (NVI)
 

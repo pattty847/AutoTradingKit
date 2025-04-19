@@ -7,15 +7,17 @@ from atklip.controls.pandas_ta.utils import (
     v_offset,
     v_pos_default,
     v_scalar,
-    v_series
+    v_series,
 )
 
 
-
 def cfo(
-    close: Series, length: Int = None,
-    scalar: IntFloat = None, drift: Int = None,
-    offset: Int = None, **kwargs: DictLike
+    close: Series,
+    length: Int = None,
+    scalar: IntFloat = None,
+    drift: Int = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Chande Forcast Oscillator (CFO)
 

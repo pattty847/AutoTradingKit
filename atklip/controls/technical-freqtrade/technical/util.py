@@ -61,7 +61,13 @@ def resample_to_interval(dataframe: DataFrame, interval):
 
     df = dataframe.copy()
     df = df.set_index(DatetimeIndex(df["date"]))
-    ohlc_dict = {"open": "first", "high": "max", "low": "min", "close": "last", "volume": "sum"}
+    ohlc_dict = {
+        "open": "first",
+        "high": "max",
+        "low": "min",
+        "close": "last",
+        "volume": "sum",
+    }
     # Resample to "left" border as dates are candle open dates
     df = df.resample(str(interval) + "min", label="left").agg(ohlc_dict).dropna()
     df.reset_index(inplace=True)
@@ -86,7 +92,9 @@ def resampled_merge(original: DataFrame, resampled: DataFrame, fill_na=True):
         # Subtract "small" timeframe so merging is not delayed by 1 small candle.
         # Detailed explanation in https://github.com/freqtrade/freqtrade/issues/4073
         resampled["date_merge"] = (
-            resampled["date"] + to_timedelta(resampled_int, "m") - to_timedelta(original_int, "m")
+            resampled["date"]
+            + to_timedelta(resampled_int, "m")
+            - to_timedelta(original_int, "m")
         )
     else:
         raise ValueError(
@@ -118,7 +126,9 @@ def compute_interval(dataframe: DataFrame, exchange_interval=False):
     :param exchange_interval: should we convert the result to an exchange interval or just a number
     :return:
     """
-    res_interval = int((dataframe["date"] - dataframe["date"].shift()).min().total_seconds() // 60)
+    res_interval = int(
+        (dataframe["date"] - dataframe["date"].shift()).min().total_seconds() // 60
+    )
 
     if exchange_interval:
         # convert to our allowed ticker values

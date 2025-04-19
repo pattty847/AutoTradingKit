@@ -13,17 +13,24 @@ from atklip.controls.pandas_ta.utils import (
     v_scalar,
     v_series,
     v_talib,
-    zero
+    zero,
 )
 from atklip.controls.pandas_ta.volatility import atr
 
 
-
 def adx(
-    high: Series, low: Series, close: Series, length: Int = None,
-    lensig: Int = None, adxr_length: Int = None, scalar: IntFloat = None,
-    tvmode: bool = None, mamode: str = None,
-    drift: Int = None, offset: Int = None, **kwargs: DictLike
+    high: Series,
+    low: Series,
+    close: Series,
+    length: Int = None,
+    lensig: Int = None,
+    adxr_length: Int = None,
+    scalar: IntFloat = None,
+    tvmode: bool = None,
+    mamode: str = None,
+    drift: Int = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> DataFrame:
     """Average Directional Movement (ADX)
 
@@ -77,8 +84,11 @@ def adx(
 
     # Calculate
     atr_ = atr(
-        high=high, low=low, close=close,
-        length=length, prenan=kwargs.pop("prenan", True)
+        high=high,
+        low=low,
+        close=close,
+        length=length,
+        prenan=kwargs.pop("prenan", True),
     )
     if atr_ is None or all(isnan(atr_)):
         return
@@ -86,7 +96,7 @@ def adx(
     k = scalar / atr_
 
     up = high - high.shift(drift)  # high.diff(drift)
-    dn = low.shift(drift) - low    # low.diff(-drift).shift(drift)
+    dn = low.shift(drift) - low  # low.diff(-drift).shift(drift)
 
     pos = ((up > dn) & (up > 0)) * up
     neg = ((dn > up) & (dn > 0)) * dn
@@ -106,9 +116,9 @@ def adx(
         # the initial value, work around it by modifying input value to get
         # desired output.
         pos.iloc[length - 1] = pos[:length].sum()
-        pos[:length - 1] = 0
+        pos[: length - 1] = 0
         neg.iloc[length - 1] = neg[:length].sum()
-        neg[:length - 1] = 0
+        neg[: length - 1] = 0
 
         alpha = 1 / length
         dmp = k * pos.ewm(alpha=alpha, adjust=False, min_periods=length).mean()
@@ -118,11 +128,11 @@ def adx(
         dx = scalar * (dmp - dmn).abs() / (dmp + dmn)
         dx = dx.shift(-length)
         dx.iloc[length - 1] = dx[:length].sum()
-        dx[:length - 1] = 0
+        dx[: length - 1] = 0
 
         adx = ma(mamode, dx, length=lensig)
         # Rollback shifted rows.
-        adx[:length - 1] = nan
+        adx[: length - 1] = nan
         adx = adx.shift(length)
     else:
         dmp = k * ma(mamode, pos, length=length)

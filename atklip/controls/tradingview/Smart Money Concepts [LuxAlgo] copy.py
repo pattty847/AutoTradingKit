@@ -15,27 +15,30 @@ xScale = 2.0
 yScale = 0.5 * ta.atr(length=500)
 
 # Define colors (not used in calculations)
-upper_col = '#fda05e'
-lower_col = '#2fd68e'
+upper_col = "#fda05e"
+lower_col = "#2fd68e"
 
 # Initialize arrays for storing points and levels
 points = []
 levels = []
 
+
 # Function to calculate pivot high and pivot low
 def calculate_pivothigh(high, leftBars, rightBars):
     pivot_high = np.zeros_like(high)
     for i in range(leftBars, len(high) - rightBars):
-        if high[i] == np.max(high[i - leftBars:i + rightBars + 1]):
+        if high[i] == np.max(high[i - leftBars : i + rightBars + 1]):
             pivot_high[i] = high[i]
     return pivot_high
+
 
 def calculate_pivotlow(low, leftBars, rightBars):
     pivot_low = np.zeros_like(low)
     for i in range(leftBars, len(low) - rightBars):
-        if low[i] == np.min(low[i - leftBars:i + rightBars + 1]):
+        if low[i] == np.min(low[i - leftBars : i + rightBars + 1]):
             pivot_low[i] = low[i]
     return pivot_low
+
 
 # Function to calculate normalized volume delta
 def calculate_normalized_volume(volume, leftBars, rightBars):
@@ -46,13 +49,17 @@ def calculate_normalized_volume(volume, leftBars, rightBars):
     norm_vol = (volume_ / reference_vol) * 5
     return norm_vol
 
+
 # Function to check if lines are crossed
 def check_cross(arrayOfLines, close):
     for line in arrayOfLines:
-        lineLevel = line['price']
-        lineWasCrossed = np.sign(close.shift(1) - lineLevel) != np.sign(close - lineLevel)
+        lineLevel = line["price"]
+        lineWasCrossed = np.sign(close.shift(1) - lineLevel) != np.sign(
+            close - lineLevel
+        )
         if lineWasCrossed:
             arrayOfLines.remove(line)
+
 
 # Function to draw circles (not used in calculations)
 def draw_circle(src, mult_x, mult_y, high, low, rightBars, bar_index):
@@ -67,16 +74,18 @@ def draw_circle(src, mult_x, mult_y, high, low, rightBars, bar_index):
         angle += np.pi / 5
         points.append((xValue, yValue))
 
+
 # Function to draw levels (not used in calculations)
 def draw_level(src, n, width, color):
-    levels.append({'price': src, 'width': width, 'color': color})
+    levels.append({"price": src, "width": width, "color": color})
+
 
 # Main function to process data
 def process_data(df):
-    high = df['high']
-    low = df['low']
-    close = df['close']
-    volume = df['volume']
+    high = df["high"]
+    low = df["low"]
+    close = df["close"]
+    volume = df["volume"]
 
     ph = calculate_pivothigh(high, leftBars, rightBars)
     pl = calculate_pivotlow(low, leftBars, rightBars)
@@ -86,7 +95,15 @@ def process_data(df):
     for i in range(11):
         condition = ~np.isnan(ph) & (norm_vol > i) & (norm_vol > filter_vol)
         if condition.iloc[-1]:
-            draw_circle(True, np.round(i * step), np.round(i * step), high, low, rightBars, len(df) - 1)
+            draw_circle(
+                True,
+                np.round(i * step),
+                np.round(i * step),
+                high,
+                low,
+                rightBars,
+                len(df) - 1,
+            )
 
     if ~np.isnan(ph.iloc[-1]) & (norm_vol.iloc[-1] > filter_vol):
         n = len(df) - 1 - rightBars
@@ -97,7 +114,15 @@ def process_data(df):
     for i in range(11, 0, -1):
         condition = ~np.isnan(pl) & (norm_vol > i) & (norm_vol > filter_vol)
         if condition.iloc[-1]:
-            draw_circle(False, np.round(i * step), np.round(i * step), high, low, rightBars, len(df) - 1)
+            draw_circle(
+                False,
+                np.round(i * step),
+                np.round(i * step),
+                high,
+                low,
+                rightBars,
+                len(df) - 1,
+            )
 
     if ~np.isnan(pl.iloc[-1]) & (norm_vol.iloc[-1] > filter_vol):
         n = len(df) - 1 - rightBars
@@ -110,6 +135,7 @@ def process_data(df):
     # Clean up lines if levels are not shown
     if not show_lvl:
         levels.clear()
+
 
 # Example usage
 # df = pd.read_csv('your_data.csv')  # Load your data here

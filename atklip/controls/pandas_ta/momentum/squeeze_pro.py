@@ -13,21 +13,28 @@ from atklip.controls.pandas_ta.utils import (
     v_offset,
     v_pos_default,
     v_scalar,
-    v_series
+    v_series,
 )
 from atklip.controls.pandas_ta.volatility import bbands, kc
 
 
-
 def squeeze_pro(
-    high: Series, low: Series, close: Series,
-    bb_length: Int = None, bb_std: IntFloat = None,
-    kc_length: Int = None, kc_scalar_wide: IntFloat = None,
-    kc_scalar_normal: IntFloat = None, kc_scalar_narrow: IntFloat = None,
-    mom_length: Int = None, mom_smooth: Int = None,
-    use_tr: bool = None, mamode: str = None,
+    high: Series,
+    low: Series,
+    close: Series,
+    bb_length: Int = None,
+    bb_std: IntFloat = None,
+    kc_length: Int = None,
+    kc_scalar_wide: IntFloat = None,
+    kc_scalar_normal: IntFloat = None,
+    kc_scalar_narrow: IntFloat = None,
+    mom_length: Int = None,
+    mom_smooth: Int = None,
+    use_tr: bool = None,
+    mamode: str = None,
     prenan: bool = None,
-    offset: Int = None, **kwargs: DictLike
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> DataFrame:
     """Squeeze PRO(SQZPRO)
 
@@ -95,8 +102,9 @@ def squeeze_pro(
     kc_scalar_normal = v_scalar(kc_scalar_normal, 1.5)
     kc_scalar_wide = v_scalar(kc_scalar_wide, 2)
     prenan = v_bool(prenan, False)
-    valid_kc_scaler = kc_scalar_wide > kc_scalar_normal \
-        and kc_scalar_normal > kc_scalar_narrow
+    valid_kc_scaler = (
+        kc_scalar_wide > kc_scalar_normal and kc_scalar_normal > kc_scalar_narrow
+    )
 
     if not valid_kc_scaler:
         return
@@ -111,16 +119,31 @@ def squeeze_pro(
     # Calculate
     bbd = bbands(close, length=bb_length, std=bb_std, mamode=mamode)
     kch_wide = kc(
-        high, low, close, length=kc_length, scalar=kc_scalar_wide,
-        mamode=mamode, tr=use_tr
+        high,
+        low,
+        close,
+        length=kc_length,
+        scalar=kc_scalar_wide,
+        mamode=mamode,
+        tr=use_tr,
     )
     kch_normal = kc(
-        high, low, close, length=kc_length, scalar=kc_scalar_normal,
-        mamode=mamode, tr=use_tr
+        high,
+        low,
+        close,
+        length=kc_length,
+        scalar=kc_scalar_normal,
+        mamode=mamode,
+        tr=use_tr,
     )
     kch_narrow = kc(
-        high, low, close, length=kc_length, scalar=kc_scalar_narrow,
-        mamode=mamode, tr=use_tr
+        high,
+        low,
+        close,
+        length=kc_length,
+        scalar=kc_scalar_narrow,
+        mamode=mamode,
+        tr=use_tr,
     )
 
     # Simplify KC and BBAND column names for dynamic access
@@ -183,7 +206,7 @@ def squeeze_pro(
         f"SQZPRO_ON_NORMAL": squeeze_on_normal,
         f"SQZPRO_ON_NARROW": squeeze_on_narrow,
         f"SQZPRO_OFF": squeeze_off_wide,
-        f"SQZPRO_NO": no_squeeze
+        f"SQZPRO_NO": no_squeeze,
     }
     df = DataFrame(data, index=close.index)
     df.name = squeeze.name

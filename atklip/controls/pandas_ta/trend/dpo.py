@@ -5,10 +5,12 @@ from atklip.controls.pandas_ta.overlap import sma
 from atklip.controls.pandas_ta.utils import v_bool, v_offset, v_pos_default, v_series
 
 
-
 def dpo(
-    close: Series, length: Int = None, centered: bool = True,
-    offset: Int = None, **kwargs: DictLike
+    close: Series,
+    length: Int = None,
+    centered: bool = True,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Detrend Price Oscillator (DPO)
 

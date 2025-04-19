@@ -6,10 +6,12 @@ from atklip.controls.pandas_ta.statistics import stdev
 from atklip.controls.pandas_ta.utils import v_lowerbound, v_offset, v_series
 
 
-
 def zscore(
-    close: Series, length: Int = None, std: IntFloat = None,
-    offset: Int = None, **kwargs: DictLike
+    close: Series,
+    length: Int = None,
+    std: IntFloat = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Rolling Z Score
 

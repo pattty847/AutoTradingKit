@@ -36,4 +36,6 @@ class MorningStar(CandlestickFinder):
         #         prev_open < open and
         #         close > b_prev_close)
 
-        return max(prev_open, prev_close) < b_prev_close < b_prev_open and close > open > max(prev_open, prev_close)
+        return max(
+            prev_open, prev_close
+        ) < b_prev_close < b_prev_open and close > open > max(prev_open, prev_close)

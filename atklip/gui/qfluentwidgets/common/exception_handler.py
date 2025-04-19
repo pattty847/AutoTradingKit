@@ -2,9 +2,8 @@
 from copy import deepcopy
 
 
-
 def exceptionHandler(*default):
-    """ decorator for exception handling
+    """decorator for exception handling
 
     Parameters
     ----------

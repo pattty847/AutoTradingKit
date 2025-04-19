@@ -1,7 +1,7 @@
 # coding:utf-8
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QWidget, QStackedWidget, QVBoxLayout
-from atklip.gui.qfluentwidgets import (Pivot)
+from atklip.gui.qfluentwidgets import Pivot
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QWidget
@@ -11,7 +11,7 @@ from atklip.gui.qfluentwidgets.components.navigation.pivot import PivotItem
 
 
 class PivotInterface(QWidget):
-    """ Pivot interface """
+    """Pivot interface"""
 
     Nav = Pivot
     sig_change_widget = Signal(float)
@@ -28,11 +28,11 @@ class PivotInterface(QWidget):
         self.vBoxLayout.addWidget(self.stackedWidget)
         self.vBoxLayout.setContentsMargins(0, 0, 0, 0)
         self.vBoxLayout.setSpacing(0)
-        self.stackedWidget.setContentsMargins(0,0,0,0)
-        
+        self.stackedWidget.setContentsMargins(0, 0, 0, 0)
+
         # FluentStyleSheet.NAVIGATION_VIEW_INTERFACE.apply(self)
         self.stackedWidget.currentChanged.connect(self.onCurrentIndexChanged)
-        
+
     def addSubInterface(self, widget, objectName, text):
         widget.setObjectName(objectName)
         # widget.setAlignment(Qt.AlignTop | Qt.AlignLeft)
@@ -45,7 +45,7 @@ class PivotInterface(QWidget):
         )
         PivotItem.setObjectName(objectName)
         PivotItem.itemClicked.connect(self.setcurentWidget)
-        
+
         _height_widget = widget.height() + self.pivot.height()
         self.setFixedHeight(_height_widget)
 
@@ -66,4 +66,3 @@ class PivotInterface(QWidget):
         self.setFixedHeight(_height_widget)
         self.pivot.setCurrentItem(widget.objectName())
         qrouter.push(self.stackedWidget, widget.objectName())
-

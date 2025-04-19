@@ -5,10 +5,12 @@ from atklip.controls.pandas_ta.overlap import sma
 from atklip.controls.pandas_ta.utils import v_offset, v_pos_default, v_series
 
 
-
 def vwma(
-    close: Series, volume: Series, length: Int = None,
-    offset: Int = None, **kwargs: DictLike
+    close: Series,
+    volume: Series,
+    length: Int = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Volume Weighted Moving Average (VWMA)
 

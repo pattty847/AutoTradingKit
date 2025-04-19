@@ -7,11 +7,13 @@ from atklip.controls.pandas_ta.utils import v_offset, v_pos_default, v_series, v
 from .variance import variance
 
 
-
 def stdev(
-    close: Series, length: Int = None,
-    ddof: Int = None, talib: bool = None,
-    offset: Int = None, **kwargs: DictLike
+    close: Series,
+    length: Int = None,
+    ddof: Int = None,
+    talib: bool = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Rolling Standard Deviation
 
@@ -47,9 +49,7 @@ def stdev(
     offset = v_offset(offset)
 
     # Calculate
-    stdev = variance(
-        close=close, length=length, ddof=ddof, talib=mode_tal
-    ).apply(sqrt)
+    stdev = variance(close=close, length=length, ddof=ddof, talib=mode_tal).apply(sqrt)
 
     # Offset
     if offset != 0:

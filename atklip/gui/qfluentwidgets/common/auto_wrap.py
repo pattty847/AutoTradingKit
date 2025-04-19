@@ -25,7 +25,7 @@ class TextWrap:
 
     @classmethod
     @lru_cache(maxsize=128)
-    def get_width(cls, _char:str="") -> int:
+    def get_width(cls, _char: str = "") -> int:
         """Returns the width of the char"""
         return cls.EAST_ASAIN_WIDTH_TABLE.get(east_asian_width(_char), 1)
 
@@ -37,7 +37,7 @@ class TextWrap:
 
     @classmethod
     @lru_cache(maxsize=128)
-    def get_char_type(cls, _char:str="") -> CharType:
+    def get_char_type(cls, _char: str = "") -> CharType:
         """Returns the type of the char"""
 
         if _char.isspace():

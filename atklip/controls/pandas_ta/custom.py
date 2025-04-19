@@ -10,7 +10,6 @@ import pandas_ta
 from atklip.controls.pandas_ta._typing import DictLike
 
 
-
 def bind(name: str, f: types.FunctionType, method: types.MethodType = None):
     """
     Helper function to bind the function and class method defined in a custom

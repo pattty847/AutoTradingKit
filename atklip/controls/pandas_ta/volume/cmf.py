@@ -1,14 +1,23 @@
 # -*- coding: utf-8 -*-
 from pandas import Series
 from atklip.controls.pandas_ta._typing import DictLike, Int
-from atklip.controls.pandas_ta.utils import non_zero_range, v_offset, v_pos_default, v_series
-
+from atklip.controls.pandas_ta.utils import (
+    non_zero_range,
+    v_offset,
+    v_pos_default,
+    v_series,
+)
 
 
 def cmf(
-    high: Series, low: Series, close: Series, volume: Series,
-    open_: Series = None, length: Int = None,
-    offset: Int = None, **kwargs: DictLike
+    high: Series,
+    low: Series,
+    close: Series,
+    volume: Series,
+    open_: Series = None,
+    length: Int = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Chaikin Money Flow (CMF)
 
@@ -59,8 +68,10 @@ def cmf(
         ad = 2 * close - (high + low)  # AD with High, Low, Close
 
     ad *= volume / non_zero_range(high, low)
-    cmf = ad.rolling(length, min_periods=min_periods).sum() \
+    cmf = (
+        ad.rolling(length, min_periods=min_periods).sum()
         / volume.rolling(length, min_periods=min_periods).sum()
+    )
 
     # Offset
     if offset != 0:

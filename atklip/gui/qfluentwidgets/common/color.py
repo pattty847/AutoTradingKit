@@ -8,10 +8,11 @@ from PySide6.QtGui import QColor
 
 
 class FluentThemeColor(Enum):
-    """ Fluent theme color
+    """Fluent theme color
 
     Refer to: https://www.figma.com/file/iM7EPX8Jn37zjeSezb43cF
     """
+
     YELLOW_GOLD = "#FFB900"
     GOLD = "#FF8C00"
     ORANGE_BRIGHT = "#F7630C"
@@ -66,8 +67,10 @@ class FluentThemeColor(Enum):
 
 
 # Color Utility
-@lru_cache(maxsize=128) 
-def hsv2rgb(h_or_color: Union[tuple, int], s: int = 0, v: int = 0, a: int = None) -> tuple:
+@lru_cache(maxsize=128)
+def hsv2rgb(
+    h_or_color: Union[tuple, int], s: int = 0, v: int = 0, a: int = None
+) -> tuple:
     """Convert hsv color to rgb color.
 
     :param h_or_color: The 'hue' value or a color tuple.
@@ -82,13 +85,18 @@ def hsv2rgb(h_or_color: Union[tuple, int], s: int = 0, v: int = 0, a: int = None
             h, s, v, a = h_or_color
         else:
             h, s, v = h_or_color
-    else: h = h_or_color
+    else:
+        h = h_or_color
     r, g, b = colorsys.hsv_to_rgb(h / 100.0, s / 100.0, v / 100.0)
-    if a is not None: return r * 255, g * 255, b * 255, a
+    if a is not None:
+        return r * 255, g * 255, b * 255, a
     return r * 255, g * 255, b * 255
 
-@lru_cache(maxsize=128) 
-def rgb2hsv(r_or_color: Union[tuple, int], g: int = 0, b: int = 0, a: int = None) -> tuple:
+
+@lru_cache(maxsize=128)
+def rgb2hsv(
+    r_or_color: Union[tuple, int], g: int = 0, b: int = 0, a: int = None
+) -> tuple:
     """Convert rgb color to hsv color.
 
     :param r_or_color: The 'red' value or a color tuple.
@@ -103,12 +111,15 @@ def rgb2hsv(r_or_color: Union[tuple, int], g: int = 0, b: int = 0, a: int = None
             r, g, b, a = r_or_color
         else:
             r, g, b = r_or_color
-    else: r = r_or_color
+    else:
+        r = r_or_color
     h, s, v = colorsys.rgb_to_hsv(r / 255.0, g / 255.0, b / 255.0)
-    if a is not None: return h * 100, s * 100, v * 100, a
+    if a is not None:
+        return h * 100, s * 100, v * 100, a
     return h * 100, s * 100, v * 100
 
-@lru_cache(maxsize=128) 
+
+@lru_cache(maxsize=128)
 def hex2rgb(hex: str) -> tuple:
     """Convert hex color to rgb color.
 
@@ -116,12 +127,15 @@ def hex2rgb(hex: str) -> tuple:
     :return: The converted rgb tuple color.
     """
 
-    if len(hex) < 6: hex += "0"*(6-len(hex))
-    elif len(hex) > 6: hex = hex[0:6]
-    rgb = tuple(int(hex[i:i+2], 16) for i in (0,2,4))
+    if len(hex) < 6:
+        hex += "0" * (6 - len(hex))
+    elif len(hex) > 6:
+        hex = hex[0:6]
+    rgb = tuple(int(hex[i : i + 2], 16) for i in (0, 2, 4))
     return rgb
 
-@lru_cache(maxsize=128) 
+
+@lru_cache(maxsize=128)
 def rgb2hex(r_or_color: Union[tuple, int], g: int = 0, b: int = 0, a: int = 0) -> str:
     """Convert rgb color to hex color.
 
@@ -132,12 +146,15 @@ def rgb2hex(r_or_color: Union[tuple, int], g: int = 0, b: int = 0, a: int = 0) -
     :return: The converted hexadecimal color.
     """
 
-    if type(r_or_color).__name__ == "tuple": r, g, b = r_or_color[:3]
-    else: r = r_or_color
-    hex = '%02x%02x%02x' % (int(r), int(g), int(b))
+    if type(r_or_color).__name__ == "tuple":
+        r, g, b = r_or_color[:3]
+    else:
+        r = r_or_color
+    hex = "%02x%02x%02x" % (int(r), int(g), int(b))
     return hex
 
-@lru_cache(maxsize=128) 
+
+@lru_cache(maxsize=128)
 def hex2hsv(hex: str) -> tuple:
     """Convert hex color to hsv color.
 
@@ -147,7 +164,8 @@ def hex2hsv(hex: str) -> tuple:
 
     return rgb2hsv(hex2rgb(hex))
 
-@lru_cache(maxsize=128) 
+
+@lru_cache(maxsize=128)
 def hsv2hex(h_or_color: Union[tuple, int], s: int = 0, v: int = 0, a: int = 0) -> str:
     """Convert hsv color to hex color.
 
@@ -158,8 +176,8 @@ def hsv2hex(h_or_color: Union[tuple, int], s: int = 0, v: int = 0, a: int = 0) -
     :return: The converted hexadecimal color.
     """
 
-    if type(h_or_color).__name__ == "tuple": h, s, v = h_or_color[:3]
-    else: h = h_or_color
+    if type(h_or_color).__name__ == "tuple":
+        h, s, v = h_or_color[:3]
+    else:
+        h = h_or_color
     return rgb2hex(hsv2rgb(h, s, v))
-
-

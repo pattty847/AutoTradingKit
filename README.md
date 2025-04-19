@@ -45,17 +45,17 @@ Let’s build the future of algorithmic trading together! 🚀🔥
 |                **Forex**                |                Under Development                |
 |                **Stock**                |                Under Development                |
 
-![1739977622209](image/README/1739977622209.png)
+![1739977622209](images/README/1739977622209.png)
 
-![1739977750678](image/README/1739977750678.png)
+![1739977750678](images/README/1739977750678.png)
 
-![1739977775276](image/README/1739977775276.png)
+![1739977775276](images/README/1739977775276.png)
 
-![1739977816909](image/README/1739977816909.png)
+![1739977816909](images/README/1739977816909.png)
 
-![1740004081150](image/README/1740004081150.png)
+![1740004081150](images/README/1740004081150.png)
 
-![1740004113843](image/README/1740004113843.png)
+![1740004113843](images/README/1740004113843.png)
 
 ## Connect with ATK team
 

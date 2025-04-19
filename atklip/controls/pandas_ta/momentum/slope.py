@@ -7,15 +7,17 @@ from atklip.controls.pandas_ta.utils import (
     v_bool,
     v_offset,
     v_pos_default,
-    v_series
+    v_series,
 )
 
 
-
 def slope(
-    close: Series, length: Int = None,
-    as_angle: bool = None, to_degrees: bool = None,
-    offset: Int = None, **kwargs: DictLike
+    close: Series,
+    length: Int = None,
+    as_angle: bool = None,
+    to_degrees: bool = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Slope
 
@@ -68,7 +70,11 @@ def slope(
         slope.fillna(kwargs["fillna"], inplace=True)
 
     # Name and Category
-    slope.name = f"SLOPE_{length}" if not as_angle else f"ANGLE{'d' if to_degrees else 'r'}_{length}"
+    slope.name = (
+        f"SLOPE_{length}"
+        if not as_angle
+        else f"ANGLE{'d' if to_degrees else 'r'}_{length}"
+    )
     slope.category = "momentum"
 
     return slope

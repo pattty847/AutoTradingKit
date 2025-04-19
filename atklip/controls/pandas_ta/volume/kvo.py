@@ -10,16 +10,22 @@ from atklip.controls.pandas_ta.utils import (
     v_mamode,
     v_offset,
     v_pos_default,
-    v_series
+    v_series,
 )
 
 
-
 def kvo(
-    high: Series, low: Series, close: Series, volume: Series,
-    fast: Int = None, slow: Int = None, signal: Int = None,
-    mamode: str = None, drift: Int = None,
-    offset: Int = None, **kwargs: DictLike
+    high: Series,
+    low: Series,
+    close: Series,
+    volume: Series,
+    fast: Int = None,
+    slow: Int = None,
+    signal: Int = None,
+    mamode: str = None,
+    drift: Int = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> DataFrame:
     """Klinger Volume Oscillator (KVO)
 
@@ -66,13 +72,13 @@ def kvo(
 
     # Calculate
     signed_volume = volume * signed_series(hlc3(high, low, close), -1)
-    sv = signed_volume.loc[signed_volume.first_valid_index():, ]
+    sv = signed_volume.loc[signed_volume.first_valid_index() :,]
 
     kvo = ma(mamode, sv, length=fast) - ma(mamode, sv, length=slow)
     if kvo is None or all(isnan(kvo.to_numpy())):
         return  # Emergency Break
 
-    kvo_signal = ma(mamode, kvo.loc[kvo.first_valid_index():, ], length=signal)
+    kvo_signal = ma(mamode, kvo.loc[kvo.first_valid_index() :,], length=signal)
     if kvo_signal is None or all(isnan(kvo_signal.to_numpy())):
         return  # Emergency Break
 

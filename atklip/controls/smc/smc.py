@@ -6,6 +6,7 @@ from pandas import DataFrame, Series
 from datetime import datetime
 from atklip.appmanager.worker.return_worker import HeavyProcess
 
+
 def inputvalidator(input_="ohlc"):
     def dfcheck(func):
         @wraps(func)
@@ -440,8 +441,13 @@ class smc:
                         percentage[idx] = 0.0
                         active_bullish.remove(idx)
                 else:
-                    if ((not close_mitigation and _low[close_index] < bottom_arr[idx])
-                        or (close_mitigation and min(_open[close_index], _close[close_index]) < bottom_arr[idx])):
+                    if (
+                        not close_mitigation and _low[close_index] < bottom_arr[idx]
+                    ) or (
+                        close_mitigation
+                        and min(_open[close_index], _close[close_index])
+                        < bottom_arr[idx]
+                    ):
                         breaker[idx] = True
                         mitigated_index[idx] = close_index - 1
 
@@ -450,7 +456,10 @@ class smc:
             last_top_index = swing_high_indices[pos - 1] if pos > 0 else None
 
             if last_top_index is not None:
-                if _close[close_index] > _high[last_top_index] and not crossed[last_top_index]:
+                if (
+                    _close[close_index] > _high[last_top_index]
+                    and not crossed[last_top_index]
+                ):
                     crossed[last_top_index] = True
                     # Initialise with default values from previous candle
                     default_index = close_index - 1
@@ -475,11 +484,21 @@ class smc:
                     ob[obIndex] = 1
                     top_arr[obIndex] = obTop
                     bottom_arr[obIndex] = obBtm
-                    obVolume[obIndex] = _volume[close_index] + _volume[close_index - 1] + _volume[close_index - 2]
+                    obVolume[obIndex] = (
+                        _volume[close_index]
+                        + _volume[close_index - 1]
+                        + _volume[close_index - 2]
+                    )
                     lowVolume[obIndex] = _volume[close_index - 2]
-                    highVolume[obIndex] = _volume[close_index] + _volume[close_index - 1]
+                    highVolume[obIndex] = (
+                        _volume[close_index] + _volume[close_index - 1]
+                    )
                     max_vol = max(highVolume[obIndex], lowVolume[obIndex])
-                    percentage[obIndex] = (min(highVolume[obIndex], lowVolume[obIndex]) / max_vol * 100.0) if max_vol != 0 else 100.0
+                    percentage[obIndex] = (
+                        (min(highVolume[obIndex], lowVolume[obIndex]) / max_vol * 100.0)
+                        if max_vol != 0
+                        else 100.0
+                    )
                     active_bullish.append(obIndex)
 
         # List to track active bearish order blocks
@@ -500,8 +519,10 @@ class smc:
                         percentage[idx] = 0.0
                         active_bearish.remove(idx)
                 else:
-                    if ((not close_mitigation and _high[close_index] > top_arr[idx])
-                        or (close_mitigation and max(_open[close_index], _close[close_index]) > top_arr[idx])):
+                    if (not close_mitigation and _high[close_index] > top_arr[idx]) or (
+                        close_mitigation
+                        and max(_open[close_index], _close[close_index]) > top_arr[idx]
+                    ):
                         breaker[idx] = True
                         mitigated_index[idx] = close_index
 
@@ -510,7 +531,10 @@ class smc:
             last_btm_index = swing_low_indices[pos - 1] if pos > 0 else None
 
             if last_btm_index is not None:
-                if _close[close_index] < _low[last_btm_index] and not crossed[last_btm_index]:
+                if (
+                    _close[close_index] < _low[last_btm_index]
+                    and not crossed[last_btm_index]
+                ):
                     crossed[last_btm_index] = True
                     default_index = close_index - 1
                     obTop = _high[default_index]
@@ -531,11 +555,19 @@ class smc:
                     ob[obIndex] = -1
                     top_arr[obIndex] = obTop
                     bottom_arr[obIndex] = obBtm
-                    obVolume[obIndex] = _volume[close_index] + _volume[close_index - 1] + _volume[close_index - 2]
+                    obVolume[obIndex] = (
+                        _volume[close_index]
+                        + _volume[close_index - 1]
+                        + _volume[close_index - 2]
+                    )
                     lowVolume[obIndex] = _volume[close_index] + _volume[close_index - 1]
                     highVolume[obIndex] = _volume[close_index - 2]
                     max_vol = max(highVolume[obIndex], lowVolume[obIndex])
-                    percentage[obIndex] = (min(highVolume[obIndex], lowVolume[obIndex]) / max_vol * 100.0) if max_vol != 0 else 100.0
+                    percentage[obIndex] = (
+                        (min(highVolume[obIndex], lowVolume[obIndex]) / max_vol * 100.0)
+                        if max_vol != 0
+                        else 100.0
+                    )
                     active_bearish.append(obIndex)
 
         # Convert zeros to NaN where OB was not set
@@ -566,7 +598,9 @@ class smc:
         )
 
     @classmethod
-    def liquidity(cls, ohlc: DataFrame, swing_highs_lows: DataFrame, range_percent: float = 0.01) -> DataFrame:
+    def liquidity(
+        cls, ohlc: DataFrame, swing_highs_lows: DataFrame, range_percent: float = 0.01
+    ) -> DataFrame:
         """
         Liquidity
         Liquidity is when there are multiple highs within a small range of each other,
@@ -586,7 +620,7 @@ class smc:
         # Work on a copy so the original is not modified.
         shl = swing_highs_lows.copy()
         n = len(ohlc)
-        
+
         # Calculate the pip range based on the overall high-low range.
         pip_range = (ohlc["high"].max() - ohlc["low"].min()) * range_percent
 
@@ -714,23 +748,25 @@ class smc:
         broken_high = np.zeros(len(ohlc), dtype=np.int32)
         broken_low = np.zeros(len(ohlc), dtype=np.int32)
 
-        resampled_ohlc = ohlc.resample(time_frame).agg(
-            {
-                "open": "first",
-                "high": "max",
-                "low": "min",
-                "close": "last",
-                "volume": "sum",
-            }
-        ).dropna()
+        resampled_ohlc = (
+            ohlc.resample(time_frame)
+            .agg(
+                {
+                    "open": "first",
+                    "high": "max",
+                    "low": "min",
+                    "close": "last",
+                    "volume": "sum",
+                }
+            )
+            .dropna()
+        )
 
         currently_broken_high = False
         currently_broken_low = False
         last_broken_time = None
         for i in range(len(ohlc)):
-            resampled_previous_index = np.where(
-                resampled_ohlc.index < ohlc.index[i]
-            )[0]
+            resampled_previous_index = np.where(resampled_ohlc.index < ohlc.index[i])[0]
             if len(resampled_previous_index) <= 1:
                 previous_high[i] = np.nan
                 previous_low[i] = np.nan
@@ -742,10 +778,14 @@ class smc:
                 currently_broken_low = False
                 last_broken_time = resampled_previous_index
 
-            previous_high[i] = resampled_ohlc["high"].iloc[resampled_previous_index] 
+            previous_high[i] = resampled_ohlc["high"].iloc[resampled_previous_index]
             previous_low[i] = resampled_ohlc["low"].iloc[resampled_previous_index]
-            currently_broken_high = ohlc["high"].iloc[i] > previous_high[i] or currently_broken_high
-            currently_broken_low = ohlc["low"].iloc[i] < previous_low[i] or currently_broken_low
+            currently_broken_high = (
+                ohlc["high"].iloc[i] > previous_high[i] or currently_broken_high
+            )
+            currently_broken_low = (
+                ohlc["low"].iloc[i] < previous_low[i] or currently_broken_low
+            )
             broken_high[i] = 1 if currently_broken_high else 0
             broken_low[i] = 1 if currently_broken_low else 0
 
@@ -951,31 +991,41 @@ class smc:
 
         return pd.concat([direction, current_retracement, deepest_retracement], axis=1)
 
+
 import numpy as np
 import pandas as pd
 from typing import List
-from atklip.controls.ohlcv import   OHLCV
-from atklip.controls.candle import JAPAN_CANDLE,HEIKINASHI,SMOOTH_CANDLE,N_SMOOTH_CANDLE
+from atklip.controls.ohlcv import OHLCV
+from atklip.controls.candle import (
+    JAPAN_CANDLE,
+    HEIKINASHI,
+    SMOOTH_CANDLE,
+    N_SMOOTH_CANDLE,
+)
 from atklip.appmanager import ThreadPoolExecutor_global as ApiThreadPool
 
-from PySide6.QtCore import Signal,QObject
+from PySide6.QtCore import Signal, QObject
+
 
 class SMC(QObject):
     sig_update_candle = Signal()
     sig_add_candle = Signal()
     sig_reset_all = Signal()
-    signal_delete = Signal()  
-    sig_add_historic = Signal(int)   
-    def __init__(self,_candles,dict_ta_params:dict={}) -> None:   
+    signal_delete = Signal()
+    sig_add_historic = Signal(int)
+
+    def __init__(self, _candles, dict_ta_params: dict = {}) -> None:
         super().__init__(parent=None)
-        self._candles: JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE =_candles
-        
-        self.window:int = dict_ta_params.get("window",500)
-        self.swing_length:int = dict_ta_params.get("swing_length",5)
-        self.time_frame:int = dict_ta_params.get("time_frame","4h")
-        self.session:int = dict_ta_params.get("session","London")
-        
-        #self.signal_delete.connect(self.deleteLater)
+        self._candles: JAPAN_CANDLE | HEIKINASHI | SMOOTH_CANDLE | N_SMOOTH_CANDLE = (
+            _candles
+        )
+
+        self.window: int = dict_ta_params.get("window", 500)
+        self.swing_length: int = dict_ta_params.get("swing_length", 5)
+        self.time_frame: int = dict_ta_params.get("time_frame", "4h")
+        self.session: int = dict_ta_params.get("session", "London")
+
+        # self.signal_delete.connect(self.deleteLater)
 
         self.first_gen = False
         self.is_genering = True
@@ -983,7 +1033,7 @@ class SMC(QObject):
         self.is_histocric_load = False
         self._name = f"SMC {self.window}"
 
-        self.df:pd.DataFrame = pd.DataFrame([])
+        self.df: pd.DataFrame = pd.DataFrame([])
         self.worker = ApiThreadPool
 
         self.data = {
@@ -999,42 +1049,47 @@ class SMC(QObject):
         }
 
         self.connect_signals()
+
     @property
-    def is_current_update(self)-> bool:
+    def is_current_update(self) -> bool:
         return self._is_current_update
+
     @is_current_update.setter
-    def is_current_update(self,_is_current_update):
+    def is_current_update(self, _is_current_update):
         self._is_current_update = _is_current_update
-    
+
     @property
-    def source_name(self)-> str:
+    def source_name(self) -> str:
         return self._source_name
+
     @source_name.setter
-    def source_name(self,source_name):
+    def source_name(self, source_name):
         self._source_name = source_name
-    
-    def change_input(self,candles=None,dict_ta_params: dict={}):
+
+    def change_input(self, candles=None, dict_ta_params: dict = {}):
         if candles != None:
             self.disconnect_signals()
-            self._candles : JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE= candles
+            self._candles: (
+                JAPAN_CANDLE | HEIKINASHI | SMOOTH_CANDLE | N_SMOOTH_CANDLE
+            ) = candles
             self.connect_signals()
-        
-        if dict_ta_params != {}:    
-            self.window:int = dict_ta_params.get("window",500)
 
-            ta_name:str=dict_ta_params.get("ta_name")
-            obj_id:str=dict_ta_params.get("obj_id") 
-            
+        if dict_ta_params != {}:
+            self.window: int = dict_ta_params.get("window", 500)
+
+            ta_name: str = dict_ta_params.get("ta_name")
+            obj_id: str = dict_ta_params.get("obj_id")
+
             ta_param = f"{obj_id}-{ta_name}-{self.window}"
 
             self._name = ta_param
-        
+
         self.first_gen = False
         self.is_genering = True
-        #self.is_current_update = False
-        
+        # self.is_current_update = False
+
         self.first_gen_data()
-    
+
     def disconnect_signals(self):
         try:
             self._candles.sig_reset_all.disconnect(self.started_worker)
@@ -1043,76 +1098,76 @@ class SMC(QObject):
             self._candles.signal_delete.disconnect(self.signal_delete)
             self._candles.sig_add_historic.disconnect(self.add_historic_worker)
         except RuntimeError:
-                    pass
-    
+            pass
+
     def connect_signals(self):
         self._candles.sig_reset_all.connect(self.started_worker)
         self._candles.sig_update_candle.connect(self.update_worker)
         self._candles.sig_add_candle.connect(self.add_worker)
         self._candles.signal_delete.connect(self.signal_delete)
         self._candles.sig_add_historic.connect(self.add_historic_worker)
-    
-    
-    def change_source(self,_candles:JAPAN_CANDLE|HEIKINASHI|SMOOTH_CANDLE|N_SMOOTH_CANDLE):
+
+    def change_source(
+        self, _candles: JAPAN_CANDLE | HEIKINASHI | SMOOTH_CANDLE | N_SMOOTH_CANDLE
+    ):
         self.disconnect_signals()
-        self._candles =_candles
+        self._candles = _candles
         self.connect_signals()
         self.started_worker()
-    
-    
+
     @property
     def name(self):
         return self._name
+
     @name.setter
-    def name(self,_name):
+    def name(self, _name):
         self._name = _name
-    
-    def get_df(self,n:int=None):
+
+    def get_df(self, n: int = None):
         if not n:
             return self.df
         return self.df.tail(n)
-    
-    def get_data(self,start:int=0,stop:int=0):
+
+    def get_data(self, start: int = 0, stop: int = 0):
         return self.data
-    
-    
+
     def get_last_row_df(self):
-        return self.df.iloc[-1] 
+        return self.df.iloc[-1]
 
-    
-    def update_worker(self,candle):
-        self.worker.submit(self.update,candle)
+    def update_worker(self, candle):
+        self.worker.submit(self.update, candle)
 
-    def add_worker(self,candle):
-        self.worker.submit(self.add,candle)
-    
-    def add_historic_worker(self,n):
-        self.worker.submit(self.add_historic,n)
+    def add_worker(self, candle):
+        self.worker.submit(self.add, candle)
+
+    def add_historic_worker(self, n):
+        self.worker.submit(self.add_historic, n)
 
     def started_worker(self):
         self.worker.submit(self.first_gen_data)
-    
-    def paire_data(self,INDICATOR:pd.DataFrame|pd.Series):
-        if isinstance(INDICATOR,pd.Series):
+
+    def paire_data(self, INDICATOR: pd.DataFrame | pd.Series):
+        if isinstance(INDICATOR, pd.Series):
             y_data = INDICATOR
         else:
             column_names = INDICATOR.columns.tolist()
-            roc_name = ''
+            roc_name = ""
             for name in column_names:
                 if name.__contains__("CCI_"):
                     roc_name = name
             y_data = INDICATOR[roc_name]
         return y_data
-    
-    
+
     @staticmethod
-    def calculate(df: pd.DataFrame,swing_length=5, time_frame="4h",session="London"):
+    def calculate(df: pd.DataFrame, swing_length=5, time_frame="4h", session="London"):
         window_df = df.copy()
         # window_df = df.set_index("time")
         # window_df.index = pd.to_datetime(window_df.index, unit="ms").strftime("%Y-%m-%d %H:%M:%S")
         # window_df = df.reset_index(drop=True)
         fvg_data = smc.fvg(window_df, join_consecutive=True)
-        swing_highs_lows_data = smc.swing_highs_lows(window_df, swing_length=swing_length)
+        swing_highs_lows_data = smc.swing_highs_lows(
+            window_df, swing_length=swing_length
+        )
         bos_choch_data = smc.bos_choch(window_df, swing_highs_lows_data)
         ob_data = smc.ob(window_df, swing_highs_lows_data)
         liquidity_data = smc.liquidity(window_df, swing_highs_lows_data)
@@ -1127,14 +1182,19 @@ class SMC(QObject):
         # print(_index_df)
         # print(fvg_data)
 
-        fvg_data = pd.concat([_index_df,fvg_data],axis=1, ignore_index=False)  
-        swing_highs_lows_data = pd.concat([_index_df,swing_highs_lows_data],axis=1, ignore_index=False)
-        bos_choch_data = pd.concat([_index_df,bos_choch_data],axis=1, ignore_index=False)
-        ob_data = pd.concat([_index_df,ob_data],axis=1, ignore_index=False)
-        liquidity_data = pd.concat([_index_df,liquidity_data],axis=1, ignore_index=False)
+        fvg_data = pd.concat([_index_df, fvg_data], axis=1, ignore_index=False)
+        swing_highs_lows_data = pd.concat(
+            [_index_df, swing_highs_lows_data], axis=1, ignore_index=False
+        )
+        bos_choch_data = pd.concat(
+            [_index_df, bos_choch_data], axis=1, ignore_index=False
+        )
+        ob_data = pd.concat([_index_df, ob_data], axis=1, ignore_index=False)
+        liquidity_data = pd.concat(
+            [_index_df, liquidity_data], axis=1, ignore_index=False
+        )
         # previous_high_low_data = pd.concat([_index_df,previous_high_low_data],axis=1, ignore_index=False)
-        retracements = pd.concat([_index_df,retracements],axis=1, ignore_index=False)
-
+        retracements = pd.concat([_index_df, retracements], axis=1, ignore_index=False)
 
         data = {
             "FVG": {},
@@ -1160,7 +1220,7 @@ class SMC(QObject):
                 top = fvg_data["Top"][i]
                 fvg = fvg_data["FVG"][i]
                 bottom = fvg_data["Bottom"][i]
-                mid_x =round((x + x1) / 2)
+                mid_x = round((x + x1) / 2)
                 mid_y = (fvg_data["Top"][i] + fvg_data["Bottom"][i]) / 2
                 data["FVG"][x] = {
                     "x": x,
@@ -1209,7 +1269,7 @@ class SMC(QObject):
                     "mid_x": mid_x,
                     "mid_y": mid_y,
                 }
-            
+
         "OB"
         for i in range(len(ob_data["OB"])):
             if not np.isnan(ob_data["OB"][i]):
@@ -1262,80 +1322,86 @@ class SMC(QObject):
         # print(data["OB"])
         # print("Liquidity")
         # print(data["Liquidity"])
-        
+
         return data
 
     def first_gen_data(self):
-        #self.is_current_update = False
+        # self.is_current_update = False
         self.is_genering = True
         self.df = pd.DataFrame([])
-        df:pd.DataFrame = self._candles.get_df(self.window*2)
-        process = HeavyProcess(self.calculate,
-                               self.callback_first_gen,
-                               df,
-                               self.swing_length, 
-                               self.time_frame,
-                               self.session)
+        df: pd.DataFrame = self._candles.get_df(self.window * 2)
+        process = HeavyProcess(
+            self.calculate,
+            self.callback_first_gen,
+            df,
+            self.swing_length,
+            self.time_frame,
+            self.session,
+        )
         process.start()
-        
-    
-    def add_historic(self,n:int):
+
+    def add_historic(self, n: int):
         self.is_genering = True
         self.is_histocric_load = False
         _pre_len = len(self.df)
-        df = self._candles.get_df(self.window*2)
+        df = self._candles.get_df(self.window * 2)
         # df:pd.DataFrame = candle_df.head(-_pre_len)
-        
-        process = HeavyProcess(self.calculate,
-                               self.callback_gen_historic_data,
-                               df,
-                               self.swing_length, 
-                               self.time_frame,
-                               self.session)
+
+        process = HeavyProcess(
+            self.calculate,
+            self.callback_gen_historic_data,
+            df,
+            self.swing_length,
+            self.time_frame,
+            self.session,
+        )
         process.start()
-       
-    def add(self,new_candles:List[OHLCV]):
-        new_candle:OHLCV = new_candles[-1]
-        #self.is_current_update = False
+
+    def add(self, new_candles: List[OHLCV]):
+        new_candle: OHLCV = new_candles[-1]
+        # self.is_current_update = False
         if (self.first_gen == True) and (self.is_genering == False):
-            df:pd.DataFrame = self._candles.get_df(self.window*2)
-            process = HeavyProcess(self.calculate,
-                               self.callback_add,
-                               df,
-                               self.swing_length, 
-                               self.time_frame,
-                               self.session)
+            df: pd.DataFrame = self._candles.get_df(self.window * 2)
+            process = HeavyProcess(
+                self.calculate,
+                self.callback_add,
+                df,
+                self.swing_length,
+                self.time_frame,
+                self.session,
+            )
             process.start()
         else:
             pass
-            #self.is_current_update = True
-            
-    def update(self, new_candles:List[OHLCV]):
-        new_candle:OHLCV = new_candles[-1]
-        #self.is_current_update = False
+            # self.is_current_update = True
+
+    def update(self, new_candles: List[OHLCV]):
+        new_candle: OHLCV = new_candles[-1]
+        # self.is_current_update = False
         if (self.first_gen == True) and (self.is_genering == False):
-            df:pd.DataFrame = self._candles.get_df(self.window*2)
-            process = HeavyProcess(self.calculate,
-                               self.callback_update,
-                               df,
-                               self.swing_length, 
-                               self.time_frame,
-                               self.session)
-            process.start() 
+            df: pd.DataFrame = self._candles.get_df(self.window * 2)
+            process = HeavyProcess(
+                self.calculate,
+                self.callback_update,
+                df,
+                self.swing_length,
+                self.time_frame,
+                self.session,
+            )
+            process.start()
         else:
             pass
-            #self.is_current_update = True
-    
+            # self.is_current_update = True
+
     def callback_first_gen(self, future: Future):
         self.data = future.result()
         self.is_genering = False
         if self.first_gen == False:
             self.first_gen = True
             self.is_genering = False
-        #self.is_current_update = True
+        # self.is_current_update = True
         self.sig_reset_all.emit()
-        
-    
+
     def callback_gen_historic_data(self, future: Future):
         self.data = future.result()
         self.is_genering = False
@@ -1345,14 +1411,13 @@ class SMC(QObject):
         self.is_histocric_load = True
         _len = len(self.data)
         self.sig_add_historic.emit(_len)
-   
-    def callback_add(self,future: Future):
+
+    def callback_add(self, future: Future):
         self.data = future.result()
         self.sig_add_candle.emit()
-        #self.is_current_update = True
-        
-    def callback_update(self,future: Future):
+        # self.is_current_update = True
+
+    def callback_update(self, future: Future):
         self.data = future.result()
         self.sig_update_candle.emit()
-        #self.is_current_update = True
-        
+        # self.is_current_update = True

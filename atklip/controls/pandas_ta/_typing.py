@@ -11,7 +11,6 @@ from numpy import number as np_number
 from pandas import DataFrame, Series
 
 
-
 # Generic types
 T = TypeVar("T")
 

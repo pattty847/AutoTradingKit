@@ -20,7 +20,6 @@ from atklip.controls.pandas_ta.overlap.vidya import vidya
 from atklip.controls.pandas_ta.overlap.wma import wma
 
 
-
 def ma(name: str = None, source: Series = None, **kwargs: DictLike) -> Series:
     """Simple MA Utility for easier MA selection
 
@@ -44,8 +43,23 @@ def ma(name: str = None, source: Series = None, **kwargs: DictLike) -> Series:
         pd.Series: New feature generated.
     """
     _mas = [
-        "dema", "ema", "fwma", "hma", "linreg", "midpoint", "pwma", "rma",
-        "sinwma", "sma", "ssf", "swma", "t3", "tema", "trima", "vidya", "wma"
+        "dema",
+        "ema",
+        "fwma",
+        "hma",
+        "linreg",
+        "midpoint",
+        "pwma",
+        "rma",
+        "sinwma",
+        "sma",
+        "ssf",
+        "swma",
+        "t3",
+        "tema",
+        "trima",
+        "vidya",
+        "wma",
     ]
     if name is None and source is None:
         return _mas
@@ -54,20 +68,37 @@ def ma(name: str = None, source: Series = None, **kwargs: DictLike) -> Series:
     else:  # "ema"
         name = _mas[1]
 
-    if   name == "dema": return dema(source, **kwargs)
-    elif name == "fwma": return fwma(source, **kwargs)
-    elif name == "hma": return hma(source, **kwargs)
-    elif name == "linreg": return linreg(source, **kwargs)
-    elif name == "midpoint": return midpoint(source, **kwargs)
-    elif name == "pwma": return pwma(source, **kwargs)
-    elif name == "rma": return rma(source, **kwargs)
-    elif name == "sinwma": return sinwma(source, **kwargs)
-    elif name == "sma": return sma(source, **kwargs)
-    elif name == "ssf": return ssf(source, **kwargs)
-    elif name == "swma": return swma(source, **kwargs)
-    elif name == "t3": return t3(source, **kwargs)
-    elif name == "tema": return tema(source, **kwargs)
-    elif name == "trima": return trima(source, **kwargs)
-    elif name == "vidya": return vidya(source, **kwargs)
-    elif name == "wma": return wma(source, **kwargs)
-    else: return ema(source, **kwargs)
+    if name == "dema":
+        return dema(source, **kwargs)
+    elif name == "fwma":
+        return fwma(source, **kwargs)
+    elif name == "hma":
+        return hma(source, **kwargs)
+    elif name == "linreg":
+        return linreg(source, **kwargs)
+    elif name == "midpoint":
+        return midpoint(source, **kwargs)
+    elif name == "pwma":
+        return pwma(source, **kwargs)
+    elif name == "rma":
+        return rma(source, **kwargs)
+    elif name == "sinwma":
+        return sinwma(source, **kwargs)
+    elif name == "sma":
+        return sma(source, **kwargs)
+    elif name == "ssf":
+        return ssf(source, **kwargs)
+    elif name == "swma":
+        return swma(source, **kwargs)
+    elif name == "t3":
+        return t3(source, **kwargs)
+    elif name == "tema":
+        return tema(source, **kwargs)
+    elif name == "trima":
+        return trima(source, **kwargs)
+    elif name == "vidya":
+        return vidya(source, **kwargs)
+    elif name == "wma":
+        return wma(source, **kwargs)
+    else:
+        return ema(source, **kwargs)

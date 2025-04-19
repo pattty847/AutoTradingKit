@@ -1,6 +1,6 @@
 from PySide6.QtCore import QThreadPool
 import multiprocessing
-from concurrent.futures import ThreadPoolExecutor,ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 
 
 global num_threads
@@ -12,7 +12,9 @@ QThreadPool_global.setMaxThreadCount(num_threads)
 
 
 global ThreadPoolExecutor_global
-ThreadPoolExecutor_global = ThreadPoolExecutor(max_workers=num_threads*20)
+ThreadPoolExecutor_global = ThreadPoolExecutor(max_workers=num_threads * 20)
 
 global Heavy_ProcessPoolExecutor_global
-Heavy_ProcessPoolExecutor_global = ProcessPoolExecutor(max_workers=int(num_threads/2)) # ,max_tasks_per_child=num_threads*10
+Heavy_ProcessPoolExecutor_global = ProcessPoolExecutor(
+    max_workers=int(num_threads / 2)
+)  # ,max_tasks_per_child=num_threads*10

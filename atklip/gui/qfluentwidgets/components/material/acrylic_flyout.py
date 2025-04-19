@@ -6,12 +6,18 @@ from PySide6.QtWidgets import QWidget
 
 from ...common.style_sheet import isDarkTheme
 from ...common.icon import FluentIconBase
-from ..widgets.flyout import FlyoutAnimationType, FlyoutViewBase, FlyoutView, Flyout, FlyoutAnimationManager
+from ..widgets.flyout import (
+    FlyoutAnimationType,
+    FlyoutViewBase,
+    FlyoutView,
+    Flyout,
+    FlyoutAnimationManager,
+)
 from .acrylic_widget import AcrylicWidget
 
 
 class AcrylicFlyoutViewBase(AcrylicWidget, FlyoutViewBase):
-    """ Acrylic flyout view base """
+    """Acrylic flyout view base"""
 
     def acrylicClipPath(self):
         path = QPainterPath()
@@ -31,7 +37,7 @@ class AcrylicFlyoutViewBase(AcrylicWidget, FlyoutViewBase):
 
 
 class AcrylicFlyoutView(AcrylicWidget, FlyoutView):
-    """ Acrylic flyout view """
+    """Acrylic flyout view"""
 
     def acrylicClipPath(self):
         path = QPainterPath()
@@ -51,13 +57,22 @@ class AcrylicFlyoutView(AcrylicWidget, FlyoutView):
 
 
 class AcrylicFlyout(Flyout):
-    """ Acrylic flyout """
+    """Acrylic flyout"""
 
     @classmethod
-    def create(cls, title: str, content: str, icon: Union[FluentIconBase, QIcon, str] = None,
-               image: Union[str, QPixmap, QImage] = None, isClosable=False, target: Union[QWidget, QPoint] = None,
-               parent=None, aniType=FlyoutAnimationType.PULL_UP, isDeleteOnClose=True):
-        """ create and show a flyout using the default view
+    def create(
+        cls,
+        title: str,
+        content: str,
+        icon: Union[FluentIconBase, QIcon, str] = None,
+        image: Union[str, QPixmap, QImage] = None,
+        isClosable=False,
+        target: Union[QWidget, QPoint] = None,
+        parent=None,
+        aniType=FlyoutAnimationType.PULL_UP,
+        isDeleteOnClose=True,
+    ):
+        """create and show a flyout using the default view
 
         Parameters
         ----------
@@ -94,7 +109,7 @@ class AcrylicFlyout(Flyout):
         return w
 
     def exec(self, pos: QPoint, aniType=FlyoutAnimationType.PULL_UP):
-        """ show calendar view """
+        """show calendar view"""
         self.aniManager = FlyoutAnimationManager.make(aniType, self)
 
         if isinstance(self.view, AcrylicWidget):

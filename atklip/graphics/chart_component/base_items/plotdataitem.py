@@ -4,22 +4,28 @@ import bisect
 from typing import TypedDict
 import numpy as np
 from PySide6 import QtCore, QtGui, QtWidgets
-from atklip.graphics.pyqtgraph import GraphicsObject,PlotCurveItem,\
-    ScatterPlotItem,getConfigOption,functions as fn,debug as debug
+from pyqtgraph import (
+    GraphicsObject,
+    PlotCurveItem,
+    ScatterPlotItem,
+    getConfigOption,
+    functions as fn,
+    debug as debug,
+)
 
-__all__ = ['PlotDataItem']
+__all__ = ["PlotDataItem"]
 
 
 class PlotDataset:
     """
     Holds collected information for a plottable dataset.
-    
+
     Numpy arrays containing x and y coordinates are available as ``dataset.x`` and
     ``dataset.y``.
-    
+
     After a search has been performed, typically during a call to
     :meth:`dataRect <pyqtgraph.PlotDataset.dataRect>`, ``dataset.containsNonfinite``
-    is ``True`` if any coordinate values are non-finite (e.g. ``NaN`` or ``Inf``) or 
+    is ``True`` if any coordinate values are non-finite (e.g. ``NaN`` or ``Inf``) or
     ``False`` if all values are finite. If no search has been performed yet,
     `dataset.containsNonfinite` is ``None``.
 
@@ -39,18 +45,19 @@ class PlotDataset:
     Warnings
     --------
     :orphan:
-    .. warning:: 
-        
+    .. warning::
+
         This class is intended for internal use of :class:`~pyqtgraph.PlotDataItem`.
         The interface may change without warning.  It is not considered part of the
         public API.
     """
+
     def __init__(
         self,
         x: np.ndarray,
         y: np.ndarray,
         xAllFinite: bool | None = None,
-        yAllFinite: bool | None = None
+        yAllFinite: bool | None = None,
     ):
         super().__init__()
         self.x = x
@@ -59,9 +66,9 @@ class PlotDataset:
         self.yAllFinite = yAllFinite
         self._dataRect = None
 
-        if isinstance(x, np.ndarray) and x.dtype.kind in 'iu':
+        if isinstance(x, np.ndarray) and x.dtype.kind in "iu":
             self.xAllFinite = True
-        if isinstance(y, np.ndarray) and y.dtype.kind in 'iu':
+        if isinstance(y, np.ndarray) and y.dtype.kind in "iu":
             self.yAllFinite = True
 
     @property
@@ -72,7 +79,7 @@ class PlotDataset:
         return not (self.xAllFinite and self.yAllFinite)
 
     def _updateDataRect(self):
-        """ 
+        """
         Identify plottable bounds and presence of non-finite data.
         """
         if self.y is None or self.x is None:
@@ -80,14 +87,11 @@ class PlotDataset:
         xmin, xmax, self.xAllFinite = self._getArrayBounds(self.x, self.xAllFinite)
         ymin, ymax, self.yAllFinite = self._getArrayBounds(self.y, self.yAllFinite)
         self._dataRect = QtCore.QRectF(
-            QtCore.QPointF(xmin, ymin),
-            QtCore.QPointF(xmax, ymax)
+            QtCore.QPointF(xmin, ymin), QtCore.QPointF(xmax, ymax)
         )
 
     def _getArrayBounds(
-        self,
-        arr: np.ndarray,
-        all_finite: bool | None
+        self, arr: np.ndarray, all_finite: bool | None
     ) -> tuple[float, float, bool]:
         # here all_finite could be [None, False, True]
         if not all_finite:  # This may contain NaN or inf values.
@@ -97,11 +101,11 @@ class PlotDataset:
             # True if all values are finite, False if there are any non-finites
             if not selection.all():
                 arr = arr[selection]
-        
+
         # here all_finite could be [False, True]
         try:
-            amin = np.min( arr )  # find minimum of all finite values
-            amax = np.max( arr )  # find maximum of all finite values
+            amin = np.min(arr)  # find minimum of all finite values
+            amax = np.max(arr)  # find maximum of all finite values
         except ValueError:  # is raised when there are no finite values
             amin = np.nan
             amax = np.nan
@@ -120,7 +124,7 @@ class PlotDataset:
             The bounding rect of the data in view-space.  Will return ``None`` if there
             is no data or if all `x` and `y` values are ``NaN``.
         """
-        if self._dataRect is None: 
+        if self._dataRect is None:
             self._updateDataRect()
         return self._dataRect
 
@@ -130,7 +134,7 @@ class PlotDataset:
 
         This replaces the internal data. Values of ``-inf`` resulting from zeros in the
         original dataset are replaced by ``np.nan``.
-        
+
         Parameters
         ----------
         logMode : tuple of bool
@@ -140,7 +144,7 @@ class PlotDataset:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", RuntimeWarning)
                 self.x = np.log10(self.x)
-            non_finites = ~np.isfinite( self.x )
+            non_finites = ~np.isfinite(self.x)
             if non_finites.any():
                 self.x[non_finites] = np.nan  # set all non-finite values to NaN
                 all_x_finite = False
@@ -152,7 +156,7 @@ class PlotDataset:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", RuntimeWarning)
                 self.y = np.log10(self.y)
-            non_finites = ~np.isfinite( self.y )
+            non_finites = ~np.isfinite(self.y)
             if non_finites.any():
                 self.y[non_finites] = np.nan  # set all non-finite values to NaN
                 all_y_finite = False
@@ -175,9 +179,9 @@ class PlotDataItem(GraphicsObject):
         # The convention throughout PlotDataItem is that a PlotDataset is only
         # instantiated if valid data is available.
         # will hold a PlotDataset for the original data, accessed by getOriginalData()
-        self._dataset        = None
+        self._dataset = None
         # will hold a PlotDataset for data after mapping transforms (e.g. log scale)
-        self._datasetMapped  = None
+        self._datasetMapped = None
         # will hold a PlotDataset for data downsampled and limited for display,
         # accessed by getData()
         self._datasetDisplay = None
@@ -189,12 +193,12 @@ class PlotDataItem(GraphicsObject):
         self.curve.sigClicked.connect(self.sigClicked)
         self.scatter.sigClicked.connect(self.scatterClicked)
         self.scatter.sigHovered.connect(self.sigPointsHovered)
-        
-        # update-required notifications are handled through properties to allow future 
+
+        # update-required notifications are handled through properties to allow future
         # management through the QDynamicPropertyChangeEvent sent on any change.
-        self.setProperty('xViewRangeWasChanged', False)
-        self.setProperty('yViewRangeWasChanged', False)
-        self.setProperty('styleWasChanged', True)  # force initial update
+        self.setProperty("xViewRangeWasChanged", False)
+        self.setProperty("yViewRangeWasChanged", False)
+        self.setProperty("styleWasChanged", True)  # force initial update
 
         # holds last clipping points of dynamic range limiter
         self._drlLastClip = (0.0, 0.0)
@@ -202,61 +206,58 @@ class PlotDataItem(GraphicsObject):
         # self.clear()
         self.opts = {
             # defaults to 'all', unless overridden to 'finite' for log-scaling
-            'connect': 'auto',
-            'skipFiniteCheck': True, 
-            'fftMode': False,
-            'logMode': [False, False],
-            'derivativeMode': False,
-            'phasemapMode': False,
-            'alphaHint': 1.0,
-            'alphaMode': False,
-
-            'pen': (200,200,200),
-            'shadowPen': None,
-            'fillLevel': None,
-            'fillOutline': False,
-            'fillBrush': None,
-            'stepMode': None,
-
-            'symbol': None,
-            'symbolSize': 10,
-            'symbolPen': (200, 200, 200),
-            'symbolBrush': (50, 50, 150),
-            'pxMode': True,
-
-            'antialias': False,
-            'pointMode': None,
-
-            'useCache': True,
-            'downsample': 1,
-            'autoDownsample': False,
-            'downsampleMethod': 'subsample',
-            'autoDownsampleFactor': 5.,  # draw ~5 samples per pixel
-            'clipToView': False,
-            'dynamicRangeLimit': 1e6,
-            'dynamicRangeHyst': 3.0,
-            'data': None,
+            "connect": "auto",
+            "skipFiniteCheck": True,
+            "fftMode": False,
+            "logMode": [False, False],
+            "derivativeMode": False,
+            "phasemapMode": False,
+            "alphaHint": 1.0,
+            "alphaMode": False,
+            "pen": (200, 200, 200),
+            "shadowPen": None,
+            "fillLevel": None,
+            "fillOutline": False,
+            "fillBrush": None,
+            "stepMode": None,
+            "symbol": None,
+            "symbolSize": 10,
+            "symbolPen": (200, 200, 200),
+            "symbolBrush": (50, 50, 150),
+            "pxMode": True,
+            "antialias": False,
+            "pointMode": None,
+            "useCache": True,
+            "downsample": 1,
+            "autoDownsample": False,
+            "downsampleMethod": "subsample",
+            "autoDownsampleFactor": 5.0,  # draw ~5 samples per pixel
+            "clipToView": False,
+            "dynamicRangeLimit": 1e6,
+            "dynamicRangeHyst": 3.0,
+            "data": None,
         }
-        self.setCurveClickable(kwargs.get('clickable', False))
+        self.setCurveClickable(kwargs.get("clickable", False))
         self.setData(*args, **kwargs)
-    
+
     # Fix "NotImplementedError: QGraphicsObject.paint() is abstract and must be overridden"
-    def paint(self, *args):
-        ...
-    
+    def paint(self, *args): ...
+
     # Compatibility with direct property access to previous xData and yData structures:
     @property
     def xData(self):
-        if self._dataset is None: return None
+        if self._dataset is None:
+            return None
         return self._dataset.x
-        
+
     @property
     def yData(self):
-        if self._dataset is None: return None
+        if self._dataset is None:
+            return None
         return self._dataset.y
 
     def implements(self, interface=None):
-        ints = ['plotData']
+        ints = ["plotData"]
         if interface is None:
             return ints
         return interface in ints
@@ -270,7 +271,7 @@ class PlotDataItem(GraphicsObject):
         str or None
             The name that represents this item in the legend.
         """
-        return self.opts.get('name')
+        return self.opts.get("name")
 
     def setCurveClickable(self, state: bool, width: int | None = None):
         """
@@ -280,7 +281,7 @@ class PlotDataItem(GraphicsObject):
         ----------
         state : bool
             Set the curve to be clickable.
-        width : int 
+        width : int
             The distance tolerance margin in pixels to recognize the mouse click.
         """
         self.curve.setClickable(state, width)
@@ -325,10 +326,10 @@ class PlotDataItem(GraphicsObject):
         :meth:`QGraphicsItem.setOpacity <QGraphicsItem.setOpacity>`
             This is the Qt method that the value is relayed to.
         """
-        if self.opts['alphaHint'] == alpha and self.opts['alphaMode'] == auto:
+        if self.opts["alphaHint"] == alpha and self.opts["alphaMode"] == auto:
             return
-        self.opts['alphaHint'] = alpha
-        self.opts['alphaMode'] = auto
+        self.opts["alphaHint"] = alpha
+        self.opts["alphaMode"] = auto
         self.setOpacity(alpha)
 
     def setFftMode(self, state: bool):
@@ -343,10 +344,10 @@ class PlotDataItem(GraphicsObject):
         state : bool
             To enable or disable FFT mode.
         """
-        if self.opts['fftMode'] == state:
+        if self.opts["fftMode"] == state:
             return
-        self.opts['fftMode'] = state
-        self._datasetMapped  = None
+        self.opts["fftMode"] = state
+        self._datasetMapped = None
         self._datasetDisplay = None
         self.updateItems(styleUpdate=False)
         self.informViewBoundsChanged()
@@ -366,12 +367,12 @@ class PlotDataItem(GraphicsObject):
         yState : bool
             Enable log mode on the y-axis.
         """
-        if self.opts['logMode'] == [xState, yState]:
+        if self.opts["logMode"] == [xState, yState]:
             return
-        self.opts['logMode'] = [xState, yState]
-        self._datasetMapped  = None  # invalidate mapped data
+        self.opts["logMode"] = [xState, yState]
+        self._datasetMapped = None  # invalidate mapped data
         self._datasetDisplay = None  # invalidate display data
-        self._adsLastValue   = 1     # reset auto-downsample value
+        self._adsLastValue = 1  # reset auto-downsample value
         self.updateItems(styleUpdate=False)
         self.informViewBoundsChanged()
 
@@ -388,12 +389,12 @@ class PlotDataItem(GraphicsObject):
         state : bool
             Enable derivative mode.
         """
-        if self.opts['derivativeMode'] == state:
+        if self.opts["derivativeMode"] == state:
             return
-        self.opts['derivativeMode'] = state
-        self._datasetMapped  = None  # invalidate mapped data
+        self.opts["derivativeMode"] = state
+        self._datasetMapped = None  # invalidate mapped data
         self._datasetDisplay = None  # invalidate display data
-        self._adsLastValue   = 1     # reset auto-downsample value
+        self._adsLastValue = 1  # reset auto-downsample value
         self.updateItems(styleUpdate=False)
         self.informViewBoundsChanged()
 
@@ -410,12 +411,12 @@ class PlotDataItem(GraphicsObject):
         state : bool
             This enabled phase map mode.
         """
-        if self.opts['phasemapMode'] == state:
+        if self.opts["phasemapMode"] == state:
             return
-        self.opts['phasemapMode'] = state
-        self._datasetMapped  = None  # invalidate mapped data
+        self.opts["phasemapMode"] = state
+        self._datasetMapped = None  # invalidate mapped data
         self._datasetDisplay = None  # invalidate display data
-        self._adsLastValue   = 1     # reset auto-downsample value
+        self._adsLastValue = 1  # reset auto-downsample value
         self.updateItems(styleUpdate=False)
         self.informViewBoundsChanged()
 
@@ -426,14 +427,14 @@ class PlotDataItem(GraphicsObject):
         Parameters
         ----------
         *args : tuple or None
-            :class:`QPen`, or parameters for a QPen constructed by 
+            :class:`QPen`, or parameters for a QPen constructed by
             :func:`mkPen <pyqtgraph.mkPen>`. Use ``None`` to disable drawing of lines.
         **kwargs : dict
             Alternative specification of arguments directed to
             :func:`mkPen <pyqtgraph.mkPen>`.
         """
         pen = fn.mkPen(*args, **kwargs)
-        self.opts['pen'] = pen
+        self.opts["pen"] = pen
         self.updateItems(styleUpdate=True)
 
     def setShadowPen(self, *args, **kwargs):
@@ -447,7 +448,7 @@ class PlotDataItem(GraphicsObject):
         Parameters
         ----------
         *args : tuple or None
-            :class:`QPen`, or parameters for a QPen constructed by 
+            :class:`QPen`, or parameters for a QPen constructed by
             :func:`mkPen <pyqtgraph.mkPen>`. Use ``None`` to disable the shadow pen.
         **kwargs : dict
             Alternative specification of arguments directed to
@@ -457,14 +458,14 @@ class PlotDataItem(GraphicsObject):
             pen = None
         else:
             pen = fn.mkPen(*args, **kwargs)
-        self.opts['shadowPen'] = pen
+        self.opts["shadowPen"] = pen
         self.updateItems(styleUpdate=True)
 
     def setFillBrush(self, *args, **kwargs):
         """
         Set the :class:`QBrush` used to fill the area under the curve.
-         
-        Use :meth:`setFillLevel` to enable filling and set the boundary value. 
+
+        Use :meth:`setFillLevel` to enable filling and set the boundary value.
 
         Parameters
         ----------
@@ -480,9 +481,9 @@ class PlotDataItem(GraphicsObject):
             brush = None
         else:
             brush = fn.mkBrush(*args, **kwargs)
-        if self.opts['fillBrush'] == brush:
+        if self.opts["fillBrush"] == brush:
             return
-        self.opts['fillBrush'] = brush
+        self.opts["fillBrush"] = brush
         self.updateItems(styleUpdate=True)
 
     def setBrush(self, *args, **kwargs):
@@ -518,14 +519,13 @@ class PlotDataItem(GraphicsObject):
             :class:`~pyqtgraph.GraphicsItem` creates a filled in region between two
             curves.
         """
-        if self.opts['fillLevel'] == level:
+        if self.opts["fillLevel"] == level:
             return
-        self.opts['fillLevel'] = level
+        self.opts["fillLevel"] = level
         self.updateItems(styleUpdate=True)
 
     def setSymbol(
-        self,
-        symbol: str | QtGui.QPainterPath | list[str | QtGui.QPainterPath]
+        self, symbol: str | QtGui.QPainterPath | list[str | QtGui.QPainterPath]
     ):
         """
         Set the symbol or symbols for drawing the points.
@@ -540,42 +540,42 @@ class PlotDataItem(GraphicsObject):
             length as the number of points, and every element must be a recognized
             string or of type :class:`QPainterPath`. Use ``None`` to disable the scatter
             plot.
-        
+
         See Also
         --------
         :meth:`pyqtgraph.ScatterPlotItem.setSymbol`
             Recognized symbols are detailed in the description of this method.
         """
-        if self.opts['symbol'] == symbol:
+        if self.opts["symbol"] == symbol:
             return
-        self.opts['symbol'] = symbol
+        self.opts["symbol"] = symbol
         self.updateItems(styleUpdate=True)
 
     def setSymbolPen(self, *args, **kwargs):
         """
         Set the :class:`QPen` used to draw symbols.
-        
+
         Setting a different :class:`QPen` per point is not supported by this function.
 
         Parameters
         ----------
         *args : tuple
-            :class:`QPen`, or parameters for a QPen constructed by 
+            :class:`QPen`, or parameters for a QPen constructed by
             :func:`mkPen <pyqtgraph.mkPen>`.
         **kwargs : dict
             Alternative specification of arguments directed to
             :func:`mkPen <pyqtgraph.mkPen>`.
         """
         pen = fn.mkPen(*args, **kwargs)
-        if self.opts['symbolPen'] == pen:
+        if self.opts["symbolPen"] == pen:
             return
-        self.opts['symbolPen'] = pen
+        self.opts["symbolPen"] = pen
         self.updateItems(styleUpdate=True)
 
     def setSymbolBrush(self, *args, **kwargs):
         """
         Set the :class:`QBrush` used to fill symbols.
-        
+
         Setting a different :class:`QBrush` per point is not supported by this function.
 
         Parameters
@@ -589,10 +589,10 @@ class PlotDataItem(GraphicsObject):
             :func:`mkBrush <pyqtgraph.mkBrush>`.
         """
         brush = fn.mkBrush(*args, **kwargs)
-        if self.opts['symbolBrush'] == brush:
+        if self.opts["symbolBrush"] == brush:
             return
-        self.opts['symbolBrush'] = brush
-        #self.scatter.setSymbolBrush(brush)
+        self.opts["symbolBrush"] = brush
+        # self.scatter.setSymbolBrush(brush)
         self.updateItems(styleUpdate=True)
 
     def setSymbolSize(self, size: int):
@@ -606,20 +606,17 @@ class PlotDataItem(GraphicsObject):
             either in pixels or data-space coordinates depending on the value of
             `pxMode`.
         """
-        if self.opts['symbolSize'] == size:
+        if self.opts["symbolSize"] == size:
             return
-        self.opts['symbolSize'] = size
+        self.opts["symbolSize"] = size
         self.updateItems(styleUpdate=True)
 
     def setDownsampling(
-        self,
-        ds: int | None = None,
-        auto: bool | None = None,
-        method: str = 'peak'
+        self, ds: int | None = None, auto: bool | None = None, method: str = "peak"
     ):
         """
         Set the downsampling mode.
-        
+
         Downsampling reduces the number of samples drawn to increase performance.
 
         Parameters
@@ -631,7 +628,7 @@ class PlotDataItem(GraphicsObject):
             If ``True``, automatically pick `ds` based on visible range.
         method : { 'subsample', 'mean', 'peak' }, default 'peak'
             Specify the method of the downsampling calculation.
-            
+
             * `subsample` - Downsample by taking the first of `N` samples. This method
               is the fastest, but least accurate.
             * `mean` - Downsample by taking the mean of `N` samples.
@@ -640,50 +637,50 @@ class PlotDataItem(GraphicsObject):
               the data but is slower.
         """
         changed = False
-        if ds is not None and self.opts['downsample'] != ds:
+        if ds is not None and self.opts["downsample"] != ds:
             changed = True
-            self.opts['downsample'] = ds
+            self.opts["downsample"] = ds
 
-        if auto is not None and self.opts['autoDownsample'] != auto:
+        if auto is not None and self.opts["autoDownsample"] != auto:
             changed = True
-            self.opts['autoDownsample'] = auto
+            self.opts["autoDownsample"] = auto
 
-        if method is not None and self.opts['downsampleMethod'] != method:
+        if method is not None and self.opts["downsampleMethod"] != method:
             changed = True
-            self.opts['downsampleMethod'] = method
+            self.opts["downsampleMethod"] = method
 
         if changed:
-            self._datasetMapped  = None  # invalidate mapped data
+            self._datasetMapped = None  # invalidate mapped data
             self._datasetDisplay = None  # invalidate display data
-            self._adsLastValue   = 1     # reset auto-downsample value
+            self._adsLastValue = 1  # reset auto-downsample value
             self.updateItems(styleUpdate=False)
 
     def setClipToView(self, state: bool):
         """
         Clip the displayed data to the visible range of the x-axis.
 
-        This setting can result in significant performance improvements. 
+        This setting can result in significant performance improvements.
 
         Parameters
         ----------
         state : bool
             Enable clipping the displayed data set to the visible x-axis range.
         """
-        if self.opts['clipToView'] == state:
+        if self.opts["clipToView"] == state:
             return
-        self.opts['clipToView'] = state
+        self.opts["clipToView"] = state
         self._datasetDisplay = None  # invalidate display data
         self.updateItems(styleUpdate=False)
 
-    def setDynamicRangeLimit(self, limit: float | None = 1e06, hysteresis: float = 3.):
+    def setDynamicRangeLimit(self, limit: float | None = 1e06, hysteresis: float = 3.0):
         """
         Limit the off-screen positions of data points at large magnification.
 
         This is intended to work around an upstream Qt issue:
-        When zoomed closely into plots with a much larger range of data, plots can fail 
-        to display entirely because they are incorrectly determined to be off-screen. 
+        When zoomed closely into plots with a much larger range of data, plots can fail
+        to display entirely because they are incorrectly determined to be off-screen.
         The dynamic range limiting avoids this error by repositioning far-off points.
-        At default settings, points are restricted to ±10⁶ times the viewport height. 
+        At default settings, points are restricted to ±10⁶ times the viewport height.
 
         Parameters
         ----------
@@ -692,23 +689,23 @@ class PlotDataItem(GraphicsObject):
             the limit value. All values are relative to the viewport height. ``None``
             disables the check for a minimal increase in performance.
         hysteresis : float, default 3.0
-            Hysteresis factor that controls how much change in zoom level (in terms of 
+            Hysteresis factor that controls how much change in zoom level (in terms of
             the visible y-axis range) is allowed before recalculating.
-        
+
         Notes
         -----
         See https://github.com/pyqtgraph/pyqtgraph/issues/1676 for an example
         of the issue this method addresses.
         """
         hysteresis = max(hysteresis, 1.0)
-        self.opts['dynamicRangeHyst'] = hysteresis
+        self.opts["dynamicRangeHyst"] = hysteresis
 
-        if limit == self.opts['dynamicRangeLimit']:
+        if limit == self.opts["dynamicRangeLimit"]:
             return  # avoid update if there is no change
-        self.opts['dynamicRangeLimit'] = limit  # can be None
+        self.opts["dynamicRangeLimit"] = limit  # can be None
         self._datasetDisplay = None  # invalidate display data
         self.updateItems(styleUpdate=False)
-        
+
     def setSkipFiniteCheck(self, skipFiniteCheck: bool):
         """
         Toggle performance option to bypass the finite check.
@@ -718,7 +715,7 @@ class PlotDataItem(GraphicsObject):
         contain any non-finite values (such as ``NaN`` or ``Inf``) while this flag is
         set, unpredictable behavior will occur. The data might not be plotted, or there
         might be significant performance impact.
-        
+
         In the default ``connect='auto'`` mode, PlotDataItem will apply this setting
         automatically.
 
@@ -736,12 +733,12 @@ class PlotDataItem(GraphicsObject):
             Function to create :class:`QPainterPath` which is rendered on the screen
             from numpy arrays.
         """
-        self.opts['skipFiniteCheck'] = skipFiniteCheck
+        self.opts["skipFiniteCheck"] = skipFiniteCheck
 
-    def addHistoricData(self, new_x:list|np.ndarray, new_y: list|np.ndarray):
+    def addHistoricData(self, new_x: list | np.ndarray, new_y: list | np.ndarray):
         """
         Append new data to the existing dataset.
-        
+
         Parameters
         ----------
         new_x : array-like
@@ -751,30 +748,29 @@ class PlotDataItem(GraphicsObject):
         """
         if len(new_x) != len(new_y):
             raise ValueError("x and y data must have same leng")
-        
+
         if self._dataset is None or len(self._dataset.x) == 0:
             # If there is no existing dataset, set the new data as the dataset.
             self.setData(new_x, new_y)
             return
-        if not isinstance(new_x,np.ndarray):
+        if not isinstance(new_x, np.ndarray):
             new_x = np.array(new_x)
-        if not isinstance(new_y,np.ndarray):
+        if not isinstance(new_y, np.ndarray):
             new_y = np.array(new_y)
-            
+
         # Concatenate new data to existing dataset
-        self._dataset.x = np.concatenate((new_x,self._dataset.x))
-        self._dataset.y = np.concatenate((new_y,self._dataset.y))
-        self._datasetMapped  = None
+        self._dataset.x = np.concatenate((new_x, self._dataset.x))
+        self._dataset.y = np.concatenate((new_y, self._dataset.y))
+        self._datasetMapped = None
         self._datasetDisplay = None
-        self._adsLastValue   = 1
+        self._adsLastValue = 1
         self.updateItems(styleUpdate=False)
         self.sigPlotChanged.emit(self)
-    
-    
-    def updateData(self, new_x:list|np.ndarray, new_y: list|np.ndarray):
+
+    def updateData(self, new_x: list | np.ndarray, new_y: list | np.ndarray):
         """
         Update the last data point in the dataset.
-        
+
         Parameters
         ----------
         new_x : list|np.ndarray
@@ -782,15 +778,15 @@ class PlotDataItem(GraphicsObject):
         new_y : list|np.ndarray
             The new y-value to set.
         """
-        
+
         if len(new_x) != len(new_y):
             raise ValueError("x and y data must have same leng")
-        
-        if isinstance(new_x,list):
+
+        if isinstance(new_x, list):
             new_x = np.array(new_x)
-        if isinstance(new_y,list):
+        if isinstance(new_y, list):
             new_y = np.array(new_y)
-        
+
         if self._dataset is None or len(self._dataset.x) == 0:
             # If there is no existing dataset, set the new data as the dataset.
             self.setData(new_x, new_y)
@@ -802,19 +798,14 @@ class PlotDataItem(GraphicsObject):
         else:
             self._dataset.x = np.concatenate((self._dataset.x, new_x))
             self._dataset.y = np.concatenate((self._dataset.y, new_y))
-            self._datasetMapped  = None
+            self._datasetMapped = None
             self._datasetDisplay = None
-            self._adsLastValue   = 1
+            self._adsLastValue = 1
 
         self.updateItems(styleUpdate=False)  # Update items
         self.sigPlotChanged.emit(self)
-    
-    
-    def setData(
-        self,
-        *args,
-        **kwargs
-    ):
+
+    def setData(self, *args, **kwargs):
         """
         Clear any data displayed by this item and display new data.
 
@@ -833,7 +824,7 @@ class PlotDataItem(GraphicsObject):
         See Also
         --------
         :class:`PlotDataItem`
-            The arguments accepted by :meth:`setData` are the same used during 
+            The arguments accepted by :meth:`setData` are the same used during
             initialization, and are listed in the opening section.
         :func:`~pyqtgraph.arrayToQPath`
             Explains the constructions of the draw paths.
@@ -844,39 +835,43 @@ class PlotDataItem(GraphicsObject):
         if len(args) == 1:
             data = args[0]
             dt = dataType(data)
-            if dt == 'empty':
+            if dt == "empty":
                 pass
-            elif dt == 'listOfValues':
+            elif dt == "listOfValues":
                 y = np.array(data)
-            elif dt == 'Nx2array':
+            elif dt == "Nx2array":
                 x = data[:, 0]
                 y = data[:, 1]
-            elif dt == 'recarray' or dt == 'dictOfLists':
-                if 'x' in data:
-                    x = np.array(data['x'])
-                if 'y' in data:
-                    y = np.array(data['y'])
-            elif dt == 'listOfDicts':
-                if 'x' in data[0]:
-                    x = np.array([d.get('x',None) for d in data])
-                if 'y' in data[0]:
-                    y = np.array([d.get('y',None) for d in data])
+            elif dt == "recarray" or dt == "dictOfLists":
+                if "x" in data:
+                    x = np.array(data["x"])
+                if "y" in data:
+                    y = np.array(data["y"])
+            elif dt == "listOfDicts":
+                if "x" in data[0]:
+                    x = np.array([d.get("x", None) for d in data])
+                if "y" in data[0]:
+                    y = np.array([d.get("y", None) for d in data])
                 for k in [
-                    'data', 'symbolSize', 'symbolPen', 'symbolBrush', 'symbolShape'
+                    "data",
+                    "symbolSize",
+                    "symbolPen",
+                    "symbolBrush",
+                    "symbolShape",
                 ]:
                     if k in data:
                         kwargs[k] = [d.get(k) for d in data]
             else:
-                raise TypeError('Invalid data type %s' % type(data))
+                raise TypeError("Invalid data type %s" % type(data))
 
         elif len(args) == 2:
-            seq = ('listOfValues', 'empty')
+            seq = ("listOfValues", "empty")
             dtyp = dataType(args[0]), dataType(args[1])
             if dtyp[0] not in seq or dtyp[1] not in seq:
                 raise TypeError(
                     (
-                        'When passing two unnamed arguments, both must be a list or '
-                        'array of values. (got %s, %s)'
+                        "When passing two unnamed arguments, both must be a list or "
+                        "array of values. (got %s, %s)"
                         % (str(type(args[0])), str(type(args[1])))
                     )
                 )
@@ -889,56 +884,57 @@ class PlotDataItem(GraphicsObject):
             else:
                 y = args[1].view(np.ndarray)
 
-        if 'x' in kwargs:
-            x = kwargs['x']
-        if 'y' in kwargs:
-            y = kwargs['y']
+        if "x" in kwargs:
+            x = kwargs["x"]
+        if "y" in kwargs:
+            y = kwargs["y"]
 
-        profiler('interpret data')
+        profiler("interpret data")
         # pull in all style arguments.
         # Use self.opts to fill in anything not present in kwargs.
 
-        if 'name' in kwargs:
-            self.opts['name'] = kwargs['name']
-            self.setProperty('styleWasChanged', True)
+        if "name" in kwargs:
+            self.opts["name"] = kwargs["name"]
+            self.setProperty("styleWasChanged", True)
 
-        if 'connect' in kwargs:
-            self.opts['connect'] = kwargs['connect']
-            self.setProperty('styleWasChanged', True)
-            
-        if 'skipFiniteCheck' in kwargs:
-            self.opts['skipFiniteCheck'] = kwargs['skipFiniteCheck']
+        if "connect" in kwargs:
+            self.opts["connect"] = kwargs["connect"]
+            self.setProperty("styleWasChanged", True)
+
+        if "skipFiniteCheck" in kwargs:
+            self.opts["skipFiniteCheck"] = kwargs["skipFiniteCheck"]
 
         # if symbol pen/brush are given with no previously set symbol,
         # then assume symbol is 'o'
         if (
-            'symbol' not in kwargs
+            "symbol" not in kwargs
             and (
-                'symbolPen' in kwargs
-                or 'symbolBrush' in kwargs
-                or 'symbolSize' in kwargs
-            ) and self.opts['symbol'] is None
+                "symbolPen" in kwargs
+                or "symbolBrush" in kwargs
+                or "symbolSize" in kwargs
+            )
+            and self.opts["symbol"] is None
         ):
-            kwargs['symbol'] = 'o'
+            kwargs["symbol"] = "o"
 
-        if 'brush' in kwargs:
-            kwargs['fillBrush'] = kwargs['brush']
+        if "brush" in kwargs:
+            kwargs["fillBrush"] = kwargs["brush"]
 
         for k in list(self.opts.keys()):
             if k in kwargs:
                 self.opts[k] = kwargs[k]
-                self.setProperty('styleWasChanged', True)
-        #curveArgs = {}
-        #for k in ['pen', 'shadowPen', 'fillLevel', 'brush']:
-            #if k in kwargs:
-                #self.opts[k] = kwargs[k]
-            #curveArgs[k] = self.opts[k]
+                self.setProperty("styleWasChanged", True)
+        # curveArgs = {}
+        # for k in ['pen', 'shadowPen', 'fillLevel', 'brush']:
+        # if k in kwargs:
+        # self.opts[k] = kwargs[k]
+        # curveArgs[k] = self.opts[k]
 
-        #scatterArgs = {}
-        #for k,v in [('symbolPen','pen'), ('symbolBrush','brush'), ('symbol','symbol')]:
-            #if k in kwargs:
-                #self.opts[k] = kwargs[k]
-            #scatterArgs[v] = self.opts[k]
+        # scatterArgs = {}
+        # for k,v in [('symbolPen','pen'), ('symbolBrush','brush'), ('symbol','symbol')]:
+        # if k in kwargs:
+        # self.opts[k] = kwargs[k]
+        # scatterArgs[v] = self.opts[k]
 
         if y is None or len(y) == 0:  # empty data is represented as None
             yData = None
@@ -948,7 +944,7 @@ class PlotDataItem(GraphicsObject):
             yData = y.view(np.ndarray)
             if x is None:
                 x = np.arange(len(y))
-                
+
         if x is None or len(x) == 0:  # empty data is represented as None
             xData = None
         else:  # actual data is represented by ndarray
@@ -959,25 +955,25 @@ class PlotDataItem(GraphicsObject):
         if xData is None or yData is None:
             self._dataset = None
         else:
-            self._dataset = PlotDataset( xData, yData )
+            self._dataset = PlotDataset(xData, yData)
         # invalidate mapped data , will be generated in getData() / _getDisplayDataset()
-        self._datasetMapped  = None
+        self._datasetMapped = None
         # invalidate display data, will be generated in getData() / _getDisplayDataset()
         self._datasetDisplay = None
         # reset auto-downsample value
-        self._adsLastValue   = 1
+        self._adsLastValue = 1
 
-        profiler('set data')
+        profiler("set data")
 
-        self.updateItems( styleUpdate=self.property('styleWasChanged') )
+        self.updateItems(styleUpdate=self.property("styleWasChanged"))
         # items have been updated
-        self.setProperty('styleWasChanged', False)
-        profiler('update items')
+        self.setProperty("styleWasChanged", False)
+        profiler("update items")
 
         self.informViewBoundsChanged()
 
         self.sigPlotChanged.emit(self)
-        profiler('emit')
+        profiler("emit")
 
     def updateItems(self, styleUpdate: bool = True):
         """
@@ -985,7 +981,7 @@ class PlotDataItem(GraphicsObject):
 
         This method is called internally to redraw the curve and scatter plot when the
         data or graphics style has been updated. It is not usally necessary to call this
-        from user code. 
+        from user code.
 
         Parameters
         ----------
@@ -1006,28 +1002,28 @@ class PlotDataItem(GraphicsObject):
 
         if styleUpdate:  # repeat style arguments only when changed
             for k, v in [
-                ('pen', 'pen'),
-                ('shadowPen', 'shadowPen'),
-                ('fillLevel', 'fillLevel'),
-                ('fillOutline', 'fillOutline'),
-                ('fillBrush', 'brush'),
-                ('antialias', 'antialias'),
-                ('connect', 'connect'),
-                ('stepMode', 'stepMode'),
-                ('skipFiniteCheck', 'skipFiniteCheck')
+                ("pen", "pen"),
+                ("shadowPen", "shadowPen"),
+                ("fillLevel", "fillLevel"),
+                ("fillOutline", "fillOutline"),
+                ("fillBrush", "brush"),
+                ("antialias", "antialias"),
+                ("connect", "connect"),
+                ("stepMode", "stepMode"),
+                ("skipFiniteCheck", "skipFiniteCheck"),
             ]:
                 if k in self.opts:
                     curveArgs[v] = self.opts[k]
 
             for k, v in [
-                ('symbolPen', 'pen'),
-                ('symbolBrush', 'brush'),
-                ('symbol', 'symbol'),
-                ('symbolSize', 'size'),
-                ('data', 'data'),
-                ('pxMode', 'pxMode'),
-                ('antialias', 'antialias'),
-                ('useCache', 'useCache')
+                ("symbolPen", "pen"),
+                ("symbolBrush", "brush"),
+                ("symbol", "symbol"),
+                ("symbolSize", "size"),
+                ("data", "data"),
+                ("pxMode", "pxMode"),
+                ("antialias", "antialias"),
+                ("useCache", "useCache"),
             ]:
                 if k in self.opts:
                     scatterArgs[v] = self.opts[k]
@@ -1040,38 +1036,33 @@ class PlotDataItem(GraphicsObject):
 
         x = dataset.x
         y = dataset.y
-        #scatterArgs['mask'] = self.dataMask
-        if (
-            self.opts['pen'] is not None
-            or (
-                self.opts['fillBrush'] is not None and
-                self.opts['fillLevel'] is not None
-            )
+        # scatterArgs['mask'] = self.dataMask
+        if self.opts["pen"] is not None or (
+            self.opts["fillBrush"] is not None and self.opts["fillLevel"] is not None
         ):  # draw if visible...
             # auto-switch to indicate non-finite values as interruptions in the curve:
             if (
-                isinstance(curveArgs['connect'], str) and
-                curveArgs['connect'] == 'auto'
+                isinstance(curveArgs["connect"], str) and curveArgs["connect"] == "auto"
             ):  # connect can also take a boolean array
                 if dataset.containsNonfinite is False:
                     # all points can be connected, and no further check is needed.
-                    curveArgs['connect'] = 'all'
-                    curveArgs['skipFiniteCheck'] = True
-                else:   # True or None
+                    curveArgs["connect"] = "all"
+                    curveArgs["skipFiniteCheck"] = True
+                else:  # True or None
                     # True: (we checked and found non-finites)
                     #   don't connect non-finites
                     # None: (we haven't performed a check for non-finites yet)
                     #   use connect='finite' in case there are non-finites.
-                    curveArgs['connect'] = 'finite'
-                    curveArgs['skipFiniteCheck'] = False
+                    curveArgs["connect"] = "finite"
+                    curveArgs["skipFiniteCheck"] = False
             self.curve.setData(x=x, y=y, **curveArgs)
             self.curve.show()
         else:  # ...hide if not.
             self.curve.hide()
 
-        if self.opts['symbol'] is not None:  # draw if visible...
-            if self.opts.get('stepMode') == "center":
-                x = 0.5 * (x[:-1] + x[1:])                
+        if self.opts["symbol"] is not None:  # draw if visible...
+            if self.opts.get("stepMode") == "center":
+                x = 0.5 * (x[:-1] + x[1:])
             self.scatter.setData(x=x, y=y, **scatterArgs)
             self.scatter.show()
         else:  # ...hide if not.
@@ -1105,7 +1096,7 @@ class PlotDataItem(GraphicsObject):
         This method is not considered part of the public API.
 
         Returns
-        ------- 
+        -------
         :class:`PlotDataset`
             Data suitable for display (including mapping and data reduction) as
             ``dataset.x`` and ``dataset.y``.
@@ -1114,14 +1105,19 @@ class PlotDataItem(GraphicsObject):
             return None
         # Return cached processed dataset if available and still valid:
         if (
-            self._datasetDisplay is not None and
-            not (self.property('xViewRangeWasChanged') and self.opts['clipToView']) and
-            not (self.property('xViewRangeWasChanged') and self.opts['autoDownsample']) and
-            not (self.property('yViewRangeWasChanged') and self.opts['dynamicRangeLimit'] is not None)
+            self._datasetDisplay is not None
+            and not (self.property("xViewRangeWasChanged") and self.opts["clipToView"])
+            and not (
+                self.property("xViewRangeWasChanged") and self.opts["autoDownsample"]
+            )
+            and not (
+                self.property("yViewRangeWasChanged")
+                and self.opts["dynamicRangeLimit"] is not None
+            )
         ):
             return self._datasetDisplay
 
-        # Apply data mapping functions if mapped dataset is not yet available: 
+        # Apply data mapping functions if mapped dataset is not yet available:
         if self._datasetMapped is None:
             x = self._dataset.x
             y = self._dataset.y
@@ -1129,32 +1125,29 @@ class PlotDataItem(GraphicsObject):
                 y = y.astype(np.uint8)
             if x.dtype == bool:
                 x = x.astype(np.uint8)
-            if self.opts['fftMode']:
+            if self.opts["fftMode"]:
                 x, y = self._fourierTransform(x, y)
                 # Ignore the first bin for fft data if we have a logx scale
-                if self.opts['logMode'][0]:
+                if self.opts["logMode"][0]:
                     x = x[1:]
                     y = y[1:]
-            if self.opts['derivativeMode']:  # plot dV/dt
+            if self.opts["derivativeMode"]:  # plot dV/dt
                 y = np.diff(self._dataset.y) / np.diff(self._dataset.x)
                 x = x[:-1]
-            if self.opts['phasemapMode']:  # plot dV/dt vs V
+            if self.opts["phasemapMode"]:  # plot dV/dt vs V
                 x = self._dataset.y[:-1]
                 y = np.diff(self._dataset.y) / np.diff(self._dataset.x)
 
             dataset = PlotDataset(
-                x,
-                y,
-                self._dataset.xAllFinite,
-                self._dataset.yAllFinite
+                x, y, self._dataset.xAllFinite, self._dataset.yAllFinite
             )
-            
-            if True in self.opts['logMode']:
+
+            if True in self.opts["logMode"]:
                 # Apply log scaling for x and/or y-axis
-                dataset.applyLogMapping( self.opts['logMode'] )
+                dataset.applyLogMapping(self.opts["logMode"])
 
             self._datasetMapped = dataset
-        
+
         # apply processing that affects the on-screen display of data:
         x = self._datasetMapped.x
         y = self._datasetMapped.y
@@ -1169,11 +1162,11 @@ class PlotDataItem(GraphicsObject):
         if view_range is None:
             view_range = self.viewRect()
 
-        ds = self.opts['downsample']
+        ds = self.opts["downsample"]
         if not isinstance(ds, int):
             ds = 1
 
-        if self.opts['autoDownsample']:
+        if self.opts["autoDownsample"]:
             # this option presumes that x-values have uniform spacing
             if xAllFinite:
                 finite_x = x
@@ -1182,17 +1175,17 @@ class PlotDataItem(GraphicsObject):
                 # None : (we haven't performed a check for non-finites yet)
                 finite_x = x[np.isfinite(x)]  # ignore infinite and nan values
             if view_range is not None and len(finite_x) > 1:
-                dx = float(finite_x[-1]-finite_x[0]) / (len(finite_x)-1)
+                dx = float(finite_x[-1] - finite_x[0]) / (len(finite_x) - 1)
                 if dx != 0.0:
                     width = self.getViewBox().width()
                     if width != 0.0:  # autoDownsampleFactor _should_ be > 1.0
                         ds_float = max(
                             1.0,
                             abs(
-                                view_range.width() /
-                                dx /
-                                (width * self.opts['autoDownsampleFactor'])
-                            )
+                                view_range.width()
+                                / dx
+                                / (width * self.opts["autoDownsampleFactor"])
+                            ),
                         )
                         if math.isfinite(ds_float):
                             ds = int(ds_float)
@@ -1204,8 +1197,7 @@ class PlotDataItem(GraphicsObject):
             self._adsLastValue = ds
             # downsampling is expensive; delay until after clipping.
 
-        
-        if self.opts['clipToView']:
+        if self.opts["clipToView"]:
             if view is None or view.autoRangeEnabled()[0]:
                 pass  # no ViewBox to clip to, or view will autoscale to data range.
             else:
@@ -1216,9 +1208,9 @@ class PlotDataItem(GraphicsObject):
                     right = view_range.right()
                     bottom = view_range.bottom()
                     top = view_range.top()
-                   
+
                     # Determine the masks
-                    mask_x = (x >= left) & (x <= right) 
+                    mask_x = (x >= left) & (x <= right)
                     mask_y = (y >= top) & (y <= bottom)
 
                     # Combine the masks for both x and y axes
@@ -1227,7 +1219,7 @@ class PlotDataItem(GraphicsObject):
                     # Apply the mask to x and y
                     x = x[mask]
                     y = y[mask]
-        
+
         # if self.opts['clipToView']:
         #     if view is None or view.autoRangeEnabled()[0]:
         #         pass  # no ViewBox to clip to, or view will autoscale to data range.
@@ -1255,40 +1247,40 @@ class PlotDataItem(GraphicsObject):
         #             y = y[x0:x1]
 
         if ds > 1:
-            if self.opts['downsampleMethod'] == 'subsample':
+            if self.opts["downsampleMethod"] == "subsample":
                 x = x[::ds]
                 y = y[::ds]
-            elif self.opts['downsampleMethod'] == 'mean':
+            elif self.opts["downsampleMethod"] == "mean":
                 n = len(x) // ds
                 # start of x-values try to select a somewhat centered point
                 stx = ds // 2
-                x = x[stx:stx + n * ds:ds]
-                y = y[:n * ds].reshape(n, ds).mean(axis=1)
-            elif self.opts['downsampleMethod'] == 'peak':
+                x = x[stx : stx + n * ds : ds]
+                y = y[: n * ds].reshape(n, ds).mean(axis=1)
+            elif self.opts["downsampleMethod"] == "peak":
                 n = len(x) // ds
                 x1 = np.empty((n, 2))
                 # start of x-values; try to select a somewhat centered point
                 stx = ds // 2
-                x1[:] = x[stx:stx + n * ds:ds, np.newaxis]
+                x1[:] = x[stx : stx + n * ds : ds, np.newaxis]
                 x = x1.reshape(n * 2)
                 y1 = np.empty((n, 2))
-                y2 = y[:n * ds].reshape((n, ds))
+                y2 = y[: n * ds].reshape((n, ds))
                 y1[:, 0] = y2.max(axis=1)
                 y1[:, 1] = y2.min(axis=1)
                 y = y1.reshape(n * 2)
 
-        if self.opts['dynamicRangeLimit'] is not None and view_range is not None:
+        if self.opts["dynamicRangeLimit"] is not None and view_range is not None:
             data_range = self._datasetMapped.dataRect()
             if data_range is not None:
                 view_height = view_range.height()
-                limit = self.opts['dynamicRangeLimit']
-                hyst  = self.opts['dynamicRangeHyst']
+                limit = self.opts["dynamicRangeLimit"]
+                hyst = self.opts["dynamicRangeHyst"]
                 # never clip data if it fits into +/- (extended) limit * view height
                 if (
                     # note that "bottom" is the larger number, and "top" is the smaller
                     # one. Never clip if the view does not show anything and would cause
                     # division by zero
-                    view_height > 0                               
+                    view_height > 0
                     # never clip if all data is too small to see
                     and not data_range.bottom() < view_range.top()
                     # never clip if all data is too large to see
@@ -1301,11 +1293,15 @@ class PlotDataItem(GraphicsObject):
                         # top is minimum value, bottom is maximum value
                         # how many multiples of the current view height does the clipped
                         # plot extend to the top and bottom?
-                        top_exc = -(self._drlLastClip[0]-view_range.bottom()) / view_height
-                        bot_exc =  (self._drlLastClip[1]-view_range.top()   ) / view_height
+                        top_exc = (
+                            -(self._drlLastClip[0] - view_range.bottom()) / view_height
+                        )
+                        bot_exc = (
+                            self._drlLastClip[1] - view_range.top()
+                        ) / view_height
                         if (
-                            limit / hyst <= top_exc <= limit * hyst and
-                            limit / hyst <= bot_exc <= limit * hyst
+                            limit / hyst <= top_exc <= limit * hyst
+                            and limit / hyst <= bot_exc <= limit * hyst
                         ):
                             # restore cached values
                             x = self._datasetDisplay.x
@@ -1313,12 +1309,12 @@ class PlotDataItem(GraphicsObject):
                             cache_is_good = True
                     if not cache_is_good:
                         min_val = view_range.bottom() - limit * view_height
-                        max_val = view_range.top()    + limit * view_height
+                        max_val = view_range.top() + limit * view_height
                         y = fn.clip_array(y, min_val, max_val)
                         self._drlLastClip = (min_val, max_val)
         self._datasetDisplay = PlotDataset(x, y, xAllFinite, yAllFinite)
-        self.setProperty('xViewRangeWasChanged', False)
-        self.setProperty('yViewRangeWasChanged', False)
+        self.setProperty("xViewRangeWasChanged", False)
+        self.setProperty("yViewRangeWasChanged", False)
 
         return self._datasetDisplay
 
@@ -1355,10 +1351,7 @@ class PlotDataItem(GraphicsObject):
         return None if self._dataset is None else self._dataset.dataRect()
 
     def dataBounds(
-        self,
-        ax: int,
-        frac: float = 1.0,
-        orthoRange: tuple[float, float] | None = None
+        self, ax: int, frac: float = 1.0, orthoRange: tuple[float, float] | None = None
     ) -> tuple[float, float] | tuple[None, None]:
         """
         Get the range occupied by the data (along a specific axis) for this item.
@@ -1401,16 +1394,16 @@ class PlotDataItem(GraphicsObject):
                 ),
                 min(
                     (i for i in [bounds2[1], bounds[1]] if i is not None), default=None
-                )
+                ),
             )
         return bounds
 
     def pixelPadding(self) -> int:
         """
         Get the size (in pixels) that this item might draw beyond the data.
-        
+
         The size of scatter plot symbols or width of the line plot make the
-        displayed image extend further than the extend of the raw data. 
+        displayed image extend further than the extend of the raw data.
 
         Returns
         -------
@@ -1430,7 +1423,6 @@ class PlotDataItem(GraphicsObject):
         self._dataset = self._datasetMapped = self._datasetDisplay = None
         self.curve.clear()
         self.scatter.clear()
-    
 
     @QtCore.Slot(object, object)
     def curveClicked(self, _: PlotCurveItem, ev):
@@ -1438,7 +1430,9 @@ class PlotDataItem(GraphicsObject):
             (
                 "PlotCurveItem.curveClicked is deprecated, and will be removed in a "
                 "future version of pyqtgraph."
-            ), DeprecationWarning, stacklevel=3
+            ),
+            DeprecationWarning,
+            stacklevel=3,
         )
         self.sigClicked.emit(self, ev)
 
@@ -1453,7 +1447,9 @@ class PlotDataItem(GraphicsObject):
             (
                 "PlotCurveItem.scatterHovered is deprecated, and will be removed in a "
                 "future version of pyqtgraph."
-            ), DeprecationWarning, stacklevel=3
+            ),
+            DeprecationWarning,
+            stacklevel=3,
         )
         self.sigPointsHovered.emit(self, points, ev)
 
@@ -1463,27 +1459,24 @@ class PlotDataItem(GraphicsObject):
     # has already been invalidated. However, responding here will make PlotDataItem
     # update curve and scatter later than intended.
     #   super().viewTransformChanged() # this invalidates the viewRect() cache!
-        
+
     @QtCore.Slot(object, object)
     @QtCore.Slot(object, object, object)
     def viewRangeChanged(self, vb=None, ranges=None, changed=None):
-        # view range has changed; re-plot if needed 
+        # view range has changed; re-plot if needed
         update_needed = False
-        if changed is None or changed[0]: 
+        if changed is None or changed[0]:
             # if ranges is not None:
             #     print('hor:', ranges[0])
-            self.setProperty('xViewRangeWasChanged', True)
-            if (
-                self.opts['clipToView']
-                or self.opts['autoDownsample']
-            ):
+            self.setProperty("xViewRangeWasChanged", True)
+            if self.opts["clipToView"] or self.opts["autoDownsample"]:
                 self._datasetDisplay = None
                 update_needed = True
         if changed is None or changed[1]:
             # if ranges is not None:
             #     print('ver:', ranges[1])
-            self.setProperty('yViewRangeWasChanged', True)
-            if self.opts['dynamicRangeLimit'] is not None:
+            self.setProperty("yViewRangeWasChanged", True)
+            if self.opts["dynamicRangeLimit"] is not None:
                 # update, but do not discard cached display data
                 update_needed = True
         if update_needed:
@@ -1493,10 +1486,10 @@ class PlotDataItem(GraphicsObject):
     def _fourierTransform(x, y):
         # Perform Fourier transform. If x values are not sampled uniformly,
         # then use np.interp to resample before taking fft.
-        if len(x) == 1: 
+        if len(x) == 1:
             return np.array([0]), abs(y)
         dx = np.diff(x)
-        uniform = not np.any(np.abs(dx - dx[0]) > (abs(dx[0]) / 1000.))
+        uniform = not np.any(np.abs(dx - dx[0]) > (abs(dx[0]) / 1000.0))
         if not uniform:
             x2 = np.linspace(x[0], x[-1], len(x))
             y = np.interp(x2, x, y)
@@ -1511,25 +1504,25 @@ class PlotDataItem(GraphicsObject):
 
 def dataType(obj) -> str:
     type_: str
-    if hasattr(obj, '__len__') and len(obj) == 0:
-        type_ = 'empty'
+    if hasattr(obj, "__len__") and len(obj) == 0:
+        type_ = "empty"
     elif isinstance(obj, dict):
-        type_ = 'dictOfLists'
+        type_ = "dictOfLists"
     elif np.iterable(obj):
         first = obj[0]
         if isinstance(obj, np.ndarray):
             if obj.ndim == 1:
-                type_ = 'listOfValues' if obj.dtype.names is None else 'recarray'
+                type_ = "listOfValues" if obj.dtype.names is None else "recarray"
             elif obj.ndim == 2 and obj.dtype.names is None and obj.shape[1] == 2:
-                type_ = 'Nx2array'
+                type_ = "Nx2array"
             else:
                 raise ValueError(
-                    f'array shape must be (N,) or (N,2); got {str(obj.shape)} instead'
+                    f"array shape must be (N,) or (N,2); got {str(obj.shape)} instead"
                 )
         elif isinstance(first, dict):
-            type_ = 'listOfDicts'
+            type_ = "listOfDicts"
         else:
-            type_ = 'listOfValues'
+            type_ = "listOfValues"
     else:
         raise ValueError("Cannot identify data-structure.")
     return type_
@@ -1540,13 +1533,12 @@ def isSequence(obj):
         (
             "isSequence is deprecated and will be removed in a future version of"
             "pyqtgraph, use np.iterable(obj) instead."
-        ), DeprecationWarning, stacklevel=2
+        ),
+        DeprecationWarning,
+        stacklevel=2,
     )
     return (
-        hasattr(obj, '__iter__') or
-        isinstance(obj, np.ndarray) or
-        (
-            hasattr(obj, 'implements') and
-            obj.implements('MetaArray')
-        )
+        hasattr(obj, "__iter__")
+        or isinstance(obj, np.ndarray)
+        or (hasattr(obj, "implements") and obj.implements("MetaArray"))
     )

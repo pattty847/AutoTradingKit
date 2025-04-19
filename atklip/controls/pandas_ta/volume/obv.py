@@ -5,10 +5,12 @@ from atklip.controls.pandas_ta.maps import Imports
 from atklip.controls.pandas_ta.utils import signed_series, v_offset, v_series, v_talib
 
 
-
 def obv(
-    close: Series, volume: Series, talib: bool = None,
-    offset: Int = None, **kwargs: DictLike
+    close: Series,
+    volume: Series,
+    talib: bool = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """On Balance Volume (OBV)
 

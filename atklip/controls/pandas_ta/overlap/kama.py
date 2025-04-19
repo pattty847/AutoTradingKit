@@ -9,15 +9,19 @@ from atklip.controls.pandas_ta.utils import (
     v_mamode,
     v_offset,
     v_pos_default,
-    v_series
+    v_series,
 )
 
 
-
 def kama(
-    close: Series, length: Int = None, fast: Int = None, slow: Int = None,
-    mamode: str = None, drift: Int = None,
-    offset: Int = None, **kwargs: DictLike
+    close: Series,
+    length: Int = None,
+    fast: Int = None,
+    slow: Int = None,
+    mamode: str = None,
+    drift: Int = None,
+    offset: Int = None,
+    **kwargs: DictLike,
 ) -> Series:
     """Kaufman's Adaptive Moving Average (KAMA)
 
@@ -79,8 +83,7 @@ def kama(
     ma0 = ma(mamode, close.iloc[:length], length=length, **kwargs).iloc[-1]
     result = [nan for _ in range(0, length - 1)] + [ma0]
     for i in range(length, m):
-        result.append(sc.iat[i] * close.iat[i] \
-            + (1 - sc.iat[i]) * result[i - 1])
+        result.append(sc.iat[i] * close.iat[i] + (1 - sc.iat[i]) * result[i - 1])
 
     kama = Series(result, index=close.index)
 

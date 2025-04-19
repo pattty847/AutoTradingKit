@@ -1,2 +1,2 @@
 import os
-from .smc import smc,SMC
+from .smc import smc, SMC

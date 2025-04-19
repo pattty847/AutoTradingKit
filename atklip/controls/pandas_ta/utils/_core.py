@@ -30,10 +30,9 @@ from atklip.controls.pandas_ta.maps import Imports
 # ]
 
 
-
 def camelCase2Title(x: str):
     """https://stackoverflow.com/questions/5020906/python-convert-camel-case-to-space-delimited-using-regex-and-taking-acronyms-in"""
-    return re_.sub("([a-z])([A-Z])",r"\g<1> \g<2>", x).title()
+    return re_.sub("([a-z])([A-Z])", r"\g<1> \g<2>", x).title()
 
 
 def category_files(category: str) -> list:
@@ -49,8 +48,10 @@ def category_files(category: str) -> list:
 def client_exists():
     if Imports["urllib"]:
         from urllib.request import urlopen
+
         if urlopen("https://8.8.8.8", timeout=1).status == 200:
             from socket import gethostbyname, gethostname
+
             la = gethostbyname(gethostname())
             pa = urlopen("https://ident.me", timeout=1).read().decode("utf8")
             return f"{pa}:{la}"
@@ -63,7 +64,6 @@ def non_zero_range(high: Series, low: Series) -> Series:
     if diff.eq(0).any().any():
         diff += sflt.epsilon
     return diff
-
 
 
 def recent_maximum_index(x) -> Int:
@@ -100,22 +100,23 @@ def signed_series(series: Series, initial: Int, lag: Int = None) -> Series:
     return sign
 
 
-def simplify_columns(df, n: Int=3) -> ListStr:
+def simplify_columns(df, n: Int = 3) -> ListStr:
     df.columns = df.columns.str.lower()
-    return [c.split("_")[0][n - 1:n] for c in df.columns]
+    return [c.split("_")[0][n - 1 : n] for c in df.columns]
 
 
 def tal_ma(name: str) -> Int:
     """Helper Function that returns the Enum value for TA Lib's MA Type"""
     if Imports["talib"] and isinstance(name, str) and len(name) > 1:
         from atklip.controls.talib import MA_Type
+
         name = name.lower()
         if name == "sma":
-            return MA_Type.SMA   # 0
+            return MA_Type.SMA  # 0
         elif name == "ema":
-            return MA_Type.EMA   # 1
+            return MA_Type.EMA  # 1
         elif name == "wma":
-            return MA_Type.WMA   # 2
+            return MA_Type.WMA  # 2
         elif name == "dema":
             return MA_Type.DEMA  # 3
         elif name == "tema":
@@ -127,12 +128,13 @@ def tal_ma(name: str) -> Int:
         elif name == "mama":
             return MA_Type.MAMA  # 7
         elif name == "t3":
-            return MA_Type.T3    # 8
+            return MA_Type.T3  # 8
     return 0  # Default: SMA -> 0
 
 
-def unsigned_differences(series: Series, lag: Int = None,
-                         **kwargs) -> Union[Series, Series]:
+def unsigned_differences(
+    series: Series, lag: Int = None, **kwargs
+) -> Union[Series, Series]:
     """Unsigned Differences
     Returns two Series, an unsigned positive and unsigned negative series based
     on the differences of the original series. The positive series are only the
@@ -166,27 +168,37 @@ def ms2secs(ms, p: Int) -> IntFloat:
 
 
 def _speed_group(
-        df: DataFrame, group: ListStr = [], talib: bool = False,
-        index_name: str = "Indicator", p: Int = 4
-    ) -> ListStr:
+    df: DataFrame,
+    group: ListStr = [],
+    talib: bool = False,
+    index_name: str = "Indicator",
+    p: Int = 4,
+) -> ListStr:
     result = []
     for i in group:
         r = df.ta(i, talib=talib, timed=True)
         if r is None:
             print(f"[S] {i} skipped due to returning None")
-            continue # ta.pivots() sometimes returns None
+            continue  # ta.pivots() sometimes returns None
         ms = float(r.timed.split(" ")[0].split(" ")[0])
         result.append({index_name: i, "ms": ms, "secs": ms2secs(ms, p)})
     return result
 
 
-def speed_test(df: DataFrame,
-        only: ListStr = None, excluded: ListStr = None,
-        top: Int = None, talib: bool = False,
-        ascending: bool = False, sortby: str = "secs",
-        gradient: bool = False, places: Int = 5, stats: bool = False,
-        verbose: bool = False, silent: bool = False
-    ) -> DataFrame:
+def speed_test(
+    df: DataFrame,
+    only: ListStr = None,
+    excluded: ListStr = None,
+    top: Int = None,
+    talib: bool = False,
+    ascending: bool = False,
+    sortby: str = "secs",
+    gradient: bool = False,
+    places: Int = 5,
+    stats: bool = False,
+    verbose: bool = False,
+    silent: bool = False,
+) -> DataFrame:
     """Speed Test
 
     Given a standard ohlcv DataFrame, the Speed Test calculates the
@@ -230,7 +242,8 @@ def speed_test(df: DataFrame,
     else:
         _indicators = df.ta.indicators(as_list=True, exclude=_ichimoku)
 
-    if len(_indicators) == 0: return None
+    if len(_indicators) == 0:
+        return None
 
     _iname = "Indicator"
     if verbose:
@@ -246,8 +259,7 @@ def speed_test(df: DataFrame,
     tdf.set_index(_iname, inplace=True)
     tdf.sort_values(by=sortby, ascending=ascending, inplace=True)
 
-    total_timedf = DataFrame(
-        tdf.describe().loc[['min', '50%', 'mean', 'max']]).T
+    total_timedf = DataFrame(tdf.describe().loc[["min", "50%", "mean", "max"]]).T
     total_timedf["total"] = tdf.sum(axis=0).T
     total_timedf = total_timedf.T
 
@@ -261,7 +273,9 @@ def speed_test(df: DataFrame,
         tdf = tdf.head(top)
 
     if not silent:
-        print(f"\n{_div}\n{_title}\n{_observations}\n{_div}\n{tdf}\n\n{_div}\n{_perfstats}\n\n{_div}\n")
+        print(
+            f"\n{_div}\n{_title}\n{_observations}\n{_div}\n{tdf}\n\n{_div}\n{_perfstats}\n\n{_div}\n"
+        )
 
     if isinstance(gradient, bool) and gradient:
         return tdf.style.background_gradient("autumn_r"), total_timedf
