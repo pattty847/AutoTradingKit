@@ -91,8 +91,8 @@ class MainWidget(QWidget, Ui_MainWidget):
         self.topbar.mode.clicked.connect(self.chartbox_splitter.chart.change_mode)
 
         "khởi tạo indicator menu, symbol menu trước. đang test"
-        # self.topbar.setup_indicator_menu()
-        # self.topbar.setup_symbol_menu()
+        self.topbar.setup_indicator_menu()
+        self.topbar.setup_symbol_menu()
 
         self.TabInterface = BottomInterface(self)
 
