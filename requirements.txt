@@ -22,4 +22,4 @@ websockets
 psygnal
 click
 winloop
-pywin32
+# pywin32
