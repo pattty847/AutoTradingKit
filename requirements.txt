@@ -9,7 +9,7 @@ qasync
 numpy
 pyqtgraph
 pandas==2.2.3
-numba
+# numba
 ccxt
 PyOpenGL
 cython
@@ -21,5 +21,5 @@ humanize
 websockets
 psygnal
 click
-winloop
+# winloop
 # pywin32
